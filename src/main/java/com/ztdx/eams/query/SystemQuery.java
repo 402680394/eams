@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by li on 2018/4/11.
@@ -17,22 +18,22 @@ public class SystemQuery {
 
     private final DSLContext dslContext;
 
-    private HashMap<String,Object> resultMap;
+    private Map<String, Object> resultMap;
 
     private SysOrganization sysOrganization = Tables.SYS_ORGANIZATION;
 
     @Autowired
     public SystemQuery(DSLContext dslContext) {
         this.dslContext = dslContext;
-        resultMap =new HashMap<String,Object>();
+        resultMap = new HashMap<String, Object>();
     }
 
     /**
      * 获取下级机构列表.
      */
-    public HashMap<String,Object> getLowerList(int orgId){
+    public Map<String, Object> getLowerList(int id) {
 
-        List list=dslContext.select(
+        List<Map<String, Object>> list = dslContext.select(
                 sysOrganization.ID.as("id"),
                 sysOrganization.ORG_CODE.as("code"),
                 sysOrganization.ORG_NAME.as("name"),
@@ -40,11 +41,25 @@ public class SystemQuery {
                 sysOrganization.ORG_ORDER_NUMBER.as("orderNumber"),
                 sysOrganization.ORG_TYPE.as("type"))
                 .from(sysOrganization)
-                .where(sysOrganization.ORG_PARENT_ID.equal(orgId))
-                .orderBy(sysOrganization.ORG_ORDER_NUMBER)
+                .where(sysOrganization.ORG_PARENT_ID.equal(id))
+                .orderBy(sysOrganization.ORG_ORDER_NUMBER, sysOrganization.ORG_TYPE)
                 .fetch().intoMaps();
 
-        resultMap.put("items",list);
+        resultMap.put("items", list);
+        return resultMap;
+    }
+
+    /**
+     * 获取机构详情.
+     */
+    public Map<String, Object> get(int id) {
+        resultMap = dslContext.select(sysOrganization.ID.as("id"),
+                sysOrganization.ORG_CODE.as("code"),
+                sysOrganization.ORG_NAME.as("name"),
+                sysOrganization.ORG_PARENT_ID.as("parentId"),
+                sysOrganization.ORG_ORDER_NUMBER.as("orderNumber"),
+                sysOrganization.ORG_TYPE.as("type"))
+                .from(sysOrganization).where(sysOrganization.ID.equal(id)).fetch().intoMaps().get(0);
         return resultMap;
     }
 }

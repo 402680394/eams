@@ -1,14 +1,13 @@
 package com.ztdx.eams.controller;
 
 import com.ztdx.eams.domain.system.application.OganizationService;
+import com.ztdx.eams.domain.system.model.Oganization;
 import com.ztdx.eams.query.SystemQuery;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by li on 2018/4/11.
@@ -28,7 +27,7 @@ public class OganizationController {
     }
 
     /**
-     * @api {get} /oganization/{id}/lowerlist 下级机构列表
+     * @api {get} /oganization/{id}/lowerlist 获取下级机构列表
      * @apiName getLowerList
      * @apiGroup oganization
      * @apiParam {int} id 机构ID（根机构传0）
@@ -39,16 +38,82 @@ public class OganizationController {
      * @apiSuccess (Success 200) {int} orderNumber 同级排序编号.
      * @apiSuccess (Success 200) {int} type 机构类型
      * @apiSuccessExample {json} Success-Response:
-     *     {
-     *     "data":{
-     *              "items":[{"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}
-     *                      {"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}]}
-     *     }.
-     * @apiError (Error 401) message 未登录.
+     * {
+     * "data":{
+     *          "items":[{"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}
+     *                   {"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}]
+     *        }
+     * }.
+     */
+    @RequestMapping(value = "/{id}/lowerlist", method = RequestMethod.GET)
+    public Map<String, Object> getLowerList(@PathVariable("id") int id) {
+        return systemQuery.getLowerList(id);
+    }
+
+    /**
+     * @api {post} /oganization 新增机构
+     * @apiName save
+     * @apiGroup oganization
+     * @apiParam {int} parentId 上级机构ID（根机构传0）
+     * @apiParam {String} code 机构编码
+     * @apiParam {String} name 机构名称
+     * @apiParam {String} depict 机构描述
+     * @apiParam {String} remark 备注
+     * @apiParam {int} type 机构类型（1-公司；2-部门；3-科室）
+     * @apiError (Error 400) message 1-机构编码已存在；2-部门与科室下无法创建公司；3-根节点无法创建部门与科室.
      * @apiUse ErrorExample
      */
-     @RequestMapping(value = "/{id}/lowerlist", method = RequestMethod.GET)
-     public HashMap<String,Object> getLowerList(@PathVariable("id") int orgId){
-         return systemQuery.getLowerList(orgId);
-     }
+    @RequestMapping(value = "", method = RequestMethod.POST)
+    public void save(@RequestBody Oganization oganization) {
+        oganizationService.save(oganization);
+    }
+
+    /**
+     * @api {delete} /oganization/{id} 删除机构
+     * @apiName delete
+     * @apiGroup oganization
+     * @apiParam {int} id 机构ID
+     * @apiError (Error 400) message 1-机构下存在用户.
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    public void delete(@PathVariable("id") int id) {
+        oganizationService.delete(id);
+    }
+
+    /**
+     * @api {post} /oganization 修改机构信息
+     * @apiName update
+     * @apiGroup oganization
+     * @apiParam {int} parentId 上级机构ID（根机构传0）
+     * @apiParam {String} code 机构编码
+     * @apiParam {String} name 机构名称
+     * @apiParam {String} depict 机构描述
+     * @apiParam {String} remark 备注
+     * @apiParam {int} type 机构类型（1-公司；2-部门；3-科室）
+     * @apiError (Error 400) message 1-机构编码已存在；2-部门与科室下无法创建公司；3-根节点无法创建部门与科室.
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "", method = RequestMethod.PUT)
+    public void update(@RequestBody Oganization oganization) {
+        oganizationService.update(oganization);
+    }
+
+    /**
+     * @api {get} /oganization/{id} 获取机构详情
+     * @apiName get
+     * @apiGroup oganization
+     * @apiParam {int} id 机构ID
+     * @apiSuccess (Success 200) {int} id 机构ID.
+     * @apiSuccess (Success 200) {String} code 机构编码.
+     * @apiSuccess (Success 200) {String} name 机构名称.
+     * @apiSuccess (Success 200) {int} parentId 上级机构ID.
+     * @apiSuccess (Success 200) {int} type 机构类型
+     * @apiSuccessExample {json} Success-Response:
+     * {"data":{"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"type": 机构类型}}.
+     */
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public Map<String, Object> get(@PathVariable("id") int id) {
+        return systemQuery.get(id);
+    }
 }

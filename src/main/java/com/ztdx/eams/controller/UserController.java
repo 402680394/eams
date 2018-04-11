@@ -32,7 +32,7 @@ public class UserController {
     /**
      * @apiDefine ErrorExample
      * @apiErrorExample {json} Error-Response:
-     *     {"error": {"timestamp":1,"code":500,"message":"","path":"/home"}}
+     *     {"error": {"timestamp":1,"code":状态码,"message":"错误消息","path":"/home"}}
      */
 
     /**
@@ -42,8 +42,8 @@ public class UserController {
      * @apiParam {String} username 用户名
      * @apiParam {String} password 密码
      * @apiParamExample {json} Request-Example:
-     * {"data":{"username":"lht753951","password":"123456"}}
-     * @apiError (Error 401) message 1.用户不存在; 2.密码错误; 3.该用户已被禁止使用.
+     *      {"data":{"username":"lht753951","password":"123456"}}
+     * @apiError (Error 401) message 1-用户不存在; 2-密码错误; 3-该用户已被禁止使用.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/login", method = RequestMethod.POST)
