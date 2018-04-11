@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import javax.persistence.Table;
 
 @Repository
-@Table(name = "user")
+@Table(name = "sys_user")
 @Qualifier("userRepository")
 public interface UserRepository
         extends JpaRepository<User, Integer> {

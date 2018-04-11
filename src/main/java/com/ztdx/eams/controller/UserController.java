@@ -38,7 +38,7 @@ public class UserController {
     /**
      * @api {post} /user/login 用户登录
      * @apiName login
-     * @apiGroup User
+     * @apiGroup user
      * @apiParam {String} username 用户名
      * @apiParam {String} password 密码
      * @apiParamExample {json} Request-Example:
