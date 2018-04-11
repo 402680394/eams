@@ -14,8 +14,4 @@ public class UserCredential {
      * 用户标识
      */
     private int userId;
-    /**
-     * 角色标识
-     */
-    private int roleId;
 }
