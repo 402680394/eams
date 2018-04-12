@@ -36,6 +36,6 @@ public class Fonds {
 
     //备注
     @Size(max = 100)
-    @Column(name = "fonds_remark")
+    @Column(name = "remark")
     private String remark;
 }

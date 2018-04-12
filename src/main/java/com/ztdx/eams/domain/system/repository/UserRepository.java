@@ -25,4 +25,17 @@ public interface UserRepository
      */
     User findFirstByOrganizationId(int id);
 
+    /**
+     * 通过id修改密码
+     */
+    @Modifying
+    @Query("update User u set u.password=:password where u.id=:id")
+    void updatePwdById(@Param("id") int id,@Param("password") String password);
+
+    /**
+     * 通过id修改状态
+     */
+    @Modifying
+    @Query("update User u set u.flag=:flag where u.id=:id")
+    void updateFlagById(@Param("id") int id,@Param("flag") int flag);
 }

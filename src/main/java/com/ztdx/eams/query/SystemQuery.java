@@ -37,12 +37,12 @@ public class SystemQuery {
                 sysOrganization.ID.as("id"),
                 sysOrganization.ORG_CODE.as("code"),
                 sysOrganization.ORG_NAME.as("name"),
-                sysOrganization.ORG_PARENT_ID.as("parentId"),
-                sysOrganization.ORG_ORDER_NUMBER.as("orderNumber"),
+                sysOrganization.PARENT_ID.as("parentId"),
+                sysOrganization.ORDER_NUMBER.as("orderNumber"),
                 sysOrganization.ORG_TYPE.as("type"))
                 .from(sysOrganization)
-                .where(sysOrganization.ORG_PARENT_ID.equal(id))
-                .orderBy(sysOrganization.ORG_ORDER_NUMBER, sysOrganization.ORG_TYPE)
+                .where(sysOrganization.PARENT_ID.equal(id))
+                .orderBy(sysOrganization.ORDER_NUMBER, sysOrganization.ORG_TYPE)
                 .fetch().intoMaps();
 
         resultMap.put("items", list);
@@ -56,8 +56,8 @@ public class SystemQuery {
         resultMap = dslContext.select(sysOrganization.ID.as("id"),
                 sysOrganization.ORG_CODE.as("code"),
                 sysOrganization.ORG_NAME.as("name"),
-                sysOrganization.ORG_PARENT_ID.as("parentId"),
-                sysOrganization.ORG_ORDER_NUMBER.as("orderNumber"),
+                sysOrganization.PARENT_ID.as("parentId"),
+                sysOrganization.ORDER_NUMBER.as("orderNumber"),
                 sysOrganization.ORG_TYPE.as("type"))
                 .from(sysOrganization).where(sysOrganization.ID.equal(id)).fetch().intoMaps().get(0);
         return resultMap;

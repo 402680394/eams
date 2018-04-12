@@ -21,22 +21,22 @@ public class User {
 
     //姓名
     @Size(max = 10)
-    @Column(name = "user_name")
+    @Column(name = "real_name")
     private String name;
 
     //工号
     @Size(max = 20)
-    @Column(name = "user_workers")
+    @Column(name = "workers")
     private String workers;
 
     //用户名
     @Size(max = 20)
-    @Column(name = "user_username")
+    @Column(name = "username")
     private String username;
 
     //密码
     @Size(max = 30)
-    @Column(name = "user_password")
+    @Column(name = "pwd")
     private String password;
 
     //所属机构
@@ -46,27 +46,27 @@ public class User {
 
     //电话
     @Size(max = 20)
-    @Column(name = "user_phone")
+    @Column(name = "phone")
     private String phone;
 
     //邮箱
     @Size(max = 50)
-    @Column(name = "user_email")
+    @Column(name = "email")
     private String email;
 
     //职位
     @Size(max = 20)
-    @Column(name = "user_position")
-    private String position;
+    @Column(name = "job")
+    private String job;
 
     //备注
     @Size(max = 100)
-    @Column(name = "user_remark")
+    @Column(name = "remark")
     private String remark;
 
     //状态
     @Min(value = 0)
     @Max(value = 10)
-    @Column(name = "user_status")
-    private int status;
+    @Column(name = "flag")
+    private int flag;
 }

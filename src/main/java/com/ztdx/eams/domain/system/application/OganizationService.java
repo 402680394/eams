@@ -31,29 +31,13 @@ public class OganizationService {
      */
     @Transactional
     public void save(Oganization oganization) {
-        int i = oganizationRepository.countByCode(oganization.getCode());
-        if (i != 0) {
-            throw new InvalidArgumentException("机构编码已存在");
-        }
-        //确认上下级结构
-        if (oganization.getParentId() == 0) {
-            if (oganization.getType() != 1) {
-                throw new InvalidArgumentException("根节点无法创建部门与科室");
-            }
-        } else {
-            Oganization parent = oganizationRepository.findById(oganization.getParentId());
-            if (oganization.getType() == 1 && parent.getType() == 2) {
-                throw new InvalidArgumentException("部门下无法创建公司");
-            }
-            if (parent.getType() == 3) {
-                throw new InvalidArgumentException("科室下无法创建机构");
-            }
-        }
 
+        //信息合法验证
+        validate(oganization);
         //设置同级机构优先级
         int orderNumber = oganizationRepository.findMaxOrderNumber(oganization.getParentId(), oganization.getType());
-        oganization.setOrderNumber(orderNumber+1);
-
+        oganization.setOrderNumber(orderNumber + 1);
+        //存储数据
         oganizationRepository.save(oganization);
     }
 
@@ -83,7 +67,32 @@ public class OganizationService {
      */
     @Transactional
     public void update(Oganization oganization) {
+        //信息合法验证
+        validate(oganization);
+        //修改数据
+        oganizationRepository.updateById(oganization.getId(), oganization.getParentId(), oganization.getCode(),
+                oganization.getName(), oganization.getDescribe(), oganization.getRemark(), oganization.getType());
+    }
 
+    /**
+     * 修改机构排序优先级
+     */
+    @Transactional
+    public void priority(int upId, int downId) {
+        Oganization up=oganizationRepository.findById(upId);
+        Oganization down=oganizationRepository.findById(downId);
+
+        if(up.getParentId()!=down.getParentId()&&up.getType()!=down.getType()){
+            throw new InvalidArgumentException("机构类型或上级机构不一致");
+        }
+        oganizationRepository.updateOrderNumberById(upId,down.getOrderNumber());
+        oganizationRepository.updateOrderNumberById(downId,up.getOrderNumber());
+    }
+
+    /**
+     * 新增/修改机构验证
+     */
+    public void validate(Oganization oganization) {
         int i = oganizationRepository.countByCode(oganization.getCode());
         if (i != 0) {
             throw new InvalidArgumentException("机构编码已存在");
@@ -102,14 +111,5 @@ public class OganizationService {
                 throw new InvalidArgumentException("科室下无法创建机构");
             }
         }
-        //修改
-
-    }
-
-    /**
-     * 修改机构优先级
-     */
-    @Transactional
-    public void priority(int id1, int id2) {
     }
 }

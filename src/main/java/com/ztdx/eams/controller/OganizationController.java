@@ -1,13 +1,11 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.system.application.OganizationService;
 import com.ztdx.eams.domain.system.model.Oganization;
 import com.ztdx.eams.query.SystemQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -31,7 +29,7 @@ public class OganizationController {
      * @api {get} /oganization/{id}/lowerlist 获取下级机构列表
      * @apiName getLowerList
      * @apiGroup oganization
-     * @apiParam {int} id 机构ID（根机构传0）
+     * @apiParam {int} id 机构ID（根机构传0）（url占位符）
      * @apiSuccess (Success 200) {int} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
@@ -73,7 +71,7 @@ public class OganizationController {
      * @api {delete} /oganization/{id} 删除机构
      * @apiName delete
      * @apiGroup oganization
-     * @apiParam {int} id 机构ID
+     * @apiParam {int} id 机构ID（url占位符）
      * @apiError (Error 400) message 该机构或子机构下存在用户.
      * @apiUse ErrorExample
      */
@@ -83,9 +81,10 @@ public class OganizationController {
     }
 
     /**
-     * @api {post} /oganization 修改机构信息
+     * @api {put} /oganization 修改机构信息
      * @apiName update
      * @apiGroup oganization
+     * @apiParam {int} id 机构ID
      * @apiParam {int} parentId 上级机构ID（根机构传0）
      * @apiParam {String} code 机构编码
      * @apiParam {String} name 机构名称
@@ -104,7 +103,7 @@ public class OganizationController {
      * @api {get} /oganization/{id} 获取机构详情
      * @apiName get
      * @apiGroup oganization
-     * @apiParam {int} id 机构ID
+     * @apiParam {int} id 机构ID（url占位符）
      * @apiSuccess (Success 200) {int} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
@@ -119,16 +118,16 @@ public class OganizationController {
     }
 
     /**
-     * @api {post} /oganization 修改机构优先级
+     * @api {patch} /oganization/{upId},{downId}/priority 修改机构排序优先级
      * @apiName priority
      * @apiGroup oganization
-     * @apiParam {int} parentId 上级机构ID（根机构传0）
-     * @apiParam {String} code 机构编码
-     * @apiError (Error 400) message 1.机构类型或上级机构不一致.
+     * @apiParam {int} upId 上移机构ID（url占位符）
+     * @apiParam {int} downId 下移机构ID（url占位符）
+     * @apiError (Error 400) message 机构类型或上级机构不一致.
      * @apiUse ErrorExample
      */
-    @RequestMapping(value = "/{id1},{id2}/priority", method = RequestMethod.PATCH)
-    public void priority(@PathVariable("id1") int id1,@PathVariable("id1") int id2) {
-        oganizationService.priority(id1,id2);
+    @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)
+    public void priority(@PathVariable("upId") int upId,@PathVariable("downId") int downId) {
+        oganizationService.priority(upId,downId);
     }
 }

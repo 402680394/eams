@@ -21,11 +21,30 @@ public interface OganizationRepository extends JpaRepository<Oganization, Intege
 
     //查询机构编码是否存在
     int countByCode(String code);
+
     //通过ID查询机构
     Oganization findById(int id);
+
     // 通过父机构ID查询子机构
     List<Oganization> findAllByParentId(int id);
+
     //查询同级机构优先级最大值
     @Query("select max (o.orderNumber) from Oganization o where o.parentId=:parentId and o.type=:type")
-    int findMaxOrderNumber(@Param(value = "parentId")int parentId,@Param(value = "type") int type);
+    int findMaxOrderNumber(@Param(value = "parentId") int parentId, @Param(value = "type") int type);
+
+    //通过ID修改信息
+    @Modifying
+    @Query("update Oganization o set o.parentId=:parentId,o.code=:code,o.name=:name,o.describe=:describe,o.remark=:remark,o.type=:type where o.id=:id")
+    void updateById(@Param(value = "id") int id,
+                    @Param(value = "parentId") int parentId,
+                    @Param(value = "code") String code,
+                    @Param(value = "name") String name,
+                    @Param(value = "describe") String describe,
+                    @Param(value = "remark") String remark,
+                    @Param(value = "type") int type);
+
+    //设置机构优先级
+    @Modifying
+    @Query("update Oganization o set o.orderNumber=:orderNumber where o.id=:id")
+    void updateOrderNumberById(@Param(value = "id") int id, @Param(value = "orderNumber") int orderNumber);
 }

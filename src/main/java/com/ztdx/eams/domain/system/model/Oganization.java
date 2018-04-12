@@ -34,12 +34,12 @@ public class Oganization {
 
     //上级机构
     @Max(value = 11)
-    @Column(name = "org_parent_id")
+    @Column(name = "parent_id")
     private int parentId;
 
     //同级机构优先级
     @Min(value = 1)
-    @Column(name = "org_order_number")
+    @Column(name = "order_number")
     private int orderNumber;
 
     //机构类型
@@ -55,11 +55,11 @@ public class Oganization {
 
     //机构描述
     @Size(max = 50)
-    @Column(name = "org_depict")
-    private String depict;
+    @Column(name = "org_describe")
+    private String describe;
 
     //备注
     @Size(max = 100)
-    @Column(name = "org_remark")
+    @Column(name = "remark")
     private String remark;
 }
