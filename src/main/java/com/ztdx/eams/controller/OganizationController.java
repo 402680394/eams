@@ -1,5 +1,6 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.system.application.OganizationService;
 import com.ztdx.eams.domain.system.model.Oganization;
 import com.ztdx.eams.query.SystemQuery;
@@ -60,7 +61,7 @@ public class OganizationController {
      * @apiParam {String} depict 机构描述
      * @apiParam {String} remark 备注
      * @apiParam {int} type 机构类型（1-公司；2-部门；3-科室）
-     * @apiError (Error 400) message 1-机构编码已存在；2-部门与科室下无法创建公司；3-根节点无法创建部门与科室.
+     * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室；4.科室下无法创建部门.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.POST)
@@ -73,7 +74,7 @@ public class OganizationController {
      * @apiName delete
      * @apiGroup oganization
      * @apiParam {int} id 机构ID
-     * @apiError (Error 400) message 1-机构下存在用户.
+     * @apiError (Error 400) message 该机构或子机构下存在用户.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
@@ -91,7 +92,7 @@ public class OganizationController {
      * @apiParam {String} depict 机构描述
      * @apiParam {String} remark 备注
      * @apiParam {int} type 机构类型（1-公司；2-部门；3-科室）
-     * @apiError (Error 400) message 1-机构编码已存在；2-部门与科室下无法创建公司；3-根节点无法创建部门与科室.
+     * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.PUT)
@@ -115,5 +116,19 @@ public class OganizationController {
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
         return systemQuery.get(id);
+    }
+
+    /**
+     * @api {post} /oganization 修改机构优先级
+     * @apiName priority
+     * @apiGroup oganization
+     * @apiParam {int} parentId 上级机构ID（根机构传0）
+     * @apiParam {String} code 机构编码
+     * @apiError (Error 400) message 1.机构类型或上级机构不一致.
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "/{id1},{id2}/priority", method = RequestMethod.PATCH)
+    public void priority(@PathVariable("id1") int id1,@PathVariable("id1") int id2) {
+        oganizationService.priority(id1,id2);
     }
 }

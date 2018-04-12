@@ -1,9 +1,12 @@
 package com.ztdx.eams.domain.system.model;
 
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Size;
 
 /**
  * Created by li on 2018/4/11.
@@ -18,12 +21,14 @@ public class Oganization {
     private int id;
 
     //机构编码
-    @Max(value = 20)
+//    @Max(value = 20)
+    @Size(max = 20)
     @Column(name = "org_code")
     private String code;
 
     //机构名称
-    @Max(value = 50)
+//    @Length(value = 50)
+    @Size(max = 50)
     @Column(name = "org_name")
     private String name;
 
@@ -33,26 +38,28 @@ public class Oganization {
     private int parentId;
 
     //同级机构优先级
-    @Max(value = 3)
+    @Min(value = 1)
     @Column(name = "org_order_number")
     private int orderNumber;
 
     //机构类型
-    @Max(value = 2)
+    @Min(value = 1)
+    @Max(value = 3)
     @Column(name = "org_type")
     private int type;
 
     //所属全宗
-    @Max(value = 20)
+    @Size(max = 20)
     @Column(name = "fonds_id")
     private String fondsId;
+
     //机构描述
-    @Max(value = 50)
+    @Size(max = 50)
     @Column(name = "org_depict")
     private String depict;
 
     //备注
-    @Max(value = 100)
+    @Size(max = 100)
     @Column(name = "org_remark")
     private String remark;
 }

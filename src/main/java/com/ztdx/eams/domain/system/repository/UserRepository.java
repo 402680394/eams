@@ -20,4 +20,9 @@ public interface UserRepository
     */
     User findByUsername(String username);
 
+    /**
+     * 通过所属机构id查询第一个user
+     */
+    User findFirstByOrganizationId(int id);
+
 }
