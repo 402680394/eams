@@ -1,14 +1,16 @@
 package com.ztdx.eams.domain.system.application;
 
+import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.UnauthorizedException;
+import com.ztdx.eams.domain.system.model.Oganization;
 import com.ztdx.eams.domain.system.model.User;
+import com.ztdx.eams.domain.system.repository.OganizationRepository;
 import com.ztdx.eams.domain.system.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -18,9 +20,14 @@ import java.util.Map;
 public class UserService {
     private final UserRepository userRepository;
 
+    private final OganizationRepository oganizationRepository;
+
+    private final String initPassword = "111111";
+
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, OganizationRepository oganizationRepository) {
         this.userRepository = userRepository;
+        this.oganizationRepository = oganizationRepository;
     }
 
     /**
@@ -41,7 +48,7 @@ public class UserService {
     }
 
     /**
-     *  通过id删除用户
+     * 通过id删除用户
      */
     @Transactional
     public void delete(int id) {
@@ -49,30 +56,70 @@ public class UserService {
     }
 
     /**
-     *  通过id批量删除用户
+     * 通过id批量删除用户
      */
     @Transactional
     public void listDelete(List<Integer> list) {
-        for (int id:list){
+        for (int id : list) {
             userRepository.deleteById(id);
         }
     }
 
     /**
-     *  通过id批量重置用户密码
+     * 通过id批量重置用户密码
      */
     @Transactional
     public void listPassReset(List<Integer> list) {
-        String password="111111";
-        for (int id:list){
-            userRepository.updatePwdById(id,password);
+        for (int id : list) {
+            userRepository.updatePwdById(id, initPassword);
         }
     }
 
     /**
-     *  通过id锁定|解锁用户
+     * 通过id锁定|解锁用户
      */
+    @Transactional
     public void changeFlag(int id, int flag) {
-        userRepository.updateFlagById(id,flag);
+        userRepository.updateFlagById(id, flag);
+    }
+
+    /**
+     * 添加用户
+     */
+    @Transactional
+    public void save(User user) {
+        //验证
+        User u = userRepository.findByUsername(user.getUsername());
+        if (u != null) {
+            throw new InvalidArgumentException("用户名已存在");
+        }
+        Oganization o = oganizationRepository.findById(user.getOrganizationId());
+        if (o == null) {
+            throw new InvalidArgumentException("机构不存在或已被删除");
+        }
+        //设置初始密码
+        user.setPassword(initPassword);
+        userRepository.save(user);
+    }
+
+    /**
+     * 修改用户信息
+     */
+    @Transactional
+    public void update(User user) {
+        //验证用户名
+        User u = userRepository.findByUsernameAndId(user.getUsername(), user.getId());
+        if (u == null) {
+            u = userRepository.findByUsername(user.getUsername());
+            if (u != null) {
+                throw new InvalidArgumentException("用户名已存在");
+            }
+        }
+        Oganization o = oganizationRepository.findById(user.getOrganizationId());
+        if (o == null) {
+            throw new InvalidArgumentException("机构不存在或已被删除");
+        }
+        //修改信息
+        userRepository.updateById(user);
     }
 }

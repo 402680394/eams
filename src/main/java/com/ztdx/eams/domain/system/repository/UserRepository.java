@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
+import javax.validation.constraints.Size;
 
 @Repository
 @Table(name = "sys_user")
@@ -16,8 +17,8 @@ import javax.persistence.Table;
 public interface UserRepository
         extends JpaRepository<User, Integer> {
     /**
-    * 通过用户名查询user
-    */
+     * 通过用户名查询user
+     */
     User findByUsername(String username);
 
     /**
@@ -30,12 +31,24 @@ public interface UserRepository
      */
     @Modifying
     @Query("update User u set u.password=:password where u.id=:id")
-    void updatePwdById(@Param("id") int id,@Param("password") String password);
+    void updatePwdById(@Param("id") int id, @Param("password") String password);
 
     /**
      * 通过id修改状态
      */
     @Modifying
     @Query("update User u set u.flag=:flag where u.id=:id")
-    void updateFlagById(@Param("id") int id,@Param("flag") int flag);
+    void updateFlagById(@Param("id") int id, @Param("flag") int flag);
+
+    /**
+     * 通过id修改信息
+     */
+    @Modifying
+    @Query("update User u set u.name=:#{#user.name},u.workers=:#{#user.workers},u.username=:#{#user.username},u.organizationId=:#{#user.organizationId},u.phone=:#{#user.phone},u.email=:#{#user.email},u.job=:#{#user.job},u.remark=:#{#user.remark} where u.id=:#{#user.id}")
+    void updateById(@Param("user") User user);
+
+    /**
+     * 通过用户名查询总数
+     */
+    User findByUsernameAndId(String username, int id);
 }

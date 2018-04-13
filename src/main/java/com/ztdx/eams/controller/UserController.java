@@ -4,6 +4,7 @@ import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.system.application.UserService;
 import com.ztdx.eams.domain.system.model.User;
+import com.ztdx.eams.query.SystemQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +22,12 @@ public class UserController {
 
     private final UserService userService;
 
+    private final SystemQuery systemQuery;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, SystemQuery systemQuery) {
         this.userService = userService;
+        this.systemQuery = systemQuery;
     }
 
     /**
@@ -39,8 +42,6 @@ public class UserController {
      * @apiGroup user
      * @apiParam {String} username 用户名
      * @apiParam {String} password 密码
-     * @apiParamExample {json} Request-Example:
-     *      {"username":"lht753951","password":"123456"}
      * @apiError (Error 401) message 1-用户不存在; 2-密码错误; 3-该用户已被禁止使用.
      * @apiUse ErrorExample
      */
@@ -69,19 +70,20 @@ public class UserController {
      * @apiGroup user
      * @apiParam {int} id 用户ID
      * @apiParamExample {json} Request-Example:
-     *                          [1,2,3]
+     * [1,2,3]
      */
     @RequestMapping(value = "/list", method = RequestMethod.DELETE)
     public void listDelete(@RequestBody List<Integer> list) {
         userService.listDelete(list);
     }
+
     /**
      * @api {patch} /user/listPassReset 批量重置用户密码
      * @apiName listPassReset
      * @apiGroup user
      * @apiParam {int} id 用户ID
      * @apiParamExample {json} Request-Example:
-     *                          [1,2,3]
+     * [1,2,3]
      */
     @RequestMapping(value = "/listReset", method = RequestMethod.PATCH)
     public void listPassReset(@RequestBody List<Integer> list) {
@@ -90,14 +92,115 @@ public class UserController {
 
     /**
      * @api {patch} /user/{id}/lock 锁定|解锁用户
-     * @apiName changeFlag
+     * @apiName lock
      * @apiGroup user
      * @apiParam {int} id 用户ID（url占位符）
      * @apiParam {int} flag 状态（可选值：0-可用，1-禁用）（url参数）
      */
     @RequestMapping(value = "/{id}/lock", method = RequestMethod.PATCH)
-    public void changeFlag(@PathVariable("id") int id,@RequestParam int flag) {
-        userService.changeFlag(id,flag);
+    public void lock(@PathVariable("id") int id, @RequestParam int flag) {
+        userService.changeFlag(id, flag);
+    }
+
+    /**
+     * @api {get} /user/list 获取用户列表
+     * @apiName list
+     * @apiGroup user
+     * @apiParam {int} pageNum 页码（默认为1）（url参数）
+     * @apiParam {String} name 姓名（未输入传""值）
+     * @apiParam {String} workers 工号（未输入传""值）
+     * @apiParam {String} username 用户名（未输入传""值）
+     * @apiParam {int} organizationId 所属机构ID（根机构传0）
+     * @apiParam {String} phone 电话（未输入传""值）
+     * @apiParam {String} email 邮箱（未输入传""值）
+     * @apiParam {String} job 职位（未输入传""值）
+     * @apiSuccess (Success 200) {int} id 用户ID.
+     * @apiSuccess (Success 200) {String} name 姓名.
+     * @apiSuccess (Success 200) {String} workers 工号.
+     * @apiSuccess (Success 200) {String} username 用户名.
+     * @apiSuccess (Success 200) {String} phone 电话.
+     * @apiSuccess (Success 200) {String} email 邮箱.
+     * @apiSuccess (Success 200) {String} job 职位
+     * @apiSuccess (Success 200) {String} remark 备注
+     * @apiSuccess (Success 200) {int} flag 状态
+     * @apiSuccess (Success 200) {int} total 数据总数
+     * @apiSuccessExample {json} Success-Response:
+     * {
+     * "data":{
+     * "items":[{"id": 用户ID,"name": "姓名","workers": "工号","username": "用户名","phone": "电话","email": "邮箱","job": "职位","remark": "备注","flag": 状态}
+     * {"id": 用户ID,"name": "姓名","workers": "工号","username": "用户名","phone": "电话","email": "邮箱","job": "职位","remark": "备注","flag": 状态}]
+     * "total":数据总数
+     * }
+     * }.
+     */
+    @RequestMapping(value = "/list", method = RequestMethod.POST)
+    public Map<String, Object> list(@RequestBody User user, @RequestParam("pageNum") int pageNum) {
+        //判断是否查询所有用户
+        if(user.getOrganizationId()==0){
+            return systemQuery.getUserList(user,pageNum);
+        }
+        return systemQuery.getUserListByOrg(user,pageNum);
+    }
+
+    /**
+     * @api {post} /user 新增用户
+     * @apiName save
+     * @apiGroup user
+     * @apiParam {String} name 姓名
+     * @apiParam {String} workers 工号（未输入传""值）
+     * @apiParam {String} username 用户名
+     * @apiParam {int} organizationId 所属机构ID
+     * @apiParam {String} phone 电话（未输入传""值）
+     * @apiParam {String} email 邮箱（未输入传""值）
+     * @apiParam {String} job 职位（未输入传""值）
+     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiError (Error 400) message 1.用户名已存在;2.机构不存在或已被删除.
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "", method = RequestMethod.POST)
+    public void save(@RequestBody User user) {
+        userService.save(user);
+    }
+
+    /**
+     * @api {put} /user 修改用户信息
+     * @apiName update
+     * @apiGroup user
+     * @apiParam {String} name 姓名
+     * @apiParam {String} workers 工号
+     * @apiParam {String} username 用户名
+     * @apiParam {int} organizationId 所属机构ID
+     * @apiParam {String} phone 电话
+     * @apiParam {String} email 邮箱
+     * @apiParam {String} job 职位
+     * @apiParam {String} remark 备注
+     * @apiError (Error 400) message 1.用户名已存在;2.机构不存在或已被删除.
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "", method = RequestMethod.PUT)
+    public void update(@RequestBody User user) {
+        userService.update(user);
+    }
+
+    /**
+     * @api {get} /user/{id} 获取用户信息详情
+     * @apiName get
+     * @apiGroup user
+     * @apiParam {int} id 用户ID（url占位符）
+     * @apiSuccess (Success 200) {String} name 姓名
+     * @apiSuccess (Success 200) {String} workers 工号
+     * @apiSuccess (Success 200) {String} username 用户名
+     * @apiSuccess (Success 200) {int} organizationId 所属机构ID
+     * @apiSuccess (Success 200) {String} phone 电话
+     * @apiSuccess (Success 200) {String} email 邮箱
+     * @apiSuccess (Success 200) {String} job 职位
+     * @apiSuccess (Success 200) {String} remark 备注
+     * @apiSuccessExample {json} Success-Response:
+     * {"data":{"name":"姓名","workers":"工号","username":"用户名","organizationId":所属机构ID,"phone":"电话","email":"邮箱","job":"职位","remark":"备注"}}.
+     */
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public Map<String, Object> get(@PathVariable("id") int id) {
+        return systemQuery.getUser(id);
     }
 
 }

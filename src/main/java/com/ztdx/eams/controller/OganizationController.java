@@ -39,14 +39,14 @@ public class OganizationController {
      * @apiSuccessExample {json} Success-Response:
      * {
      * "data":{
-     *          "items":[{"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}
-     *                   {"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}]
-     *        }
+     * "items":[{"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}
+     * {"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}]
+     * }
      * }.
      */
     @RequestMapping(value = "/{id}/lowerlist", method = RequestMethod.GET)
     public Map<String, Object> getLowerList(@PathVariable("id") int id) {
-        return systemQuery.getLowerList(id);
+        return systemQuery.getOrganizationLowerList(id);
     }
 
     /**
@@ -56,8 +56,8 @@ public class OganizationController {
      * @apiParam {int} parentId 上级机构ID（根机构传0）
      * @apiParam {String} code 机构编码
      * @apiParam {String} name 机构名称
-     * @apiParam {String} depict 机构描述
-     * @apiParam {String} remark 备注
+     * @apiParam {String} depict 机构描述（未输入传""值）
+     * @apiParam {String} remark 备注（未输入传""值）
      * @apiParam {int} type 机构类型（1-公司；2-部门；3-科室）
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室；4.科室下无法创建部门.
      * @apiUse ErrorExample
@@ -88,9 +88,9 @@ public class OganizationController {
      * @apiParam {int} parentId 上级机构ID（根机构传0）
      * @apiParam {String} code 机构编码
      * @apiParam {String} name 机构名称
-     * @apiParam {String} depict 机构描述
-     * @apiParam {String} remark 备注
-     * @apiParam {int} type 机构类型（1-公司；2-部门；3-科室）
+     * @apiParam {String} depict 机构描述（未输入传""值）
+     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiParam {int} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室.
      * @apiUse ErrorExample
      */
@@ -114,7 +114,7 @@ public class OganizationController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return systemQuery.get(id);
+        return systemQuery.getOrganization(id);
     }
 
     /**
@@ -127,7 +127,7 @@ public class OganizationController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)
-    public void priority(@PathVariable("upId") int upId,@PathVariable("downId") int downId) {
-        oganizationService.priority(upId,downId);
+    public void priority(@PathVariable("upId") int upId, @PathVariable("downId") int downId) {
+        oganizationService.priority(upId, downId);
     }
 }
