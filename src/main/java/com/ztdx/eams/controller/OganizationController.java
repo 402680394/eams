@@ -26,27 +26,24 @@ public class OganizationController {
     }
 
     /**
-     * @api {get} /oganization/{id}/lowerlist 获取下级机构列表
-     * @apiName getLowerList
+     * @api {get} /oganization/list 获取机构列表
+     * @apiName list
      * @apiGroup oganization
-     * @apiParam {int} id 机构ID（根机构传0）（url占位符）
      * @apiSuccess (Success 200) {int} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
      * @apiSuccess (Success 200) {int} parentId 上级机构ID.
      * @apiSuccess (Success 200) {int} orderNumber 同级排序编号.
      * @apiSuccess (Success 200) {int} type 机构类型
+     * @apiSuccess (Success 200) {arr} subOrganization 子机构信息
      * @apiSuccessExample {json} Success-Response:
-     * {
-     * "data":{
-     * "items":[{"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}
-     * {"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}]
-     * }
-     * }.
+     * {"data": {"items": [{"id": 机构ID,"code": "机构编码","name": "父机构0","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型},
+     * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrganization": [
+     * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,}]}]}}.
      */
-    @RequestMapping(value = "/{id}/lowerlist", method = RequestMethod.GET)
-    public Map<String, Object> getLowerList(@PathVariable("id") int id) {
-        return systemQuery.getOrganizationLowerList(id);
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public Map<String, Object> list() {
+        return systemQuery.getOrganizationListMap(0);
     }
 
     /**

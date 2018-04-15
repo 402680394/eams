@@ -33,11 +33,10 @@ public class Oganization {
     private String name;
 
     //上级机构
-    @Max(value = 11)
     @Column(name = "parent_id")
     private int parentId;
 
-    //同级机构优先级
+    //同级排序优先级
     @Min(value = 1)
     @Column(name = "order_number")
     private int orderNumber;
