@@ -34,7 +34,7 @@ public interface OganizationRepository extends JpaRepository<Oganization, Intege
 
     //通过ID修改信息
     @Modifying
-    @Query("update Oganization o set o.parentId=#{#user.workers},o.code=:code,o.name=:name,o.describe=:describe,o.remark=:remark,o.type=:type where o.id=:id")
+    @Query("update Oganization o set o.parentId=:parentId,o.code=:code,o.name=:name,o.describe=:describe,o.remark=:remark,o.type=:type where o.id=:id")
     void updateById(@Param(value = "id") int id,
                     @Param(value = "parentId") int parentId,
                     @Param(value = "code") String code,
