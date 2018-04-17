@@ -16,11 +16,13 @@ public class Interceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws IOException {
-        //请求验证拦截
-//        if(!"/user/login".equals(httpServletRequest.getRequestURI())){
-//            UserCredential userCredential= (UserCredential) httpServletRequest.getSession().getAttribute("LOGIN_USER");
-//            if (null==userCredential) {
-//                appendToResponse(httpServletRequest, httpServletResponse, new UnauthorizedException("请登录后进行操作"));
+//        if (!httpServletRequest.getMethod().equals("OPTIONS")){
+//            //请求验证拦截
+//            if(!"/user/login".equals(httpServletRequest.getRequestURI())){
+//                UserCredential userCredential= (UserCredential) httpServletRequest.getSession().getAttribute("LOGIN_USER");
+//                if (null==userCredential) {
+//                    appendToResponse(httpServletRequest, httpServletResponse, new UnauthorizedException("请登录后进行操作"));
+//                }
 //            }
 //        }
         return true;

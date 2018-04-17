@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -34,8 +35,13 @@ public class FondsService {
         }
 
         //设置同级机构优先级
-        int orderNumber = fondsRepository.findMaxOrderNumber(fonds.getParentId(), fonds.getType());
-        fonds.setOrderNumber(orderNumber + 1);
+        Integer orderNumber = fondsRepository.findMaxOrderNumber(fonds.getParentId(), fonds.getType());
+        if (orderNumber!=null){
+            fonds.setOrderNumber(orderNumber + 1);
+        }
+        fonds.setOrderNumber(1);
+        //设置创建时间
+        fonds.setGmtCreate(Calendar.getInstance().getTime());
         //存储数据
         fondsRepository.save(fonds);
     }
@@ -60,6 +66,7 @@ public class FondsService {
     /**
      * 修改全宗
      */
+    @Transactional
     public void update(Fonds fonds) {
 
         int i = fondsRepository.countByCode(fonds.getCode());
@@ -73,6 +80,7 @@ public class FondsService {
     /**
      * 修改全宗排序优先级
      */
+    @Transactional
     public void priority(int upId, int downId) {
 
         Fonds up=fondsRepository.findById(upId);

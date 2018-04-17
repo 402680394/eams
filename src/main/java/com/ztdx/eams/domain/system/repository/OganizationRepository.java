@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -34,17 +35,13 @@ public interface OganizationRepository extends JpaRepository<Oganization, Intege
 
     //通过ID修改信息
     @Modifying
-    @Query("update Oganization o set o.parentId=:parentId,o.code=:code,o.name=:name,o.describe=:describe,o.remark=:remark,o.type=:type where o.id=:id")
-    void updateById(@Param(value = "id") int id,
-                    @Param(value = "parentId") int parentId,
-                    @Param(value = "code") String code,
-                    @Param(value = "name") String name,
-                    @Param(value = "describe") String describe,
-                    @Param(value = "remark") String remark,
-                    @Param(value = "type") int type);
+    @Query("update Oganization o set o.parentId=:#{#oganization.parentId},o.code=:#{#oganization.code},o.name=:#{#oganization.name},o.describe=:#{#oganization.describe},o.remark=:#{#oganization.remark},o.type=:#{#oganization.type} where o.id=:#{#oganization.id}")
+    void updateById(@Param("oganization")Oganization oganization);
 
     //设置机构优先级
     @Modifying
     @Query("update Oganization o set o.orderNumber=:orderNumber where o.id=:id")
     void updateOrderNumberById(@Param(value = "id") int id, @Param(value = "orderNumber") int orderNumber);
+
+    Oganization findByCodeAndId(String code, int id);
 }

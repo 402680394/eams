@@ -6,6 +6,7 @@ import com.ztdx.eams.query.jooq.tables.SysFonds;
 import com.ztdx.eams.query.jooq.tables.SysOrganization;
 import com.ztdx.eams.query.jooq.tables.SysUser;
 import org.jooq.DSLContext;
+import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +39,7 @@ public class SystemQuery {
     /**
      * 通过ID获取机构及下级机构列表.
      */
-    public Map<String, Object> getOrganizationListMap(int id) {
+    public Map<String, Object> getOrganizationListMap(UInteger id) {
         resultMap.put("items", getOrganizationList(id));
         return resultMap;
     }
@@ -46,7 +47,7 @@ public class SystemQuery {
     /**
      * 通过ID获取机构及下级机构列表.
      */
-    public List<Map<String, Object>> getOrganizationList(int id) {
+    public List<Map<String, Object>> getOrganizationList(UInteger id) {
         //获取机构列表
         List<Map<String, Object>> orgList = dslContext.select(
                 sysOrganization.ID.as("id"),
@@ -62,8 +63,8 @@ public class SystemQuery {
         //判断机构下是否有子机构
         for (Map<String, Object> map : orgList) {
             //如果有，递归查询子机构，并放入父机构数据中
-            if (hasSubOrg((Integer) map.get("id"))) {
-                List<Map<String, Object>> subOrgList = getOrganizationList((Integer) map.get("id"));
+            if (hasSubOrg((UInteger) map.get("id"))) {
+                List<Map<String, Object>> subOrgList = getOrganizationList((UInteger) map.get("id"));
 
                 map.put("subOrganization", subOrgList);
             }
@@ -74,7 +75,7 @@ public class SystemQuery {
     /**
      * 通过ID判断是否有子机构.
      */
-    public boolean hasSubOrg(int id) {
+    public boolean hasSubOrg(UInteger id) {
         int total = (int) dslContext.select(sysOrganization.ID.count()).from(sysOrganization).where(sysOrganization.PARENT_ID.equal(id)).fetch().getValue(0, 0);
         if (total != 0) {
             return true;
@@ -85,7 +86,7 @@ public class SystemQuery {
     /**
      * 获取机构详情.
      */
-    public Map<String, Object> getOrganization(int id) {
+    public Map<String, Object> getOrganization(UInteger id) {
         resultMap = dslContext.select(sysOrganization.ID.as("id"),
                 sysOrganization.ORG_CODE.as("code"),
                 sysOrganization.ORG_NAME.as("name"),
@@ -115,7 +116,7 @@ public class SystemQuery {
                         sysUser.REMARK.as("remark"),
                         sysUser.FLAG.as("flag"))
                         .from(sysUser)
-                        .where(sysUser.ORGANIZATION_ID.equal(user.getOrganizationId()),
+                        .where(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(user.getOrganizationId())),
                                 sysUser.REAL_NAME.like("%" + user.getName() + "%"),
                                 sysUser.WORKERS.like("%" + user.getWorkers() + "%"),
                                 sysUser.USERNAME.like("%" + user.getUsername() + "%"),
@@ -137,7 +138,7 @@ public class SystemQuery {
      */
     public int getUserListTotalByOrg(User user) {
         return (int) dslContext.select(sysUser.ID.count()).from(sysUser)
-                .where(sysUser.ORGANIZATION_ID.equal(user.getOrganizationId()),
+                .where(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(user.getOrganizationId())),
                         sysUser.REAL_NAME.like("%" + user.getName() + "%"),
                         sysUser.WORKERS.like("%" + user.getWorkers() + "%"),
                         sysUser.USERNAME.like("%" + user.getUsername() + "%"),
@@ -197,7 +198,7 @@ public class SystemQuery {
     /**
      * 获取用户详情.
      */
-    public Map<String, Object> getUser(int id) {
+    public Map<String, Object> getUser(UInteger id) {
         resultMap = dslContext.select(sysUser.ID.as("id"),
                 sysUser.REAL_NAME.as("name"),
                 sysUser.WORKERS.as("workers"),
@@ -214,7 +215,7 @@ public class SystemQuery {
     /**
      * 通过ID获取全宗及下级全宗列表.
      */
-    public Map<String, Object> getFondsListMap(int id) {
+    public Map<String, Object> getFondsListMap(UInteger id) {
         resultMap.put("items", getFondsList(id));
         return resultMap;
     }
@@ -222,7 +223,7 @@ public class SystemQuery {
     /**
      * 通过ID获取全宗及下级全宗列表.
      */
-    public List<Map<String, Object>> getFondsList(int id) {
+    public List<Map<String, Object>> getFondsList(UInteger id) {
         //获取机构列表
         List<Map<String, Object>> fondsList = dslContext.select(
                 sysFonds.ID.as("id"),
@@ -235,21 +236,34 @@ public class SystemQuery {
                 .where(sysFonds.PARENT_ID.equal(id))
                 .orderBy(sysFonds.ORDER_NUMBER, sysFonds.FONDS_TYPE)
                 .fetch().intoMaps();
-        //判断机构下是否有子机构
+        //判断机构下是否有子全宗
         for (Map<String, Object> map : fondsList) {
-            //如果有，递归查询子机构，并放入父机构数据中
-            if (hasSubOrg((Integer) map.get("id"))) {
-                List<Map<String, Object>> subFondsList = getOrganizationList((Integer) map.get("id"));
 
-                map.put("subFONDS", subFondsList);
+            //如果有，递归查询子全宗，并放入父全宗数据中
+            if (hasSubFonds((UInteger) map.get("id"))) {
+                List<Map<String, Object>> subFondsList = getFondsList((UInteger) map.get("id"));
+
+                map.put("subFonds", subFondsList);
             }
         }
         return fondsList;
     }
+
+    /**
+     * 通过ID判断是否有子全宗.
+     */
+    public boolean hasSubFonds(UInteger id) {
+        int total = (int) dslContext.select(sysFonds.ID.count()).from(sysFonds).where(sysFonds.PARENT_ID.equal(id)).fetch().getValue(0, 0);
+        if (total != 0) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * 获取全宗详情.
      */
-    public Map<String,Object> getFonds(int id) {
+    public Map<String, Object> getFonds(UInteger id) {
         resultMap = dslContext.select(sysFonds.ID.as("id"),
                 sysFonds.FONDS_NAME.as("name"),
                 sysFonds.FONDS_CODE.as("workers"),

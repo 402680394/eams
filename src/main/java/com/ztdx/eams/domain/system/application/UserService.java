@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 
@@ -99,6 +102,8 @@ public class UserService {
         }
         //设置初始密码
         user.setPassword(initPassword);
+        //设置创建时间
+        user.setGmtCreate(Calendar.getInstance().getTime());
         userRepository.save(user);
     }
 

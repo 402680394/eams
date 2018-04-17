@@ -6,6 +6,7 @@ import javax.persistence.*;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
+import java.util.Date;
 
 /**
  * Created by li on 2018/3/22.
@@ -69,4 +70,12 @@ public class User {
     @Max(value = 10)
     @Column(name = "flag")
     private int flag;
+
+    //创建时间
+    @Column(name = "gmt_create")
+    private Date gmtCreate;
+
+    //修改时间
+    @Column(name = "gmt_modified")
+    private Date gmtModified;
 }

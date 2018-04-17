@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -31,12 +32,20 @@ public class OganizationService {
      */
     @Transactional
     public void save(Oganization oganization) {
-
-        //信息合法验证
+        int i = oganizationRepository.countByCode(oganization.getCode());
+        if (i != 0) {
+            throw new InvalidArgumentException("机构编码已存在");
+        }
+        //机构结构验证
         validate(oganization);
         //设置同级机构优先级
-        int orderNumber = oganizationRepository.findMaxOrderNumber(oganization.getParentId(), oganization.getType());
-        oganization.setOrderNumber(orderNumber + 1);
+        Integer orderNumber = oganizationRepository.findMaxOrderNumber(oganization.getParentId(), oganization.getType());
+        if (orderNumber!=null){
+            oganization.setOrderNumber(orderNumber + 1);
+        }
+        oganization.setOrderNumber(1);
+        //设置创建时间
+        oganization.setGmtCreate(Calendar.getInstance().getTime());
         //存储数据
         oganizationRepository.save(oganization);
     }
@@ -67,11 +76,17 @@ public class OganizationService {
      */
     @Transactional
     public void update(Oganization oganization) {
-        //信息合法验证
+        Oganization o = oganizationRepository.findByCodeAndId(oganization.getCode(), oganization.getId());
+        if (o == null) {
+            int i = oganizationRepository.countByCode(oganization.getCode());
+            if (i != 0) {
+                throw new InvalidArgumentException("机构编码已存在");
+            }
+        }
+        //机构结构验证
         validate(oganization);
         //修改数据
-        oganizationRepository.updateById(oganization.getId(), oganization.getParentId(), oganization.getCode(),
-                oganization.getName(), oganization.getDescribe(), oganization.getRemark(), oganization.getType());
+        oganizationRepository.updateById(oganization);
     }
 
     /**
@@ -90,13 +105,9 @@ public class OganizationService {
     }
 
     /**
-     * 新增/修改机构验证
+     * 新增/修改机构结构验证
      */
     public void validate(Oganization oganization) {
-        int i = oganizationRepository.countByCode(oganization.getCode());
-        if (i != 0) {
-            throw new InvalidArgumentException("机构编码已存在");
-        }
         //确认上下级结构
         if (oganization.getParentId() == 0) {
             if (oganization.getType() != 1) {

@@ -3,6 +3,7 @@ package com.ztdx.eams.controller;
 import com.ztdx.eams.domain.system.application.OganizationService;
 import com.ztdx.eams.domain.system.model.Oganization;
 import com.ztdx.eams.query.SystemQuery;
+import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,7 +44,7 @@ public class OganizationController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list() {
-        return systemQuery.getOrganizationListMap(0);
+        return systemQuery.getOrganizationListMap(UInteger.valueOf(0));
     }
 
     /**
@@ -111,7 +112,7 @@ public class OganizationController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return systemQuery.getOrganization(id);
+        return systemQuery.getOrganization(UInteger.valueOf(id));
     }
 
     /**

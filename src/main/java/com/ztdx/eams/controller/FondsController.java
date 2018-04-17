@@ -3,6 +3,7 @@ package com.ztdx.eams.controller;
 import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.query.SystemQuery;
+import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,7 +44,7 @@ public class FondsController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list() {
-        return systemQuery.getFondsListMap(0);
+        return systemQuery.getFondsListMap(UInteger.valueOf(0));
     }
 
     /**
@@ -54,7 +55,7 @@ public class FondsController {
      * @apiParam {String} code 全宗号
      * @apiParam {String} name 全宗名称
      * @apiParam {String} remark 备注（未输入传""值）
-     * @apiParam {String} type 全宗类型
+     * @apiParam {int} type 全宗类型
      * @apiError (Error 400) message 全宗号已存在.
      * @apiUse ErrorExample
      */
@@ -107,7 +108,7 @@ public class FondsController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return systemQuery.getFonds(id);
+        return systemQuery.getFonds(UInteger.valueOf(id));
     }
 
     /**

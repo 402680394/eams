@@ -5,6 +5,7 @@ import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.system.application.UserService;
 import com.ztdx.eams.domain.system.model.User;
 import com.ztdx.eams.query.SystemQuery;
+import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -78,8 +79,8 @@ public class UserController {
     }
 
     /**
-     * @api {patch} /user/listPassReset 批量重置用户密码
-     * @apiName listPassReset
+     * @api {patch} /user/listReset 批量重置用户密码
+     * @apiName listReset
      * @apiGroup user
      * @apiParam {int} id 用户ID
      * @apiParamExample {json} Request-Example:
@@ -200,7 +201,7 @@ public class UserController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return systemQuery.getUser(id);
+        return systemQuery.getUser(UInteger.valueOf(id));
     }
 
 }
