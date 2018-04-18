@@ -21,8 +21,10 @@ import java.util.List;
 @Table(name = "sys_fonds")
 @Qualifier("fondsRepository")
 public interface FondsRepository extends JpaRepository<Fonds, Integer> {
-
-    int countByCode(@Size(max = 20) String code);
+    //查询是code否存在
+    boolean existsByCode(String code);
+    //查询是ID否存在
+    boolean existsById(int id);
 
     //查询同级全宗优先级最大值
     @Query("select max (f.orderNumber) from Fonds f where f.parentId=:parentId and f.type=:type")

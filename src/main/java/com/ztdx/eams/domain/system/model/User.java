@@ -67,7 +67,7 @@ public class User {
 
     //状态
     @Min(value = 0)
-    @Max(value = 10)
+    @Max(value = 1)
     @Column(name = "flag")
     private int flag;
 

@@ -22,9 +22,19 @@ public interface UserRepository
     User findByUsername(String username);
 
     /**
-     * 通过所属机构id查询第一个user
+     * 通过用户名查询user是否存在
      */
-    User findFirstByOrganizationId(int id);
+    boolean existsByUsername(String username);
+
+    /**
+     * 通过Id查询user是否存在
+     */
+    boolean existsById(int id);
+
+    /**
+     * 通过所属机构id查询是否存在用户
+     */
+    boolean existsByOrganizationId(int id);
 
     /**
      * 通过id修改密码
@@ -50,5 +60,5 @@ public interface UserRepository
     /**
      * 通过用户名查询总数
      */
-    User findByUsernameAndId(String username, int id);
+    boolean existsByUsernameAndId(String username, int id);
 }

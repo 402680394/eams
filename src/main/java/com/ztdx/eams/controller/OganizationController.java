@@ -89,7 +89,7 @@ public class OganizationController {
      * @apiParam {String} depict 机构描述（未输入传""值）
      * @apiParam {String} remark 备注（未输入传""值）
      * @apiParam {int} type 机构类型（可选值：1-公司；2-部门；3-科室）
-     * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室.
+     * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室 4.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.PUT)
@@ -121,7 +121,7 @@ public class OganizationController {
      * @apiGroup oganization
      * @apiParam {int} upId 上移机构ID（url占位符）
      * @apiParam {int} downId 下移机构ID（url占位符）
-     * @apiError (Error 400) message 机构类型或上级机构不一致.
+     * @apiError (Error 400) message 1.机构类型或上级机构不一致 2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)

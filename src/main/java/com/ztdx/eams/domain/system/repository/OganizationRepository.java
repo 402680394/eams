@@ -21,10 +21,13 @@ import java.util.List;
 public interface OganizationRepository extends JpaRepository<Oganization, Integer> {
 
     //查询机构编码是否存在
-    int countByCode(String code);
+    boolean existsByCode(String code);
 
     //通过ID查询机构
     Oganization findById(int id);
+
+    //通过ID查询机构是否存在
+    boolean existsById(int id);
 
     // 通过父机构ID查询子机构
     List<Oganization> findAllByParentId(int id);
@@ -43,5 +46,5 @@ public interface OganizationRepository extends JpaRepository<Oganization, Intege
     @Query("update Oganization o set o.orderNumber=:orderNumber where o.id=:id")
     void updateOrderNumberById(@Param(value = "id") int id, @Param(value = "orderNumber") int orderNumber);
 
-    Oganization findByCodeAndId(String code, int id);
+    boolean existsByCodeAndId(String code, int id);
 }

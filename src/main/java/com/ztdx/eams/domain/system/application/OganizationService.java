@@ -32,18 +32,18 @@ public class OganizationService {
      */
     @Transactional
     public void save(Oganization oganization) {
-        int i = oganizationRepository.countByCode(oganization.getCode());
-        if (i != 0) {
+        if (oganizationRepository.existsByCode(oganization.getCode())) {
             throw new InvalidArgumentException("机构编码已存在");
         }
         //机构结构验证
         validate(oganization);
         //设置同级机构优先级
         Integer orderNumber = oganizationRepository.findMaxOrderNumber(oganization.getParentId(), oganization.getType());
-        if (orderNumber!=null){
+        if (orderNumber != null) {
             oganization.setOrderNumber(orderNumber + 1);
+        } else {
+            oganization.setOrderNumber(1);
         }
-        oganization.setOrderNumber(1);
         //设置创建时间
         oganization.setGmtCreate(Calendar.getInstance().getTime());
         //存储数据
@@ -55,20 +55,21 @@ public class OganizationService {
      */
     @Transactional
     public void delete(int id) {
-        //机构下是否存在用户
-        User user = userRepository.findFirstByOrganizationId(id);
-        if (null != user) {
-            throw new InvalidArgumentException("该机构或子机构下存在用户");
-        }
-        //删除子机构
-        List<Oganization> list = oganizationRepository.findAllByParentId(id);
-        if (!list.isEmpty()) {
-            for (Oganization o : list) {
-                delete(o.getId());
+        if (oganizationRepository.existsById(id)) {
+            //机构下是否存在用户
+            if (userRepository.existsByOrganizationId(id)) {
+                throw new InvalidArgumentException("该机构或子机构下存在用户");
             }
+            //删除子机构
+            List<Oganization> list = oganizationRepository.findAllByParentId(id);
+            if (!list.isEmpty()) {
+                for (Oganization o : list) {
+                    delete(o.getId());
+                }
+            }
+            //删除本机构
+            oganizationRepository.deleteById(id);
         }
-        //删除本机构
-        oganizationRepository.deleteById(id);
     }
 
     /**
@@ -76,10 +77,8 @@ public class OganizationService {
      */
     @Transactional
     public void update(Oganization oganization) {
-        Oganization o = oganizationRepository.findByCodeAndId(oganization.getCode(), oganization.getId());
-        if (o == null) {
-            int i = oganizationRepository.countByCode(oganization.getCode());
-            if (i != 0) {
+        if (!oganizationRepository.existsByCodeAndId(oganization.getCode(), oganization.getId())) {
+            if (oganizationRepository.existsByCode(oganization.getCode())) {
                 throw new InvalidArgumentException("机构编码已存在");
             }
         }
@@ -94,14 +93,17 @@ public class OganizationService {
      */
     @Transactional
     public void priority(int upId, int downId) {
-        Oganization up=oganizationRepository.findById(upId);
-        Oganization down=oganizationRepository.findById(downId);
+        Oganization up = oganizationRepository.findById(upId);
+        Oganization down = oganizationRepository.findById(downId);
+        if(up==null||down==null){
+            throw new InvalidArgumentException("机构不存在或已被删除");
+        }
 
-        if(up.getParentId()!=down.getParentId()&&up.getType()!=down.getType()){
+        if (up.getParentId() != down.getParentId() && up.getType() != down.getType()) {
             throw new InvalidArgumentException("机构类型或上级机构不一致");
         }
-        oganizationRepository.updateOrderNumberById(upId,down.getOrderNumber());
-        oganizationRepository.updateOrderNumberById(downId,up.getOrderNumber());
+        oganizationRepository.updateOrderNumberById(upId, down.getOrderNumber());
+        oganizationRepository.updateOrderNumberById(downId, up.getOrderNumber());
     }
 
     /**

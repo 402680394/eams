@@ -29,8 +29,7 @@ public class FondsService {
     @Transactional
     public void save(Fonds fonds) {
 
-        int i = fondsRepository.countByCode(fonds.getCode());
-        if (i != 0) {
+        if (fondsRepository.existsByCode(fonds.getCode())) {
             throw new InvalidArgumentException("全宗号已存在");
         }
 
@@ -38,8 +37,9 @@ public class FondsService {
         Integer orderNumber = fondsRepository.findMaxOrderNumber(fonds.getParentId(), fonds.getType());
         if (orderNumber!=null){
             fonds.setOrderNumber(orderNumber + 1);
+        }else{
+            fonds.setOrderNumber(1);
         }
-        fonds.setOrderNumber(1);
         //设置创建时间
         fonds.setGmtCreate(Calendar.getInstance().getTime());
         //存储数据
@@ -51,16 +51,17 @@ public class FondsService {
      */
     @Transactional
     public void delete(int id) {
-
-        //删除子全宗
-        List<Fonds> list = fondsRepository.findAllByParentId(id);
-        if (!list.isEmpty()) {
-            for (Fonds f : list) {
-                delete(f.getId());
+        if(fondsRepository.existsById(id)){
+            //删除子全宗
+            List<Fonds> list = fondsRepository.findAllByParentId(id);
+            if (!list.isEmpty()) {
+                for (Fonds f : list) {
+                    delete(f.getId());
+                }
             }
+            //删除本全宗
+            fondsRepository.deleteById(id);
         }
-        //删除本全宗
-        fondsRepository.deleteById(id);
     }
 
     /**
@@ -69,8 +70,7 @@ public class FondsService {
     @Transactional
     public void update(Fonds fonds) {
 
-        int i = fondsRepository.countByCode(fonds.getCode());
-        if (i != 0) {
+        if (fondsRepository.existsByCode(fonds.getCode())) {
             throw new InvalidArgumentException("全宗号已存在");
         }
         //修改数据

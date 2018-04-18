@@ -55,7 +55,9 @@ public class UserService {
      */
     @Transactional
     public void delete(int id) {
-        userRepository.deleteById(id);
+        if (userRepository.existsById(id)){
+            userRepository.deleteById(id);
+        }
     }
 
     /**
@@ -64,7 +66,9 @@ public class UserService {
     @Transactional
     public void listDelete(List<Integer> list) {
         for (int id : list) {
-            userRepository.deleteById(id);
+            if (userRepository.existsById(id)){
+                userRepository.deleteById(id);
+            }
         }
     }
 
@@ -74,7 +78,9 @@ public class UserService {
     @Transactional
     public void listPassReset(List<Integer> list) {
         for (int id : list) {
-            userRepository.updatePwdById(id, initPassword);
+            if (userRepository.existsById(id)){
+                userRepository.updatePwdById(id, initPassword);
+            }
         }
     }
 
@@ -83,7 +89,9 @@ public class UserService {
      */
     @Transactional
     public void changeFlag(int id, int flag) {
-        userRepository.updateFlagById(id, flag);
+        if (userRepository.existsById(id)){
+            userRepository.updateFlagById(id, flag);
+        }
     }
 
     /**
@@ -92,12 +100,10 @@ public class UserService {
     @Transactional
     public void save(User user) {
         //验证
-        User u = userRepository.findByUsername(user.getUsername());
-        if (u != null) {
+        if (userRepository.existsByUsername(user.getUsername())) {
             throw new InvalidArgumentException("用户名已存在");
         }
-        Oganization o = oganizationRepository.findById(user.getOrganizationId());
-        if (o == null) {
+        if (!oganizationRepository.existsById(user.getOrganizationId())) {
             throw new InvalidArgumentException("机构不存在或已被删除");
         }
         //设置初始密码
@@ -113,15 +119,12 @@ public class UserService {
     @Transactional
     public void update(User user) {
         //验证用户名
-        User u = userRepository.findByUsernameAndId(user.getUsername(), user.getId());
-        if (u == null) {
-            u = userRepository.findByUsername(user.getUsername());
-            if (u != null) {
+        if (!userRepository.existsByUsernameAndId(user.getUsername(), user.getId())) {
+            if (userRepository.existsByUsername(user.getUsername())) {
                 throw new InvalidArgumentException("用户名已存在");
             }
         }
-        Oganization o = oganizationRepository.findById(user.getOrganizationId());
-        if (o == null) {
+        if (!oganizationRepository.existsById(user.getOrganizationId())) {
             throw new InvalidArgumentException("机构不存在或已被删除");
         }
         //修改信息
