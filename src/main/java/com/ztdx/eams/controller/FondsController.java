@@ -44,7 +44,7 @@ public class FondsController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list() {
-        return systemQuery.getFondsListMap(UInteger.valueOf(0));
+        return systemQuery.getAllFondsTreeMap();
     }
 
     /**

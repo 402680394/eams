@@ -9,6 +9,7 @@ import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,19 +37,26 @@ public class BusinessQuery {
     }
 
     /**
-     * 通过ID获取档案分类及下级档案分类列表.
+     * 获取全宗下全部档案分类树形列表.
      */
-    public Map<String, Object> getClassificationListMap(UInteger id) {
-        resultMap.put("items", getClassificationList(id));
+    public Map<String, Object> getAllClassificationTreeMap(UInteger fondsId) {
+        //伪造根档案分类，便于递归查询子档案分类
+        resultMap.put("id", UInteger.valueOf(0));
+        //查询
+        resultMap = getSubClassificationTreeMap(getAllClassificationList(fondsId), resultMap);
+        //拼装返回数据信息
+        resultMap.put("items", resultMap.get("subClassification"));
+        //去除根档案分类数据
+        resultMap.remove("id");
+        resultMap.remove("subClassification");
         return resultMap;
     }
 
     /**
-     * 通过ID获取档案分类及下级档案分类列表.
+     * 获取全宗下全部档案分类.
      */
-    public List<Map<String, Object>> getClassificationList(UInteger id) {
-        //获取档案分类列表
-        List<Map<String, Object>> classificationList = dslContext.select(
+    public List<Map<String, Object>> getAllClassificationList(UInteger fondsId) {
+        List<Map<String, Object>> dataList = dslContext.select(
                 businessClassification.ID.as("id"),
                 businessClassification.CLASSIFICATION_CODE.as("code"),
                 businessClassification.CLASSIFICATION_NAME.as("name"),
@@ -57,30 +65,43 @@ public class BusinessQuery {
                 businessClassification.PARENT_ID.as("parentId"),
                 businessClassification.ORDER_NUMBER.as("orderNumber"))
                 .from(businessClassification)
-                .where(businessClassification.PARENT_ID.equal(id))
+                .where(businessClassification.FONDS_ID.equal(fondsId))
                 .orderBy(businessClassification.ORDER_NUMBER)
                 .fetch().intoMaps();
-        //判断档案分类下是否有子档案分类
-        for (Map<String, Object> map : classificationList) {
-            //如果有，递归查询子档案分类，并放入父档案分类数据中
-            if (hasSub((UInteger) map.get("id"))) {
-                List<Map<String, Object>> subClassificationList = getClassificationList((UInteger) map.get("id"));
-
-                map.put("subClassification", subClassificationList);
-            }
-        }
-        return classificationList;
+        return dataList;
     }
 
     /**
-     * 通过ID判断是否有子档案分类.
+     * 递归获取档案分类下的子档案分类列表.
      */
-    public boolean hasSub(UInteger id) {
-        int total = (int) dslContext.select(businessClassification.ID.count()).from(businessClassification).where(businessClassification.PARENT_ID.equal(id)).fetch().getValue(0, 0);
-        if (total != 0) {
-            return true;
+    public Map<String, Object> getSubClassificationTreeMap(List<Map<String, Object>> dataList, Map<String, Object> classificationMap) {
+        //创建一个空的子档案分类列表
+        List<Map<String, Object>> subClassificationList = new ArrayList<Map<String, Object>>();
+        //遍历档案分类数据，若档案分类有子档案分类，将添加子档案分类后的子档案分类加入子档案分类列表
+        for (Map<String, Object> map : dataList) {
+            if (map.get("parentId").equals(classificationMap.get("id"))) {
+                //递归添加子档案分类的子档案分类
+                map = getSubClassificationTreeMap(dataList, map);
+                //将添加子档案分类后的子档案分类放入子档案分类列表
+                subClassificationList.add(map);
+            }
         }
-        return false;
+        //将子档案分类列表加入档案分类信息
+        classificationMap.put("subClassification", subClassificationList);
+        return classificationMap;
     }
 
+    /**
+     * 获取档案分类详情.
+     */
+    public Map<String, Object> getClassification(UInteger id) {
+        resultMap = dslContext.select(businessClassification.ID.as("id"),
+                businessClassification.CLASSIFICATION_CODE.as("code"),
+                businessClassification.CLASSIFICATION_NAME.as("name"),
+                businessClassification.REMARK.as("remark"),
+                businessClassification.RETENTION_PERIOD.as("retentionPeriod"),
+                businessClassification.PARENT_ID.as("parentId"))
+                .from(businessClassification).where(businessClassification.ID.equal(id)).fetch().intoMaps().get(0);
+        return resultMap;
+    }
 }

@@ -10,6 +10,7 @@ import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,19 +38,26 @@ public class SystemQuery {
     }
 
     /**
-     * 通过ID获取机构及下级机构列表.
+     * 获取全部机构树形列表.
      */
-    public Map<String, Object> getOrganizationListMap(UInteger id) {
-        resultMap.put("items", getOrganizationList(id));
+    public Map<String, Object> getAllOrganizationTreeMap() {
+        //伪造根机构，便于递归查询子机构
+        resultMap.put("id", UInteger.valueOf(0));
+        //查询
+        resultMap = getSubOrganizationTreeMap(getAllOrganizationList(), resultMap);
+        //拼装返回数据信息
+        resultMap.put("items", resultMap.get("subOrg"));
+        //去除根机构数据
+        resultMap.remove("id");
+        resultMap.remove("subOrg");
         return resultMap;
     }
 
     /**
-     * 通过ID获取机构及下级机构列表.
+     * 获取全部机构.
      */
-    public List<Map<String, Object>> getOrganizationList(UInteger id) {
-        //获取机构列表
-        List<Map<String, Object>> orgList = dslContext.select(
+    public List<Map<String, Object>> getAllOrganizationList() {
+        List<Map<String, Object>> dataList = dslContext.select(
                 sysOrganization.ID.as("id"),
                 sysOrganization.ORG_CODE.as("code"),
                 sysOrganization.ORG_NAME.as("name"),
@@ -57,30 +65,30 @@ public class SystemQuery {
                 sysOrganization.ORDER_NUMBER.as("orderNumber"),
                 sysOrganization.ORG_TYPE.as("type"))
                 .from(sysOrganization)
-                .where(sysOrganization.PARENT_ID.equal(id))
-                .orderBy(sysOrganization.ORDER_NUMBER, sysOrganization.ORG_TYPE)
+                .orderBy(sysOrganization.ORG_TYPE,sysOrganization.ORDER_NUMBER)
                 .fetch().intoMaps();
-        //判断机构下是否有子机构
-        for (Map<String, Object> map : orgList) {
-            //如果有，递归查询子机构，并放入父机构数据中
-            if (hasSubOrg((UInteger) map.get("id"))) {
-                List<Map<String, Object>> subOrgList = getOrganizationList((UInteger) map.get("id"));
 
-                map.put("subOrganization", subOrgList);
-            }
-        }
-        return orgList;
+        return dataList;
     }
 
     /**
-     * 通过ID判断是否有子机构.
+     * 递归获取机构下的子机构列表.
      */
-    public boolean hasSubOrg(UInteger id) {
-        int total = (int) dslContext.select(sysOrganization.ID.count()).from(sysOrganization).where(sysOrganization.PARENT_ID.equal(id)).fetch().getValue(0, 0);
-        if (total != 0) {
-            return true;
+    public Map<String, Object> getSubOrganizationTreeMap(List<Map<String, Object>> dataList, Map<String, Object> orgMap) {
+        //创建一个空的子机构列表
+        List<Map<String, Object>> subOrgList = new ArrayList<Map<String, Object>>();
+        //遍历机构数据，若机构有子机构，将添加子机构后的子机构加入子机构列表
+        for (Map<String, Object> map : dataList) {
+            if (map.get("parentId").equals(orgMap.get("id"))) {
+                //递归添加子机构的子机构
+                map = getSubOrganizationTreeMap(dataList, map);
+                //将添加子机构后的子机构放入子机构列表
+                subOrgList.add(map);
+            }
         }
-        return false;
+        //将子机构列表加入机构信息
+        orgMap.put("subOrg", subOrgList);
+        return orgMap;
     }
 
     /**
@@ -175,7 +183,7 @@ public class SystemQuery {
                         .limit(index, 10)
                         .fetch().intoMaps();
 
-        int total = getUserListTotalByOrg(user);
+        int total = getUserListTotal(user);
 
         resultMap.put("items", list);
         resultMap.put("total", total);
@@ -213,19 +221,26 @@ public class SystemQuery {
     }
 
     /**
-     * 通过ID获取全宗及下级全宗列表.
+     * 获取全部全宗树形列表.
      */
-    public Map<String, Object> getFondsListMap(UInteger id) {
-        resultMap.put("items", getFondsList(id));
+    public Map<String, Object> getAllFondsTreeMap() {
+        //伪造根全宗，便于递归查询子全宗
+        resultMap.put("id", UInteger.valueOf(0));
+        //查询
+        resultMap = getSubFondsTreeMap(getAllFondsList(), resultMap);
+        //拼装返回数据信息
+        resultMap.put("items", resultMap.get("subFonds"));
+        //去除根全宗数据
+        resultMap.remove("id");
+        resultMap.remove("subFonds");
         return resultMap;
     }
 
     /**
-     * 通过ID获取全宗及下级全宗列表.
+     * 获取全部全宗.
      */
-    public List<Map<String, Object>> getFondsList(UInteger id) {
-        //获取机构列表
-        List<Map<String, Object>> fondsList = dslContext.select(
+    public List<Map<String, Object>> getAllFondsList() {
+        List<Map<String, Object>> dataList = dslContext.select(
                 sysFonds.ID.as("id"),
                 sysFonds.FONDS_CODE.as("code"),
                 sysFonds.FONDS_NAME.as("name"),
@@ -233,31 +248,29 @@ public class SystemQuery {
                 sysFonds.ORDER_NUMBER.as("orderNumber"),
                 sysFonds.FONDS_TYPE.as("type"))
                 .from(sysFonds)
-                .where(sysFonds.PARENT_ID.equal(id))
-                .orderBy(sysFonds.ORDER_NUMBER, sysFonds.FONDS_TYPE)
+                .orderBy(sysFonds.FONDS_TYPE,sysFonds.ORDER_NUMBER)
                 .fetch().intoMaps();
-        //判断机构下是否有子全宗
-        for (Map<String, Object> map : fondsList) {
-
-            //如果有，递归查询子全宗，并放入父全宗数据中
-            if (hasSubFonds((UInteger) map.get("id"))) {
-                List<Map<String, Object>> subFondsList = getFondsList((UInteger) map.get("id"));
-
-                map.put("subFonds", subFondsList);
-            }
-        }
-        return fondsList;
+        return dataList;
     }
 
     /**
-     * 通过ID判断是否有子全宗.
+     * 递归获取机构下的子全宗列表.
      */
-    public boolean hasSubFonds(UInteger id) {
-        int total = (int) dslContext.select(sysFonds.ID.count()).from(sysFonds).where(sysFonds.PARENT_ID.equal(id)).fetch().getValue(0, 0);
-        if (total != 0) {
-            return true;
+    public Map<String, Object> getSubFondsTreeMap(List<Map<String, Object>> dataList, Map<String, Object> fondsMap) {
+        //创建一个空的子全宗列表
+        List<Map<String, Object>> subFondsList = new ArrayList<Map<String, Object>>();
+        //遍历全宗数据，若全宗有子全宗，将添加子全宗后的子全宗加入子全宗列表
+        for (Map<String, Object> map : dataList) {
+            if (map.get("parentId").equals(fondsMap.get("id"))) {
+                //递归添加子全宗的子全宗
+                map = getSubFondsTreeMap(dataList, map);
+                //将添加子全宗后的子全宗放入子全宗列表
+                subFondsList.add(map);
+            }
         }
-        return false;
+        //将子全宗列表加入全宗信息
+        fondsMap.put("subFonds", subFondsList);
+        return fondsMap;
     }
 
     /**

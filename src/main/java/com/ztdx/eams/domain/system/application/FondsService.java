@@ -86,8 +86,8 @@ public class FondsService {
         Fonds up=fondsRepository.findById(upId);
         Fonds down=fondsRepository.findById(downId);
 
-        if(up.getParentId()!=down.getParentId()){
-            throw new InvalidArgumentException("上级全宗不一致");
+        if(up.getParentId()!=down.getParentId()&& up.getType() != down.getType()){
+            throw new InvalidArgumentException("全宗类型或上级全宗不一致");
         }
         fondsRepository.updateOrderNumberById(upId,down.getOrderNumber());
         fondsRepository.updateOrderNumberById(downId,up.getOrderNumber());

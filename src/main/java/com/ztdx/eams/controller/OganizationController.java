@@ -44,7 +44,7 @@ public class OganizationController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list() {
-        return systemQuery.getOrganizationListMap(UInteger.valueOf(0));
+        return systemQuery.getAllOrganizationTreeMap();
     }
 
     /**

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,15 +44,19 @@ public class UserController {
      * @apiGroup user
      * @apiParam {String} username 用户名
      * @apiParam {String} password 密码
+     * @apiSuccess (Success 200) {int} id 用户ID.
      * @apiError (Error 401) message 1-用户不存在; 2-密码错误; 3-该用户已被禁止使用.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public void login(@JsonParam String username, @JsonParam String password, HttpSession session) {
+    public Map<String,Object> login(@JsonParam String username, @JsonParam String password, HttpSession session) {
 
         User user = userService.login(username, password);
         UserCredential userCredential = new UserCredential(user.getId());
         session.setAttribute("LOGIN_USER", userCredential);
+        HashMap resultMap=new HashMap();
+        resultMap.put("id",user.getId());
+        return resultMap;
     }
 
     /**

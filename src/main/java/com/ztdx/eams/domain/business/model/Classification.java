@@ -3,6 +3,7 @@ package com.ztdx.eams.domain.business.model;
 import lombok.Data;
 
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 import java.util.Date;
 
@@ -37,6 +38,11 @@ public class Classification {
     //上级分类id
     @Column(name = "parent_id")
     private int parentId;
+
+    //同级排序优先级
+    @Min(value = 1)
+    @Column(name = "order_number")
+    private int orderNumber;
 
     //所属全宗id
     @Column(name = "fonds_id")
