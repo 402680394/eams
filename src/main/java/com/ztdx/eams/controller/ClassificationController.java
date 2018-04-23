@@ -27,10 +27,10 @@ public class ClassificationController {
     }
 
     /**
-     * @api {get} /classification/{fondsId}/list 获取全宗下档案分类列表
+     * @api {get} /classification/list 获取全宗下档案分类列表
      * @apiName list
      * @apiGroup classification
-     * @apiParam {int} fondsId 所属全宗ID(全局ID值为0)
+     * @apiParam {int} fondsId 所属全宗ID(全局为0)(url参数)
      * @apiSuccess (Success 200) {int} id 档案分类ID.
      * @apiSuccess (Success 200) {String} code 档案分类编码.
      * @apiSuccess (Success 200) {String} name 档案分类名称.
@@ -40,13 +40,13 @@ public class ClassificationController {
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccess (Success 200) {arr} subClassification 子档案分类信息
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"items": [{"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类0","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"},
+     * {"data": {"items": [{"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类0","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","subClassification": []},
      * {"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","subClassification": [
-     * {"id": 档案分类ID,"code": "档案分类编码","name": "子档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"}]}]}}.
+     * {"id": 档案分类ID,"code": "档案分类编码","name": "子档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","subClassification": []}]}]}}.
      */
-    @RequestMapping(value = "/{fondsId}/list", method = RequestMethod.GET)
-    public Map<String, Object> list(@PathVariable("fondsId") int fondsId) {
-        return businessQuery.getAllClassificationTreeMap(UInteger.valueOf(fondsId));
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public Map<String, Object> list(@RequestParam("fondsId") int fondsId) {
+        return businessQuery.getClassificationTreeMap(UInteger.valueOf(fondsId));
     }
 
     /**

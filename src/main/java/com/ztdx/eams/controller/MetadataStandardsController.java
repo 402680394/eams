@@ -1,0 +1,137 @@
+package com.ztdx.eams.controller;
+
+import com.ztdx.eams.domain.business.application.MetadataStandardsService;
+import com.ztdx.eams.domain.business.model.MetadataStandards;
+import com.ztdx.eams.query.BusinessQuery;
+import org.jooq.types.UInteger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+/**
+ * Created by li on 2018/4/22.
+ */
+@RestController
+@RequestMapping(value = "/metadataStandards")
+public class MetadataStandardsController {
+
+    private final MetadataStandardsService metadataStandardsService;
+
+    private final BusinessQuery businessQuery;
+    @Autowired
+    public MetadataStandardsController(MetadataStandardsService metadataStandardsService, BusinessQuery businessQuery) {
+        this.metadataStandardsService = metadataStandardsService;
+        this.businessQuery = businessQuery;
+    }
+
+    /**
+     * @api {get} /metadataStandards/list 获取元数据规范列表
+     * @apiName list
+     * @apiGroup metadataStandards
+     * @apiParam {String} name 名称(未输入传""值)(url参数)
+     * @apiSuccess (Success 200) {int} id ID.
+     * @apiSuccess (Success 200) {String} code 编号.
+     * @apiSuccess (Success 200) {String} name 名称.
+     * @apiSuccess (Success 200) {int} characterSet 字符集.
+     * @apiSuccess (Success 200) {String} releaseOrganization 发布机构.
+     * @apiSuccess (Success 200) {String} descriptionFile 描述文件.
+     * @apiSuccess (Success 200) {String} edition 版本.
+     * @apiSuccess (Success 200) {int} orderNumber 排序号.
+     * @apiSuccess (Success 200) {int} flag 是否启用.
+     * @apiSuccess (Success 200) {String} remark 备注.
+     * @apiSuccessExample {json} Success-Response:
+     * {"data": {"items": [{"id": ID,"code": "编号","name": "名称","characterSet": 字符集,"releaseOrganization": "发布机构","descriptionFile": "描述文件","edition": "版本","orderNumber": 排序号,"flag": 是否启用,"remark": "备注"}]}}.
+     */
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public Map<String, Object> list(@RequestParam(value = "name",defaultValue = "") String name) {
+        return businessQuery.getMetadataStandardsList(name);
+    }
+
+    /**
+     * @api {post} /metadataStandards 新增元数据规范
+     * @apiName save
+     * @apiGroup metadataStandards
+     * @apiParam {String} code 编号
+     * @apiParam {String} name 名称
+     * @apiParam {int} characterSet 字符集.
+     * @apiParam {String} releaseOrganization 发布机构（未输入传""值）
+     * @apiParam {String} descriptionFile 描述文件（未输入传""值）
+     * @apiParam {String} edition 版本.
+     * @apiParam {int} flag 是否启用.
+     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiError (Error 400) message 编号已存在.
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "", method = RequestMethod.POST)
+    public void save(@RequestBody MetadataStandards metadataStandards) {
+        metadataStandardsService.save(metadataStandards);
+    }
+
+    /**
+     * @api {delete} /metadataStandards/{id} 删除元数据规范
+     * @apiName delete
+     * @apiGroup metadataStandards
+     * @apiParam {int} id ID（url占位符）
+     */
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    public void delete(@PathVariable("id") int id) {
+        metadataStandardsService.delete(id);
+    }
+
+    /**
+     * @api {put} /metadataStandards 修改元数据规范
+     * @apiName update
+     * @apiGroup metadataStandards
+     * @apiParam {int} id ID
+     * @apiParam {String} code 编号
+     * @apiParam {String} name 名称
+     * @apiParam {int} characterSet 字符集.
+     * @apiParam {String} releaseOrganization 发布机构（未输入传""值）
+     * @apiParam {String} descriptionFile 描述文件（未输入传""值）
+     * @apiParam {String} edition 版本.
+     * @apiParam {int} flag 是否启用.
+     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiError (Error 400) message 编号已存在.
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "", method = RequestMethod.PUT)
+    public void update(@RequestBody MetadataStandards metadataStandards) {
+        metadataStandardsService.update(metadataStandards);
+    }
+
+    /**
+     * @api {get} /metadataStandards/{id} 获取元数据规范详情
+     * @apiName get
+     * @apiGroup metadataStandards
+     * @apiParam int} id 词典ID（url占位符）
+     * @apiSuccess (Success 200) {int} id ID.
+     * @apiSuccess (Success 200) {String} code 编号.
+     * @apiSuccess (Success 200) {String} name 名称.
+     * @apiSuccess (Success 200) {int} characterSet 字符集.
+     * @apiSuccess (Success 200) {String} releaseOrganization 发布机构.
+     * @apiSuccess (Success 200) {String} descriptionFile 描述文件.
+     * @apiSuccess (Success 200) {String} edition 版本.
+     * @apiSuccess (Success 200) {int} orderNumber 排序号.
+     * @apiSuccess (Success 200) {int} flag 是否启用.
+     * @apiSuccess (Success 200) {String} remark 备注.
+     * @apiSuccessExample {json} Success-Response:
+     * {"data":{"id": ID,"code": "编号","name": "名称","characterSet": 字符集,"releaseOrganization": "发布机构","descriptionFile": "描述文件","edition": "版本","orderNumber": 排序号,"flag": 是否启用,"remark": "备注"}}.
+     */
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public Map<String, Object> get(@PathVariable("id") int id) {
+        return businessQuery.getMetadataStandards(UInteger.valueOf(id));
+    }
+
+    /**
+     * @api {patch} /metadataStandards/{upId},{downId}/priority 修改元数据规范排序优先级
+     * @apiName priority
+     * @apiGroup metadataStandards
+     * @apiParam {int} upId 上移词典ID（url占位符）
+     * @apiParam {int} downId 下移词典ID（url占位符）
+     */
+    @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)
+    public void priority(@PathVariable("upId") int upId, @PathVariable("downId") int downId) {
+        metadataStandardsService.priority(upId, downId);
+    }
+}

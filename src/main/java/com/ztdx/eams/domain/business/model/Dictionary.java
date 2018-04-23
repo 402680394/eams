@@ -3,6 +3,7 @@ package com.ztdx.eams.domain.business.model;
 import lombok.Data;
 
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 import java.util.Date;
 
@@ -46,6 +47,11 @@ public class Dictionary {
     @Size(max = 30)
     @Column(name = "business_expansion")
     private String businessExpansion;
+
+    //排序优先级
+    @Min(value = 1)
+    @Column(name = "order_number")
+    private int orderNumber;
 
     //创建时间
     @Column(name = "gmt_create")

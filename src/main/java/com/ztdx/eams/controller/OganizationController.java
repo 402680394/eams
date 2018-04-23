@@ -36,15 +36,15 @@ public class OganizationController {
      * @apiSuccess (Success 200) {int} parentId 上级机构ID.
      * @apiSuccess (Success 200) {int} orderNumber 同级排序编号.
      * @apiSuccess (Success 200) {int} type 机构类型
-     * @apiSuccess (Success 200) {arr} subOrganization 子机构信息
+     * @apiSuccess (Success 200) {arr} subOrg 子机构信息
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"items": [{"id": 机构ID,"code": "机构编码","name": "父机构0","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型},
-     * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrganization": [
-     * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,}]}]}}.
+     * {"data": {"items": [{"id": 机构ID,"code": "机构编码","name": "父机构0","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrg": []},
+     * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrg": [
+     * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrg": []}]}]}}.
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list() {
-        return systemQuery.getAllOrganizationTreeMap();
+        return systemQuery.getOrganizationTreeMap();
     }
 
     /**

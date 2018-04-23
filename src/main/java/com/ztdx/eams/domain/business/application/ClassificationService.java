@@ -36,8 +36,6 @@ public class ClassificationService {
         }else{
             classification.setOrderNumber(1);
         }
-        //设置创建时间
-        classification.setGmtCreate(Calendar.getInstance().getTime());
         //存储数据
         classificationRepository.save(classification);
     }
@@ -76,9 +74,11 @@ public class ClassificationService {
     public void priority(int upId, int downId) {
         Classification up=classificationRepository.findById(upId);
         Classification down=classificationRepository.findById(downId);
-
+        if(up==null||down==null){
+            throw new InvalidArgumentException("档案分类不存在或已被删除");
+        }
         if(up.getParentId()!=down.getParentId()){
-            throw new InvalidArgumentException("全宗类型或上级全宗不一致");
+            throw new InvalidArgumentException("档案分类类型或上级档案分类不一致");
         }
         classificationRepository.updateOrderNumberById(upId,down.getOrderNumber());
         classificationRepository.updateOrderNumberById(downId,up.getOrderNumber());

@@ -38,13 +38,13 @@ public class FondsController {
      * @apiSuccess (Success 200) {int} type 全宗类型
      * @apiSuccess (Success 200) {arr} subFonds 子全宗信息
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"items": [{"id": 全宗ID,"code": "全宗号","name": "父全宗0","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型},
+     * {"data": {"items": [{"id": 全宗ID,"code": "全宗号","name": "父全宗0","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型,subFonds": []},
      * {"id": 全宗ID,"code": "全宗号","name": "父全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型,"subFonds": [
-     * {"id": 全宗ID,"code": "全宗号","name": "子全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型,}]}]}}.
+     * {"id": 全宗ID,"code": "全宗号","name": "子全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型,subFonds": []}]}]}}.
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list() {
-        return systemQuery.getAllFondsTreeMap();
+        return systemQuery.getFondsTreeMap();
     }
 
     /**

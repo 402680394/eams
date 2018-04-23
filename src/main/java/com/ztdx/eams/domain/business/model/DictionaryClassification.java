@@ -19,15 +19,20 @@ public class DictionaryClassification {
     @Column(name = "id")
     private int id;
 
+    //词典分类编码
+    @Size(max = 30)
+    @Column(name = "classification_code")
+    private String code;
+
     //词典分类名称
     @Size(max = 30)
     @Column(name = "classification_name")
     private String name;
 
-    //词典分类编码
-    @Size(max = 30)
-    @Column(name = "classification_code")
-    private String code;
+    //备注
+    @Size(max = 100)
+    @Column(name = "remark")
+    private String remark;
 
     //所属全宗id
     @Column(name = "fonds_id")
