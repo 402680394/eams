@@ -22,13 +22,11 @@ public class Oganization {
     private int id;
 
     //机构编码
-//    @Max(value = 20)
     @Size(max = 20)
     @Column(name = "org_code")
     private String code;
 
     //机构名称
-//    @Length(value = 50)
     @Size(max = 50)
     @Column(name = "org_name")
     private String name;
