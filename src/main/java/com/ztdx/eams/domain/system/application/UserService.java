@@ -108,8 +108,6 @@ public class UserService {
         }
         //设置初始密码
         user.setPassword(initPassword);
-        //设置创建时间
-        user.setGmtCreate(Calendar.getInstance().getTime());
         userRepository.save(user);
     }
 

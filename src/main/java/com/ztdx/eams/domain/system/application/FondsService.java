@@ -40,8 +40,6 @@ public class FondsService {
         }else{
             fonds.setOrderNumber(1);
         }
-        //设置创建时间
-        fonds.setGmtCreate(Calendar.getInstance().getTime());
         //存储数据
         fondsRepository.save(fonds);
     }

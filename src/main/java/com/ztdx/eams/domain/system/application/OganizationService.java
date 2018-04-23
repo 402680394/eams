@@ -44,8 +44,6 @@ public class OganizationService {
         } else {
             oganization.setOrderNumber(1);
         }
-        //设置创建时间
-        oganization.setGmtCreate(Calendar.getInstance().getTime());
         //存储数据
         oganizationRepository.save(oganization);
     }
