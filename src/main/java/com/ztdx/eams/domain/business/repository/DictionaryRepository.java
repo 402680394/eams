@@ -36,7 +36,7 @@ public interface DictionaryRepository extends JpaRepository<Dictionary, Integer>
     @Query("update Dictionary d set d.code=:#{#dictionary.code},d.name=:#{#dictionary.name},d.businessLevel=:#{#dictionary.businessLevel},d.businessExpansion=:#{#dictionary.businessExpansion},d.remark=:#{#dictionary.remark} where d.id=:#{#dictionary.id}")
     void updateById(@Param(value = "dictionary")Dictionary dictionary);
 
-    //设置机构优先级
+    //修改排序号
     @Modifying
     @Query("update Dictionary d set d.orderNumber=:orderNumber where d.id=:id")
     void updateOrderNumberById(@Param(value = "id") int id, @Param(value = "orderNumber") int orderNumber);

@@ -30,9 +30,9 @@ public class BusinessQuery {
 
     private SysFonds sysFonds = Tables.SYS_FONDS;
 
-    private BusinessMetadataStandards businessMetadataStandards=Tables.BUSINESS_METADATA_STANDARDS;
+    private BusinessMetadataStandards businessMetadataStandards = Tables.BUSINESS_METADATA_STANDARDS;
 
-    private BusinessMetadata businessMetadata=Tables.BUSINESS_METADATA;
+    private BusinessMetadata businessMetadata = Tables.BUSINESS_METADATA;
 
     @Autowired
     public BusinessQuery(DSLContext dslContext) {
@@ -180,6 +180,7 @@ public class BusinessQuery {
 
         return treeMap;
     }
+
     /**
      * 获取词典分类详情.
      */
@@ -190,35 +191,37 @@ public class BusinessQuery {
                 businessDictionaryClassification.REMARK.as("remark"))
                 .from(businessDictionaryClassification).where(businessDictionaryClassification.ID.equal(id)).fetch().intoMaps().get(0);
     }
+
     /**
      * 获取全宗所属词典分类列表.
      */
-    public Map<String,Object> getDictionaryClassificationListByFonds(UInteger fondsId) {
-         List<Map<String,Object>> list=dslContext.select(businessDictionaryClassification.ID.as("id"),
+    public Map<String, Object> getDictionaryClassificationListByFonds(UInteger fondsId) {
+        List<Map<String, Object>> list = dslContext.select(businessDictionaryClassification.ID.as("id"),
                 businessDictionaryClassification.CLASSIFICATION_CODE.as("code"),
                 businessDictionaryClassification.CLASSIFICATION_NAME.as("name"),
                 businessDictionaryClassification.REMARK.as("remark"))
                 .from(businessDictionaryClassification).where(businessDictionaryClassification.FONDS_ID.equal(fondsId)).fetch().intoMaps();
-         resultMap.put("items",list);
+        resultMap.put("items", list);
         return resultMap;
     }
+
     /**
      * 通过词典分类与名称查询词典列表
      */
-    public Map<String,Object> getDictionaryList(UInteger dictionaryClassificationId, String name) {
-        List<Map<String,Object>> list=dslContext.select(businessDictionary.ID.as("id"),
+    public Map<String, Object> getDictionaryList(UInteger dictionaryClassificationId, String name) {
+        List<Map<String, Object>> list = dslContext.select(businessDictionary.ID.as("id"),
                 businessDictionary.DICTIONARY_CODE.as("code"),
                 businessDictionary.DICTIONARY_NAME.as("name"),
                 businessDictionaryClassification.CLASSIFICATION_NAME.as("classificationName"),
                 businessDictionary.BUSINESS_LEVEL.as("businessLevel"),
                 businessDictionary.BUSINESS_EXPANSION.as("businessExpansion"),
                 businessDictionary.REMARK.as("remark"))
-                .from(businessDictionary,businessDictionaryClassification)
+                .from(businessDictionary, businessDictionaryClassification)
                 .where(businessDictionary.DICTIONARY_CLASSIFICATION_ID.equal(dictionaryClassificationId)
-                        ,businessDictionary.DICTIONARY_CLASSIFICATION_ID.equal(businessDictionaryClassification.ID)
-                        ,businessDictionary.DICTIONARY_NAME.like("%"+name+"%"))
+                        , businessDictionary.DICTIONARY_CLASSIFICATION_ID.equal(businessDictionaryClassification.ID)
+                        , businessDictionary.DICTIONARY_NAME.like("%" + name + "%"))
                 .fetch().intoMaps();
-        resultMap.put("items",list);
+        resultMap.put("items", list);
         return resultMap;
     }
 
@@ -234,11 +237,12 @@ public class BusinessQuery {
                 businessDictionary.REMARK.as("remark"))
                 .from(businessDictionary).where(businessDictionary.ID.equal(id)).fetch().intoMaps().get(0);
     }
+
     /**
      * 获取元数据规范列表.
      */
-    public Map<String,Object> getMetadataStandardsList(String name) {
-        List<Map<String,Object>> list=dslContext.select(businessDictionary.ID.as("id"),
+    public Map<String, Object> getMetadataStandardsList(String name) {
+        List<Map<String, Object>> list = dslContext.select(businessMetadataStandards.ID.as("id"),
                 businessMetadataStandards.METADATA_STANDARDS_CODE.as("code"),
                 businessMetadataStandards.METADATA_STANDARDS_NAME.as("name"),
                 businessMetadataStandards.CHARACTER_SET.as("characterSet"),
@@ -249,16 +253,17 @@ public class BusinessQuery {
                 businessMetadataStandards.FLAG.as("flag"),
                 businessMetadataStandards.REMARK.as("remark"))
                 .from(businessMetadataStandards)
-                .where(businessMetadataStandards.METADATA_STANDARDS_NAME.like("%"+name+"%"))
+                .where(businessMetadataStandards.METADATA_STANDARDS_NAME.like("%" + name + "%"))
                 .orderBy(businessMetadataStandards.ORDER_NUMBER)
                 .fetch().intoMaps();
-        resultMap.put("items",list);
+        resultMap.put("items", list);
         return resultMap;
     }
+
     /**
      * 获取元数据规范详情.
      */
-    public Map<String,Object> getMetadataStandards(UInteger id) {
+    public Map<String, Object> getMetadataStandards(UInteger id) {
         return dslContext.select(businessMetadataStandards.ID.as("id"),
                 businessMetadataStandards.METADATA_STANDARDS_CODE.as("code"),
                 businessMetadataStandards.METADATA_STANDARDS_NAME.as("name"),
@@ -270,5 +275,63 @@ public class BusinessQuery {
                 businessMetadataStandards.REMARK.as("remark"))
                 .from(businessMetadataStandards)
                 .where(businessMetadataStandards.ID.equal(id)).fetch().intoMaps().get(0);
+    }
+    /**
+     * 获取元数据列表.
+     */
+    public Map<String, Object> getMetadataList(UInteger metadataStandardsId, String name) {
+        List<Map<String, Object>> list = dslContext.select(businessMetadata.ID.as("id"),
+                businessMetadata.DISPLAY_NAME.as("displayName"),
+                businessMetadata.METADATA_NAME.as("name"),
+                businessMetadata.FIELD_PROPERTIES.as("fieldProperties"),
+                businessMetadata.DATA_TYPE.as("dataType"),
+                businessMetadata.FIELD_WIDTH.as("fieldWidth"),
+                businessMetadata.FIELD_PRECISION.as("fieldPrecision"),
+                businessMetadata.PARENT_ID.as("parentId"),
+                businessMetadata.METADATA_STANDARDS_ID.as("metadataStandardsId"),
+                businessMetadata.DEFAULT_VALUE.as("defaultValue"),
+                businessMetadata.METADATA_DEFINITION.as("definition"),
+                businessMetadata.OBJECTIVE.as("objective"),
+                businessMetadata.METADATA_CONSTRAINT.as("constraint"),
+                businessMetadata.ELEMENT_TYPE.as("elementType"),
+                businessMetadata.CODING_MODIFICATION.as("codingModification"),
+                businessMetadata.RELATED_ELEMENTS.as("relatedElements"),
+                businessMetadata.METADATA_RANGE.as("range"),
+                businessMetadata.INFORMATION_SOURCES.as("informationSources"),
+                businessMetadata.ORDER_NUMBER.as("orderNumber"),
+                businessMetadata.REMARK.as("remark"))
+                .from(businessMetadata)
+                .where(businessMetadata.ID.equal(metadataStandardsId), businessMetadata.METADATA_NAME.like("%" + name + "%"))
+                .orderBy(businessMetadata.ORDER_NUMBER)
+                .fetch().intoMaps();
+        resultMap.put("items", list);
+        return resultMap;
+    }
+    /**
+     * 获取元数据详情.
+     */
+    public Map<String,Object> getMetadata(UInteger id) {
+        return dslContext.select(businessMetadata.ID.as("id"),
+                businessMetadata.DISPLAY_NAME.as("displayName"),
+                businessMetadata.METADATA_NAME.as("name"),
+                businessMetadata.FIELD_PROPERTIES.as("fieldProperties"),
+                businessMetadata.DATA_TYPE.as("dataType"),
+                businessMetadata.FIELD_WIDTH.as("fieldWidth"),
+                businessMetadata.FIELD_PRECISION.as("fieldPrecision"),
+                businessMetadata.PARENT_ID.as("parentId"),
+                businessMetadata.METADATA_STANDARDS_ID.as("metadataStandardsId"),
+                businessMetadata.DEFAULT_VALUE.as("defaultValue"),
+                businessMetadata.METADATA_DEFINITION.as("definition"),
+                businessMetadata.OBJECTIVE.as("objective"),
+                businessMetadata.METADATA_CONSTRAINT.as("constraint"),
+                businessMetadata.ELEMENT_TYPE.as("elementType"),
+                businessMetadata.CODING_MODIFICATION.as("codingModification"),
+                businessMetadata.RELATED_ELEMENTS.as("relatedElements"),
+                businessMetadata.METADATA_RANGE.as("range"),
+                businessMetadata.INFORMATION_SOURCES.as("informationSources"),
+                businessMetadata.ORDER_NUMBER.as("orderNumber"),
+                businessMetadata.REMARK.as("remark"))
+                .from(businessMetadata)
+                .where(businessMetadata.ID.equal(id)).fetch().intoMaps().get(0);
     }
 }

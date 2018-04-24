@@ -120,8 +120,8 @@
 					<!-- Configure the database connection here -->
 					<jdbc>
 						<driver>com.mysql.jdbc.Driver</driver>
-						<url>jdbc:mysql://localhost:3306/eams</url>
-						<user>user1</user>
+						<url>jdbc:mysql://192.168.1.200:3306/eams</url>
+						<user>root</user>
 						<password>123456</password>
 					</jdbc>
 
