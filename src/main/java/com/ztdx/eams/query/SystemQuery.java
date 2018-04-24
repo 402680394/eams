@@ -23,8 +23,6 @@ public class SystemQuery {
 
     private final DSLContext dslContext;
 
-    private Map<String, Object> resultMap;
-
     private SysOrganization sysOrganization = Tables.SYS_ORGANIZATION;
 
     private SysUser sysUser = Tables.SYS_USER;
@@ -34,13 +32,13 @@ public class SystemQuery {
     @Autowired
     public SystemQuery(DSLContext dslContext) {
         this.dslContext = dslContext;
-        resultMap = new HashMap<String, Object>();
     }
 
     /**
      * 获取全部机构树形列表.
      */
     public Map<String, Object> getOrganizationTreeMap() {
+        Map<String, Object> resultMap = new HashMap<>();
         //伪造根机构，便于递归查询子机构
         resultMap.put("id", UInteger.valueOf(0));
         //查询
@@ -56,7 +54,7 @@ public class SystemQuery {
     /**
      * 获取全部机构.
      */
-    public List<Map<String, Object>> getAllOrganizationList() {
+    private List<Map<String, Object>> getAllOrganizationList() {
         return dslContext.select(
                 sysOrganization.ID.as("id"),
                 sysOrganization.ORG_CODE.as("code"),
@@ -65,7 +63,7 @@ public class SystemQuery {
                 sysOrganization.ORDER_NUMBER.as("orderNumber"),
                 sysOrganization.ORG_TYPE.as("type"))
                 .from(sysOrganization)
-                .orderBy(sysOrganization.ORG_TYPE,sysOrganization.ORDER_NUMBER)
+                .orderBy(sysOrganization.ORG_TYPE, sysOrganization.ORDER_NUMBER)
                 .fetch().intoMaps();
     }
 
@@ -74,7 +72,7 @@ public class SystemQuery {
      */
     public Map<String, Object> getSubOrganizationTreeMap(List<Map<String, Object>> dataList, Map<String, Object> treeMap) {
         //创建一个空的子机构列表
-        List<Map<String, Object>> subOrgList = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> subOrgList = new ArrayList<>();
         //遍历机构数据，并递归添加子机构的下级机构
         for (Map<String, Object> map : dataList) {
             if (map.get("parentId").equals(treeMap.get("id"))) {
@@ -84,7 +82,7 @@ public class SystemQuery {
             }
         }
         //将子机构列表加入根节点
-        if(!subOrgList.isEmpty()){
+        if (!subOrgList.isEmpty()) {
             treeMap.put("subOrg", subOrgList);
 
         }
@@ -109,31 +107,34 @@ public class SystemQuery {
      */
     public Map<String, Object> getUserListByOrg(User user, int pageNum) {
 
-        int index = (pageNum - 1) * 10;
-
-        List<Map<String, Object>> list =
-                dslContext.select(
-                        sysUser.ID.as("id"),
-                        sysUser.REAL_NAME.as("name"),
-                        sysUser.WORKERS.as("workers"),
-                        sysUser.USERNAME.as("username"),
-                        sysUser.PHONE.as("phone"),
-                        sysUser.EMAIL.as("email"),
-                        sysUser.JOB.as("job"),
-                        sysUser.REMARK.as("remark"),
-                        sysUser.FLAG.as("flag"))
-                        .from(sysUser)
-                        .where(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(user.getOrganizationId())),
-                                sysUser.REAL_NAME.like("%" + user.getName() + "%"),
-                                sysUser.WORKERS.like("%" + user.getWorkers() + "%"),
-                                sysUser.USERNAME.like("%" + user.getUsername() + "%"),
-                                sysUser.PHONE.like("%" + user.getPhone() + "%"),
-                                sysUser.EMAIL.like("%" + user.getEmail() + "%"),
-                                sysUser.JOB.like("%" + user.getJob() + "%"))
-                        .limit(index, 10)
-                        .fetch().intoMaps();
+        Map<String, Object> resultMap = new HashMap<>();
+        List<Map<String, Object>> list = new ArrayList<>();
 
         int total = getUserListTotalByOrg(user);
+        if (total != 0) {
+            int index = (pageNum - 1) * 10;
+
+            list = dslContext.select(
+                    sysUser.ID.as("id"),
+                    sysUser.REAL_NAME.as("name"),
+                    sysUser.WORKERS.as("workers"),
+                    sysUser.USERNAME.as("username"),
+                    sysUser.PHONE.as("phone"),
+                    sysUser.EMAIL.as("email"),
+                    sysUser.JOB.as("job"),
+                    sysUser.REMARK.as("remark"),
+                    sysUser.FLAG.as("flag"))
+                    .from(sysUser)
+                    .where(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(user.getOrganizationId())),
+                            sysUser.REAL_NAME.like("%" + user.getName() + "%"),
+                            sysUser.WORKERS.like("%" + user.getWorkers() + "%"),
+                            sysUser.USERNAME.like("%" + user.getUsername() + "%"),
+                            sysUser.PHONE.like("%" + user.getPhone() + "%"),
+                            sysUser.EMAIL.like("%" + user.getEmail() + "%"),
+                            sysUser.JOB.like("%" + user.getJob() + "%"))
+                    .limit(index, 10)
+                    .fetch().intoMaps();
+        }
 
         resultMap.put("items", list);
         resultMap.put("total", total);
@@ -159,30 +160,33 @@ public class SystemQuery {
      */
     public Map<String, Object> getUserList(User user, int pageNum) {
 
-        int index = (pageNum - 1) * 10;
-
-        List<Map<String, Object>> list =
-                dslContext.select(
-                        sysUser.ID.as("id"),
-                        sysUser.REAL_NAME.as("name"),
-                        sysUser.WORKERS.as("workers"),
-                        sysUser.USERNAME.as("username"),
-                        sysUser.PHONE.as("phone"),
-                        sysUser.EMAIL.as("email"),
-                        sysUser.JOB.as("job"),
-                        sysUser.REMARK.as("remark"),
-                        sysUser.FLAG.as("flag"))
-                        .from(sysUser)
-                        .where(sysUser.REAL_NAME.like("%" + user.getName() + "%"),
-                                sysUser.WORKERS.like("%" + user.getWorkers() + "%"),
-                                sysUser.USERNAME.like("%" + user.getUsername() + "%"),
-                                sysUser.PHONE.like("%" + user.getPhone() + "%"),
-                                sysUser.EMAIL.like("%" + user.getEmail() + "%"),
-                                sysUser.JOB.like("%" + user.getJob() + "%"))
-                        .limit(index, 10)
-                        .fetch().intoMaps();
+        Map<String, Object> resultMap = new HashMap<>();
+        List<Map<String, Object>> list = new ArrayList<>();
 
         int total = getUserListTotal(user);
+        if (total != 0) {
+            int index = (pageNum - 1) * 10;
+
+            list = dslContext.select(
+                    sysUser.ID.as("id"),
+                    sysUser.REAL_NAME.as("name"),
+                    sysUser.WORKERS.as("workers"),
+                    sysUser.USERNAME.as("username"),
+                    sysUser.PHONE.as("phone"),
+                    sysUser.EMAIL.as("email"),
+                    sysUser.JOB.as("job"),
+                    sysUser.REMARK.as("remark"),
+                    sysUser.FLAG.as("flag"))
+                    .from(sysUser)
+                    .where(sysUser.REAL_NAME.like("%" + user.getName() + "%"),
+                            sysUser.WORKERS.like("%" + user.getWorkers() + "%"),
+                            sysUser.USERNAME.like("%" + user.getUsername() + "%"),
+                            sysUser.PHONE.like("%" + user.getPhone() + "%"),
+                            sysUser.EMAIL.like("%" + user.getEmail() + "%"),
+                            sysUser.JOB.like("%" + user.getJob() + "%"))
+                    .limit(index, 10)
+                    .fetch().intoMaps();
+        }
 
         resultMap.put("items", list);
         resultMap.put("total", total);
@@ -206,7 +210,7 @@ public class SystemQuery {
      * 获取用户详情.
      */
     public Map<String, Object> getUser(UInteger id) {
-        resultMap = dslContext.select(sysUser.ID.as("id"),
+        return dslContext.select(sysUser.ID.as("id"),
                 sysUser.REAL_NAME.as("name"),
                 sysUser.WORKERS.as("workers"),
                 sysUser.USERNAME.as("username"),
@@ -216,13 +220,13 @@ public class SystemQuery {
                 sysUser.JOB.as("job"),
                 sysUser.REMARK.as("remark"))
                 .from(sysUser).where(sysUser.ID.equal(id)).fetch().intoMaps().get(0);
-        return resultMap;
     }
 
     /**
      * 获取全部全宗树形列表.
      */
     public Map<String, Object> getFondsTreeMap() {
+        Map<String, Object> resultMap = new HashMap<>();
         //伪造根全宗，便于递归查询子全宗
         resultMap.put("id", UInteger.valueOf(0));
         //查询
@@ -238,7 +242,7 @@ public class SystemQuery {
     /**
      * 获取全部全宗.
      */
-    public List<Map<String, Object>> getAllFondsList() {
+    private List<Map<String, Object>> getAllFondsList() {
         List<Map<String, Object>> dataList = dslContext.select(
                 sysFonds.ID.as("id"),
                 sysFonds.FONDS_CODE.as("code"),
@@ -247,7 +251,7 @@ public class SystemQuery {
                 sysFonds.ORDER_NUMBER.as("orderNumber"),
                 sysFonds.FONDS_TYPE.as("type"))
                 .from(sysFonds)
-                .orderBy(sysFonds.FONDS_TYPE,sysFonds.ORDER_NUMBER)
+                .orderBy(sysFonds.FONDS_TYPE, sysFonds.ORDER_NUMBER)
                 .fetch().intoMaps();
         return dataList;
     }
@@ -267,7 +271,7 @@ public class SystemQuery {
             }
         }
         //将子全宗列表加入全宗信息
-        if(!subFondsList.isEmpty()){
+        if (!subFondsList.isEmpty()) {
             treeMap.put("subFonds", subFondsList);
         }
         return treeMap;

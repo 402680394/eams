@@ -20,8 +20,6 @@ public class BusinessQuery {
 
     private final DSLContext dslContext;
 
-    private Map<String, Object> resultMap;
-
     private BusinessClassification businessClassification = Tables.BUSINESS_CLASSIFICATION;
 
     private BusinessDictionaryClassification businessDictionaryClassification = Tables.BUSINESS_DICTIONARY_CLASSIFICATION;
@@ -37,13 +35,13 @@ public class BusinessQuery {
     @Autowired
     public BusinessQuery(DSLContext dslContext) {
         this.dslContext = dslContext;
-        resultMap = new HashMap<String, Object>();
     }
 
     /**
      * 获取全宗下全部档案分类树形列表.
      */
     public Map<String, Object> getClassificationTreeMap(UInteger fondsId) {
+        Map<String, Object> resultMap= new HashMap<>();
         //伪造档案分类根节点，便于递归查询子档案分类
         resultMap.put("id", UInteger.valueOf(0));
         //查询
@@ -59,7 +57,7 @@ public class BusinessQuery {
     /**
      * 获取全宗下全部档案分类.
      */
-    public List<Map<String, Object>> getAllClassificationList(UInteger fondsId) {
+    private List<Map<String, Object>> getAllClassificationList(UInteger fondsId) {
         return dslContext.select(
                 businessClassification.ID.as("id"),
                 businessClassification.CLASSIFICATION_CODE.as("code"),
@@ -112,6 +110,7 @@ public class BusinessQuery {
      * 获取全宗词典分类树形列表.
      */
     public Map<String, Object> getDictionaryClassificationTreeMap() {
+        Map<String, Object> resultMap= new HashMap<String, Object>();
         //伪造全宗根节点，便于递归查询
         resultMap.put("id", UInteger.valueOf(0));
         //查询
@@ -124,7 +123,7 @@ public class BusinessQuery {
     /**
      * 获取全部词典分类.
      */
-    public List<Map<String, Object>> getAllDictionaryClassificationList() {
+    private List<Map<String, Object>> getAllDictionaryClassificationList() {
         return dslContext.select(
                 businessDictionaryClassification.ID.as("id"),
                 businessDictionaryClassification.CLASSIFICATION_CODE.as("code"),
@@ -138,7 +137,7 @@ public class BusinessQuery {
     /**
      * 获取全部全宗.
      */
-    public List<Map<String, Object>> getAllFondsList() {
+    private List<Map<String, Object>> getAllFondsList() {
         return dslContext.select(
                 sysFonds.ID.as("id"),
                 sysFonds.FONDS_CODE.as("code"),
@@ -156,7 +155,7 @@ public class BusinessQuery {
      */
     public Map<String, Object> getSubDictionaryClassificationTreeMap(List<Map<String, Object>> dataFondsList, List<Map<String, Object>> dataDCList, Map<String, Object> treeMap) {
         //创建一个空的词典分类列表
-        List<Map<String, Object>> subDictionaryClassificationList = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> subDictionaryClassificationList = new ArrayList<>();
 
         //遍历词典分类数据，并将子词典分类加入词典分类列表
         for (Map<String, Object> map : dataDCList) {
@@ -171,7 +170,7 @@ public class BusinessQuery {
         }
 
         //创建一个空的子全宗列表
-        List<Map<String, Object>> subFondsList = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> subFondsList = new ArrayList<>();
         //遍历全宗数据，并将全宗加入全宗列表
         for (Map<String, Object> map : dataFondsList) {
             if (map.get("parentId").equals(treeMap.get("id"))) {
@@ -204,6 +203,7 @@ public class BusinessQuery {
      * 获取全宗所属词典分类列表.
      */
     public Map<String, Object> getDictionaryClassificationListByFonds(UInteger fondsId) {
+        Map<String, Object> resultMap= new HashMap<>();
         List<Map<String, Object>> list = dslContext.select(businessDictionaryClassification.ID.as("id"),
                 businessDictionaryClassification.CLASSIFICATION_CODE.as("code"),
                 businessDictionaryClassification.CLASSIFICATION_NAME.as("name"),
@@ -217,6 +217,7 @@ public class BusinessQuery {
      * 通过词典分类与名称查询词典列表
      */
     public Map<String, Object> getDictionaryList(UInteger dictionaryClassificationId, String name) {
+        Map<String, Object> resultMap= new HashMap<>();
         List<Map<String, Object>> list = dslContext.select(businessDictionary.ID.as("id"),
                 businessDictionary.DICTIONARY_CODE.as("code"),
                 businessDictionary.DICTIONARY_NAME.as("name"),
@@ -250,6 +251,7 @@ public class BusinessQuery {
      * 获取元数据规范列表.
      */
     public Map<String, Object> getMetadataStandardsList(String name) {
+        Map<String, Object> resultMap= new HashMap<>();
         List<Map<String, Object>> list = dslContext.select(businessMetadataStandards.ID.as("id"),
                 businessMetadataStandards.METADATA_STANDARDS_CODE.as("code"),
                 businessMetadataStandards.METADATA_STANDARDS_NAME.as("name"),
@@ -288,6 +290,7 @@ public class BusinessQuery {
      * 获取元数据列表.
      */
     public Map<String, Object> getMetadataList(UInteger metadataStandardsId, String name) {
+        Map<String, Object> resultMap= new HashMap<>();
         List<Map<String, Object>> list = dslContext.select(businessMetadata.ID.as("id"),
                 businessMetadata.DISPLAY_NAME.as("displayName"),
                 businessMetadata.METADATA_NAME.as("name"),

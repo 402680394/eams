@@ -1,7 +1,7 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.domain.system.application.OganizationService;
-import com.ztdx.eams.domain.system.model.Oganization;
+import com.ztdx.eams.domain.system.application.OrganizationService;
+import com.ztdx.eams.domain.system.model.Organization;
 import com.ztdx.eams.query.SystemQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +16,13 @@ import java.util.Map;
 @RequestMapping(value = "/oganization")
 public class OganizationController {
 
-    private final OganizationService oganizationService;
+    private final OrganizationService organizationService;
 
     private final SystemQuery systemQuery;
 
     @Autowired
-    public OganizationController(OganizationService oganizationService, SystemQuery systemQuery) {
-        this.oganizationService = oganizationService;
+    public OganizationController(OrganizationService organizationService, SystemQuery systemQuery) {
+        this.organizationService = organizationService;
         this.systemQuery = systemQuery;
     }
 
@@ -48,9 +48,9 @@ public class OganizationController {
     }
 
     /**
-     * @api {post} /oganization 新增机构
+     * @api {post} /organization 新增机构
      * @apiName save
-     * @apiGroup oganization
+     * @apiGroup organization
      * @apiParam {int} parentId 上级机构ID（根机构传0）
      * @apiParam {String} code 机构编码
      * @apiParam {String} name 机构名称
@@ -61,8 +61,8 @@ public class OganizationController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.POST)
-    public void save(@RequestBody Oganization oganization) {
-        oganizationService.save(oganization);
+    public void save(@RequestBody Organization organization) {
+        organizationService.save(organization);
     }
 
     /**
@@ -75,13 +75,13 @@ public class OganizationController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {
-        oganizationService.delete(id);
+        organizationService.delete(id);
     }
 
     /**
-     * @api {put} /oganization 修改机构信息
+     * @api {put} /organization 修改机构信息
      * @apiName update
-     * @apiGroup oganization
+     * @apiGroup organization
      * @apiParam {int} id 机构ID
      * @apiParam {int} parentId 上级机构ID（根机构传0）
      * @apiParam {String} code 机构编码
@@ -93,8 +93,8 @@ public class OganizationController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.PUT)
-    public void update(@RequestBody Oganization oganization) {
-        oganizationService.update(oganization);
+    public void update(@RequestBody Organization organization) {
+        organizationService.update(organization);
     }
 
     /**
@@ -126,6 +126,6 @@ public class OganizationController {
      */
     @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)
     public void priority(@PathVariable("upId") int upId, @PathVariable("downId") int downId) {
-        oganizationService.priority(upId, downId);
+        organizationService.priority(upId, downId);
     }
 }
