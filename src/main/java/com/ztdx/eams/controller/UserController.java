@@ -7,6 +7,10 @@ import com.ztdx.eams.domain.system.model.User;
 import com.ztdx.eams.query.SystemQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
@@ -26,10 +30,13 @@ public class UserController {
 
     private final SystemQuery systemQuery;
 
+    private final AuthenticationManager authenticationManager;
+
     @Autowired
-    public UserController(UserService userService, SystemQuery systemQuery) {
+    public UserController(UserService userService, SystemQuery systemQuery, AuthenticationManager authenticationManager) {
         this.userService = userService;
         this.systemQuery = systemQuery;
+        this.authenticationManager = authenticationManager;
     }
 
     /**
@@ -56,6 +63,12 @@ public class UserController {
         session.setAttribute("LOGIN_USER", userCredential);
         HashMap resultMap=new HashMap();
         resultMap.put("id",user.getId());
+
+        //使用spring security做认证
+        UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(username, password);
+        Authentication authentication = authenticationManager.authenticate(authRequest);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
         return resultMap;
     }
 
