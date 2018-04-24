@@ -84,7 +84,10 @@ public class SystemQuery {
             }
         }
         //将子机构列表加入根节点
-        treeMap.put("subOrg", subOrgList);
+        if(!subOrgList.isEmpty()){
+            treeMap.put("subOrg", subOrgList);
+
+        }
         return treeMap;
     }
 
@@ -264,7 +267,9 @@ public class SystemQuery {
             }
         }
         //将子全宗列表加入全宗信息
-        treeMap.put("subFonds", subFondsList);
+        if(!subFondsList.isEmpty()){
+            treeMap.put("subFonds", subFondsList);
+        }
         return treeMap;
     }
 

@@ -89,7 +89,9 @@ public class BusinessQuery {
             }
         }
         //将子档案分类列表加入根节点档案分类信息
-        treeMap.put("subClassification", subClassificationList);
+        if(!subClassificationList.isEmpty()){
+            treeMap.put("subClassification", subClassificationList);
+        }
         return treeMap;
     }
 
@@ -163,7 +165,10 @@ public class BusinessQuery {
             }
         }
         //将子词典分类列表加入根节点
-        treeMap.put("subDictionaryClassification", subDictionaryClassificationList);
+        if(!subDictionaryClassificationList.isEmpty()){
+            treeMap.put("subDictionaryClassification", subDictionaryClassificationList);
+
+        }
 
         //创建一个空的子全宗列表
         List<Map<String, Object>> subFondsList = new ArrayList<Map<String, Object>>();
@@ -176,7 +181,10 @@ public class BusinessQuery {
             }
         }
         //将子全宗列表加入跟节点
-        treeMap.put("subFonds", subFondsList);
+        if(!subFondsList.isEmpty()){
+            treeMap.put("subFonds", subFondsList);
+
+        }
 
         return treeMap;
     }
