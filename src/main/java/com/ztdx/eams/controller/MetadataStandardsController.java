@@ -30,15 +30,16 @@ public class MetadataStandardsController {
      * @apiName list
      * @apiGroup metadataStandards
      * @apiParam {String} name 名称(未输入传""值)(url参数)
+     * @apiParam {String} name 名称(未输入传""值)(url参数)
      * @apiSuccess (Success 200) {int} id ID.
      * @apiSuccess (Success 200) {String} code 编号.
      * @apiSuccess (Success 200) {String} name 名称.
-     * @apiSuccess (Success 200) {int} characterSet 字符集.
+     * @apiSuccess (Success 200) {int} characterSet 字符集(1-"utf-8",2-"gb2312",3-其他).
      * @apiSuccess (Success 200) {String} releaseOrganization 发布机构.
      * @apiSuccess (Success 200) {String} descriptionFile 描述文件.
      * @apiSuccess (Success 200) {String} edition 版本.
      * @apiSuccess (Success 200) {int} orderNumber 排序号.
-     * @apiSuccess (Success 200) {int} flag 是否启用.
+     * @apiSuccess (Success 200) {int} flag 是否启用(0-启用,2-禁用).
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"id": ID,"code": "编号","name": "名称","characterSet": 字符集,"releaseOrganization": "发布机构","descriptionFile": "描述文件","edition": "版本","orderNumber": 排序号,"flag": 是否启用,"remark": "备注"}]}}.
@@ -54,11 +55,11 @@ public class MetadataStandardsController {
      * @apiGroup metadataStandards
      * @apiParam {String} code 编号
      * @apiParam {String} name 名称
-     * @apiParam {int} characterSet 字符集.
+     * @apiParam {int} characterSet 字符集(1-"utf-8",2-"gb2312",3-其他).
      * @apiParam {String} releaseOrganization 发布机构（未输入传""值）
      * @apiParam {String} descriptionFile 描述文件（未输入传""值）
      * @apiParam {String} edition 版本.
-     * @apiParam {int} flag 是否启用.
+     * @apiParam {int} flag 是否启用(0-启用,2-禁用).
      * @apiParam {String} remark 备注（未输入传""值）
      * @apiError (Error 400) message 编号已存在.
      * @apiUse ErrorExample
@@ -86,11 +87,11 @@ public class MetadataStandardsController {
      * @apiParam {int} id ID
      * @apiParam {String} code 编号
      * @apiParam {String} name 名称
-     * @apiParam {int} characterSet 字符集.
+     * @apiParam {int} characterSet 字符集(1-"utf-8",2-"gb2312",3-其他).
      * @apiParam {String} releaseOrganization 发布机构（未输入传""值）
      * @apiParam {String} descriptionFile 描述文件（未输入传""值）
      * @apiParam {String} edition 版本.
-     * @apiParam {int} flag 是否启用.
+     * @apiParam {int} flag 是否启用(0-启用,2-禁用).
      * @apiParam {String} remark 备注（未输入传""值）
      * @apiError (Error 400) message 编号已存在.
      * @apiUse ErrorExample
@@ -108,12 +109,12 @@ public class MetadataStandardsController {
      * @apiSuccess (Success 200) {int} id ID.
      * @apiSuccess (Success 200) {String} code 编号.
      * @apiSuccess (Success 200) {String} name 名称.
-     * @apiSuccess (Success 200) {int} characterSet 字符集.
+     * @apiSuccess (Success 200) {int} characterSet 字符集(1-"utf-8",2-"gb2312",3-其他).
      * @apiSuccess (Success 200) {String} releaseOrganization 发布机构.
      * @apiSuccess (Success 200) {String} descriptionFile 描述文件.
      * @apiSuccess (Success 200) {String} edition 版本.
      * @apiSuccess (Success 200) {int} orderNumber 排序号.
-     * @apiSuccess (Success 200) {int} flag 是否启用.
+     * @apiSuccess (Success 200) {int} flag 是否启用(0-启用,2-禁用).
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"id": ID,"code": "编号","name": "名称","characterSet": 字符集,"releaseOrganization": "发布机构","descriptionFile": "描述文件","edition": "版本","orderNumber": 排序号,"flag": 是否启用,"remark": "备注"}}.

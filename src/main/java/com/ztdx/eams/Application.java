@@ -1,4 +1,4 @@
-package com.ztdx;
+package com.ztdx.eams;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

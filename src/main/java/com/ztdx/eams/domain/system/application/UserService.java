@@ -2,17 +2,13 @@ package com.ztdx.eams.domain.system.application;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.UnauthorizedException;
-import com.ztdx.eams.domain.system.model.Oganization;
 import com.ztdx.eams.domain.system.model.User;
-import com.ztdx.eams.domain.system.repository.OganizationRepository;
+import com.ztdx.eams.domain.system.repository.OrganizationRepository;
 import com.ztdx.eams.domain.system.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 
@@ -23,14 +19,14 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
 
-    private final OganizationRepository oganizationRepository;
+    private final OrganizationRepository organizationRepository;
 
     private final String initPassword = "111111";
 
     @Autowired
-    public UserService(UserRepository userRepository, OganizationRepository oganizationRepository) {
+    public UserService(UserRepository userRepository, OrganizationRepository organizationRepository) {
         this.userRepository = userRepository;
-        this.oganizationRepository = oganizationRepository;
+        this.organizationRepository = organizationRepository;
     }
 
     /**
@@ -103,7 +99,7 @@ public class UserService {
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new InvalidArgumentException("用户名已存在");
         }
-        if (!oganizationRepository.existsById(user.getOrganizationId())) {
+        if (!organizationRepository.existsById(user.getOrganizationId())) {
             throw new InvalidArgumentException("机构不存在或已被删除");
         }
         //设置初始密码
@@ -122,7 +118,7 @@ public class UserService {
                 throw new InvalidArgumentException("用户名已存在");
             }
         }
-        if (!oganizationRepository.existsById(user.getOrganizationId())) {
+        if (!organizationRepository.existsById(user.getOrganizationId())) {
             throw new InvalidArgumentException("机构不存在或已被删除");
         }
         //修改信息
