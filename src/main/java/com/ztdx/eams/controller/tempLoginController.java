@@ -23,7 +23,7 @@ public class tempLoginController {
         this.authenticationManager = authenticationManager;
     }
 
-    @RequestMapping(value = "/login")
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
     void login(@RequestParam String username, @RequestParam String password ) {
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(username, password);
         Authentication authentication = authenticationManager.authenticate(authRequest);

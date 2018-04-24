@@ -27,7 +27,7 @@ public class ResourceService {
         }
 
         if(resource.getParentId() != null && !resourceRepository.existsById(resource.getParentId())){
-            throw new InvalidArgumentException("");
+            throw new InvalidArgumentException("上级节点id不存在");
         }
 
         //设置同级机构优先级
@@ -58,11 +58,20 @@ public class ResourceService {
     }
 
     public void update(Resource resource) {
+        if (resourceRepository.existsById(resource.getId())) {
+            save(resource);
+            return;
+        }
 
         Resource find = resourceRepository.findByResourceUrl(resource.getResourceUrl());
         if (find != null && find.getId() != resource.getId()) {
             throw new InvalidArgumentException("资源路径已存在");
         }
+
+        if(resource.getParentId() != null && !resourceRepository.existsById(resource.getParentId())){
+            throw new InvalidArgumentException("上级节点id不存在");
+        }
+
         //修改数据
         resourceRepository.updateById(resource);
     }
@@ -72,7 +81,11 @@ public class ResourceService {
         Resource up=resourceRepository.findById(upId);
         Resource down=resourceRepository.findById(downId);
 
-        if(up.getParentId()!=down.getParentId()){
+        if(up==null||down==null){
+            throw new InvalidArgumentException("资源不存在");
+        }
+
+        if(!up.getParentId().equals(down.getParentId())) {
             throw new InvalidArgumentException("不在一个节点上");
         }
         resourceRepository.updateOrderNumberById(upId,down.getOrderNumber());

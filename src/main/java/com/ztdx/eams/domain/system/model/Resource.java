@@ -32,13 +32,13 @@ public class Resource {
     private Long parentId;
 
     //资源类型
-    @Pattern(regexp = "^(dir|func)&",message = "格式不正确")
+    @Pattern(regexp = "^(dir|func)$",message = "格式不正确")
     @Column(name = "resource_type")
     private String resourceType;
 
     //顺序
     @Column(name = "order_number")
-    private int orderNumber;
+    private Integer orderNumber;
 
     //创建时间
     @Column(name = "gmt_create")

@@ -87,13 +87,16 @@ public class RoleService {
         resourceUrls.removeAll(existsUrl);
         Date now = Calendar.getInstance().getTime();
 
+        HashSet<Permission> batch = new HashSet<>();
+
         for (String url :resourceUrls){
             Permission permission = new Permission();
             permission.setRoleId(roleId);
             permission.setResourceUrl(url);
             permission.setGmtCreate(now);
-            permissionRepository.save(permission);
+            batch.add(permission);
         }
+        permissionRepository.saveAll(batch);
 
         Map<String, List<String>> result = new HashMap<>();
         result.put("added", resourceUrls);
@@ -112,13 +115,16 @@ public class RoleService {
         addUserIds.removeAll(existsUserIds);
         Date now = Calendar.getInstance().getTime();
 
+        HashSet<RoleOfUser> batch = new HashSet<>();
+
         for (Integer userId :addUserIds){
             RoleOfUser user = new RoleOfUser();
             user.setRoleId(roleId);
             user.setUserId(userId);
             user.setGmtCreate(now);
-            roleOfUserRepository.save(user);
+            batch.add(user);
         }
+        roleOfUserRepository.saveAll(batch);
 
         Map<String, List<Integer>> result = new HashMap<>();
         result.put("added", addUserIds);
