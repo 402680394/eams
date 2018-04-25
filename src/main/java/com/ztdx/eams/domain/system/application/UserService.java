@@ -80,7 +80,7 @@ public class UserService {
     public void listPassReset(List<Integer> list) {
         for (int id : list) {
             if (userRepository.existsById(id)){
-                userRepository.updatePwdById(id, initPassword);
+                userRepository.updatePwdById(id, passwordEncoder.encode(initPassword));
             }
         }
     }
@@ -108,7 +108,7 @@ public class UserService {
             throw new InvalidArgumentException("机构不存在或已被删除");
         }
         //设置初始密码
-        user.setPassword(initPassword);
+        user.setPassword(passwordEncoder.encode(initPassword));
         userRepository.save(user);
     }
 
@@ -130,6 +130,9 @@ public class UserService {
         userRepository.updateById(user);
     }
 
+    /**
+     * 密码加密，不经常使用
+     */
     public void resetPwd(){
         List<User> list = userRepository.findAll();
         for(User u : list){
