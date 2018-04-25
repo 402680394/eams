@@ -35,7 +35,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         String pwd = (String)map.get("pwd");
         Integer flag = (Integer)map.get("flag");
         User securityUser = new User(userName, pwd,
-                flag.equals(1), true, true, true, grantedAuthorities);
+                flag.equals(0), true, true, true, grantedAuthorities);
         return securityUser;
     }
 

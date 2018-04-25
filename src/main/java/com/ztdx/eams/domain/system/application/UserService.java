@@ -6,6 +6,7 @@ import com.ztdx.eams.domain.system.model.User;
 import com.ztdx.eams.domain.system.repository.OrganizationRepository;
 import com.ztdx.eams.domain.system.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +24,13 @@ public class UserService {
 
     private final String initPassword = "111111";
 
+    private final PasswordEncoder passwordEncoder;
+
     @Autowired
-    public UserService(UserRepository userRepository, OrganizationRepository organizationRepository) {
+    public UserService(UserRepository userRepository, OrganizationRepository organizationRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.organizationRepository = organizationRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -38,7 +42,8 @@ public class UserService {
         //验证
         if (user == null) {
             throw new UnauthorizedException("用户不存在");
-        } else if (!password.equals(user.getPassword())) {
+            //} else if (!password.equals(user.getPassword())) {
+        } else if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new UnauthorizedException("密码错误");
         } else if (0 != (user.getFlag())) {
             throw new UnauthorizedException("该用户已被禁止使用");
@@ -123,5 +128,15 @@ public class UserService {
         }
         //修改信息
         userRepository.updateById(user);
+    }
+
+    public void resetPwd(){
+        List<User> list = userRepository.findAll();
+        for(User u : list){
+            String pwd = u.getPassword();
+            pwd = passwordEncoder.encode(pwd);
+            u.setPassword(pwd);
+        }
+        userRepository.saveAll(list);
     }
 }

@@ -1,5 +1,6 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.domain.system.application.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,9 +19,12 @@ import javax.servlet.http.HttpServletResponse;
 public class tempLoginController {
     private final AuthenticationManager authenticationManager;
 
+    private final UserService userService;
+
     @Autowired
-    public tempLoginController(AuthenticationManager authenticationManager) {
+    public tempLoginController(AuthenticationManager authenticationManager, UserService userService) {
         this.authenticationManager = authenticationManager;
+        this.userService = userService;
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
@@ -41,5 +45,10 @@ public class tempLoginController {
     @RequestMapping(value="/myinfo", method = RequestMethod.GET)
     Authentication myInfo(){
         return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    //@RequestMapping(value="/resetpwd", method = RequestMethod.GET)
+    void resetPwd(){
+        userService.resetPwd();
     }
 }
