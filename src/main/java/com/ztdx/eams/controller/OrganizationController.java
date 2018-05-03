@@ -14,22 +14,22 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping(value = "/oganization")
-public class OganizationController {
+public class OrganizationController {
 
     private final OrganizationService organizationService;
 
     private final SystemQuery systemQuery;
 
     @Autowired
-    public OganizationController(OrganizationService organizationService, SystemQuery systemQuery) {
+    public OrganizationController(OrganizationService organizationService, SystemQuery systemQuery) {
         this.organizationService = organizationService;
         this.systemQuery = systemQuery;
     }
 
     /**
-     * @api {get} /oganization/treeList 获取机构树形列表
+     * @api {get} /organization/treeList 获取机构树形列表
      * @apiName treeList
-     * @apiGroup oganization
+     * @apiGroup organization
      * @apiSuccess (Success 200) {int} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
@@ -66,9 +66,9 @@ public class OganizationController {
     }
 
     /**
-     * @api {delete} /oganization/{id} 删除机构
+     * @api {delete} /organization/{id} 删除机构
      * @apiName delete
-     * @apiGroup oganization
+     * @apiGroup organization
      * @apiParam {int} id 机构ID（url占位符）
      * @apiError (Error 400) message 该机构或子机构下存在用户.
      * @apiUse ErrorExample
@@ -98,9 +98,9 @@ public class OganizationController {
     }
 
     /**
-     * @api {get} /oganization/{id} 获取机构详情
+     * @api {get} /organization/{id} 获取机构详情
      * @apiName get
-     * @apiGroup oganization
+     * @apiGroup organization
      * @apiParam {int} id 机构ID（url占位符）
      * @apiSuccess (Success 200) {int} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
@@ -116,9 +116,9 @@ public class OganizationController {
     }
 
     /**
-     * @api {patch} /oganization/{upId},{downId}/priority 修改机构排序优先级
+     * @api {patch} /organization/{upId},{downId}/priority 修改机构排序优先级
      * @apiName priority
-     * @apiGroup oganization
+     * @apiGroup organization
      * @apiParam {int} upId 上移机构ID（url占位符）
      * @apiParam {int} downId 下移机构ID（url占位符）
      * @apiError (Error 400) message 1.机构类型或上级机构不一致 2.机构不存在或已被删除.
