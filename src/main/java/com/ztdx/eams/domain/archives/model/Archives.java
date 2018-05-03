@@ -23,10 +23,11 @@ public class Archives {
     private int id;
 
     //档案库类型(1 一文一件；2 案卷；3 项目)
-    @Min(value = 1)
-    @Max(value = 3)
+//    @Min(value = 1)
+//    @Max(value = 3)
     @Column(name = "archives_type")
-    private int archivesType;
+    @Convert(converter = ArchivesType.EnumConverter.class)
+    private ArchivesType archivesType;
 
     //档案库名称
     @Size(max = 50)
