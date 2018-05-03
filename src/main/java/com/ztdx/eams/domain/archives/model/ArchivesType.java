@@ -47,6 +47,9 @@ public enum ArchivesType {
         return code;
     }
 
+    /**
+     * 创建枚举
+     */
     @JsonCreator
     public static ArchivesType create(int code) {
         if (!enumMap.containsKey(code))
