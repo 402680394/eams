@@ -27,8 +27,8 @@ public class FondsController {
     }
 
     /**
-     * @api {get} /fonds/list 获取全宗列表
-     * @apiName list
+     * @api {get} /fonds/treeList 获取全宗树形列表
+     * @apiName treeList
      * @apiGroup fonds
      * @apiSuccess (Success 200) {int} id 全宗ID.
      * @apiSuccess (Success 200) {String} code 全宗号.
@@ -42,8 +42,8 @@ public class FondsController {
      * {"id": 全宗ID,"code": "全宗号","name": "父全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型,"subFonds": [
      * {"id": 全宗ID,"code": "全宗号","name": "子全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型,subFonds": []}]}]}}.
      */
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list() {
+    @RequestMapping(value = "/treeList", method = RequestMethod.GET)
+    public Map<String, Object> treeList() {
         return systemQuery.getFondsTreeMap();
     }
 

@@ -27,8 +27,8 @@ public class OganizationController {
     }
 
     /**
-     * @api {get} /oganization/list 获取机构列表
-     * @apiName list
+     * @api {get} /oganization/treeList 获取机构树形列表
+     * @apiName treeList
      * @apiGroup oganization
      * @apiSuccess (Success 200) {int} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
@@ -42,8 +42,8 @@ public class OganizationController {
      * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrg": [
      * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrg": []}]}]}}.
      */
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list() {
+    @RequestMapping(value = "/treeList", method = RequestMethod.GET)
+    public Map<String, Object> treeList() {
         return systemQuery.getOrganizationTreeMap();
     }
 

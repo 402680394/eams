@@ -28,8 +28,8 @@ public class DictionaryClassificationController {
     }
 
     /**
-     * @api {get} /dictionaryClassification/list 获取词典分类树形列表
-     * @apiName list
+     * @api {get} /dictionaryClassification/treeList 获取词典分类树形列表
+     * @apiName treeList
      * @apiGroup dictionaryClassification
      * @apiSuccess (Success 200) {int} id 全宗ID/词典分类ID.
      * @apiSuccess (Success 200) {String} code 全宗号/词典分类编码.
@@ -44,16 +44,16 @@ public class DictionaryClassificationController {
     {"id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID}],"subFonds": [
     {"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"subDictionaryClassification": [],"subFonds": []}]}]}}
      */
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list() {
+    @RequestMapping(value = "/treeList", method = RequestMethod.GET)
+    public Map<String, Object> treeList() {
         return businessQuery.getDictionaryClassificationTreeMap();
     }
 
     /**
-     * @api {get} /dictionaryClassification/listByFonds 获取全宗所属词典分类列表
-     * @apiName listByFonds
+     * @api {get} /dictionaryClassification/listByFondsId 获取全宗所属词典分类列表
+     * @apiName listByFondsId
      * @apiGroup dictionaryClassification
-     * @apiParam {int} id 词典分类ID（url占位符）
+     * @apiParam {int} fondsId 全宗ID（url参数）
      * @apiSuccess (Success 200) {int} id 词典分类ID.
      * @apiSuccess (Success 200) {String} code 词典分类编码.
      * @apiSuccess (Success 200) {String} name 词典分类名称.
@@ -70,7 +70,7 @@ public class DictionaryClassificationController {
      * @api {post} /dictionaryClassification 新增词典分类
      * @apiName save
      * @apiGroup dictionaryClassification
-     * @apiParam {int} fonds_id 所属全宗ID（全局传0）
+     * @apiParam {int} fondsId 所属全宗ID（全局传0）
      * @apiParam {String} code 词典分类编码
      * @apiParam {String} name 词典分类名称
      * @apiParam {String} remark 备注（未输入传""值）

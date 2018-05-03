@@ -27,8 +27,8 @@ public class ClassificationController {
     }
 
     /**
-     * @api {get} /classification/list 获取全宗下档案分类列表
-     * @apiName list
+     * @api {get} /classification/treeList 获取全宗下档案分类树形列表
+     * @apiName treeList
      * @apiGroup classification
      * @apiParam {int} fondsId 所属全宗ID(全局为0)(url参数)
      * @apiSuccess (Success 200) {int} id 档案分类ID.
@@ -44,8 +44,8 @@ public class ClassificationController {
      * {"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","subClassification": [
      * {"id": 档案分类ID,"code": "档案分类编码","name": "子档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","subClassification": []}]}]}}.
      */
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list(@RequestParam("fondsId") int fondsId) {
+    @RequestMapping(value = "/treeList", method = RequestMethod.GET)
+    public Map<String, Object> treeList(@RequestParam("fondsId") int fondsId) {
         return businessQuery.getClassificationTreeMap(UInteger.valueOf(fondsId));
     }
 

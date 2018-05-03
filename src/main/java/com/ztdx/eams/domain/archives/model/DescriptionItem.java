@@ -34,7 +34,7 @@ public class DescriptionItem {
     @Column(name = "property_type_id")
     private int propertyTypeId;
 
-    //默认值（1 NULL
+    //默认值（1 NULL 2 0 3 1）
     @Min(value = 0)
     @Max(value = 1)
     @Column(name = "default_value")

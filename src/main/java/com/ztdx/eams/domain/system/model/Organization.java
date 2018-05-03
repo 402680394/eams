@@ -47,9 +47,9 @@ public class Organization {
     private int type;
 
     //所属全宗
-    @Size(max = 20)
+    @Min(value = 1)
     @Column(name = "fonds_id")
-    private String fondsId;
+    private int fondsId;
 
     //机构描述
     @Size(max = 50)
