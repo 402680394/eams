@@ -36,8 +36,8 @@ public class User {
     private String username;
 
     //密码
-    @Size(max = 30)
-    @Column(name = "pwd")
+    @Size(max = 200)
+    @Column(name = "pwd",length = 200)
     private String password;
 
     //所属机构
