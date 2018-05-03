@@ -6,46 +6,56 @@ import com.ztdx.eams.basic.exception.BusinessException;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
+import java.util.HashMap;
+import java.util.Map;
 
 public enum ArchivesType {
 
-    /** 一文一件
+    /**
+     * 一文一件
      */
     ArticleOne(1),
 
-    /** 传统立卷
+    /**
+     * 传统立卷
      */
     TraditionalArchives(2),
 
-    /** 项目
+    /**
+     * 项目
      */
     Project(3);
 
     private Integer code;
-    ArchivesType(Integer i){
-        code =i;
+    private static final Map<Integer, ArchivesType> enumMap = new HashMap<>();
+
+    ArchivesType(Integer i) {
+        code = i;
+    }
+
+    static {
+        for (ArchivesType item : values()) {
+            enumMap.put(item.getCode(), item);
+        }
     }
 
     /**
      * 获取值
      */
     @JsonValue
-    public Integer getCode(){
+    public Integer getCode() {
         return code;
     }
 
     @JsonCreator
-    public static ArchivesType create(int code){
-        switch (code){
-            case 1 : return ArchivesType.ArticleOne;
-            case 2 : return ArchivesType.TraditionalArchives;
-            case 3 : return ArchivesType.Project;
-            default:
-                throw new BusinessException("不存在类型为"+code+"的档案库类型");
-        }
+    public static ArchivesType create(int code) {
+        if (!enumMap.containsKey(code))
+            throw new BusinessException("不存在类型为" + code + "的档案库类型");
+
+        return enumMap.get(code);
     }
 
-    @Converter(autoApply=true)
+    @Converter(autoApply = true)
     public static class EnumConverter implements AttributeConverter<ArchivesType, Integer> {
 
         @Override
