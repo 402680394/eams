@@ -15,7 +15,7 @@ import java.io.OutputStream;
 public class Interceptor implements HandlerInterceptor {
 
     @Override
-    public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws IOException {
+    public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o)   {
         /*if (!httpServletRequest.getMethod().equals("OPTIONS")){
             //请求验证拦截
             if(!"/user/login".equals(httpServletRequest.getRequestURI())){
@@ -46,7 +46,7 @@ public class Interceptor implements HandlerInterceptor {
         if (exception instanceof ApplicationException) {
             errorCode = ((ApplicationException) exception).getCode();
         }
-        String response = "{\"error\":{\"timestamp\":" + System.currentTimeMillis() + ",\"code\":" + errorCode + ",\"message\":\"" + exception.getMessage() + "\",\"path\":\"" + httpServletRequest.getServletPath() + "\"}}";
+        String response = "{\"error\":{\"timestamp\":" + System.currentTimeMillis() + ",\"code\":" + errorCode + ",\"message\":\"" + exception.getMessage().replaceAll("\"","'") + "\",\"path\":\"" + httpServletRequest.getServletPath() + "\"}}";
 
         String origin = httpServletRequest.getHeader("Origin");
         httpServletResponse.setHeader("Access-Control-Allow-Origin", origin);

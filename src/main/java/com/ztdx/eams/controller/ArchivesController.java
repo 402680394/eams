@@ -23,6 +23,7 @@ public class ArchivesController {
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public Archives get() {
         Archives archives =  archivesService.get(1);
+        archives.setArchivesType(ArchivesType.Project);
         return  archives;
 //        Archives archives = new Archives();
 //        archives.setName("档案库");

@@ -1,8 +1,6 @@
 package com.ztdx.eams.domain.archives.model;
 
 import lombok.Data;
-import org.hibernate.validator.constraints.Range;
-
 import javax.persistence.*;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -23,8 +21,8 @@ public class Archives {
     private int id;
 
     //档案库类型(1 一文一件；2 案卷；3 项目)
-//    @Min(value = 1)
-//    @Max(value = 3)
+    @Min(value = 1)
+    @Max(value = 3)
     @Column(name = "archives_type")
     @Convert(converter = ArchivesType.EnumConverter.class)
     private ArchivesType archivesType;
