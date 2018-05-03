@@ -48,7 +48,7 @@ public enum ArchivesType {
     }
 
     /**
-     * 创建枚举
+     * 创建枚举的工厂方法
      */
     @JsonCreator
     public static ArchivesType create(int code) {
