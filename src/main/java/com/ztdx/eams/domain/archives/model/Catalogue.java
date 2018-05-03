@@ -1,7 +1,6 @@
 package com.ztdx.eams.domain.archives.model;
 
 import lombok.Data;
-import org.hibernate.validator.constraints.Range;
 
 import javax.persistence.*;
 import javax.validation.constraints.Max;
@@ -14,28 +13,32 @@ import java.util.Date;
  */
 @Data
 @Entity
-@Table(name = "archives")
-public class Archives {
+@Table(name = "archives_catalogue")
+public class Catalogue {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int id;
 
-    //档案库类型(1 一文一件；2 案卷；3 项目)
+    //目录类型(1 一文一件/卷内 2 案卷 3 项目）
     @Min(value = 1)
     @Max(value = 3)
-    @Column(name = "archives_type")
-    private int archivesType;
+    @Column(name = "directory_type")
+    private int directoryType;
 
-    //档案库名称
-    @Size(max = 50)
-    @Column(name = "name")
-    private String name;
+    //档案库标识
+    @Column(name = "archives_id")
+    private int archivesId;
 
-    //全宗标识
-    @Column(name = "fonds_id")
-    private int fondsId;
+    //物理表的名称
+    @Size(max = 100)
+    @Column(name = "table_name")
+    private String tableName;
+
+    //元数据规范标识
+    @Column(name = "metadata_standards_id")
+    private String metadataStandardsId;
 
     //创建时间
     @Column(name = "gmt_create")
