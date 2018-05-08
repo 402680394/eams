@@ -32,9 +32,9 @@ public class Archives {
     @Column(name = "name")
     private String name;
 
-    //全宗标识
-    @Column(name = "fonds_id")
-    private int fondsId;
+    //所属库分组ID
+    @Column(name = "archives_group_id")
+    private int archivesGroupId;
 
     //创建时间
     @Column(name = "gmt_create")

@@ -97,7 +97,7 @@ public class DictionaryController {
      * @api {get} /dictionary/{id} 获取词典详情
      * @apiName get
      * @apiGroup dictionary
-     * @apiParam int} id 词典ID（url占位符）
+     * @apiParam int id 词典ID（url占位符）
      * @apiSuccess (Success 200) {int} id 词典ID.
      * @apiSuccess (Success 200) {String} code 词典编码.
      * @apiSuccess (Success 200) {String} name 词典名称.

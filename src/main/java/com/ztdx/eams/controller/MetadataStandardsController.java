@@ -30,7 +30,6 @@ public class MetadataStandardsController {
      * @apiName list
      * @apiGroup metadataStandards
      * @apiParam {String} name 名称(未输入传""值)(url参数)
-     * @apiParam {String} name 名称(未输入传""值)(url参数)
      * @apiSuccess (Success 200) {int} id ID.
      * @apiSuccess (Success 200) {String} code 编号.
      * @apiSuccess (Success 200) {String} name 名称.

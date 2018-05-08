@@ -28,21 +28,24 @@ public class DictionaryClassificationController {
     }
 
     /**
-     * @api {get} /dictionaryClassification/treeList 获取词典分类树形列表
+     * @api {get} /dictionaryClassification/treeList 获取全宗、词典分类树形列表
      * @apiName treeList
      * @apiGroup dictionaryClassification
      * @apiSuccess (Success 200) {int} id 全宗ID/词典分类ID.
      * @apiSuccess (Success 200) {String} code 全宗号/词典分类编码.
      * @apiSuccess (Success 200) {String} name 全宗名称/词典分类名称.
+     * @apiSuccess (Success 200) {int} parentId 上级全宗ID.
+     * @apiSuccess (Success 200) {int} orderNumber 排序号.
+     * @apiSuccess (Success 200) {int} type 全宗类型.
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccess (Success 200) {int} fondsId 所属全宗ID
      * @apiSuccess (Success 200) {arr} subFonds 子全宗信息
-     * @apiSuccess (Success 200) {arr} subDictionaryClassification 子词典分类信息
+     * @apiSuccess (Success 200) {arr} subDictionaryClassification 词典分类信息
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"subDictionaryClassification": [{"id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID}],
-    "subFonds": [{"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"subDictionaryClassification": [
-    {"id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID}],"subFonds": [
-    {"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"subDictionaryClassification": [],"subFonds": []}]}]}}
+     * "subFonds": [{"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"subDictionaryClassification": [
+     * {"id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID}],"subFonds": [
+     * {"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型}]}]}}
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList() {
