@@ -25,8 +25,8 @@ public interface ClassificationRepository extends JpaRepository<Classification, 
     @Query("select max (c.orderNumber) from Classification c where c.parentId=:parentId")
     Integer findMaxOrderNumber(@Param(value = "parentId")int parentId);
 
-    // 通过父ID查询子档案分类
-    List<Classification> findAllByParentId(int id);
+    // 通过父ID查询子档案分类是否存在
+    boolean existsByParentId(int id);
 
     //通过ID查询
     Classification findById(int id);

@@ -9,7 +9,7 @@ import javax.persistence.Converter;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum ArchivesType {
+public enum Structure {
 
     /**
      * 一文一件
@@ -27,14 +27,14 @@ public enum ArchivesType {
     Project(3);
 
     private Integer code;
-    private static final Map<Integer, ArchivesType> enumMap = new HashMap<>();
+    private static final Map<Integer, Structure> enumMap = new HashMap<>();
 
-    ArchivesType(Integer i) {
+    Structure(Integer i) {
         code = i;
     }
 
     static {
-        for (ArchivesType item : values()) {
+        for (Structure item : values()) {
             enumMap.put(item.getCode(), item);
         }
     }
@@ -51,7 +51,7 @@ public enum ArchivesType {
      * 创建枚举的工厂方法
      */
     @JsonCreator
-    public static ArchivesType create(int code) {
+    public static Structure create(int code) {
         if (!enumMap.containsKey(code))
             throw new BusinessException("不存在类型为" + code + "的档案库类型");
 
@@ -59,16 +59,16 @@ public enum ArchivesType {
     }
 
     @Converter(autoApply = true)
-    public static class EnumConverter implements AttributeConverter<ArchivesType, Integer> {
+    public static class EnumConverter implements AttributeConverter<Structure, Integer> {
 
         @Override
-        public Integer convertToDatabaseColumn(ArchivesType attribute) {
+        public Integer convertToDatabaseColumn(Structure attribute) {
             return attribute.getCode();
         }
 
         @Override
-        public ArchivesType convertToEntityAttribute(Integer dbData) {
-            return ArchivesType.create(dbData);
+        public Structure convertToEntityAttribute(Integer dbData) {
+            return Structure.create(dbData);
         }
     }
 

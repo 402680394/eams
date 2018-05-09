@@ -20,12 +20,12 @@ public class Archives {
     @Column(name = "id")
     private int id;
 
-    //档案库类型(1 一文一件；2 案卷；3 项目)
+    //档案库结构(1 一文一件；2 案卷；3 项目)
     @Min(value = 1)
     @Max(value = 3)
-    @Column(name = "archives_type")
-    @Convert(converter = ArchivesType.EnumConverter.class)
-    private ArchivesType archivesType;
+    @Column(name = "structure")
+    @Convert(converter = Structure.EnumConverter.class)
+    private Structure structure;
 
     //档案库名称
     @Size(max = 50)
@@ -35,6 +35,14 @@ public class Archives {
     //所属库分组ID
     @Column(name = "archives_group_id")
     private int archivesGroupId;
+
+    //档案库内容类型
+    @Column(name = "content_type")
+    private int contentType;
+
+    //档案库类型(1 登记库； 2 归档库)
+    @Column(name = "type")
+    private int type;
 
     //创建时间
     @Column(name = "gmt_create")

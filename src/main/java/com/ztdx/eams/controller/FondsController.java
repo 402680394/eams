@@ -69,6 +69,8 @@ public class FondsController {
      * @apiName delete
      * @apiGroup fonds
      * @apiParam {int} id 全宗ID（url占位符）
+     * @apiError (Error 400) message 该全宗下存在子全宗.
+     * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {

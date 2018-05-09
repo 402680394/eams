@@ -50,12 +50,9 @@ public class FondsService {
     @Transactional
     public void delete(int id) {
         if(fondsRepository.existsById(id)){
-            //删除子全宗
-            List<Fonds> list = fondsRepository.findAllByParentId(id);
-            if (!list.isEmpty()) {
-                for (Fonds f : list) {
-                    delete(f.getId());
-                }
+            //是否存在子全宗
+            if(fondsRepository.existsByParentId(id)){
+                throw new InvalidArgumentException("该全宗下存在子全宗");
             }
             //删除本全宗
             fondsRepository.deleteById(id);

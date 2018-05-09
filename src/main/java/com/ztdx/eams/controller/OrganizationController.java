@@ -70,7 +70,7 @@ public class OrganizationController {
      * @apiName delete
      * @apiGroup organization
      * @apiParam {int} id 机构ID（url占位符）
-     * @apiError (Error 400) message 该机构或子机构下存在用户.
+     * @apiError (Error 400) message 1.该机构或子机构下存在用户；2.该机构下存在子机构.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)

@@ -56,12 +56,9 @@ public class OrganizationService {
             if (userRepository.existsByOrganizationId(id)) {
                 throw new InvalidArgumentException("该机构或子机构下存在用户");
             }
-            //删除子机构
-            List<Organization> list = organizationRepository.findAllByParentId(id);
-            if (!list.isEmpty()) {
-                for (Organization o : list) {
-                    delete(o.getId());
-                }
+            //机构下是否存在子机构
+            if (organizationRepository.existsByParentId(id)) {
+                throw new InvalidArgumentException("该机构下存在子机构");
             }
             //删除本机构
             organizationRepository.deleteById(id);

@@ -46,12 +46,9 @@ public class ClassificationService {
     @Transactional
     public void delete(int id) {
         if(classificationRepository.existsById(id)){
-            //删除子档案分类
-            List<Classification> list = classificationRepository.findAllByParentId(id);
-            if (!list.isEmpty()) {
-                for (Classification c : list) {
-                    delete(c.getId());
-                }
+            //是否存在子档案分类
+            if (classificationRepository.existsByParentId(id)) {
+                throw new InvalidArgumentException("该档案分类下存在子档案分类");
             }
             //删除本档案分类
             classificationRepository.deleteById(id);

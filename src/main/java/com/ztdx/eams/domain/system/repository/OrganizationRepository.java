@@ -28,8 +28,8 @@ public interface OrganizationRepository extends JpaRepository<Organization, Inte
     //通过ID查询机构是否存在
     boolean existsById(int id);
 
-    // 通过父机构ID查询子机构
-    List<Organization> findAllByParentId(int id);
+    // 通过父机构ID查询子机构是否存在
+    boolean existsByParentId(int id);
 
     //查询同级机构优先级最大值
     @Query("select max (o.orderNumber) from Organization o where o.parentId=:parentId and o.type=:type")

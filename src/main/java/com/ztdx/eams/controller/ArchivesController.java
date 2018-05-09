@@ -2,7 +2,7 @@ package com.ztdx.eams.controller;
 
 import com.ztdx.eams.domain.archives.application.ArchivesService;
 import com.ztdx.eams.domain.archives.model.Archives;
-import com.ztdx.eams.domain.archives.model.ArchivesType;
+import com.ztdx.eams.domain.archives.model.Structure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +23,7 @@ public class ArchivesController {
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public Archives get() {
         Archives archives =  archivesService.get(1);
-        archives.setArchivesType(ArchivesType.Project);
+        archives.setStructure(Structure.Project);
         return  archives;
 //        Archives archives = new Archives();
 //        archives.setName("档案库");
