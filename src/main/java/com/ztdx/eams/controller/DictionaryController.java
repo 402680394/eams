@@ -1,8 +1,8 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.domain.business.application.DictionaryService;
-import com.ztdx.eams.domain.business.model.Dictionary;
-import com.ztdx.eams.query.BusinessQuery;
+import com.ztdx.eams.domain.archives.application.DictionaryService;
+import com.ztdx.eams.domain.archives.model.Dictionary;
+import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +18,11 @@ public class DictionaryController {
 
     private final DictionaryService dictionaryService;
 
-    private final BusinessQuery businessQuery;
+    private final ArchivesQuery archivesQuery;
     @Autowired
-    public DictionaryController(DictionaryService dictionaryService, BusinessQuery businessQuery) {
+    public DictionaryController(DictionaryService dictionaryService, ArchivesQuery archivesQuery) {
         this.dictionaryService = dictionaryService;
-        this.businessQuery = businessQuery;
+        this.archivesQuery = archivesQuery;
     }
 
     /**
@@ -43,7 +43,7 @@ public class DictionaryController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam("dictionaryClassificationId") int dictionaryClassificationId,@RequestParam(value = "name",defaultValue = "") String name) {
-        return businessQuery.getDictionaryList(UInteger.valueOf(dictionaryClassificationId),name);
+        return archivesQuery.getDictionaryList(UInteger.valueOf(dictionaryClassificationId),name);
     }
 
     /**
@@ -109,7 +109,7 @@ public class DictionaryController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return businessQuery.getDictionary(UInteger.valueOf(id));
+        return archivesQuery.getDictionary(UInteger.valueOf(id));
     }
 
     /**

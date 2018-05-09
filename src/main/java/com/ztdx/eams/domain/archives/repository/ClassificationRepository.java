@@ -1,6 +1,6 @@
-package com.ztdx.eams.domain.business.repository;
+package com.ztdx.eams.domain.archives.repository;
 
-import com.ztdx.eams.domain.business.model.Classification;
+import com.ztdx.eams.domain.archives.model.Classification;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,9 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Size;
-import java.util.List;
 
 /**
  * Created by li on 2018/4/18.

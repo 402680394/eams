@@ -1,4 +1,4 @@
-package com.ztdx.eams.domain.business.model;
+package com.ztdx.eams.domain.archives.model;
 
 import lombok.Data;
 

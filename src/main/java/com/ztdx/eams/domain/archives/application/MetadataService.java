@@ -1,8 +1,8 @@
-package com.ztdx.eams.domain.business.application;
+package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.domain.business.model.Metadata;
-import com.ztdx.eams.domain.business.repository.MetadataRepository;
+import com.ztdx.eams.domain.archives.model.Metadata;
+import com.ztdx.eams.domain.archives.repository.MetadataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

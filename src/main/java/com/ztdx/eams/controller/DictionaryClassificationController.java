@@ -1,9 +1,8 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.domain.business.application.ClassificationService;
-import com.ztdx.eams.domain.business.application.DictionaryClassificationService;
-import com.ztdx.eams.domain.business.model.DictionaryClassification;
-import com.ztdx.eams.query.BusinessQuery;
+import com.ztdx.eams.domain.archives.application.DictionaryClassificationService;
+import com.ztdx.eams.domain.archives.model.DictionaryClassification;
+import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,12 +18,12 @@ public class DictionaryClassificationController {
 
     private final DictionaryClassificationService dictionaryClassificationService;
 
-    private final BusinessQuery businessQuery;
+    private final ArchivesQuery archivesQuery;
 
     @Autowired
-    public DictionaryClassificationController(DictionaryClassificationService dictionaryClassificationService, BusinessQuery businessQuery) {
+    public DictionaryClassificationController(DictionaryClassificationService dictionaryClassificationService, ArchivesQuery archivesQuery) {
         this.dictionaryClassificationService = dictionaryClassificationService;
-        this.businessQuery = businessQuery;
+        this.archivesQuery = archivesQuery;
     }
 
     /**
@@ -49,7 +48,7 @@ public class DictionaryClassificationController {
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList() {
-        return businessQuery.getDictionaryClassificationTreeMap();
+        return archivesQuery.getDictionaryClassificationTreeMap();
     }
 
     /**
@@ -66,7 +65,7 @@ public class DictionaryClassificationController {
      */
     @RequestMapping(value = "/listByFonds", method = RequestMethod.GET)
     public Map<String, Object> listByFonds(@RequestParam int fondsId) {
-        return businessQuery.getDictionaryClassificationListByFonds(UInteger.valueOf(fondsId));
+        return archivesQuery.getDictionaryClassificationListByFonds(UInteger.valueOf(fondsId));
     }
 
     /**
@@ -127,6 +126,6 @@ public class DictionaryClassificationController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return businessQuery.getDictionaryClassification(UInteger.valueOf(id));
+        return archivesQuery.getDictionaryClassification(UInteger.valueOf(id));
     }
 }
