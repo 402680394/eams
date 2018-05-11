@@ -47,10 +47,6 @@ public class Metadata {
     @Column(name = "field_precision")
     private String fieldPrecision;
 
-    //父字段ID
-    @Column(name = "parent_id")
-    private int parentId;
-
     //元数据规范ID
     @Column(name = "metadata_standards_id")
     private int metadataStandardsId;

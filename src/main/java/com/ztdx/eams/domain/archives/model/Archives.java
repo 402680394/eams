@@ -36,9 +36,9 @@ public class Archives {
     @Column(name = "archives_group_id")
     private int archivesGroupId;
 
-    //档案库内容类型
-    @Column(name = "content_type")
-    private int contentType;
+    //档案库内容类型ID
+    @Column(name = "content_type_id")
+    private int contentTypeId;
 
     //档案库类型(1 登记库； 2 归档库)
     @Column(name = "type")

@@ -33,11 +33,11 @@ public interface MetadataRepository extends JpaRepository<Metadata, Integer> {
     //通过ID修改信息
     @Modifying
     @Query("update Metadata m set m.displayName=:#{#metadata.displayName},m.name=:#{#metadata.name},m.fieldProperties=:#{#metadata.fieldProperties}" +
-            ",m.dataType=:#{#metadata.dataType},m.fieldWidth=:#{#metadata.fieldWidth},m.fieldPrecision=:#{#metadata.fieldPrecision},m.parentId=:#{#metadata.parentId}" +
+            ",m.dataType=:#{#metadata.dataType},m.fieldWidth=:#{#metadata.fieldWidth},m.fieldPrecision=:#{#metadata.fieldPrecision}" +
             ",m.defaultValue=:#{#metadata.defaultValue},m.definition=:#{#metadata.definition},m.objective=:#{#metadata.objective},m.constraint=:#{#metadata.constraint}" +
             ",m.elementType=:#{#metadata.elementType},m.codingModification=:#{#metadata.codingModification},m.relatedElements=:#{#metadata.relatedElements}" +
             ",m.range=:#{#metadata.range},m.informationSources=:#{#metadata.informationSources},m.remark=:#{#metadata.remark} where m.id=:#{#metadata.id}")
-    void updateById(@Param(value = "metadata")Metadata metadata);
+    void updateById(@Param(value = "metadata") Metadata metadata);
 
     //设置排序号
     @Modifying

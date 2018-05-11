@@ -28,6 +28,10 @@ public class ArchivesQuery {
 
     private ArchivesCatalogue archivesCatalogue = Tables.ARCHIVES_CATALOGUE;
 
+    private ArchivesContentType archivesContentType = Tables.ARCHIVES_CONTENT_TYPE;
+
+    private ArchivesFileType archivesFileType = Tables.ARCHIVES_FILE_TYPE;
+
     private BusinessClassification businessClassification = Tables.BUSINESS_CLASSIFICATION;
 
     private BusinessDictionaryClassification businessDictionaryClassification = Tables.BUSINESS_DICTIONARY_CLASSIFICATION;
@@ -44,7 +48,7 @@ public class ArchivesQuery {
     }
 
     /**
-     * 获取全宗下全部档案分类树形列表.
+     * 获取所属全宗的档案分类树.
      */
     public Map<String, Object> getClassificationTreeMap(UInteger fondsId) {
         Map<String, Object> resultMap = new HashMap<>();
@@ -79,7 +83,7 @@ public class ArchivesQuery {
     }
 
     /**
-     * 通过根节点递归获取档案分类树形列表
+     * 通过上级节点递归获取档案分类树形列表
      */
     public Map<String, Object> getSubClassificationTreeMap(List<Map<String, Object>> dataList, Map<String, Object> treeMap) {
         //创建一个空子档案分类列表
@@ -113,7 +117,7 @@ public class ArchivesQuery {
     }
 
     /**
-     * 获取全宗词典分类树形列表.
+     * 获取全宗、词典分类树.
      */
     public Map<String, Object> getDictionaryClassificationTreeMap() {
         Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -157,7 +161,7 @@ public class ArchivesQuery {
     }
 
     /**
-     * 通过根节点递归获取全宗词典分类树形列表.
+     * 通过全宗上级节点递归获取全宗、词典分类树.
      */
     public Map<String, Object> getSubDictionaryClassificationTreeMap(List<Map<String, Object>> dataFondsList, List<Map<String, Object>> dataDCList, Map<String, Object> treeMap) {
         //创建一个空的词典分类列表
@@ -241,6 +245,21 @@ public class ArchivesQuery {
     }
 
     /**
+     * 通过词典分类ID查询词典下拉列表
+     */
+    public Map<String, Object> getDictionarySelectList(UInteger dictionaryClassificationId) {
+        Map<String, Object> resultMap = new HashMap<>();
+        List<Map<String, Object>> list = dslContext.select(businessDictionary.ID.as("id"),
+                businessDictionary.DICTIONARY_CODE.as("code"),
+                businessDictionary.DICTIONARY_NAME.as("name"))
+                .from(businessDictionary)
+                .where(businessDictionary.DICTIONARY_CLASSIFICATION_ID.equal(dictionaryClassificationId))
+                .fetch().intoMaps();
+        resultMap.put("items", list);
+        return resultMap;
+    }
+
+    /**
      * 获取词典详情.
      */
     public Map<String, Object> getDictionary(UInteger id) {
@@ -305,7 +324,6 @@ public class ArchivesQuery {
                 businessMetadata.DATA_TYPE.as("dataType"),
                 businessMetadata.FIELD_WIDTH.as("fieldWidth"),
                 businessMetadata.FIELD_PRECISION.as("fieldPrecision"),
-                businessMetadata.PARENT_ID.as("parentId"),
                 businessMetadata.METADATA_STANDARDS_ID.as("metadataStandardsId"),
                 businessMetadata.DEFAULT_VALUE.as("defaultValue"),
                 businessMetadata.METADATA_DEFINITION.as("definition"),
@@ -337,7 +355,6 @@ public class ArchivesQuery {
                 businessMetadata.DATA_TYPE.as("dataType"),
                 businessMetadata.FIELD_WIDTH.as("fieldWidth"),
                 businessMetadata.FIELD_PRECISION.as("fieldPrecision"),
-                businessMetadata.PARENT_ID.as("parentId"),
                 businessMetadata.METADATA_STANDARDS_ID.as("metadataStandardsId"),
                 businessMetadata.DEFAULT_VALUE.as("defaultValue"),
                 businessMetadata.METADATA_DEFINITION.as("definition"),
@@ -354,23 +371,121 @@ public class ArchivesQuery {
                 .where(businessMetadata.ID.equal(id)).fetch().intoMaps().get(0);
     }
 
-    public Map<String, Object> getArchivesGroupTreeMap() {
+    /**
+     * 获取全宗、档案库分组、登记库、目录树.
+     */
+    public Map<String, Object> getCatalogueTreeMap() {
         Map<String, Object> resultMap = new HashMap<String, Object>();
         //伪造全宗根节点，便于递归查询
         resultMap.put("id", UInteger.valueOf(0));
         //查询
-        resultMap = getSubFondsAndArchivesGroupTreeMap(getAllFondsList(), getAllArchivesGroupList(), resultMap);
+        resultMap = getSubFondsTreeMap(getAllFondsList(), getAllArchivesGroupList(), getAllArchivesList(), getAllCatalogueList(), resultMap);
         //拼装返回数据信息
         resultMap.put("items", resultMap.get("subFonds"));
-        //去除根档案分类数据
+        //去除根节点数据
         resultMap.remove("id");
         resultMap.remove("subFonds");
         return resultMap;
     }
 
     /**
-     * 获取全部档案库分组.
+     * 通过全宗上级节点递归获取全宗、档案库分组、登记库、目录树.
      */
+    private Map<String, Object> getSubFondsTreeMap(List<Map<String, Object>> dataFondsList, List<Map<String, Object>> dataArchivesGroupList, List<Map<String, Object>> dataArchivesList, List<Map<String, Object>> dataCatalogueList, Map<String, Object> treeMap) {
+
+        Map<String, Object> archivesGroupTreeMap = new HashMap<String, Object>();
+        //伪造档案库分组根节点，便于递归查询
+        archivesGroupTreeMap.put("id", UInteger.valueOf(0));
+        archivesGroupTreeMap.put("fondsId", treeMap.get("id"));
+        //递归查询档案库分组、登记库、目录树
+        archivesGroupTreeMap = getSubArchivesGroupTreeMap(dataArchivesGroupList, dataArchivesList, dataCatalogueList, archivesGroupTreeMap);
+        //添加查询后的下级档案库分组节点数据到本节点
+        if (archivesGroupTreeMap.get("subArchivesGroup") != null) {
+            treeMap.put("subArchivesGroup", archivesGroupTreeMap.get("subArchivesGroup"));
+        }
+
+        //创建一个空的下级全宗节点列表
+        List<Map<String, Object>> subFondsList = new ArrayList<>();
+        //遍历全宗数据，获取下级全宗节点
+        for (Map<String, Object> map : dataFondsList) {
+            if (map.get("parentId").equals(treeMap.get("id"))) {
+                //递归获取下级节点
+                map = getSubFondsTreeMap(dataFondsList, dataArchivesGroupList, dataArchivesList, dataCatalogueList, map);
+                subFondsList.add(map);
+            }
+        }
+        //添加查询后的下级全宗节点数据到本节点
+        if (!subFondsList.isEmpty()) {
+            treeMap.put("subFonds", subFondsList);
+        }
+        return treeMap;
+    }
+
+    /**
+     * 通过上级节点递归获取档案库分组、登记库、目录树.
+     */
+    private Map<String, Object> getSubArchivesGroupTreeMap(List<Map<String, Object>> dataArchivesGroupList, List<Map<String, Object>> dataArchivesList, List<Map<String, Object>> dataCatalogueList, Map<String, Object> treeMap) {
+
+        //创建一个空的下级登记库节点列表
+        List<Map<String, Object>> subArchivesList = new ArrayList<>();
+        //遍历登记库数据，获取下级登记库节点
+        for (Map<String, Object> map : dataArchivesList) {
+            if (map.get("archivesGroupId").equals(treeMap.get("id"))) {
+                //递归获取下级节点
+                map = getSubCatalogueTreeMap(dataCatalogueList, map);
+                subArchivesList.add(map);
+            }
+        }
+        //添加查询后的下级全宗节点数据到本节点
+        if (!subArchivesList.isEmpty()) {
+            treeMap.put("subArchives", subArchivesList);
+        }
+
+        //创建一个空的档案库分组列表
+        List<Map<String, Object>> subArchivesGroupList = new ArrayList<>();
+
+        //遍历档案库分组数据，并递归获取下级节点
+        for (Map<String, Object> map : dataArchivesGroupList) {
+            System.out.println(map.get("fondsId"));
+            System.out.println(treeMap.get("fondsId"));
+            System.out.println(map.get("parentId"));
+            System.out.println(treeMap.get("id"));
+            if (map.get("fondsId").equals(treeMap.get("fondsId")) && map.get("parentId").equals(treeMap.get("id"))) {
+                map = getSubArchivesGroupTreeMap(dataArchivesGroupList, dataArchivesList, dataCatalogueList, map);
+                subArchivesGroupList.add(map);
+            }
+        }
+        //将递归获取的下属档案库分组树加入上级节点
+        if (!subArchivesGroupList.isEmpty()) {
+            treeMap.put("subArchivesGroup", subArchivesGroupList);
+        }
+        return treeMap;
+    }
+
+    /**
+     * 通过上级档案库节点递归获取目录树.
+     */
+    private Map<String, Object> getSubCatalogueTreeMap(List<Map<String, Object>> dataCatalogueList, Map<String, Object> treeMap) {
+        //创建一个空的下级目录节点列表
+        List<Map<String, Object>> subCatalogueList = new ArrayList<>();
+        //遍历目录数据，获取下级目录节点
+        for (Map<String, Object> map : dataCatalogueList) {
+            if (map.get("archivesId").equals(treeMap.get("id"))) {
+                //获取下级节点
+                subCatalogueList.add(map);
+            }
+        }
+        //添加查询后的下级全宗节点数据到本节点
+        if (!subCatalogueList.isEmpty()) {
+            treeMap.put("subCatalogue", subCatalogueList);
+        }
+        return treeMap;
+    }
+
+
+        /**
+         * 获取全部档案库分组.
+         */
     private List<Map<String, Object>> getAllArchivesGroupList() {
         return dslContext.select(
                 archivesGroup.ID.as("id"),
@@ -383,56 +498,57 @@ public class ArchivesQuery {
     }
 
     /**
-     * 通过根节点递归获取全宗档案库分组树形列表.
+     * 获取全部档案库.
      */
-    public Map<String, Object> getSubFondsAndArchivesGroupTreeMap(List<Map<String, Object>> dataFondsList, List<Map<String, Object>> dataArchivesGroupList, Map<String, Object> treeMap) {
-
-        Map<String, Object> archivesGroupTreeMap = new HashMap<String, Object>();
-        //伪造档案分组根节点，便于递归查询
-        archivesGroupTreeMap.put("id", UInteger.valueOf(0));
-        archivesGroupTreeMap.put("fondsId", treeMap.get("id"));
-        //递归查询
-        archivesGroupTreeMap = getSubArchivesGroupTreeMap(dataArchivesGroupList, archivesGroupTreeMap);
-        //获取全宗下档案分组数据
-        if (archivesGroupTreeMap.get("subArchivesGroup") != null) {
-            treeMap.put("subArchivesGroup", archivesGroupTreeMap.get("subArchivesGroup"));
-        }
-
-        //创建一个空的子全宗列表
-        List<Map<String, Object>> subFondsList = new ArrayList<>();
-        //遍历全宗数据，并将全宗加入全宗列表
-        for (Map<String, Object> map : dataFondsList) {
-            if (map.get("parentId").equals(treeMap.get("id"))) {
-                //递归添加子全宗所属词典分类与下级全宗
-                map = getSubFondsAndArchivesGroupTreeMap(dataFondsList, dataArchivesGroupList, map);
-                subFondsList.add(map);
-            }
-        }
-        //将子全宗列表加入根节点
-        if (!subFondsList.isEmpty()) {
-            treeMap.put("subFonds", subFondsList);
-        }
-        return treeMap;
+    private List<Map<String, Object>> getAllArchivesList() {
+        return dslContext.select(
+                archives.ID.as("id"),
+                archives.STRUCTURE.as("structure"),
+                archives.NAME.as("name"),
+                archives.ARCHIVES_GROUP_ID.as("archivesGroupId"),
+                archives.CONTENT_TYPE_ID.as("contentTypeId"),
+                archives.TYPE.as("type"))
+                .from(archives)
+                .fetch().intoMaps();
     }
 
     /**
-     * 通过根节点递归获取档案库分组树形列表.
+     * 获取全部目录.
      */
-    private Map<String, Object> getSubArchivesGroupTreeMap(List<Map<String, Object>> dataArchivesGroupList, Map<String, Object> treeMap) {
-        //创建一个空的档案库分组列表
-        List<Map<String, Object>> subArchivesGroupList = new ArrayList<>();
+    private List<Map<String, Object>> getAllCatalogueList() {
+        return dslContext.select(
+                archivesCatalogue.ID.as("id"),
+                archivesCatalogue.CATALOGUE_TYPE.as("catalogueType"),
+                archivesCatalogue.ARCHIVES_ID.as("archivesId"),
+                archivesCatalogue.TABLE_NAME.as("tableName"),
+                archivesCatalogue.METADATA_STANDARDS_ID.as("metadataStandardsId"))
+                .from(archivesCatalogue)
+                .fetch().intoMaps();
+    }
 
-        //遍历档案库分组数据，并将所属档案库分组加入档案库分组列表
-        for (Map<String, Object> map : dataArchivesGroupList) {
-            if (map.get("fondsId").equals(treeMap.get("fondsId")) && map.get("parentId").equals(treeMap.get("id"))) {
-                map = getSubArchivesGroupTreeMap(dataArchivesGroupList, map);
-                subArchivesGroupList.add(map);
-            }
-        }
-        //将所属档案库分组列表加入上级节点
-        if (!subArchivesGroupList.isEmpty()) {
-            treeMap.put("subArchivesGroup", subArchivesGroupList);
-        }
-        return treeMap;
+    /**
+     * 查询档案库内容类型列表
+     */
+    public Map<String, Object> getContentTypeList() {
+        Map<String, Object> resultMap = new HashMap<>();
+        List<Map<String, Object>> list = dslContext.select(archivesContentType.ID.as("id"),
+                archivesContentType.NAME.as("name"))
+                .from(archivesContentType)
+                .fetch().intoMaps();
+        resultMap.put("items", list);
+        return resultMap;
+    }
+
+    /**
+     * 查询文件类型列表
+     */
+    public Map<String, Object> getFileTypeList() {
+        Map<String, Object> resultMap = new HashMap<>();
+        List<Map<String, Object>> list = dslContext.select(archivesFileType.ID.as("id"),
+                archivesFileType.NAME.as("name"))
+                .from(archivesFileType)
+                .fetch().intoMaps();
+        resultMap.put("items", list);
+        return resultMap;
     }
 }

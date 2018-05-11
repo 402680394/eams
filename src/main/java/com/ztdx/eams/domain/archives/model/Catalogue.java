@@ -24,8 +24,8 @@ public class Catalogue {
     //目录类型(1 一文一件/卷内 2 案卷 3 项目）
     @Min(value = 1)
     @Max(value = 3)
-    @Column(name = "directory_type")
-    private int directoryType;
+    @Column(name = "catalogue_type")
+    private int catalogueType;
 
     //档案库标识
     @Column(name = "archives_id")
