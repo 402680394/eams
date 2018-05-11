@@ -14,23 +14,25 @@ public enum ArchivesType {
     /**
      * 一文一件
      */
-    ArticleOne(1),
+    ArticleOne(1,"一文一件"),
 
     /**
      * 传统立卷
      */
-    TraditionalArchives(2),
+    TraditionalArchives(2,"传统立卷"),
 
     /**
      * 项目
      */
-    Project(3);
+    Project(3,"项目");
 
     private Integer code;
+    private String descpriont;
     private static final Map<Integer, ArchivesType> enumMap = new HashMap<>();
 
-    ArchivesType(Integer i) {
-        code = i;
+    ArchivesType(Integer code,String descpriont) {
+        this.code = code;
+        this.descpriont=descpriont;
     }
 
     static {
@@ -48,6 +50,13 @@ public enum ArchivesType {
     }
 
     /**
+     * 获取值
+     */
+    public String getDescription() {
+        return descpriont;
+    }
+
+    /**
      * 创建枚举的工厂方法
      */
     @JsonCreator
@@ -56,7 +65,7 @@ public enum ArchivesType {
             throw new BusinessException("不存在类型为" + code + "的档案库类型");
 
         return enumMap.get(code);
-    }
+}
 
     @Converter(autoApply = true)
     public static class EnumConverter implements AttributeConverter<ArchivesType, Integer> {
