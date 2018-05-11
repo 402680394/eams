@@ -1,8 +1,8 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.domain.business.application.DictionaryService;
-import com.ztdx.eams.domain.business.model.Dictionary;
-import com.ztdx.eams.query.BusinessQuery;
+import com.ztdx.eams.domain.archives.application.DictionaryService;
+import com.ztdx.eams.domain.archives.model.Dictionary;
+import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,18 +18,18 @@ public class DictionaryController {
 
     private final DictionaryService dictionaryService;
 
-    private final BusinessQuery businessQuery;
+    private final ArchivesQuery archivesQuery;
     @Autowired
-    public DictionaryController(DictionaryService dictionaryService, BusinessQuery businessQuery) {
+    public DictionaryController(DictionaryService dictionaryService, ArchivesQuery archivesQuery) {
         this.dictionaryService = dictionaryService;
-        this.businessQuery = businessQuery;
+        this.archivesQuery = archivesQuery;
     }
 
     /**
      * @api {get} /dictionary/list 获取词典列表
      * @apiName list
      * @apiGroup dictionary
-     * @apiParam {int} dictionaryClassificationId 词典分类ID(全局ID值为0)(url参数)
+     * @apiParam {int} dictionaryClassificationId 词典分类ID(url参数)
      * @apiParam {String} name 词典名称(未输入传""值)(url参数)
      * @apiSuccess (Success 200) {int} id 词典ID.
      * @apiSuccess (Success 200) {String} code 词典编码.
@@ -43,7 +43,23 @@ public class DictionaryController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam("dictionaryClassificationId") int dictionaryClassificationId,@RequestParam(value = "name",defaultValue = "") String name) {
-        return businessQuery.getDictionaryList(UInteger.valueOf(dictionaryClassificationId),name);
+        return archivesQuery.getDictionaryList(UInteger.valueOf(dictionaryClassificationId),name);
+    }
+
+    /**
+     * @api {get} /dictionary/selectList 通过词典分类ID获取词典下拉列表
+     * @apiName selectList
+     * @apiGroup dictionary
+     * @apiParam {int} dictionaryClassificationId 词典分类ID(url参数)
+     * @apiSuccess (Success 200) {int} id 词典ID.
+     * @apiSuccess (Success 200) {String} code 词典编码.
+     * @apiSuccess (Success 200) {String} name 词典名称.
+     * @apiSuccessExample {json} Success-Response:
+     * {"data": {"items": [{"id": 词典ID,"code": "词典编码","name": "词典名称"}]}}.
+     */
+    @RequestMapping(value = "/selectList", method = RequestMethod.GET)
+    public Map<String, Object> selectList(@RequestParam("dictionaryClassificationId") int dictionaryClassificationId) {
+        return archivesQuery.getDictionarySelectList(UInteger.valueOf(dictionaryClassificationId));
     }
 
     /**
@@ -97,7 +113,7 @@ public class DictionaryController {
      * @api {get} /dictionary/{id} 获取词典详情
      * @apiName get
      * @apiGroup dictionary
-     * @apiParam int} id 词典ID（url占位符）
+     * @apiParam int id 词典ID（url占位符）
      * @apiSuccess (Success 200) {int} id 词典ID.
      * @apiSuccess (Success 200) {String} code 词典编码.
      * @apiSuccess (Success 200) {String} name 词典名称.
@@ -109,7 +125,7 @@ public class DictionaryController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return businessQuery.getDictionary(UInteger.valueOf(id));
+        return archivesQuery.getDictionary(UInteger.valueOf(id));
     }
 
     /**

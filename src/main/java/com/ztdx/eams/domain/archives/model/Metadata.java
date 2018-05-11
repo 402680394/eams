@@ -1,4 +1,4 @@
-package com.ztdx.eams.domain.business.model;
+package com.ztdx.eams.domain.archives.model;
 
 import lombok.Data;
 
@@ -46,10 +46,6 @@ public class Metadata {
     @Size(max = 20)
     @Column(name = "field_precision")
     private String fieldPrecision;
-
-    //父字段ID
-    @Column(name = "parent_id")
-    private int parentId;
 
     //元数据规范ID
     @Column(name = "metadata_standards_id")

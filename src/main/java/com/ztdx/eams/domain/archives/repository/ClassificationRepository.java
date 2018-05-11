@@ -1,6 +1,6 @@
-package com.ztdx.eams.domain.business.repository;
+package com.ztdx.eams.domain.archives.repository;
 
-import com.ztdx.eams.domain.business.model.Classification;
+import com.ztdx.eams.domain.archives.model.Classification;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,9 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Size;
-import java.util.List;
 
 /**
  * Created by li on 2018/4/18.
@@ -25,8 +22,8 @@ public interface ClassificationRepository extends JpaRepository<Classification, 
     @Query("select max (c.orderNumber) from Classification c where c.parentId=:parentId")
     Integer findMaxOrderNumber(@Param(value = "parentId")int parentId);
 
-    // 通过父ID查询子档案分类
-    List<Classification> findAllByParentId(int id);
+    // 通过父ID查询子档案分类是否存在
+    boolean existsByParentId(int id);
 
     //通过ID查询
     Classification findById(int id);

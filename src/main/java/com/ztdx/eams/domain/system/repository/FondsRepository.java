@@ -21,17 +21,17 @@ import java.util.List;
 @Table(name = "sys_fonds")
 @Qualifier("fondsRepository")
 public interface FondsRepository extends JpaRepository<Fonds, Integer> {
-    //查询是code否存在
+    //查询code是否存在
     boolean existsByCode(String code);
-    //查询是ID否存在
+    //查询ID是否存在
     boolean existsById(int id);
 
     //查询同级全宗优先级最大值
     @Query("select max (f.orderNumber) from Fonds f where f.parentId=:parentId and f.type=:type")
     Integer findMaxOrderNumber(@Param(value = "parentId")int parentId, @Param(value = "type") int type);
 
-    // 通过父ID查询子全宗
-    List<Fonds> findAllByParentId(int id);
+    // 通过父ID查询是否存在子全宗
+    boolean existsByParentId(int id);
 
     //通过ID查询
     Fonds findById(int id);

@@ -1,8 +1,8 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.domain.business.application.MetadataStandardsService;
-import com.ztdx.eams.domain.business.model.MetadataStandards;
-import com.ztdx.eams.query.BusinessQuery;
+import com.ztdx.eams.domain.archives.application.MetadataStandardsService;
+import com.ztdx.eams.domain.archives.model.MetadataStandards;
+import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,18 +18,17 @@ public class MetadataStandardsController {
 
     private final MetadataStandardsService metadataStandardsService;
 
-    private final BusinessQuery businessQuery;
+    private final ArchivesQuery archivesQuery;
     @Autowired
-    public MetadataStandardsController(MetadataStandardsService metadataStandardsService, BusinessQuery businessQuery) {
+    public MetadataStandardsController(MetadataStandardsService metadataStandardsService, ArchivesQuery archivesQuery) {
         this.metadataStandardsService = metadataStandardsService;
-        this.businessQuery = businessQuery;
+        this.archivesQuery = archivesQuery;
     }
 
     /**
      * @api {get} /metadataStandards/list 获取元数据规范列表
      * @apiName list
      * @apiGroup metadataStandards
-     * @apiParam {String} name 名称(未输入传""值)(url参数)
      * @apiParam {String} name 名称(未输入传""值)(url参数)
      * @apiSuccess (Success 200) {int} id ID.
      * @apiSuccess (Success 200) {String} code 编号.
@@ -46,7 +45,7 @@ public class MetadataStandardsController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam(value = "name",defaultValue = "") String name) {
-        return businessQuery.getMetadataStandardsList(name);
+        return archivesQuery.getMetadataStandardsList(name);
     }
 
     /**
@@ -121,7 +120,7 @@ public class MetadataStandardsController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return businessQuery.getMetadataStandards(UInteger.valueOf(id));
+        return archivesQuery.getMetadataStandards(UInteger.valueOf(id));
     }
 
     /**

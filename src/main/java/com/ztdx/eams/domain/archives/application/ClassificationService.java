@@ -1,14 +1,11 @@
-package com.ztdx.eams.domain.business.application;
+package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.domain.business.model.Classification;
-import com.ztdx.eams.domain.business.repository.ClassificationRepository;
+import com.ztdx.eams.domain.archives.model.Classification;
+import com.ztdx.eams.domain.archives.repository.ClassificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Calendar;
-import java.util.List;
 
 /**
  * Created by li on 2018/4/18.
@@ -46,12 +43,9 @@ public class ClassificationService {
     @Transactional
     public void delete(int id) {
         if(classificationRepository.existsById(id)){
-            //删除子档案分类
-            List<Classification> list = classificationRepository.findAllByParentId(id);
-            if (!list.isEmpty()) {
-                for (Classification c : list) {
-                    delete(c.getId());
-                }
+            //是否存在子档案分类
+            if (classificationRepository.existsByParentId(id)) {
+                throw new InvalidArgumentException("该档案分类下存在子档案分类");
             }
             //删除本档案分类
             classificationRepository.deleteById(id);

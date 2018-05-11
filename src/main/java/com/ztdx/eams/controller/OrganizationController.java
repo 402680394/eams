@@ -14,22 +14,22 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping(value = "/oganization")
-public class OganizationController {
+public class OrganizationController {
 
     private final OrganizationService organizationService;
 
     private final SystemQuery systemQuery;
 
     @Autowired
-    public OganizationController(OrganizationService organizationService, SystemQuery systemQuery) {
+    public OrganizationController(OrganizationService organizationService, SystemQuery systemQuery) {
         this.organizationService = organizationService;
         this.systemQuery = systemQuery;
     }
 
     /**
-     * @api {get} /oganization/list 获取机构列表
-     * @apiName list
-     * @apiGroup oganization
+     * @api {get} /organization/treeList 获取机构树形列表
+     * @apiName treeList
+     * @apiGroup organization
      * @apiSuccess (Success 200) {int} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
@@ -38,12 +38,12 @@ public class OganizationController {
      * @apiSuccess (Success 200) {int} type 机构类型
      * @apiSuccess (Success 200) {arr} subOrg 子机构信息
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"items": [{"id": 机构ID,"code": "机构编码","name": "父机构0","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrg": []},
+     * {"data": {"items": [{"id": 机构ID,"code": "机构编码","name": "父机构0","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型},
      * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrg": [
-     * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrg": []}]}]}}.
+     * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}]}]}}.
      */
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list() {
+    @RequestMapping(value = "/treeList", method = RequestMethod.GET)
+    public Map<String, Object> treeList() {
         return systemQuery.getOrganizationTreeMap();
     }
 
@@ -66,11 +66,11 @@ public class OganizationController {
     }
 
     /**
-     * @api {delete} /oganization/{id} 删除机构
+     * @api {delete} /organization/{id} 删除机构
      * @apiName delete
-     * @apiGroup oganization
+     * @apiGroup organization
      * @apiParam {int} id 机构ID（url占位符）
-     * @apiError (Error 400) message 该机构或子机构下存在用户.
+     * @apiError (Error 400) message 1.该机构或子机构下存在用户；2.该机构下存在子机构.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
@@ -98,9 +98,9 @@ public class OganizationController {
     }
 
     /**
-     * @api {get} /oganization/{id} 获取机构详情
+     * @api {get} /organization/{id} 获取机构详情
      * @apiName get
-     * @apiGroup oganization
+     * @apiGroup organization
      * @apiParam {int} id 机构ID（url占位符）
      * @apiSuccess (Success 200) {int} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
@@ -116,9 +116,9 @@ public class OganizationController {
     }
 
     /**
-     * @api {patch} /oganization/{upId},{downId}/priority 修改机构排序优先级
+     * @api {patch} /organization/{upId},{downId}/priority 修改机构排序优先级
      * @apiName priority
-     * @apiGroup oganization
+     * @apiGroup organization
      * @apiParam {int} upId 上移机构ID（url占位符）
      * @apiParam {int} downId 下移机构ID（url占位符）
      * @apiError (Error 400) message 1.机构类型或上级机构不一致 2.机构不存在或已被删除.

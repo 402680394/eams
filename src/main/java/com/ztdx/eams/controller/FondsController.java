@@ -27,8 +27,8 @@ public class FondsController {
     }
 
     /**
-     * @api {get} /fonds/list 获取全宗列表
-     * @apiName list
+     * @api {get} /fonds/treeList 获取全宗树形列表
+     * @apiName treeList
      * @apiGroup fonds
      * @apiSuccess (Success 200) {int} id 全宗ID.
      * @apiSuccess (Success 200) {String} code 全宗号.
@@ -38,12 +38,12 @@ public class FondsController {
      * @apiSuccess (Success 200) {int} type 全宗类型
      * @apiSuccess (Success 200) {arr} subFonds 子全宗信息
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"items": [{"id": 全宗ID,"code": "全宗号","name": "父全宗0","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型,subFonds": []},
+     * {"data": {"items": [{"id": 全宗ID,"code": "全宗号","name": "父全宗0","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型},
      * {"id": 全宗ID,"code": "全宗号","name": "父全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型,"subFonds": [
-     * {"id": 全宗ID,"code": "全宗号","name": "子全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型,subFonds": []}]}]}}.
+     * {"id": 全宗ID,"code": "全宗号","name": "子全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型}]}]}}.
      */
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list() {
+    @RequestMapping(value = "/treeList", method = RequestMethod.GET)
+    public Map<String, Object> treeList() {
         return systemQuery.getFondsTreeMap();
     }
 
@@ -69,6 +69,8 @@ public class FondsController {
      * @apiName delete
      * @apiGroup fonds
      * @apiParam {int} id 全宗ID（url占位符）
+     * @apiError (Error 400) message 该全宗下存在子全宗.
+     * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {

@@ -1,6 +1,6 @@
-package com.ztdx.eams.domain.business.repository;
+package com.ztdx.eams.domain.archives.repository;
 
-import com.ztdx.eams.domain.business.model.DictionaryClassification;
+import com.ztdx.eams.domain.archives.model.DictionaryClassification;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

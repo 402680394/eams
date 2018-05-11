@@ -1,4 +1,4 @@
-package com.ztdx.eams.domain.business.model;
+package com.ztdx.eams.domain.archives.model;
 
 import lombok.Data;
 
@@ -7,36 +7,27 @@ import javax.validation.constraints.Size;
 import java.util.Date;
 
 /**
- * Created by li on 2018/4/18.
+ * Created by li on 2018/5/10.
  */
 @Data
 @Entity
-@Table(name = "business_dictionary_classification")
-public class DictionaryClassification {
+@Table(name = "archives_content_type")
+public class ContentType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int id;
 
-    //词典分类编码
+    //名称
     @Size(max = 30)
-    @Column(name = "classification_code")
-    private String code;
-
-    //词典分类名称
-    @Size(max = 30)
-    @Column(name = "classification_name")
+    @Column(name = "name")
     private String name;
 
     //备注
     @Size(max = 100)
     @Column(name = "remark")
     private String remark;
-
-    //所属全宗id
-    @Column(name = "fonds_id")
-    private int fondsId;
 
     //创建时间
     @Column(name = "gmt_create")

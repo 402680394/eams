@@ -1,8 +1,8 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.domain.business.application.MetadataService;
-import com.ztdx.eams.domain.business.model.Metadata;
-import com.ztdx.eams.query.BusinessQuery;
+import com.ztdx.eams.domain.archives.application.MetadataService;
+import com.ztdx.eams.domain.archives.model.Metadata;
+import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +18,11 @@ public class MetadataController {
 
     private final MetadataService metadataService;
 
-    private final BusinessQuery businessQuery;
+    private final ArchivesQuery archivesQuery;
     @Autowired
-    public MetadataController(MetadataService metadataService, BusinessQuery businessQuery) {
+    public MetadataController(MetadataService metadataService, ArchivesQuery archivesQuery) {
         this.metadataService = metadataService;
-        this.businessQuery = businessQuery;
+        this.archivesQuery = archivesQuery;
     }
 
     /**
@@ -61,7 +61,7 @@ public class MetadataController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam(value = "metadataStandardsId") int metadataStandardsId,@RequestParam(value = "name",defaultValue = "") String name) {
-        return businessQuery.getMetadataList(UInteger.valueOf(metadataStandardsId),name);
+        return archivesQuery.getMetadataList(UInteger.valueOf(metadataStandardsId),name);
     }
 
     /**
@@ -169,7 +169,7 @@ public class MetadataController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return businessQuery.getMetadata(UInteger.valueOf(id));
+        return archivesQuery.getMetadata(UInteger.valueOf(id));
     }
 
     /**

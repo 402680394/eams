@@ -1,8 +1,8 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.domain.business.application.ClassificationService;
-import com.ztdx.eams.domain.business.model.Classification;
-import com.ztdx.eams.query.BusinessQuery;
+import com.ztdx.eams.domain.archives.application.ClassificationService;
+import com.ztdx.eams.domain.archives.model.Classification;
+import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,17 +18,17 @@ public class ClassificationController {
 
     private final ClassificationService classificationService;
 
-    private final BusinessQuery businessQuery;
+    private final ArchivesQuery archivesQuery;
 
     @Autowired
-    public ClassificationController(ClassificationService classificationService, BusinessQuery businessQuery) {
+    public ClassificationController(ClassificationService classificationService, ArchivesQuery archivesQuery) {
         this.classificationService = classificationService;
-        this.businessQuery = businessQuery;
+        this.archivesQuery = archivesQuery;
     }
 
     /**
-     * @api {get} /classification/list 获取全宗下档案分类列表
-     * @apiName list
+     * @api {get} /classification/treeList 获取全宗下档案分类树形列表
+     * @apiName treeList
      * @apiGroup classification
      * @apiParam {int} fondsId 所属全宗ID(全局为0)(url参数)
      * @apiSuccess (Success 200) {int} id 档案分类ID.
@@ -40,13 +40,13 @@ public class ClassificationController {
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccess (Success 200) {arr} subClassification 子档案分类信息
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"items": [{"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类0","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","subClassification": []},
+     * {"data": {"items": [{"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类0","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"},
      * {"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","subClassification": [
-     * {"id": 档案分类ID,"code": "档案分类编码","name": "子档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","subClassification": []}]}]}}.
+     * {"id": 档案分类ID,"code": "档案分类编码","name": "子档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"}]}]}}.
      */
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list(@RequestParam("fondsId") int fondsId) {
-        return businessQuery.getClassificationTreeMap(UInteger.valueOf(fondsId));
+    @RequestMapping(value = "/treeList", method = RequestMethod.GET)
+    public Map<String, Object> treeList(@RequestParam("fondsId") int fondsId) {
+        return archivesQuery.getClassificationTreeMap(UInteger.valueOf(fondsId));
     }
 
     /**
@@ -111,7 +111,7 @@ public class ClassificationController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return businessQuery.getClassification(UInteger.valueOf(id));
+        return archivesQuery.getClassification(UInteger.valueOf(id));
     }
 
     /**

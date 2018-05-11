@@ -1,9 +1,8 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.domain.business.application.ClassificationService;
-import com.ztdx.eams.domain.business.application.DictionaryClassificationService;
-import com.ztdx.eams.domain.business.model.DictionaryClassification;
-import com.ztdx.eams.query.BusinessQuery;
+import com.ztdx.eams.domain.archives.application.DictionaryClassificationService;
+import com.ztdx.eams.domain.archives.model.DictionaryClassification;
+import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,41 +18,44 @@ public class DictionaryClassificationController {
 
     private final DictionaryClassificationService dictionaryClassificationService;
 
-    private final BusinessQuery businessQuery;
+    private final ArchivesQuery archivesQuery;
 
     @Autowired
-    public DictionaryClassificationController(DictionaryClassificationService dictionaryClassificationService, BusinessQuery businessQuery) {
+    public DictionaryClassificationController(DictionaryClassificationService dictionaryClassificationService, ArchivesQuery archivesQuery) {
         this.dictionaryClassificationService = dictionaryClassificationService;
-        this.businessQuery = businessQuery;
+        this.archivesQuery = archivesQuery;
     }
 
     /**
-     * @api {get} /dictionaryClassification/list 获取词典分类树形列表
-     * @apiName list
+     * @api {get} /dictionaryClassification/treeList 获取全宗、词典分类树形列表
+     * @apiName treeList
      * @apiGroup dictionaryClassification
      * @apiSuccess (Success 200) {int} id 全宗ID/词典分类ID.
      * @apiSuccess (Success 200) {String} code 全宗号/词典分类编码.
      * @apiSuccess (Success 200) {String} name 全宗名称/词典分类名称.
+     * @apiSuccess (Success 200) {int} parentId 上级全宗ID.
+     * @apiSuccess (Success 200) {int} orderNumber 排序号.
+     * @apiSuccess (Success 200) {int} type 全宗类型.
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccess (Success 200) {int} fondsId 所属全宗ID
      * @apiSuccess (Success 200) {arr} subFonds 子全宗信息
-     * @apiSuccess (Success 200) {arr} subDictionaryClassification 子词典分类信息
+     * @apiSuccess (Success 200) {arr} subDictionaryClassification 词典分类信息
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"subDictionaryClassification": [{"id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID}],
-    "subFonds": [{"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"subDictionaryClassification": [
-    {"id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID}],"subFonds": [
-    {"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"subDictionaryClassification": [],"subFonds": []}]}]}}
+     * "subFonds": [{"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"subDictionaryClassification": [
+     * {"id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID}],"subFonds": [
+     * {"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型}]}]}}
      */
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list() {
-        return businessQuery.getDictionaryClassificationTreeMap();
+    @RequestMapping(value = "/treeList", method = RequestMethod.GET)
+    public Map<String, Object> treeList() {
+        return archivesQuery.getDictionaryClassificationTreeMap();
     }
 
     /**
-     * @api {get} /dictionaryClassification/listByFonds 获取全宗所属词典分类列表
-     * @apiName listByFonds
+     * @api {get} /dictionaryClassification/listByFondsId 获取全宗所属词典分类列表
+     * @apiName listByFondsId
      * @apiGroup dictionaryClassification
-     * @apiParam {int} id 词典分类ID（url占位符）
+     * @apiParam {int} fondsId 全宗ID（url参数）
      * @apiSuccess (Success 200) {int} id 词典分类ID.
      * @apiSuccess (Success 200) {String} code 词典分类编码.
      * @apiSuccess (Success 200) {String} name 词典分类名称.
@@ -63,14 +65,14 @@ public class DictionaryClassificationController {
      */
     @RequestMapping(value = "/listByFonds", method = RequestMethod.GET)
     public Map<String, Object> listByFonds(@RequestParam int fondsId) {
-        return businessQuery.getDictionaryClassificationListByFonds(UInteger.valueOf(fondsId));
+        return archivesQuery.getDictionaryClassificationListByFonds(UInteger.valueOf(fondsId));
     }
 
     /**
      * @api {post} /dictionaryClassification 新增词典分类
      * @apiName save
      * @apiGroup dictionaryClassification
-     * @apiParam {int} fonds_id 所属全宗ID（全局传0）
+     * @apiParam {int} fondsId 所属全宗ID（全局传0）
      * @apiParam {String} code 词典分类编码
      * @apiParam {String} name 词典分类名称
      * @apiParam {String} remark 备注（未输入传""值）
@@ -124,6 +126,6 @@ public class DictionaryClassificationController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return businessQuery.getDictionaryClassification(UInteger.valueOf(id));
+        return archivesQuery.getDictionaryClassification(UInteger.valueOf(id));
     }
 }
