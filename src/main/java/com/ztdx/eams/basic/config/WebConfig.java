@@ -1,7 +1,8 @@
-package com.ztdx.eams.basic;
+package com.ztdx.eams.basic.config;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ztdx.eams.basic.Interceptor;
 import com.ztdx.eams.basic.params.JsonParamResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
