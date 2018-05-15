@@ -11,6 +11,7 @@ import java.util.UUID;
 
 @Data
 @Document(indexName = "archive_record", type = "record", createIndex = false)
+@org.springframework.data.mongodb.core.mapping.Document(collection = "archive_record")
 public class Entry {
     @Id
     private UUID id;
