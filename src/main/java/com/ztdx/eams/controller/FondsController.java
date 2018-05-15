@@ -35,12 +35,12 @@ public class FondsController {
      * @apiSuccess (Success 200) {String} name 全宗名称.
      * @apiSuccess (Success 200) {int} parentId 上级全宗ID.
      * @apiSuccess (Success 200) {int} orderNumber 同级排序编号.
-     * @apiSuccess (Success 200) {int} type 全宗类型
-     * @apiSuccess (Success 200) {arr} subFonds 子全宗信息
+     * @apiSuccess (Success 200) {String} remark 备注
+     * @apiSuccess (Success 200) {arr} children 子节点信息
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"items": [{"id": 全宗ID,"code": "全宗号","name": "父全宗0","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型},
-     * {"id": 全宗ID,"code": "全宗号","name": "父全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型,"subFonds": [
-     * {"id": 全宗ID,"code": "全宗号","name": "子全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"type": 全宗类型}]}]}}.
+     * {"data": {"items": [{"id": 全宗ID,"code": "全宗号","name": "父全宗0","parentId": 上级全宗ID,"orderNumber": 同级排序编号},
+     * {"id": 全宗ID,"code": "全宗号","name": "父全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"children": [
+     * {"id": 全宗ID,"code": "全宗号","name": "子全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList() {
@@ -51,11 +51,11 @@ public class FondsController {
      * @api {post} /fonds 新增全宗
      * @apiName save
      * @apiGroup fonds
-     * @apiParam {int} parentId 上级全宗ID（根机构传0）
+     * @apiParam {int} parentId 上级全宗ID（根节点传1）
      * @apiParam {String} code 全宗号
      * @apiParam {String} name 全宗名称
      * @apiParam {String} remark 备注（未输入传""值）
-     * @apiParam {int} type 全宗类型
+     * @apiParam {arr} association 关联机构ID
      * @apiError (Error 400) message 全宗号已存在.
      * @apiUse ErrorExample
      */
@@ -82,11 +82,11 @@ public class FondsController {
      * @apiName update
      * @apiGroup fonds
      * @apiParam {int} id 全宗ID
-     * @apiParam {int} parentId 上级全宗ID（根机构传0）
+     * @apiParam {int} parentId 上级全宗ID（根节点传1）
      * @apiParam {String} code 全宗号
      * @apiParam {String} name 全宗名称
      * @apiParam {String} remark 备注（未输入传""值）
-     * @apiParam {String} type 全宗类型
+     * @apiParam {arr} association 关联机构ID
      * @apiError (Error 400) message 全宗号已存在
      * @apiUse ErrorExample
      */
@@ -104,9 +104,8 @@ public class FondsController {
      * @apiSuccess (Success 200) {String} code 全宗号.
      * @apiSuccess (Success 200) {String} name 全宗名称.
      * @apiSuccess (Success 200) {int} parentId 上级全宗ID.
-     * @apiSuccess (Success 200) {String} type 全宗类型
      * @apiSuccessExample {json} Success-Response:
-     * {"data":{"id": 全宗ID,"code": "全宗编码","name": "全宗名称","parentId": 上级全宗ID,"type": "全宗类型"}}.
+     * {"data":{"id": 全宗ID,"code": "全宗编码","name": "全宗名称","parentId": 上级全宗ID"}}.
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {

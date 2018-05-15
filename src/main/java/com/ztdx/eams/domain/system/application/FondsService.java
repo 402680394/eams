@@ -33,8 +33,8 @@ public class FondsService {
             throw new InvalidArgumentException("全宗号已存在");
         }
 
-        //设置同级机构优先级
-        Integer orderNumber = fondsRepository.findMaxOrderNumber(fonds.getParentId(), fonds.getType());
+        //设置排序
+        Integer orderNumber = fondsRepository.findMaxOrderNumber(fonds.getParentId());
         if (orderNumber!=null){
             fonds.setOrderNumber(orderNumber + 1);
         }else{
@@ -64,9 +64,10 @@ public class FondsService {
      */
     @Transactional
     public void update(Fonds fonds) {
-
-        if (fondsRepository.existsByCode(fonds.getCode())) {
-            throw new InvalidArgumentException("全宗号已存在");
+        if (!fondsRepository.existsByCodeAndId(fonds.getCode(), fonds.getId())) {
+            if (fondsRepository.existsByCode(fonds.getCode())) {
+                throw new InvalidArgumentException("全宗号已存在");
+            }
         }
         //修改数据
         fondsRepository.updateById(fonds);
@@ -83,8 +84,8 @@ public class FondsService {
         if(up==null||down==null){
             throw new InvalidArgumentException("全宗不存在或已被删除");
         }
-        if(up.getParentId()!=down.getParentId()&& up.getType() != down.getType()){
-            throw new InvalidArgumentException("全宗类型或上级全宗不一致");
+        if(up.getParentId()!=down.getParentId()){
+            throw new InvalidArgumentException("上级全宗不一致");
         }
         fondsRepository.updateOrderNumberById(upId,down.getOrderNumber());
         fondsRepository.updateOrderNumberById(downId,up.getOrderNumber());

@@ -23,12 +23,14 @@ import java.util.List;
 public interface FondsRepository extends JpaRepository<Fonds, Integer> {
     //查询code是否存在
     boolean existsByCode(String code);
+
+    boolean existsByCodeAndId(String code, int id);
     //查询ID是否存在
     boolean existsById(int id);
 
     //查询同级全宗优先级最大值
-    @Query("select max (f.orderNumber) from Fonds f where f.parentId=:parentId and f.type=:type")
-    Integer findMaxOrderNumber(@Param(value = "parentId")int parentId, @Param(value = "type") int type);
+    @Query("select max (f.orderNumber) from Fonds f where f.parentId=:parentId")
+    Integer findMaxOrderNumber(@Param(value = "parentId")int parentId);
 
     // 通过父ID查询是否存在子全宗
     boolean existsByParentId(int id);
@@ -38,7 +40,7 @@ public interface FondsRepository extends JpaRepository<Fonds, Integer> {
 
     //通过ID修改
     @Modifying
-    @Query("update Fonds f set f.parentId=:#{#fonds.parentId},f.code=:#{#fonds.code},f.name=:#{#fonds.name},f.remark=:#{#fonds.remark},f.type=:#{#fonds.type} where f.id=:#{#fonds.id}")
+    @Query("update Fonds f set f.parentId=:#{#fonds.parentId},f.code=:#{#fonds.code},f.name=:#{#fonds.name},f.remark=:#{#fonds.remark} where f.id=:#{#fonds.id}")
     void updateById(@Param(value = "fonds")Fonds fonds);
 
     //设置优先级

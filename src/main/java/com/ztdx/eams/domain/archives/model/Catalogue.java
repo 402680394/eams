@@ -38,7 +38,7 @@ public class Catalogue {
 
     //元数据规范标识
     @Column(name = "metadata_standards_id")
-    private String metadataStandardsId;
+    private Integer metadataStandardsId;
 
     //创建时间
     @Column(name = "gmt_create")

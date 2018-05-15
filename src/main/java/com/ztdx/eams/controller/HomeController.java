@@ -1,6 +1,6 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.domain.archives.model.ArchivesType;
+//import com.ztdx.eams.domain.archives.model.ArchivesType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,9 +14,9 @@ public class HomeController {
     @RequestMapping(value = "")
     public Map get(){
         Map map =new HashMap();
-        for (ArchivesType item : ArchivesType.values()) {
-            map.put(item.getCode(), item.getDescription());
-        }
+//        for (ArchivesType item : ArchivesType.values()) {
+//            map.put(item.getCode(), item.getDescription());
+//        }
 
 
 

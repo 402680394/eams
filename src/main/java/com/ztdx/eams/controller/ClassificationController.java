@@ -30,7 +30,7 @@ public class ClassificationController {
      * @api {get} /classification/treeList 获取全宗下档案分类树形列表
      * @apiName treeList
      * @apiGroup classification
-     * @apiParam {int} fondsId 所属全宗ID(全局为0)(url参数)
+     * @apiParam {int} fondsId 所属全宗ID(全局为1)(url参数)
      * @apiSuccess (Success 200) {int} id 档案分类ID.
      * @apiSuccess (Success 200) {String} code 档案分类编码.
      * @apiSuccess (Success 200) {String} name 档案分类名称.
@@ -38,10 +38,10 @@ public class ClassificationController {
      * @apiSuccess (Success 200) {int} parentId 上级档案分类ID.
      * @apiSuccess (Success 200) {int} orderNumber 同级排序编号.
      * @apiSuccess (Success 200) {String} remark 备注.
-     * @apiSuccess (Success 200) {arr} subClassification 子档案分类信息
+     * @apiSuccess (Success 200) {arr} children 子节点信息
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类0","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"},
-     * {"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","subClassification": [
+     * {"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","children": [
      * {"id": 档案分类ID,"code": "档案分类编码","name": "子档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
@@ -53,9 +53,10 @@ public class ClassificationController {
      * @api {post} /classification 新增档案分类
      * @apiName save
      * @apiGroup classification
-     * @apiParam {int} parentId 上级档案分类ID（根节点传0）
+     * @apiParam {int} parentId 上级档案分类ID（根节点传1）
      * @apiParam {String} code 档案分类编码
      * @apiParam {String} name 档案分类名称
+     * @apiParam {String} fondsId 所属全宗ID
      * @apiParam {String} remark 备注（未输入传""值）
      * @apiParam {String} retentionPeriod 保管期限
      * @apiError (Error 400) message 档案分类编码已存在.

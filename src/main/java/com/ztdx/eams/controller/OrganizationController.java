@@ -13,7 +13,7 @@ import java.util.Map;
  * Created by li on 2018/4/11.
  */
 @RestController
-@RequestMapping(value = "/oganization")
+@RequestMapping(value = "/organization")
 public class OrganizationController {
 
     private final OrganizationService organizationService;
@@ -36,10 +36,10 @@ public class OrganizationController {
      * @apiSuccess (Success 200) {int} parentId 上级机构ID.
      * @apiSuccess (Success 200) {int} orderNumber 同级排序编号.
      * @apiSuccess (Success 200) {int} type 机构类型
-     * @apiSuccess (Success 200) {arr} subOrg 子机构信息
+     * @apiSuccess (Success 200) {arr} children 子节点信息
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"id": 机构ID,"code": "机构编码","name": "父机构0","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型},
-     * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"subOrg": [
+     * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"children": [
      * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
@@ -51,7 +51,7 @@ public class OrganizationController {
      * @api {post} /organization 新增机构
      * @apiName save
      * @apiGroup organization
-     * @apiParam {int} parentId 上级机构ID（根机构传0）
+     * @apiParam {int} parentId 上级机构ID（根机构传1）
      * @apiParam {String} code 机构编码
      * @apiParam {String} name 机构名称
      * @apiParam {String} describe 机构描述（未输入传""值）
@@ -83,7 +83,7 @@ public class OrganizationController {
      * @apiName update
      * @apiGroup organization
      * @apiParam {int} id 机构ID
-     * @apiParam {int} parentId 上级机构ID（根机构传0）
+     * @apiParam {int} parentId 上级机构ID（根机构传1）
      * @apiParam {String} code 机构编码
      * @apiParam {String} name 机构名称
      * @apiParam {String} depict 机构描述（未输入传""值）

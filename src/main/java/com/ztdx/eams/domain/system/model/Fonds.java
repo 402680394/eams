@@ -31,11 +31,6 @@ public class Fonds {
     @Column(name = "fonds_code")
     private String code;
 
-    //全宗类型
-    @Max(value = 20)
-    @Column(name = "fonds_type")
-    private int type;
-
     //上级全宗ID
     @Column(name = "parent_id")
     private int parentId;

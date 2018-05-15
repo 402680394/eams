@@ -30,21 +30,24 @@ public class DictionaryClassificationController {
      * @api {get} /dictionaryClassification/treeList 获取全宗、词典分类树形列表
      * @apiName treeList
      * @apiGroup dictionaryClassification
-     * @apiSuccess (Success 200) {int} id 全宗ID/词典分类ID.
-     * @apiSuccess (Success 200) {String} code 全宗号/词典分类编码.
-     * @apiSuccess (Success 200) {String} name 全宗名称/词典分类名称.
-     * @apiSuccess (Success 200) {int} parentId 上级全宗ID.
-     * @apiSuccess (Success 200) {int} orderNumber 排序号.
-     * @apiSuccess (Success 200) {int} type 全宗类型.
-     * @apiSuccess (Success 200) {String} remark 备注.
-     * @apiSuccess (Success 200) {int} fondsId 所属全宗ID
-     * @apiSuccess (Success 200) {arr} subFonds 子全宗信息
-     * @apiSuccess (Success 200) {arr} subDictionaryClassification 词典分类信息
+     * @apiSuccess (Success 200) {String} childrenType 节点类型(1.DictionaryClassification-词典分类;2.Fonds-全宗).
+     * @apiSuccess (Success 200) {arr} children 子节点信息
+     * @apiSuccess (Success 200) {int} DictionaryClassification:id 全宗ID.
+     * @apiSuccess (Success 200) {String} DictionaryClassification:code 全宗号.
+     * @apiSuccess (Success 200) {String} DictionaryClassification:name 全宗名称.
+     * @apiSuccess (Success 200) {int} DictionaryClassification:parentId 上级全宗ID.
+     * @apiSuccess (Success 200) {int} DictionaryClassification:orderNumber 排序号.
+     * @apiSuccess (Success 200) {int} DictionaryClassification:type 全宗类型.
+     * @apiSuccess (Success 200) {int} Fonds:id 词典分类ID.
+     * @apiSuccess (Success 200) {String} Fonds:code 词典分类编码.
+     * @apiSuccess (Success 200) {String} Fonds:name 词典分类名称.
+     * @apiSuccess (Success 200) {String} Fonds:remark 备注.
+     * @apiSuccess (Success 200) {int} Fonds:fondsId 所属全宗ID
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"subDictionaryClassification": [{"id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID}],
-     * "subFonds": [{"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"subDictionaryClassification": [
-     * {"id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID}],"subFonds": [
-     * {"id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型}]}]}}
+     * {"data": {"item": [{"childrenType": "DictionaryClassification","id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID},
+     * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"children": [
+     * {"childrenType": "DictionaryClassification","id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID},
+     * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型}]}]}}
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList() {
@@ -72,7 +75,7 @@ public class DictionaryClassificationController {
      * @api {post} /dictionaryClassification 新增词典分类
      * @apiName save
      * @apiGroup dictionaryClassification
-     * @apiParam {int} fondsId 所属全宗ID（全局传0）
+     * @apiParam {int} fondsId 所属全宗ID（全局传1）
      * @apiParam {String} code 词典分类编码
      * @apiParam {String} name 词典分类名称
      * @apiParam {String} remark 备注（未输入传""值）
@@ -100,7 +103,7 @@ public class DictionaryClassificationController {
      * @apiName update
      * @apiGroup dictionaryClassification
      * @apiParam {int} id 词典分类ID
-     * @apiParam {int} fondsId 所属全宗ID（全局传0）
+     * @apiParam {int} fondsId 所属全宗ID（全局传1）
      * @apiParam {String} code 词典分类编码
      * @apiParam {String} name 词典分类名称
      * @apiParam {String} remark 备注（未输入传""值）

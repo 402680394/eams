@@ -31,14 +31,13 @@ public class DescriptionItem {
     private String dispalyName;
 
     //属性类型标识
-    @Column(name = "property_type_id")
-    private int propertyTypeId;
+    @Column(name = "property_type")
+    private int propertyType;
 
-    //默认值（1 NULL 2 0 3 1）
-    @Min(value = 0)
-    @Max(value = 1)
+    //默认值
+    @Size(max = 100)
     @Column(name = "default_value")
-    private int defaultValue;
+    private String defaultValue;
 
     //数据类型(1 数值 2 字符串 3 日期 4 浮点)
     @Min(value = 1)

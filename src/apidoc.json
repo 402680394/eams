@@ -1,7 +1,7 @@
 {
   "name": "eams",
   "version": "0.1.0",
-  "description": "档案管理平台",
-  "title": "档案管理平台api",
+  "description": "电子档案管理",
+  "title": "电子档案管理api",
   "url" : ""
 }

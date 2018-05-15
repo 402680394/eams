@@ -40,14 +40,14 @@ public class SystemQuery {
     public Map<String, Object> getOrganizationTreeMap() {
         Map<String, Object> resultMap = new HashMap<>();
         //伪造根机构，便于递归查询子机构
-        resultMap.put("id", UInteger.valueOf(0));
+        resultMap.put("id", UInteger.valueOf(1));
         //查询
         resultMap = getSubOrganizationTreeMap(getAllOrganizationList(), resultMap);
         //拼装返回数据信息
-        resultMap.put("items", resultMap.get("subOrg"));
+        resultMap.put("items", resultMap.get("children"));
         //去除根机构数据
         resultMap.remove("id");
-        resultMap.remove("subOrg");
+        resultMap.remove("children");
         return resultMap;
     }
 
@@ -71,19 +71,19 @@ public class SystemQuery {
      * 通过节点递归获取机构子列表.
      */
     public Map<String, Object> getSubOrganizationTreeMap(List<Map<String, Object>> dataList, Map<String, Object> treeMap) {
-        //创建一个空的子机构列表
-        List<Map<String, Object>> subOrgList = new ArrayList<>();
+        //创建一个空的子列表
+        List<Map<String, Object>> childrenList = new ArrayList<>();
         //遍历机构数据，并递归添加子机构的下级机构
         for (Map<String, Object> map : dataList) {
-            if (map.get("parentId").equals(treeMap.get("id"))) {
+            if (treeMap.get("id").equals(map.get("parentId"))) {
                 map = getSubOrganizationTreeMap(dataList, map);
-                //将递归添加后的子机构放入子机构列表
-                subOrgList.add(map);
+                //将递归添加后的子机构放入子列表
+                childrenList.add(map);
             }
         }
-        //将子机构列表加入根节点
-        if (!subOrgList.isEmpty()) {
-            treeMap.put("subOrg", subOrgList);
+        //将子列表加入根节点
+        if (!childrenList.isEmpty()) {
+            treeMap.put("children", childrenList);
 
         }
         return treeMap;
@@ -228,14 +228,14 @@ public class SystemQuery {
     public Map<String, Object> getFondsTreeMap() {
         Map<String, Object> resultMap = new HashMap<>();
         //伪造根全宗，便于递归查询子全宗
-        resultMap.put("id", UInteger.valueOf(0));
+        resultMap.put("id", UInteger.valueOf(1));
         //查询
         resultMap = getSubFondsTreeMap(getAllFondsList(), resultMap);
         //拼装返回数据信息
-        resultMap.put("items", resultMap.get("subFonds"));
+        resultMap.put("items", resultMap.get("children"));
         //去除根全宗数据
         resultMap.remove("id");
-        resultMap.remove("subFonds");
+        resultMap.remove("children");
         return resultMap;
     }
 
@@ -249,9 +249,9 @@ public class SystemQuery {
                 sysFonds.FONDS_NAME.as("name"),
                 sysFonds.PARENT_ID.as("parentId"),
                 sysFonds.ORDER_NUMBER.as("orderNumber"),
-                sysFonds.FONDS_TYPE.as("type"))
+                sysFonds.REMARK.as("remark"))
                 .from(sysFonds)
-                .orderBy(sysFonds.FONDS_TYPE, sysFonds.ORDER_NUMBER)
+                .orderBy(sysFonds.ORDER_NUMBER)
                 .fetch().intoMaps();
         return dataList;
     }
@@ -260,19 +260,19 @@ public class SystemQuery {
      * 递归获取全宗子列表.
      */
     public Map<String, Object> getSubFondsTreeMap(List<Map<String, Object>> dataList, Map<String, Object> treeMap) {
-        //创建一个空的子全宗列表
-        List<Map<String, Object>> subFondsList = new ArrayList<Map<String, Object>>();
+        //创建一个空的子列表
+        List<Map<String, Object>> childrenList = new ArrayList<Map<String, Object>>();
         //遍历全宗数据，并递归添加子全宗下级全宗
         for (Map<String, Object> map : dataList) {
-            if (map.get("parentId").equals(treeMap.get("id"))) {
+            if (treeMap.get("id").equals(map.get("parentId"))) {
                 map = getSubFondsTreeMap(dataList, map);
-                //将递归添加后的子全宗放入子全宗列表
-                subFondsList.add(map);
+                //将递归添加后的子全宗放入子列表
+                childrenList.add(map);
             }
         }
-        //将子全宗列表加入全宗信息
-        if (!subFondsList.isEmpty()) {
-            treeMap.put("subFonds", subFondsList);
+        //将子列表加入
+        if (!childrenList.isEmpty()) {
+            treeMap.put("children", childrenList);
         }
         return treeMap;
     }
@@ -283,9 +283,8 @@ public class SystemQuery {
     public Map<String, Object> getFonds(UInteger id) {
         return dslContext.select(sysFonds.ID.as("id"),
                 sysFonds.FONDS_NAME.as("name"),
-                sysFonds.FONDS_CODE.as("workers"),
-                sysFonds.PARENT_ID.as("username"),
-                sysFonds.FONDS_TYPE.as("organizationId"),
+                sysFonds.FONDS_CODE.as("code"),
+                sysFonds.PARENT_ID.as("parentId"),
                 sysFonds.REMARK.as("remark"))
                 .from(sysFonds).where(sysFonds.ID.equal(id)).fetch().intoMaps().get(0);
     }
