@@ -25,6 +25,11 @@ public class DescriptionItem {
     @Column(name = "metadata_id")
     private int metadataId;
 
+    //元数据名称
+    @Size(max = 30)
+    @Column(name = "metadata_name")
+    private String metadataName;
+
     //显示名称
     @Size(max = 50)
     @Column(name = "dispaly_name")
