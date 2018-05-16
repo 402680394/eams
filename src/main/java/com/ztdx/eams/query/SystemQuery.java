@@ -6,6 +6,7 @@ import com.ztdx.eams.query.jooq.tables.SysFonds;
 import com.ztdx.eams.query.jooq.tables.SysOrganization;
 import com.ztdx.eams.query.jooq.tables.SysUser;
 import org.jooq.DSLContext;
+import org.jooq.Name;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,12 +38,17 @@ public class SystemQuery {
     /**
      * 获取全部机构树形列表.
      */
-    public Map<String, Object> getOrganizationTreeMap() {
+    public Map<String, Object> getOrganizationTreeMap(int type) {
         Map<String, Object> resultMap = new HashMap<>();
         //伪造根机构，便于递归查询子机构
         resultMap.put("id", UInteger.valueOf(1));
         //查询
-        resultMap = getSubOrganizationTreeMap(getAllOrganizationList(), resultMap);
+        if (type == 0) {
+            resultMap = getSubOrganizationTreeMap(getAllOrganizationList(), resultMap);
+        } else {
+            resultMap = getSubOrganizationTreeMap(getAllOrganizationListByType(type), resultMap);
+
+        }
         //拼装返回数据信息
         resultMap.put("items", resultMap.get("children"));
         //去除根机构数据
@@ -61,8 +67,27 @@ public class SystemQuery {
                 sysOrganization.ORG_NAME.as("name"),
                 sysOrganization.PARENT_ID.as("parentId"),
                 sysOrganization.ORDER_NUMBER.as("orderNumber"),
+                sysOrganization.FONDS_ID.as("fondsId"),
                 sysOrganization.ORG_TYPE.as("type"))
                 .from(sysOrganization)
+                .orderBy(sysOrganization.ORG_TYPE, sysOrganization.ORDER_NUMBER)
+                .fetch().intoMaps();
+    }
+
+    /**
+     * 通过公司类型获取全部机构.
+     */
+    private List<Map<String, Object>> getAllOrganizationListByType(int type) {
+        return dslContext.select(
+                sysOrganization.ID.as("id"),
+                sysOrganization.ORG_CODE.as("code"),
+                sysOrganization.ORG_NAME.as("name"),
+                sysOrganization.PARENT_ID.as("parentId"),
+                sysOrganization.ORDER_NUMBER.as("orderNumber"),
+                sysOrganization.FONDS_ID.as("fondsId"),
+                sysOrganization.ORG_TYPE.as("type"))
+                .from(sysOrganization)
+                .where(sysOrganization.ORG_TYPE.equal(type))
                 .orderBy(sysOrganization.ORG_TYPE, sysOrganization.ORDER_NUMBER)
                 .fetch().intoMaps();
     }
@@ -278,7 +303,7 @@ public class SystemQuery {
     }
 
     /**
-     * 获取全宗详情.
+     * 通过ID获取获取全宗.
      */
     public Map<String, Object> getFonds(UInteger id) {
         return dslContext.select(sysFonds.ID.as("id"),
@@ -287,5 +312,23 @@ public class SystemQuery {
                 sysFonds.PARENT_ID.as("parentId"),
                 sysFonds.REMARK.as("remark"))
                 .from(sysFonds).where(sysFonds.ID.equal(id)).fetch().intoMaps().get(0);
+    }
+
+    /**
+     * 获取全宗关联机构ID.
+     */
+    public List<Map<String, Object>> getAssociationId(UInteger fondsId) {
+        return (List<Map<String, Object>>) dslContext.select(sysOrganization.ID).from(sysOrganization).where(sysOrganization.FONDS_ID.equal(fondsId)).fetch().getValues((Name) sysOrganization.ID);
+    }
+
+    /**
+     * 通过ID获取获取全宗并获取全宗关联机构ID.
+     */
+    public Map<String, Object> getFondsAndAssociationId(UInteger id) {
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap = getFonds(id);
+        List<Map<String, Object>> AssociationIdList = getAssociationId((UInteger) resultMap.get("fondsId"));
+        resultMap.put("association", AssociationIdList);
+        return resultMap;
     }
 }

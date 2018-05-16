@@ -7,6 +7,8 @@ import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -56,12 +58,18 @@ public class FondsController {
      * @apiParam {String} name 全宗名称
      * @apiParam {String} remark 备注（未输入传""值）
      * @apiParam {arr} association 关联机构ID
-     * @apiError (Error 400) message 全宗号已存在.
+     * @apiError (Error 400) message 1.全宗号已存在 2.请设置关联机构 3.机构已被其它全宗关联.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.POST)
-    public void save(@RequestBody Fonds fonds) {
-        fondsService.save(fonds);
+    public void save(@RequestBody HashMap<String, Object> map) {
+        Fonds fonds = new Fonds();
+        fonds.setParentId((int) map.get("parentId"));
+        fonds.setCode((String) map.get("code"));
+        fonds.setName((String) map.get("name"));
+        fonds.setRemark((String) map.get("remark"));
+        ArrayList<Integer> associationList= (ArrayList<Integer>) map.get("association");
+        fondsService.save(fonds,associationList);
     }
 
     /**
@@ -87,12 +95,19 @@ public class FondsController {
      * @apiParam {String} name 全宗名称
      * @apiParam {String} remark 备注（未输入传""值）
      * @apiParam {arr} association 关联机构ID
-     * @apiError (Error 400) message 全宗号已存在
+     * @apiError (Error 400) message 1.全宗号已存在 2.请设置关联机构 3.机构已被其它全宗关联
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.PUT)
-    public void update(@RequestBody Fonds fonds) {
-        fondsService.update(fonds);
+    public void update(@RequestBody HashMap<String, Object> map) {
+        Fonds fonds = new Fonds();
+        fonds.setId((int) map.get("id"));
+        fonds.setParentId((int) map.get("parentId"));
+        fonds.setCode((String) map.get("code"));
+        fonds.setName((String) map.get("name"));
+        fonds.setRemark((String) map.get("remark"));
+        ArrayList<Integer> associationList= (ArrayList<Integer>) map.get("association");
+        fondsService.update(fonds,associationList);
     }
 
     /**
@@ -104,12 +119,13 @@ public class FondsController {
      * @apiSuccess (Success 200) {String} code 全宗号.
      * @apiSuccess (Success 200) {String} name 全宗名称.
      * @apiSuccess (Success 200) {int} parentId 上级全宗ID.
+     * @apiSuccess (Success 200) {arr} association 关联机构ID.
      * @apiSuccessExample {json} Success-Response:
-     * {"data":{"id": 全宗ID,"code": "全宗编码","name": "全宗名称","parentId": 上级全宗ID"}}.
+     * {"data":{"id": 全宗ID,"code": "全宗编码","name": "全宗名称","parentId": 上级全宗ID","association":[1,2,3]}}.
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
-        return systemQuery.getFonds(UInteger.valueOf(id));
+        return systemQuery.getFondsAndAssociationId(UInteger.valueOf(id));
     }
 
     /**

@@ -38,7 +38,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, Inte
     //通过ID修改信息
     @Modifying
     @Query("update Organization o set o.parentId=:#{#organization.parentId},o.code=:#{#organization.code},o.name=:#{#organization.name},o.describe=:#{#organization.describe},o.remark=:#{#organization.remark},o.type=:#{#organization.type} where o.id=:#{#organization.id}")
-    void updateById(@Param("organization")Organization organization);
+    void updateById(@Param("organization") Organization organization);
 
     //设置机构优先级
     @Modifying
@@ -46,4 +46,14 @@ public interface OrganizationRepository extends JpaRepository<Organization, Inte
     void updateOrderNumberById(@Param(value = "id") int id, @Param(value = "orderNumber") int orderNumber);
 
     boolean existsByCodeAndId(String code, int id);
+
+    //通过ID修改关联全宗
+    @Modifying
+    @Query("update Organization o set o.fondsId=:fondsId where o.id=:id")
+    void updatefondsIdById(@Param(value = "id") int id, @Param(value = "fondsId") int fondsId);
+
+    //通过全宗ID修改关联全宗为空
+    @Modifying
+    @Query("update Organization o set o.fondsId=null where o.fondsId=:fondsId")
+    void updatefondsIdByfondsId(@Param(value = "fondsId") int fondsId);
 }

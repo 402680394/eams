@@ -30,21 +30,23 @@ public class OrganizationController {
      * @api {get} /organization/treeList 获取机构树形列表
      * @apiName treeList
      * @apiGroup organization
+     * @apiParam {int} type 机构类型（url参数）（可选值：0-获取全部 1-获取类型为公司的机构）
      * @apiSuccess (Success 200) {int} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
      * @apiSuccess (Success 200) {int} parentId 上级机构ID.
      * @apiSuccess (Success 200) {int} orderNumber 同级排序编号.
+     * @apiSuccess (Success 200) {int} fondsId 关联全宗ID(未关联为null).
      * @apiSuccess (Success 200) {int} type 机构类型
      * @apiSuccess (Success 200) {arr} children 子节点信息
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"items": [{"id": 机构ID,"code": "机构编码","name": "父机构0","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型},
-     * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型,"children": [
-     * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"type": 机构类型}]}]}}.
+     * {"data": {"items": [{"id": 机构ID,"code": "机构编码","name": "父机构0","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型},
+     * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型,"children": [
+     * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
-    public Map<String, Object> treeList() {
-        return systemQuery.getOrganizationTreeMap();
+    public Map<String, Object> treeList(@RequestParam int type) {
+        return systemQuery.getOrganizationTreeMap(type);
     }
 
     /**
@@ -56,7 +58,7 @@ public class OrganizationController {
      * @apiParam {String} name 机构名称
      * @apiParam {String} describe 机构描述（未输入传""值）
      * @apiParam {String} remark 备注（未输入传""值）
-     * @apiParam {int} type 机构类型（1-公司；2-部门；3-科室）
+     * @apiParam {int} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室；4.科室下无法创建部门.
      * @apiUse ErrorExample
      */
@@ -106,7 +108,7 @@ public class OrganizationController {
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
      * @apiSuccess (Success 200) {int} parentId 上级机构ID.
-     * @apiSuccess (Success 200) {int} type 机构类型
+     * @apiSuccess (Success 200) {int} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"type": 机构类型}}.
      */
