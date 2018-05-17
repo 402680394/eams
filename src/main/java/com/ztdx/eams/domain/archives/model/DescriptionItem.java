@@ -22,6 +22,10 @@ public class DescriptionItem {
     private int id;
 
     //元数据标识
+    @Column(name = "catalogue_id")
+    private int catalogueId;
+
+    //元数据标识
     @Column(name = "metadata_id")
     private int metadataId;
 
@@ -49,6 +53,12 @@ public class DescriptionItem {
     @Max(value = 4)
     @Column(name = "data_type")
     private int dataType;
+
+    //是否建立索引
+    @Min(value = 0)
+    @Max(value = 1)
+    @Column(name = "is_index")
+    private int isIndex;
 
     //是否只读
     @Min(value = 0)

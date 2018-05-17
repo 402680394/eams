@@ -23,7 +23,7 @@ public interface MetadataStandardsRepository extends JpaRepository<MetadataStand
 
     //查询排序优先级最大值
     @Query("select max (m.orderNumber) from MetadataStandards m")
-    int findMaxOrderNumber();
+    Integer findMaxOrderNumber();
 
     boolean existsByCodeAndId(String code, int id);
     //通过ID修改信息

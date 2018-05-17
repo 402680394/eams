@@ -28,7 +28,7 @@ public interface DictionaryRepository extends JpaRepository<Dictionary, Integer>
 
     //查询分类排序优先级最大值
     @Query("select max (d.orderNumber) from Dictionary d where d.classificationId=:classificationId")
-    int findMaxOrderNumber(@Param(value = "classificationId") int classificationId);
+    Integer findMaxOrderNumber(@Param(value = "classificationId") int classificationId);
 
     //通过ID修改信息
     @Modifying

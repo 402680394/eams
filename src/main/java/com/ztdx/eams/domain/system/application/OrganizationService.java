@@ -104,7 +104,7 @@ public class OrganizationService {
      */
     public void validate(Organization organization) {
         //确认上下级结构
-        if (organization.getParentId() == 0) {
+        if (organization.getParentId() == 1) {
             if (organization.getType() != 1) {
                 throw new InvalidArgumentException("根节点无法创建部门与科室");
             }

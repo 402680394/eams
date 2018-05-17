@@ -36,9 +36,6 @@ public class FondsService {
         if (fondsRepository.existsByCode(fonds.getCode())) {
             throw new InvalidArgumentException("全宗号已存在");
         }
-        if (associationList.isEmpty()) {
-            throw new InvalidArgumentException("请设置关联机构");
-        }
         //设置排序
         Integer orderNumber = fondsRepository.findMaxOrderNumber(fonds.getParentId());
         if (orderNumber != null) {
@@ -86,15 +83,14 @@ public class FondsService {
                 throw new InvalidArgumentException("全宗号已存在");
             }
         }
-        if (associationList.isEmpty()) {
-            throw new InvalidArgumentException("请设置关联机构");
-        }
         //修改数据
         fondsRepository.updateById(fonds);
-        //关联机构
+        //取消机构关联
+        organizationRepository.updatefondsIdByfondsId(fonds.getId());
+        //关联新机构
         for (int orgId : associationList) {
             Organization organization = organizationRepository.findById(orgId);
-            if (null != organization.getFondsId() && fonds.getId() != organization.getFondsId()) {
+            if (null != organization.getFondsId()) {
                 throw new InvalidArgumentException("机构已被其它全宗关联");
             }
             organizationRepository.updatefondsIdById(orgId, fonds.getId());

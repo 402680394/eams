@@ -26,7 +26,7 @@ public interface MetadataRepository extends JpaRepository<Metadata, Integer> {
 
     //查询排序号最大值
     @Query("select max (m.orderNumber) from Metadata m")
-    int findMaxOrderNumber();
+    Integer findMaxOrderNumber();
 
     boolean existsByNameAndId(String name, int id);
 

@@ -122,7 +122,8 @@ public class SystemQuery {
                 sysOrganization.ORG_CODE.as("code"),
                 sysOrganization.ORG_NAME.as("name"),
                 sysOrganization.PARENT_ID.as("parentId"),
-                sysOrganization.ORDER_NUMBER.as("orderNumber"),
+                sysOrganization.ORG_DESCRIBE.as("describe"),
+                sysOrganization.REMARK.as("remark"),
                 sysOrganization.ORG_TYPE.as("type"))
                 .from(sysOrganization).where(sysOrganization.ID.equal(id)).fetch().intoMaps().get(0);
     }
@@ -318,17 +319,16 @@ public class SystemQuery {
      * 获取全宗关联机构ID.
      */
     public List<Map<String, Object>> getAssociationId(UInteger fondsId) {
-        return (List<Map<String, Object>>) dslContext.select(sysOrganization.ID).from(sysOrganization).where(sysOrganization.FONDS_ID.equal(fondsId)).fetch().getValues((Name) sysOrganization.ID);
+        return (List<Map<String, Object>>) dslContext.select(sysOrganization.ID.as("id")).from(sysOrganization).where(sysOrganization.FONDS_ID.equal(fondsId)).fetch().getValues("id");
     }
 
     /**
      * 通过ID获取获取全宗并获取全宗关联机构ID.
      */
     public Map<String, Object> getFondsAndAssociationId(UInteger id) {
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap = getFonds(id);
-        List<Map<String, Object>> AssociationIdList = getAssociationId((UInteger) resultMap.get("fondsId"));
-        resultMap.put("association", AssociationIdList);
+        Map<String, Object> resultMap = getFonds(id);
+        List<Map<String, Object>> list = getAssociationId(id);
+        resultMap.put("association", list);
         return resultMap;
     }
 }

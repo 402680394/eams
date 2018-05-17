@@ -33,7 +33,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, Inte
 
     //查询同级机构优先级最大值
     @Query("select max (o.orderNumber) from Organization o where o.parentId=:parentId and o.type=:type")
-    int findMaxOrderNumber(@Param(value = "parentId") int parentId, @Param(value = "type") int type);
+    Integer findMaxOrderNumber(@Param(value = "parentId") int parentId, @Param(value = "type") int type);
 
     //通过ID修改信息
     @Modifying
