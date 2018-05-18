@@ -310,7 +310,7 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable> exten
 
     private List<String> stringIdsRepresentation(Iterable<ID> ids) {
         Assert.notNull(ids, "ids can't be null.");
-        List<String> stringIds = new ArrayList();
+        List<String> stringIds = new ArrayList<>();
 
         for (ID id : ids) {
             stringIds.add(this.stringIdRepresentation(id));

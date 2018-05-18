@@ -1,15 +1,25 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.vividsolutions.jts.util.Assert;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.domain.archives.model.Entry;
+import com.ztdx.eams.domain.archives.model.*;
+import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
+import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
+import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
+import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 @Service
 public class EntryService {
@@ -18,32 +28,128 @@ public class EntryService {
 
     private EntryMongoRepository entryMongoRepository;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository) {
+    private DescriptionItemRepository descriptionItemRepository;
+
+    private CatalogueRepository catalogueRepository;
+
+    private ArchivesRepository archivesRepository;
+
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
+        this.descriptionItemRepository = descriptionItemRepository;
+        this.catalogueRepository = catalogueRepository;
+        this.archivesRepository = archivesRepository;
     }
 
-    public Entry save(Entry entry){
-        //TODO 缺少档案目录id的判断
+    public Entry save(Entry entry) {
+        Catalogue catalog = catalogueRepository.findById(entry.getCatalogueId()).orElse(null);
+        if (catalog == null) {
+            throw new InvalidArgumentException("目录id不存在");
+        }
+
+        Archives archives = archivesRepository.findById(catalog.getArchivesId()).orElse(null);
+        if (archives == null) {
+            throw new InvalidArgumentException("档案库不存在");
+        }
+
+        entry.setArchiveId(catalog.getArchivesId());
+        entry.setCatalogueType(CatalogueType.create(catalog.getCatalogueType()));
+        entry.setArchiveContentType(archives.getContentTypeId());
+        entry.setArchiveType(archives.getType());
         //TODO 缺少条目数据的验证
         entry.setId(UUID.randomUUID());
         entry.setGmtCreate(new Date());
+        entry.setGmtModified(new Date());
+        this.convertEntryItems(entry);
         entryMongoRepository.save(entry);
         return entryElasticsearchRepository.save(entry);
     }
 
-    public Entry update(Entry entry){
-        Optional<Entry> find = entryMongoRepository.findById(entry.getId(), "archive_record" + entry.getCatalogueId());
-        if (!find.isPresent()){
+    public Entry update(Entry entry) {
+        Optional<Entry> find = entryMongoRepository.findById(entry.getId(), "archive_record_" + entry.getCatalogueId());
+        if (!find.isPresent()) {
             return save(entry);
         }
         find.get().setItems(entry.getItems());
+        find.get().setGmtModified(new Date());
+        this.convertEntryItems(entry);
         entryMongoRepository.save(find.get());
         return entryElasticsearchRepository.save(find.get());
     }
 
-    /*public Page<Entry> search(){
-        entryElasticsearchRepository.search
+    public Page<Entry> search(int catalogueId, String queryString, Map<String, Object> itemQuery, Pageable pageable) {
+        BoolQueryBuilder query = QueryBuilders.boolQuery();
+        query.must(queryStringQuery(queryString));
+        query.must().addAll(parseQuery(catalogueId, itemQuery));
 
-    }*/
+        return entryElasticsearchRepository.search(query, pageable, new String[]{"archive_record_"+catalogueId});
+    }
+
+    private List<QueryBuilder> parseQuery(int catalogueId, Map<String, Object> itemQuery) {
+        List<QueryBuilder> query = new ArrayList<>();
+
+        Map<String, DescriptionItem> descriptionItemMap = this.getDescriptionItems(catalogueId);
+        itemQuery.forEach((key, value) -> {
+            DescriptionItem item = descriptionItemMap.get(key);
+            if (item != null) {
+                DescriptionItemDataType dataType = DescriptionItemDataType.create(item.getDataType());
+                switch (dataType) {
+                    case String: {
+                        query.add(QueryBuilders.wildcardQuery(key, value + "*"));
+                        break;
+                    }
+                    case Integer:
+                    case Double:
+                    case Date: {
+                        if (value instanceof ArrayList) {
+                            ArrayList list = (ArrayList)value;
+                            if (list.size() < 2){
+                                throw new InvalidArgumentException(key+"字段的查询格式错误，[开始区间,结束区间]");
+                            }
+                            Object start = EntryItemConverter.from(list.get(0), item);
+                            Object end = EntryItemConverter.from(list.get(1), item);
+                            if (start != null){
+                                query.add(QueryBuilders.rangeQuery(key).from(start));
+                            }
+                            if (end != null){
+                                query.add(QueryBuilders.rangeQuery(key).to(end));
+                            }
+                        } else {
+                            Object convert = EntryItemConverter.from(value, item);
+                            assert convert != null;
+                            query.add(QueryBuilders.termQuery(key, convert));
+                        }
+                    }
+                    case Array: {
+                        Object convert = EntryItemConverter.from(value, item);
+                        assert convert != null;
+                        query.add(QueryBuilders.termsQuery(key, (ArrayList) convert));
+                    }
+                    default:
+
+                }
+            }
+        });
+        return query;
+    }
+
+    private void convertEntryItems(Entry entry) {
+        Map<String, DescriptionItem> descriptionItemMap = this.getDescriptionItems(entry.getCatalogueId());
+        Map<String, Object> convert = new HashMap<>();
+        entry.getItems().forEach((key, vaule) -> {
+            DescriptionItem item = descriptionItemMap.get(key);
+            if (item != null) {
+                Object val = EntryItemConverter.from(vaule, item);
+                if (val != null) {
+                    convert.put(key, val);
+                }
+            }
+        });
+        entry.setItems(convert);
+    }
+
+    private Map<String, DescriptionItem> getDescriptionItems(int catalogueId) {
+        return descriptionItemRepository.findByCatalogueId(catalogueId).stream().collect(Collectors.toMap(DescriptionItem::getMetadataName, (d) -> d, (d1, d2) -> d2));
+    }
 }

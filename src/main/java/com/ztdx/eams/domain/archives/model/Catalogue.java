@@ -21,7 +21,7 @@ public class Catalogue {
     @Column(name = "id")
     private int id;
 
-    //目录类型(1 一文一件/卷内 2 案卷 3 项目）
+    //目录类型(1 卷内 2 案卷 3 项目）
     @Min(value = 1)
     @Max(value = 3)
     @Column(name = "catalogue_type")

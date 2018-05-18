@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import javax.persistence.Table;
 import java.util.List;
 
+
 /**
  * Created by li on 2018/5/15.
  */
@@ -15,6 +16,5 @@ import java.util.List;
 @Table(name = "archives_description_item")
 @Qualifier("descriptionItemRepository")
 public interface DescriptionItemRepository extends JpaRepository<DescriptionItem, Integer> {
-
     List<DescriptionItem> findByCatalogueId(int catalogueId);
 }

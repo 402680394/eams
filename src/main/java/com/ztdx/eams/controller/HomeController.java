@@ -11,7 +11,7 @@ import java.util.Map;
 @RequestMapping(value = "/home/")
 public class HomeController {
 
-    @RequestMapping(value = "")
+    /*@RequestMapping(value = "")
     public Map get(){
         Map map =new HashMap();
 //        for (ArchivesType item : ArchivesType.values()) {
@@ -22,5 +22,5 @@ public class HomeController {
 
         return  map;
 
-    }
+    }*/
 }

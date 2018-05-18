@@ -1,16 +1,14 @@
 package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
-import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-/**
- * Created by li on 2018/5/15.
- */
 @Service
 public class DescriptionItemService {
 
@@ -19,6 +17,10 @@ public class DescriptionItemService {
     @Autowired
     public DescriptionItemService(DescriptionItemRepository descriptionItemRepository) {
         this.descriptionItemRepository = descriptionItemRepository;
+    }
+
+    public Map<String, DescriptionItem> list(int catalogueId){
+        return descriptionItemRepository.findByCatalogueId(catalogueId).stream().collect(Collectors.toMap(DescriptionItem::getMetadataName,(d) -> d, (d1,d2)->d2));
     }
 
     //条目数据验证

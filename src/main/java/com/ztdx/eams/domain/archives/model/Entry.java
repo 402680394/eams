@@ -17,7 +17,15 @@ public class Entry {
     private UUID id;
 
     @IndexNamePostfix
-    private long catalogueId;
+    private int catalogueId;
+
+    private CatalogueType catalogueType;
+
+    private int archiveId;
+
+    private int archiveType;
+
+    private int archiveContentType;
 
     private Map<String, Object> items;
 
