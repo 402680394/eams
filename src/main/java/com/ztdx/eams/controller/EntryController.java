@@ -403,30 +403,33 @@ public class EntryController {
      * @api {post} /entry/searchFullArchive 全库搜索
      * @apiName searchFullArchive
      * @apiGroup entry
+     * @apiParam {Array} [catalogueIds] 目录id列表
      * @apiParam {Array} archiveContentType 档案内容类型
      * @apiParam {String="3year","6year","8year"} dateRange 时间
-     * @apiParam {Array="words","entry","file"} searchParam 搜索参数 words:全词匹配 entry:条目 file:全文
-     * @apiParam {String} includeWords 包含关键字
-     * @apiParam {String} rejectWords 排除关键字
      * @apiSuccess (Success 200) {Array} content 列表内容
-     * @apiSuccess (Success 200) {int} content.catalogueId 目录id
-     * @apiSuccess (Success 200) {int=1,2,3} content.catalogueType 目录类型 1:卷内 2:案卷 3:项目
      * @apiSuccess (Success 200) {int} content.archiveId 档案库id
      * @apiSuccess (Success 200) {String} content.archiveName 档案库名称
      * @apiSuccess (Success 200) {String} content.fondsName 全宗名称
-     * @apiSuccess (Success 200) {int} content.count 统计结果
+     * @apiSuccess (Success 200) {Array} content.items 目录数组
+     * @apiSuccess (Success 200) {int} content.items.catalogueId 目录id
+     * @apiSuccess (Success 200) {int=1,2,3} content.items.catalogueType 目录类型 1:卷内 2:案卷 3:项目
+     * @apiSuccess (Success 200) {int} content.items.count 统计结果
      *
      * @apiSuccessExample {json} Success-Response:
      * {
      *     "data": {
      *         "content": [
      *             {
-     *                 "catalogueId": 1,
-     *                 "catalogueType": 1,
      *                 "archiveId": 1,
      *                 "archiveName": "一文一件库",
      *                 "fondsName": "测试全宗",
-     *                 "count": 1
+     *                 "items":[
+     *                     {
+     *                         "catalogueId": 1,
+     *      *                  "catalogueType": 1,
+     *                         "count": 1
+     *                     }
+     *                 ]
      *             }
      *         ],
      *         "totalElements": 14
