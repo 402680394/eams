@@ -30,7 +30,8 @@ public class OrganizationController {
      * @api {get} /organization/treeList 获取机构树形列表
      * @apiName treeList
      * @apiGroup organization
-     * @apiParam {int} type 机构类型（url参数）（可选值：0-获取全部 1-获取类型为公司的机构）
+     * @apiParam {int} id 顶层机构ID（url参数）（非必需，默认为1根节点）
+     * @apiParam {int} type 机构类型（url参数）（非必需，默认为0）（可选值：0-获取全部 1-获取类型为公司的机构）
      * @apiSuccess (Success 200) {int} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
@@ -45,8 +46,8 @@ public class OrganizationController {
      * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
-    public Map<String, Object> treeList(@RequestParam int type) {
-        return systemQuery.getOrganizationTreeMap(type);
+    public Map<String, Object> treeList(@RequestParam(required = false, defaultValue = "1") int id, @RequestParam(required = false, defaultValue = "0") int type) {
+        return systemQuery.getOrganizationTreeMap(id, type);
     }
 
     /**

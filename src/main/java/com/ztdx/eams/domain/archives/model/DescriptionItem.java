@@ -22,10 +22,6 @@ public class DescriptionItem {
     private int id;
 
     //元数据标识
-    @Column(name = "catalogue_id")
-    private int catalogueId;
-
-    //元数据标识
     @Column(name = "metadata_id")
     private int metadataId;
 
@@ -40,17 +36,18 @@ public class DescriptionItem {
 
     //显示名称
     @Size(max = 50)
-    @Column(name = "dispaly_name")
-    private String dispalyName;
+    @Column(name = "display_name")
+    private String displayName;
 
     //属性类型标识
+    @Convert(converter = PropertyType.EnumConverter.class)
     @Column(name = "property_type")
-    private int propertyType;
+    private PropertyType propertyType;
 
     //默认值
-    @Size(max = 100)
+    @Convert(converter = DefaultValue.EnumConverter.class)
     @Column(name = "default_value")
-    private String defaultValue;
+    private DefaultValue defaultValue;
 
     //数据类型(1 数值 2 字符串 3 日期 4 浮点)
     @Min(value = 1)

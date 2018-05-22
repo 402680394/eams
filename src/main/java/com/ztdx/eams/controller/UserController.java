@@ -56,13 +56,13 @@ public class UserController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public Map<String,Object> login(@JsonParam String username, @JsonParam String password, HttpSession session) {
+    public Map<String, Object> login(@JsonParam String username, @JsonParam String password, HttpSession session) {
 
         User user = userService.login(username, password);
-        UserCredential userCredential = new UserCredential(user.getId());
+        UserCredential userCredential = new UserCredential(user.getId(),user.getName());
         session.setAttribute("LOGIN_USER", userCredential);
-        HashMap resultMap=new HashMap();
-        resultMap.put("id",user.getId());
+        HashMap resultMap = new HashMap();
+        resultMap.put("id", user.getId());
 
         //使用spring security做认证
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(username, password);
@@ -126,13 +126,8 @@ public class UserController {
      * @apiName list
      * @apiGroup user
      * @apiParam {int} pageNum 页码（默认为1）（url参数）
-     * @apiParam {String} name 姓名（未输入传""值）
-     * @apiParam {String} workers 工号（未输入传""值）
-     * @apiParam {String} username 用户名（未输入传""值）
-     * @apiParam {int} organizationId 所属机构ID（根机构传0）
-     * @apiParam {String} phone 电话（未输入传""值）
-     * @apiParam {String} email 邮箱（未输入传""值）
-     * @apiParam {String} job 职位（未输入传""值）
+     * @apiParam {int} organizationId 机构ID（url参数）
+     * @apiParam {String} key 搜索值（搜索全部不传本值）（url参数）
      * @apiSuccess (Success 200) {int} id 用户ID.
      * @apiSuccess (Success 200) {String} name 姓名.
      * @apiSuccess (Success 200) {String} workers 工号.
@@ -152,13 +147,13 @@ public class UserController {
      * }
      * }.
      */
-    @RequestMapping(value = "/list", method = RequestMethod.POST)
-    public Map<String, Object> list(@RequestBody User user, @RequestParam("pageNum") int pageNum) {
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public Map<String, Object> list(@RequestParam("organizationId") int organizationId, @RequestParam(name = "key", required = false, defaultValue = "") String key, @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
         //判断是否查询所有用户
-        if(user.getOrganizationId()==0){
-            return systemQuery.getUserList(user,pageNum);
+        if (organizationId == 1) {
+            return systemQuery.getUserList(key, pageNum);
         }
-        return systemQuery.getUserListByOrg(user,pageNum);
+        return systemQuery.getUserListByOrg(organizationId, key, pageNum);
     }
 
     /**
@@ -186,13 +181,13 @@ public class UserController {
      * @apiName update
      * @apiGroup user
      * @apiParam {String} name 姓名
-     * @apiParam {String} workers 工号
+     * @apiParam {String} workers 工号（未输入传""值）
      * @apiParam {String} username 用户名
      * @apiParam {int} organizationId 所属机构ID
-     * @apiParam {String} phone 电话
-     * @apiParam {String} email 邮箱
-     * @apiParam {String} job 职位
-     * @apiParam {String} remark 备注
+     * @apiParam {String} phone 电话（未输入传""值）
+     * @apiParam {String} email 邮箱（未输入传""值）
+     * @apiParam {String} job 职位（未输入传""值）
+     * @apiParam {String} remark 备注（未输入传""值）
      * @apiError (Error 400) message 1.用户名已存在;2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */

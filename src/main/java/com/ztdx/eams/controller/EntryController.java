@@ -1,6 +1,7 @@
 package com.ztdx.eams.controller;
 
 import com.ztdx.eams.basic.params.JsonParam;
+import com.ztdx.eams.domain.archives.application.DescriptionItemService;
 import com.ztdx.eams.domain.archives.application.EntryService;
 import com.ztdx.eams.domain.archives.model.Entry;
 import org.springframework.data.domain.Page;
@@ -8,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpSession;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.UUID;
@@ -17,6 +19,8 @@ import java.util.UUID;
 public class EntryController {
 
     private EntryService entryService;
+
+    private DescriptionItemService descriptionItemService;
 
     public EntryController(EntryService entryService) {
         this.entryService = entryService;
@@ -36,23 +40,24 @@ public class EntryController {
      * @apiParam {String[]} items.interest 爱好
      * @apiParamExample {json} Request-Example:
      * {
-     *     "catalogueId":1,
-     *     "items":{
-     *         "name":"姓名",
-     *         "age":41,
-     *         "birthday":"2018-05-09T00:00:00",
-     *         "amount":73824039.1873,
-     *         "aihao":[
-     *             "电影",
-     *             "汽车"
-     *         ]
-     *     }
+     * "catalogueId":1,
+     * "items":{
+     * "name":"姓名",
+     * "age":41,
+     * "birthday":"2018-05-09T00:00:00",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "汽车"
+     * ]
+     * }
      * }
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.POST)
-    public void save(@RequestBody Entry entry){
+    public void save(@RequestBody Entry entry, HttpSession session) {
+        descriptionItemService.addVerification(entry, session);
         entryService.save(entry);
     }
 
@@ -69,23 +74,24 @@ public class EntryController {
      * @apiParam {String[]} items.interest 爱好
      * @apiParamExample {json} Request-Example:
      * {
-     *     "items":{
-     *         "name":"姓名",
-     *         "age":41,
-     *         "birthday":"2018-05-09T00:00:00",
-     *         "amount":73824039.1873,
-     *         "aihao":[
-     *             "电影",
-     *             "汽车"
-     *         ]
-     *     }
+     * "items":{
+     * "name":"姓名",
+     * "age":41,
+     * "birthday":"2018-05-09T00:00:00",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "汽车"
+     * ]
+     * }
      * }
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    public void update(@PathVariable("id")UUID uuid, @RequestBody Entry entry){
+    public void update(@PathVariable("id") UUID uuid, @RequestBody Entry entry, HttpSession session) {
         entry.setId(uuid);
+        descriptionItemService.updateVerification(entry, session);
         entryService.update(entry);
     }
 
@@ -115,67 +121,66 @@ public class EntryController {
      * @apiSuccess (Success 200) {int} column.metadataId 元数据id
      * @apiSuccess (Success 200) {String} column.metadataName
      * @apiSuccess (Success 200) {Array} column.displayName 爱好
-     *
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveName":"一文一件库",
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "birthday":"2018-05-16T14:44:56.328+0800",
-     *                     "amount":73824039.1873,
-     *                     "aihao":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "name":"里斯1",
-     *                     "age":41
-     *                 },
-     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
-     *             }
-     *         ],
-     *         "column":[
-     *             {
-     *                 "metadataId":1,
-     *                 "metadataName":"name",
-     *                 "displayName":"姓名"
-     *             },
-     *             {
-     *                 "metadataId":2,
-     *                 "metadataName":"birthday",
-     *                 "displayName":"生日"
-     *             },
-     *             {
-     *                 "metadataId":3,
-     *                 "metadataName":"amount",
-     *                 "displayName":"资产"
-     *             },
-     *             {
-     *                 "metadataId":4,
-     *                 "metadataName":"aihao",
-     *                 "displayName":"爱好"
-     *             },
-     *             {
-     *                 "metadataId":5,
-     *                 "metadataName":"age",
-     *                 "displayName":"年龄"
-     *             }
-     *         ],
-     *         "totalElements":14
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveName":"一文一件库",
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * }
+     * ],
+     * "column":[
+     * {
+     * "metadataId":1,
+     * "metadataName":"name",
+     * "displayName":"姓名"
+     * },
+     * {
+     * "metadataId":2,
+     * "metadataName":"birthday",
+     * "displayName":"生日"
+     * },
+     * {
+     * "metadataId":3,
+     * "metadataName":"amount",
+     * "displayName":"资产"
+     * },
+     * {
+     * "metadataId":4,
+     * "metadataName":"aihao",
+     * "displayName":"爱好"
+     * },
+     * {
+     * "metadataId":5,
+     * "metadataName":"age",
+     * "displayName":"年龄"
+     * }
+     * ],
+     * "totalElements":14
+     * }
      * }
      */
     @RequestMapping(value = "/search", method = RequestMethod.GET)
-    public Page<Entry> search(@RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size){
+    public Page<Entry> search(@RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size) {
         return entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size));
     }
 
@@ -186,7 +191,6 @@ public class EntryController {
      * @apiParam {String} q 关键字(QueryString)
      * @apiParam {int} page 页码(QueryString)
      * @apiParam {int} size 页行数(QueryString)
-     *
      * @apiParam {String} catalogueId 档案目录id
      * @apiParam {Object} items 条目详细内容，是一个动态的key-value数组。
      * 以下举例条目有姓名(name)年龄(age)注册日期(regDate)爱好(interest)
@@ -212,67 +216,66 @@ public class EntryController {
      * @apiSuccess (Success 200) {int} column.metadataId 元数据id
      * @apiSuccess (Success 200) {String} column.metadataName
      * @apiSuccess (Success 200) {Array} column.displayName 爱好
-     *
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveName":"一文一件库",
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "birthday":"2018-05-16T14:44:56.328+0800",
-     *                     "amount":73824039.1873,
-     *                     "aihao":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "name":"里斯1",
-     *                     "age":41
-     *                 },
-     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
-     *             }
-     *         ],
-     *         "column":[
-     *             {
-     *                 "metadataId":1,
-     *                 "metadataName":"name",
-     *                 "displayName":"姓名"
-     *             },
-     *             {
-     *                 "metadataId":2,
-     *                 "metadataName":"birthday",
-     *                 "displayName":"生日"
-     *             },
-     *             {
-     *                 "metadataId":3,
-     *                 "metadataName":"amount",
-     *                 "displayName":"资产"
-     *             },
-     *             {
-     *                 "metadataId":4,
-     *                 "metadataName":"aihao",
-     *                 "displayName":"爱好"
-     *             },
-     *             {
-     *                 "metadataId":5,
-     *                 "metadataName":"age",
-     *                 "displayName":"年龄"
-     *             }
-     *         ],
-     *         "totalElements":14
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveName":"一文一件库",
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * }
+     * ],
+     * "column":[
+     * {
+     * "metadataId":1,
+     * "metadataName":"name",
+     * "displayName":"姓名"
+     * },
+     * {
+     * "metadataId":2,
+     * "metadataName":"birthday",
+     * "displayName":"生日"
+     * },
+     * {
+     * "metadataId":3,
+     * "metadataName":"amount",
+     * "displayName":"资产"
+     * },
+     * {
+     * "metadataId":4,
+     * "metadataName":"aihao",
+     * "displayName":"爱好"
+     * },
+     * {
+     * "metadataId":5,
+     * "metadataName":"age",
+     * "displayName":"年龄"
+     * }
+     * ],
+     * "totalElements":14
+     * }
      * }
      */
     @RequestMapping(value = "/search", method = RequestMethod.POST)
-    public Page<Entry> searchAdv(@RequestBody Entry entry, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size){
+    public Page<Entry> searchAdv(@RequestBody Entry entry, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size) {
         //, @RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size
         return entryService.search(entry.getCatalogueId(), queryString, entry.getItems(), PageRequest.of(page, size));
     }
@@ -283,7 +286,6 @@ public class EntryController {
      * @apiGroup entry
      * @apiParam {int} page 页码(QueryString)
      * @apiParam {int} size 页行数(QueryString)
-     *
      * @apiParam {Array} archiveContentType 档案内容类型
      * @apiParam {String="3year","6year","8year"} dateRange 时间
      * @apiParam {Array="words","entry","file"} searchParam 搜索参数 words:全词匹配 entry:条目 file:全文
@@ -319,83 +321,82 @@ public class EntryController {
      * @apiSuccess (Success 200) {int} aggregation.archiveContentType.name 档案类型名称
      * @apiSuccess (Success 200) {int} aggregation.archiveContentType.count 数量
      * @apiSuccess (Success 200) {int} totalElements 总记录数
-     *
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveName":"一文一件库",
-     *                 "fondsName":"测试全宗",
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "birthday":"2018-05-16T14:44:56.328+0800",
-     *                     "amount":73824039.1873,
-     *                     "aihao":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "name":"里斯1",
-     *                     "age":41
-     *                 },
-     *                 "file":{
-     *                     "fileId":1,
-     *                     "title":"这是一个文件标题",
-     *                     "fileType":"word",
-     *                     "hightlight":"这是高亮文本内容"
-     *                 },
-     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
-     *             }
-     *         ],
-     *         "column":[
-     *             {
-     *                 "metadataId":1,
-     *                 "metadataName":"name",
-     *                 "dispalyName":"姓名"
-     *             },
-     *             {
-     *                 "metadataId":2,
-     *                 "metadataName":"birthday",
-     *                 "dispalyName":"生日"
-     *             },
-     *             {
-     *                 "metadataId":3,
-     *                 "metadataName":"amount",
-     *                 "dispalyName":"资产"
-     *             },
-     *             {
-     *                 "metadataId":4,
-     *                 "metadataName":"aihao",
-     *                 "dispalyName":"爱好"
-     *             },
-     *             {
-     *                 "metadataId":5,
-     *                 "metadataName":"age",
-     *                 "dispalyName":"年龄"
-     *             }
-     *         ],
-     *         "aggregations":{
-     *             "archiveContentType":[
-     *                 {
-     *                     "id":1,
-     *                     "name":"文书档案",
-     *                     "count":10
-     *                 }
-     *             ]
-     *         },
-     *         "totalElements":14
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveName":"一文一件库",
+     * "fondsName":"测试全宗",
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "file":{
+     * "fileId":1,
+     * "title":"这是一个文件标题",
+     * "fileType":"word",
+     * "hightlight":"这是高亮文本内容"
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * }
+     * ],
+     * "column":[
+     * {
+     * "metadataId":1,
+     * "metadataName":"name",
+     * "dispalyName":"姓名"
+     * },
+     * {
+     * "metadataId":2,
+     * "metadataName":"birthday",
+     * "dispalyName":"生日"
+     * },
+     * {
+     * "metadataId":3,
+     * "metadataName":"amount",
+     * "dispalyName":"资产"
+     * },
+     * {
+     * "metadataId":4,
+     * "metadataName":"aihao",
+     * "dispalyName":"爱好"
+     * },
+     * {
+     * "metadataId":5,
+     * "metadataName":"age",
+     * "dispalyName":"年龄"
+     * }
+     * ],
+     * "aggregations":{
+     * "archiveContentType":[
+     * {
+     * "id":1,
+     * "name":"文书档案",
+     * "count":10
+     * }
+     * ]
+     * },
+     * "totalElements":14
+     * }
      * }
      */
     @RequestMapping(value = "/searchFulltext", method = RequestMethod.POST)
-    public void searchFulltext(){
+    public void searchFulltext() {
 
     }
 
@@ -414,30 +415,29 @@ public class EntryController {
      * @apiSuccess (Success 200) {int} content.items.catalogueId 目录id
      * @apiSuccess (Success 200) {int=1,2,3} content.items.catalogueType 目录类型 1:卷内 2:案卷 3:项目
      * @apiSuccess (Success 200) {int} content.items.count 统计结果
-     *
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data": {
-     *         "content": [
-     *             {
-     *                 "archiveId": 1,
-     *                 "archiveName": "一文一件库",
-     *                 "fondsName": "测试全宗",
-     *                 "items":[
-     *                     {
-     *                         "catalogueId": 1,
-     *      *                  "catalogueType": 1,
-     *                         "count": 1
-     *                     }
-     *                 ]
-     *             }
-     *         ],
-     *         "totalElements": 14
-     *     }
+     * "data": {
+     * "content": [
+     * {
+     * "archiveId": 1,
+     * "archiveName": "一文一件库",
+     * "fondsName": "测试全宗",
+     * "items":[
+     * {
+     * "catalogueId": 1,
+     * *                  "catalogueType": 1,
+     * "count": 1
+     * }
+     * ]
+     * }
+     * ],
+     * "totalElements": 14
+     * }
      * }
      */
     @RequestMapping(value = "/searchFullArchive", method = RequestMethod.POST)
-    public void searchFullArchive(){
+    public void searchFullArchive() {
 
     }
 }

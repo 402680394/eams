@@ -25,7 +25,7 @@ public class DescriptionItemController {
     }
 
     /**
-     * @api {get} /descriptionItem/list 通过目录ID获取目录所属著录项
+     * @api {get} /descriptionItem/list 获取目录的著录项
      * @apiName list
      * @apiGroup descriptionItem
      * @apiParam {int} catalogueId 所属目录ID(url参数)

@@ -50,14 +50,14 @@ public class ArchivesQuery {
     }
 
     /**
-     * 获取所属全宗的档案分类树.
+     * 通过父档案分类获取档案分类树.
      */
-    public Map<String, Object> getClassificationTreeMap(UInteger fondsId) {
+    public Map<String, Object> getClassificationTreeMapByParent(UInteger parentId) {
         Map<String, Object> resultMap = new HashMap<>();
         //伪造档案分类根节点，便于递归查询子档案分类
-        resultMap.put("id", UInteger.valueOf(1));
+        resultMap.put("id", parentId);
         //查询
-        resultMap = getSubClassificationTreeMap(getAllClassificationList(fondsId), resultMap);
+        resultMap = getSubClassificationTreeMap(getAllClassificationList(), resultMap);
         //拼装返回数据信息
         if (null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -71,21 +71,24 @@ public class ArchivesQuery {
     }
 
     /**
-     * 获取全宗下全部档案分类.
+     * 获取所属全宗的档案分类树.
      */
-    private List<Map<String, Object>> getAllClassificationList(UInteger fondsId) {
-        return dslContext.select(
-                businessClassification.ID.as("id"),
-                businessClassification.CLASSIFICATION_CODE.as("code"),
-                businessClassification.CLASSIFICATION_NAME.as("name"),
-                businessClassification.REMARK.as("remark"),
-                businessClassification.RETENTION_PERIOD.as("retentionPeriod"),
-                businessClassification.PARENT_ID.as("parentId"),
-                businessClassification.ORDER_NUMBER.as("orderNumber"))
-                .from(businessClassification)
-                .where(businessClassification.FONDS_ID.equal(fondsId))
-                .orderBy(businessClassification.ORDER_NUMBER)
-                .fetch().intoMaps();
+    public Map<String, Object> getClassificationTreeMap(UInteger fondsId) {
+        Map<String, Object> resultMap = new HashMap<>();
+        //伪造档案分类根节点，便于递归查询子档案分类
+        resultMap.put("id", UInteger.valueOf(1));
+        //查询
+        resultMap = getSubClassificationTreeMap(getClassificationListByFondsId(fondsId), resultMap);
+        //拼装返回数据信息
+        if (null != resultMap.get("children")) {
+            resultMap.put("items", resultMap.get("children"));
+        } else {
+            resultMap.put("items", new ArrayList<Map<String, Object>>());
+        }
+        //去除根档案分类数据
+        resultMap.remove("id");
+        resultMap.remove("children");
+        return resultMap;
     }
 
     /**
@@ -105,6 +108,94 @@ public class ArchivesQuery {
         //将子档案分类列表加入根节点档案分类信息
         if (!subClassificationList.isEmpty()) {
             treeMap.put("children", subClassificationList);
+        }
+        return treeMap;
+    }
+
+    /**
+     * 获取全宗下全部档案分类.
+     */
+    private List<Map<String, Object>> getClassificationListByFondsId(UInteger fondsId) {
+        return dslContext.select(
+                businessClassification.ID.as("id"),
+                businessClassification.CLASSIFICATION_CODE.as("code"),
+                businessClassification.CLASSIFICATION_NAME.as("name"),
+                businessClassification.REMARK.as("remark"),
+                businessClassification.RETENTION_PERIOD.as("retentionPeriod"),
+                businessClassification.PARENT_ID.as("parentId"),
+                businessClassification.ORDER_NUMBER.as("orderNumber"))
+                .from(businessClassification)
+                .where(businessClassification.FONDS_ID.equal(fondsId))
+                .orderBy(businessClassification.ORDER_NUMBER)
+                .fetch().intoMaps();
+    }
+
+    /**
+     * 获取全部档案分类.
+     */
+    private List<Map<String, Object>> getAllClassificationList() {
+        return dslContext.select(
+                businessClassification.ID.as("id"),
+                businessClassification.CLASSIFICATION_CODE.as("code"),
+                businessClassification.CLASSIFICATION_NAME.as("name"),
+                businessClassification.PARENT_ID.as("parentId"),
+                businessClassification.ORDER_NUMBER.as("orderNumber"))
+                .from(businessClassification)
+                .orderBy(businessClassification.ORDER_NUMBER)
+                .fetch().intoMaps();
+    }
+
+    /**
+     * 获取全宗、档案分类树.
+     */
+    public Map<String, Object> getFondsAndClassificationTreeMap() {
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        //伪造全宗根节点，便于递归查询
+        resultMap.put("id", UInteger.valueOf(1));
+        //查询
+        resultMap = getSubFondsAndClassificationTreeMap(getAllFondsList(), getAllClassificationList(), resultMap);
+
+        if (null != resultMap.get("children")) {
+            resultMap.put("items", resultMap.get("children"));
+        } else {
+            resultMap.put("items", new ArrayList<Map<String, Object>>());
+        }
+        //去除根节点数据
+        resultMap.remove("id");
+        resultMap.remove("children");
+        return resultMap;
+    }
+
+    /**
+     * 通过全宗上级节点递归获取全宗、档案分类树.
+     */
+    public Map<String, Object> getSubFondsAndClassificationTreeMap(List<Map<String, Object>> dataFondsList, List<Map<String, Object>> dataClassificationList, Map<String, Object> treeMap) {
+        //创建一个空的子列表
+        List<Map<String, Object>> childrenList = new ArrayList<>();
+
+        //遍历档案分类数据，并将子档案分类加入子列表
+        for (Map<String, Object> map : dataClassificationList) {
+            if (map.get("fondsId").equals(treeMap.get("id"))) {
+                Map<String, Object> childrenMap = map;
+                childrenMap.put("childrenType", "Classification");
+                childrenMap = getSubClassificationTreeMap(dataClassificationList, childrenMap);
+                childrenList.add(childrenMap);
+            }
+        }
+
+        //遍历全宗数据，并将子全宗加入子列表
+        for (Map<String, Object> map : dataFondsList) {
+            if (map.get("parentId").equals(treeMap.get("id"))) {
+                Map<String, Object> childrenMap = map;
+                childrenMap.put("childrenType", "Fonds");
+                //递归添加子全宗所属档案分类与下级全宗
+                childrenMap = getSubFondsAndClassificationTreeMap(dataFondsList, dataClassificationList, childrenMap);
+                childrenList.add(childrenMap);
+            }
+        }
+        //将子列表加入跟节点
+        if (!childrenList.isEmpty()) {
+            treeMap.put("children", childrenList);
         }
         return treeMap;
     }
@@ -162,7 +253,11 @@ public class ArchivesQuery {
         //查询
         resultMap = getSubDictionaryClassificationTreeMap(getAllFondsList(), getAllDictionaryClassificationList(), resultMap);
 
-        resultMap.put("item", resultMap.get("children"));
+        if (null != resultMap.get("children")) {
+            resultMap.put("items", resultMap.get("children"));
+        } else {
+            resultMap.put("items", new ArrayList<Map<String, Object>>());
+        }
         //去除根节点数据
         resultMap.remove("id");
         resultMap.remove("children");
@@ -385,7 +480,11 @@ public class ArchivesQuery {
         //查询
         resultMap = getSubFondsTreeMap(getAllFondsList(), getAllArchivesGroupList(), getAllArchivesList((byte) 1), getAllCatalogueList(), resultMap);
         //拼装返回数据信息
-        resultMap.put("items", resultMap.get("children"));
+        if (null != resultMap.get("children")) {
+            resultMap.put("items", resultMap.get("children"));
+        } else {
+            resultMap.put("items", new ArrayList<Map<String, Object>>());
+        }
         //去除根节点数据
         resultMap.remove("id");
         resultMap.remove("children");

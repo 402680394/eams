@@ -26,7 +26,7 @@ public class DictionaryController {
     }
 
     /**
-     * @api {get} /dictionary/list 获取词典列表
+     * @api {get} /dictionary/list 词典表单列表
      * @apiName list
      * @apiGroup dictionary
      * @apiParam {int} dictionaryClassificationId 词典分类ID(url参数)
@@ -47,7 +47,7 @@ public class DictionaryController {
     }
 
     /**
-     * @api {get} /dictionary/selectList 通过词典分类ID获取词典下拉列表
+     * @api {get} /dictionary/selectList 词典下拉列表
      * @apiName selectList
      * @apiGroup dictionary
      * @apiParam {int} dictionaryClassificationId 词典分类ID(url参数)

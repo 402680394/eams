@@ -27,7 +27,7 @@ public class ClassificationController {
     }
 
     /**
-     * @api {get} /classification/treeList 获取全宗下档案分类树形列表
+     * @api {get} /classification/treeList 档案分类表单树
      * @apiName treeList
      * @apiGroup classification
      * @apiParam {int} fondsId 所属全宗ID(全局为1)(url参数)
@@ -47,6 +47,57 @@ public class ClassificationController {
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList(@RequestParam("fondsId") int fondsId) {
         return archivesQuery.getClassificationTreeMap(UInteger.valueOf(fondsId));
+    }
+
+    /**
+     * @api {get} /classification/fondsAndClassificationTreeList 著录项设置档案分类下拉树
+     * @apiName treeList
+     * @apiGroup classification
+     * @apiSuccess (Success 200) {String} childrenType 节点类型(1.Classification-档案分类;2.Fonds-全宗).
+     * @apiSuccess (Success 200) {arr} children 子节点信息
+     * @apiSuccess (Success 200) {int} Fonds:id 全宗ID.
+     * @apiSuccess (Success 200) {String} Fonds:code 全宗号.
+     * @apiSuccess (Success 200) {String} Fonds:name 全宗名称.
+     * @apiSuccess (Success 200) {int} Fonds:parentId 上级全宗ID.
+     * @apiSuccess (Success 200) {int} Fonds:orderNumber 排序号.
+     * @apiSuccess (Success 200) {int} Fonds:type 全宗类型.
+     * @apiSuccess (Success 200) {int} Classification:id 档案分类ID.
+     * @apiSuccess (Success 200) {String} Classification:code 档案分类编码.
+     * @apiSuccess (Success 200) {String} Classification:name 档案分类名称.
+     * @apiSuccess (Success 200) {int} Classification:parentId 上级档案分类ID.
+     * @apiSuccess (Success 200) {int} Classification:orderNumber 同级排序编号.
+     * @apiSuccessExample {json} Success-Response:
+     * {"data": {"item": [{"id": 档案分类ID,"code": "档案分类编码","name": "档案分类名称","parentId": 上级档案分类ID,"orderNumber": 同级排序编号},
+     * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"children": [
+     * {"id": 档案分类ID,"code": "档案分类编码","name": "档案分类名称","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"children": [
+     * {"id": 档案分类ID,"code": "档案分类编码","name": "档案分类名称","parentId": 上级档案分类ID,"orderNumber": 同级排序编号}]}]}]}}
+     */
+    @RequestMapping(value = "/fondsAndClassificationTreeList", method = RequestMethod.GET)
+    public Map<String, Object> treeList() {
+        return archivesQuery.getFondsAndClassificationTreeMap();
+    }
+
+    /**
+     * @api {get} /classification/treeList 著录项输入下拉树
+     * @apiName treeList
+     * @apiGroup classification
+     * @apiParam {int} parentId 父档案分类ID(根节点为1)(url参数)
+     * @apiSuccess (Success 200) {int} id 档案分类ID.
+     * @apiSuccess (Success 200) {String} code 档案分类编码.
+     * @apiSuccess (Success 200) {String} name 档案分类名称.
+     * @apiSuccess (Success 200) {String} retentionPeriod 保管期限.
+     * @apiSuccess (Success 200) {int} parentId 上级档案分类ID.
+     * @apiSuccess (Success 200) {int} orderNumber 同级排序编号.
+     * @apiSuccess (Success 200) {String} remark 备注.
+     * @apiSuccess (Success 200) {arr} children 子节点信息
+     * @apiSuccessExample {json} Success-Response:
+     * {"data": {"items": [{"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类0","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"},
+     * {"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","children": [
+     * {"id": 档案分类ID,"code": "档案分类编码","name": "子档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"}]}]}}.
+     */
+    @RequestMapping(value = "/parent/{parentId}/treeList", method = RequestMethod.GET)
+    public Map<String, Object> treeListByParentId(@PathVariable("parentId") int parentId) {
+        return archivesQuery.getClassificationTreeMapByParent(UInteger.valueOf(parentId));
     }
 
     /**

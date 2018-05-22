@@ -139,26 +139,26 @@ public class MetadataController {
      * @api {get} /metadata/{id} 获取元数据详情
      * @apiName get
      * @apiGroup metadata
-     * @apiParam int} id 词典ID（url占位符）
+     * @apiParam int id 词典ID（url占位符）
      * @apiSuccess (Success 200) {int} id ID.
-     * @apiParam {String} displayName 字段显示名.
-     * @apiParam {String} name 字段名称.
-     * @apiParam {int} fieldProperties 字段属性.
-     * @apiParam {int} dataType 数据类型.
-     * @apiParam {String} fieldWidth 字段宽度.
-     * @apiParam {String} fieldPrecision 字段精度.
-     * @apiParam {int} parentId 父字段ID.
-     * @apiParam {int} metadataStandardsId 元数据规范ID.
-     * @apiParam {int} defaultValue 默认值.
-     * @apiParam {String} definition 定义.
-     * @apiParam {String} objective 目的.
-     * @apiParam {int} constraint 约束性.
-     * @apiParam {int} elementType 元素类型.
-     * @apiParam {String} codingModification 编码修饰体系.
-     * @apiParam {String} relatedElements 相关元素.
-     * @apiParam {String} range 值域.
-     * @apiParam {String} informationSources 信息来源.
-     * @apiParam {String} remark 备注.
+     * @apiSuccess (Success 200) {String} displayName 字段显示名.
+     * @apiSuccess (Success 200) {String} name 字段名称.
+     * @apiSuccess (Success 200) {int} fieldProperties 字段属性.
+     * @apiSuccess (Success 200) {int} dataType 数据类型.
+     * @apiSuccess (Success 200) {String} fieldWidth 字段宽度.
+     * @apiSuccess (Success 200) {String} fieldPrecision 字段精度.
+     * @apiSuccess (Success 200) {int} parentId 父字段ID.
+     * @apiSuccess (Success 200) {int} metadataStandardsId 元数据规范ID.
+     * @apiSuccess (Success 200) {int} defaultValue 默认值.
+     * @apiSuccess (Success 200) {String} definition 定义.
+     * @apiSuccess (Success 200) {String} objective 目的.
+     * @apiSuccess (Success 200) {int} constraint 约束性.
+     * @apiSuccess (Success 200) {int} elementType 元素类型.
+     * @apiSuccess (Success 200) {String} codingModification 编码修饰体系.
+     * @apiSuccess (Success 200) {String} relatedElements 相关元素.
+     * @apiSuccess (Success 200) {String} range 值域.
+     * @apiSuccess (Success 200) {String} informationSources 信息来源.
+     * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"id": ID,"displayName": "字段显示名","name": "字段名称","fieldProperties": 字段属性,
      * "dataType": "数据类型","fieldWidth": "字段宽度","fieldPrecision": "字段精度",

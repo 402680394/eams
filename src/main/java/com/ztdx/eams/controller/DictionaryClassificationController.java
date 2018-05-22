@@ -27,22 +27,22 @@ public class DictionaryClassificationController {
     }
 
     /**
-     * @api {get} /dictionaryClassification/treeList 获取全宗、词典分类树形列表
+     * @api {get} /dictionaryClassification/treeList 全宗、词典分类树
      * @apiName treeList
      * @apiGroup dictionaryClassification
      * @apiSuccess (Success 200) {String} childrenType 节点类型(1.DictionaryClassification-词典分类;2.Fonds-全宗).
      * @apiSuccess (Success 200) {arr} children 子节点信息
-     * @apiSuccess (Success 200) {int} DictionaryClassification:id 全宗ID.
-     * @apiSuccess (Success 200) {String} DictionaryClassification:code 全宗号.
-     * @apiSuccess (Success 200) {String} DictionaryClassification:name 全宗名称.
-     * @apiSuccess (Success 200) {int} DictionaryClassification:parentId 上级全宗ID.
-     * @apiSuccess (Success 200) {int} DictionaryClassification:orderNumber 排序号.
-     * @apiSuccess (Success 200) {int} DictionaryClassification:type 全宗类型.
-     * @apiSuccess (Success 200) {int} Fonds:id 词典分类ID.
-     * @apiSuccess (Success 200) {String} Fonds:code 词典分类编码.
-     * @apiSuccess (Success 200) {String} Fonds:name 词典分类名称.
-     * @apiSuccess (Success 200) {String} Fonds:remark 备注.
-     * @apiSuccess (Success 200) {int} Fonds:fondsId 所属全宗ID
+     * @apiSuccess (Success 200) {int} Fonds:id 全宗ID.
+     * @apiSuccess (Success 200) {String} Fonds:code 全宗号.
+     * @apiSuccess (Success 200) {String} Fonds:name 全宗名称.
+     * @apiSuccess (Success 200) {int} Fonds:parentId 上级全宗ID.
+     * @apiSuccess (Success 200) {int} Fonds:orderNumber 排序号.
+     * @apiSuccess (Success 200) {int} Fonds:type 全宗类型.
+     * @apiSuccess (Success 200) {int} DictionaryClassification:id 词典分类ID.
+     * @apiSuccess (Success 200) {String} DictionaryClassification:code 词典分类编码.
+     * @apiSuccess (Success 200) {String} DictionaryClassification:name 词典分类名称.
+     * @apiSuccess (Success 200) {String} DictionaryClassification:remark 备注.
+     * @apiSuccess (Success 200) {int} DictionaryClassification:fondsId 所属全宗ID
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"item": [{"childrenType": "DictionaryClassification","id": 词典分类ID,"code": "词典分类编码","name": "词典分类名称","remark": 备注,"fondsId": 所属全宗ID},
      * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"children": [
@@ -55,7 +55,7 @@ public class DictionaryClassificationController {
     }
 
     /**
-     * @api {get} /dictionaryClassification/listByFondsId 获取全宗所属词典分类列表
+     * @api {get} /dictionaryClassification/listByFondsId 词典分类表单列表
      * @apiName listByFondsId
      * @apiGroup dictionaryClassification
      * @apiParam {int} fondsId 全宗ID（url参数）
@@ -99,7 +99,7 @@ public class DictionaryClassificationController {
     }
 
     /**
-     * @api {put} /dictionaryClassification 修改词典分类信息
+     * @api {put} /dictionaryClassification 修改词典分类
      * @apiName update
      * @apiGroup dictionaryClassification
      * @apiParam {int} id 词典分类ID

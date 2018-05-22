@@ -38,10 +38,10 @@ public class SystemQuery {
     /**
      * 获取全部机构树形列表.
      */
-    public Map<String, Object> getOrganizationTreeMap(int type) {
+    public Map<String, Object> getOrganizationTreeMap(int id, int type) {
         Map<String, Object> resultMap = new HashMap<>();
         //伪造根机构，便于递归查询子机构
-        resultMap.put("id", UInteger.valueOf(1));
+        resultMap.put("id", UInteger.valueOf(id));
         //查询
         if (type == 0) {
             resultMap = getSubOrganizationTreeMap(getAllOrganizationList(), resultMap);
@@ -50,7 +50,11 @@ public class SystemQuery {
 
         }
         //拼装返回数据信息
-        resultMap.put("items", resultMap.get("children"));
+        if (null != resultMap.get("children")) {
+            resultMap.put("items", resultMap.get("children"));
+        } else {
+            resultMap.put("items", new ArrayList<Map<String, Object>>());
+        }
         //去除根机构数据
         resultMap.remove("id");
         resultMap.remove("children");
@@ -131,12 +135,12 @@ public class SystemQuery {
     /**
      * 根据条件查询机构下属用户.
      */
-    public Map<String, Object> getUserListByOrg(User user, int pageNum) {
+    public Map<String, Object> getUserListByOrg(int organizationId, String key, int pageNum) {
 
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
 
-        int total = getUserListTotalByOrg(user);
+        int total = getUserListTotalByOrg(organizationId, key);
         if (total != 0) {
             int index = (pageNum - 1) * 10;
 
@@ -151,13 +155,13 @@ public class SystemQuery {
                     sysUser.REMARK.as("remark"),
                     sysUser.FLAG.as("flag"))
                     .from(sysUser)
-                    .where(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(user.getOrganizationId())),
-                            sysUser.REAL_NAME.like("%" + user.getName() + "%"),
-                            sysUser.WORKERS.like("%" + user.getWorkers() + "%"),
-                            sysUser.USERNAME.like("%" + user.getUsername() + "%"),
-                            sysUser.PHONE.like("%" + user.getPhone() + "%"),
-                            sysUser.EMAIL.like("%" + user.getEmail() + "%"),
-                            sysUser.JOB.like("%" + user.getJob() + "%"))
+                    .where(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(organizationId)),
+                            sysUser.REAL_NAME.like("%" + key + "%")
+                                    .or(sysUser.WORKERS.like("%" + key + "%"))
+                                    .or(sysUser.USERNAME.like("%" + key + "%"))
+                                    .or(sysUser.PHONE.like("%" + key + "%"))
+                                    .or(sysUser.EMAIL.like("%" + key + "%"))
+                                    .or(sysUser.JOB.like("%" + key + "%")))
                     .limit(index, 10)
                     .fetch().intoMaps();
         }
@@ -170,26 +174,26 @@ public class SystemQuery {
     /**
      * 根据条件查询机构下属用户总数.
      */
-    public int getUserListTotalByOrg(User user) {
+    public int getUserListTotalByOrg(int organizationId, String key) {
         return (int) dslContext.select(sysUser.ID.count()).from(sysUser)
-                .where(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(user.getOrganizationId())),
-                        sysUser.REAL_NAME.like("%" + user.getName() + "%"),
-                        sysUser.WORKERS.like("%" + user.getWorkers() + "%"),
-                        sysUser.USERNAME.like("%" + user.getUsername() + "%"),
-                        sysUser.PHONE.like("%" + user.getPhone() + "%"),
-                        sysUser.EMAIL.like("%" + user.getEmail() + "%"),
-                        sysUser.JOB.like("%" + user.getJob() + "%")).fetch().getValue(0, 0);
+                .where(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(organizationId)),
+                        sysUser.REAL_NAME.like("%" + key + "%")
+                                .or(sysUser.WORKERS.like("%" + key + "%"))
+                                .or(sysUser.USERNAME.like("%" + key + "%"))
+                                .or(sysUser.PHONE.like("%" + key + "%"))
+                                .or(sysUser.EMAIL.like("%" + key + "%"))
+                                .or(sysUser.JOB.like("%" + key + "%"))).fetch().getValue(0, 0);
     }
 
     /**
      * 根据条件查询所有用户.
      */
-    public Map<String, Object> getUserList(User user, int pageNum) {
+    public Map<String, Object> getUserList(String key, int pageNum) {
 
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
 
-        int total = getUserListTotal(user);
+        int total = getUserListTotal(key);
         if (total != 0) {
             int index = (pageNum - 1) * 10;
 
@@ -204,12 +208,12 @@ public class SystemQuery {
                     sysUser.REMARK.as("remark"),
                     sysUser.FLAG.as("flag"))
                     .from(sysUser)
-                    .where(sysUser.REAL_NAME.like("%" + user.getName() + "%"),
-                            sysUser.WORKERS.like("%" + user.getWorkers() + "%"),
-                            sysUser.USERNAME.like("%" + user.getUsername() + "%"),
-                            sysUser.PHONE.like("%" + user.getPhone() + "%"),
-                            sysUser.EMAIL.like("%" + user.getEmail() + "%"),
-                            sysUser.JOB.like("%" + user.getJob() + "%"))
+                    .where(sysUser.REAL_NAME.like("%" + key + "%")
+                            .or(sysUser.WORKERS.like("%" + key + "%"))
+                            .or(sysUser.USERNAME.like("%" + key + "%"))
+                            .or(sysUser.PHONE.like("%" + key + "%"))
+                            .or(sysUser.EMAIL.like("%" + key + "%"))
+                            .or(sysUser.JOB.like("%" + key + "%")))
                     .limit(index, 10)
                     .fetch().intoMaps();
         }
@@ -222,14 +226,14 @@ public class SystemQuery {
     /**
      * 根据条件查询所有用户总数.
      */
-    public int getUserListTotal(User user) {
+    public int getUserListTotal(String key) {
         return (int) dslContext.select(sysUser.ID.count()).from(sysUser)
-                .where(sysUser.REAL_NAME.like("%" + user.getName() + "%"),
-                        sysUser.WORKERS.like("%" + user.getWorkers() + "%"),
-                        sysUser.USERNAME.like("%" + user.getUsername() + "%"),
-                        sysUser.PHONE.like("%" + user.getPhone() + "%"),
-                        sysUser.EMAIL.like("%" + user.getEmail() + "%"),
-                        sysUser.JOB.like("%" + user.getJob() + "%")).fetch().getValue(0, 0);
+                .where(sysUser.REAL_NAME.like("%" + key + "%")
+                        .or(sysUser.WORKERS.like("%" + key + "%"))
+                        .or(sysUser.USERNAME.like("%" + key + "%"))
+                        .or(sysUser.PHONE.like("%" + key + "%"))
+                        .or(sysUser.EMAIL.like("%" + key + "%"))
+                        .or(sysUser.JOB.like("%" + key + "%"))).fetch().getValue(0, 0);
     }
 
     /**
@@ -258,7 +262,11 @@ public class SystemQuery {
         //查询
         resultMap = getSubFondsTreeMap(getAllFondsList(), resultMap);
         //拼装返回数据信息
-        resultMap.put("items", resultMap.get("children"));
+        if (null != resultMap.get("children")) {
+            resultMap.put("items", resultMap.get("children"));
+        } else {
+            resultMap.put("items", new ArrayList<Map<String, Object>>());
+        }
         //去除根全宗数据
         resultMap.remove("id");
         resultMap.remove("children");
