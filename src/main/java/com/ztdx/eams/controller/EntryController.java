@@ -35,7 +35,7 @@ public class EntryController {
      * @apiParam {Object} items 条目详细内容，是一个动态的key-value数组。
      * 以下举例条目有姓名(name)年龄(age)注册日期(regDate)爱好(interest)
      * @apiParam {String} items.name 姓名
-     * @apiParam {int} items.age 年龄
+     * @apiParam {Number} items.age 年龄
      * @apiParam {Date} items.regDate 注册日期
      * @apiParam {String[]} items.interest 爱好
      * @apiParamExample {json} Request-Example:
@@ -69,7 +69,7 @@ public class EntryController {
      * @apiParam {Object} items 条目详细内容，是一个动态的key-value数组。
      * 以下举例条目有姓名(name)年龄(age)注册日期(regDate)爱好(interest)
      * @apiParam {String} items.name 姓名
-     * @apiParam {int} items.age 年龄
+     * @apiParam {Number} items.age 年龄
      * @apiParam {Date} items.regDate 注册日期
      * @apiParam {String[]} items.interest 爱好
      * @apiParamExample {json} Request-Example:
@@ -99,26 +99,26 @@ public class EntryController {
      * @api {get} /entry/search?cid={cid}&q={q}&page={page}&size={size} 按关键字搜索条目
      * @apiName search_simple
      * @apiGroup entry
-     * @apiParam {int} cid 目录id(QueryString)
+     * @apiParam {Number} cid 目录id(QueryString)
      * @apiParam {String} q 关键字(QueryString)
-     * @apiParam {int} page 页码(QueryString)
-     * @apiParam {int} size 页行数(QueryString)
+     * @apiParam {Number} page 页码(QueryString)
+     * @apiParam {Number} size 页行数(QueryString)
      * @apiSuccess (Success 200) {Array} content 列表内容
-     * @apiSuccess (Success 200) {int} content.id 条目id
-     * @apiSuccess (Success 200) {int} content.catalogueId 目录id
-     * @apiSuccess (Success 200) {int=1,2,3} content.catalogueType 目录类型 1:卷内 2:案卷 3:项目
-     * @apiSuccess (Success 200) {int} content.archiveId 档案库id
+     * @apiSuccess (Success 200) {Number} content.id 条目id
+     * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
+     * @apiSuccess (Success 200) {Number=1,2,3} content.catalogueType 目录类型 1:卷内 2:案卷 3:项目
+     * @apiSuccess (Success 200) {Number} content.archiveId 档案库id
      * @apiSuccess (Success 200) {String} content.archiveName 档案库名称
-     * @apiSuccess (Success 200) {int=1,2} content.archiveType 档案库类型 1:登记库 2:归档库
-     * @apiSuccess (Success 200) {int} content.archiveContentType 档案库内容类型
+     * @apiSuccess (Success 200) {Number=1,2} content.archiveType 档案库类型 1:登记库 2:归档库
+     * @apiSuccess (Success 200) {Number} content.archiveContentType 档案库内容类型
      * @apiSuccess (Success 200) {Array} content.items 条目字段信息(以下内容每个档案库目录都不同，字段定义在data.column中)
      * @apiSuccess (Success 200) {date} content.items.birthday 生日
      * @apiSuccess (Success 200) {double} content.items.amount 资产
      * @apiSuccess (Success 200) {Array} content.items.aihao 爱好
      * @apiSuccess (Success 200) {String} content.items.name 姓名
-     * @apiSuccess (Success 200) {int} content.items.age 年龄
+     * @apiSuccess (Success 200) {Number} content.items.age 年龄
      * @apiSuccess (Success 200) {Array} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
-     * @apiSuccess (Success 200) {int} column.metadataId 元数据id
+     * @apiSuccess (Success 200) {Number} column.metadataId 元数据id
      * @apiSuccess (Success 200) {String} column.metadataName
      * @apiSuccess (Success 200) {Array} column.displayName 爱好
      * @apiSuccessExample {json} Success-Response:
@@ -189,8 +189,8 @@ public class EntryController {
      * @apiName search_adv
      * @apiGroup entry
      * @apiParam {String} q 关键字(QueryString)
-     * @apiParam {int} page 页码(QueryString)
-     * @apiParam {int} size 页行数(QueryString)
+     * @apiParam {Number} page 页码(QueryString)
+     * @apiParam {Number} size 页行数(QueryString)
      * @apiParam {String} catalogueId 档案目录id
      * @apiParam {Object} items 条目详细内容，是一个动态的key-value数组。
      * 以下举例条目有姓名(name)年龄(age)注册日期(regDate)爱好(interest)
@@ -199,21 +199,21 @@ public class EntryController {
      * @apiParam {Array} items.regDate 注册日期 传递数组[from,to]进行区间查找
      * @apiParam {Array} items.interest 爱好 传递数组进行多词匹配。
      * @apiSuccess (Success 200) {Array} content 列表内容
-     * @apiSuccess (Success 200) {int} content.id 条目id
-     * @apiSuccess (Success 200) {int} content.catalogueId 目录id
-     * @apiSuccess (Success 200) {int=1,2,3} content.catalogueType 目录类型 1:卷内 2:案卷 3:项目
-     * @apiSuccess (Success 200) {int} content.archiveId 档案库id
+     * @apiSuccess (Success 200) {Number} content.id 条目id
+     * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
+     * @apiSuccess (Success 200) {Number=1,2,3} content.catalogueType 目录类型 1:卷内 2:案卷 3:项目
+     * @apiSuccess (Success 200) {Number} content.archiveId 档案库id
      * @apiSuccess (Success 200) {String} content.archiveName 档案库名称
-     * @apiSuccess (Success 200) {int=1,2} content.archiveType 档案库类型 1:登记库 2:归档库
-     * @apiSuccess (Success 200) {int} content.archiveContentType 档案库内容类型
+     * @apiSuccess (Success 200) {Number=1,2} content.archiveType 档案库类型 1:登记库 2:归档库
+     * @apiSuccess (Success 200) {Number} content.archiveContentType 档案库内容类型
      * @apiSuccess (Success 200) {Array} content.items 条目字段信息(以下内容每个档案库目录都不同，字段定义在data.column中)
      * @apiSuccess (Success 200) {date} content.items.birthday 生日
      * @apiSuccess (Success 200) {double} content.items.amount 资产
      * @apiSuccess (Success 200) {Array} content.items.aihao 爱好
      * @apiSuccess (Success 200) {String} content.items.name 姓名
-     * @apiSuccess (Success 200) {int} content.items.age 年龄
+     * @apiSuccess (Success 200) {Number} content.items.age 年龄
      * @apiSuccess (Success 200) {Array} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
-     * @apiSuccess (Success 200) {int} column.metadataId 元数据id
+     * @apiSuccess (Success 200) {Number} column.metadataId 元数据id
      * @apiSuccess (Success 200) {String} column.metadataName
      * @apiSuccess (Success 200) {Array} column.displayName 爱好
      * @apiSuccessExample {json} Success-Response:
@@ -284,43 +284,43 @@ public class EntryController {
      * @api {post} /entry/searchFulltext?page={page}&size={size} 全文搜索
      * @apiName searchFulltext
      * @apiGroup entry
-     * @apiParam {int} page 页码(QueryString)
-     * @apiParam {int} size 页行数(QueryString)
+     * @apiParam {Number} page 页码(QueryString)
+     * @apiParam {Number} size 页行数(QueryString)
      * @apiParam {Array} archiveContentType 档案内容类型
      * @apiParam {String="3year","6year","8year"} dateRange 时间
      * @apiParam {Array="words","entry","file"} searchParam 搜索参数 words:全词匹配 entry:条目 file:全文
      * @apiParam {String} includeWords 包含关键字
      * @apiParam {String} rejectWords 排除关键字
      * @apiSuccess (Success 200) {Array} content 列表内容
-     * @apiSuccess (Success 200) {int} content.id 条目id
-     * @apiSuccess (Success 200) {int} content.catalogueId 目录id
-     * @apiSuccess (Success 200) {int=1,2,3} content.catalogueType 目录类型 1:卷内 2:案卷 3:项目
-     * @apiSuccess (Success 200) {int} content.archiveId 档案库id
+     * @apiSuccess (Success 200) {Number} content.id 条目id
+     * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
+     * @apiSuccess (Success 200) {Number=1,2,3} content.catalogueType 目录类型 1:卷内 2:案卷 3:项目
+     * @apiSuccess (Success 200) {Number} content.archiveId 档案库id
      * @apiSuccess (Success 200) {String} content.archiveName 档案库名称
      * @apiSuccess (Success 200) {String} content.fondsName 全宗名称
-     * @apiSuccess (Success 200) {int=1,2} content.archiveType 档案库类型 1:登记库 2:归档库
-     * @apiSuccess (Success 200) {int} content.archiveContentType 档案库内容类型
+     * @apiSuccess (Success 200) {Number=1,2} content.archiveType 档案库类型 1:登记库 2:归档库
+     * @apiSuccess (Success 200) {Number} content.archiveContentType 档案库内容类型
      * @apiSuccess (Success 200) {Object} content.items 条目字段信息(以下内容每个档案库目录都不同，字段定义在data.column中)
      * @apiSuccess (Success 200) {date} content.items.birthday 生日
      * @apiSuccess (Success 200) {double} content.items.amount 资产
      * @apiSuccess (Success 200) {Array} content.items.aihao 爱好
      * @apiSuccess (Success 200) {String} content.items.name 姓名
-     * @apiSuccess (Success 200) {int} content.items.age 年龄
+     * @apiSuccess (Success 200) {Number} content.items.age 年龄
      * @apiSuccess (Success 200) {Object} content.file 文件信息
-     * @apiSuccess (Success 200) {int} content.file.fileId 文件id
-     * @apiSuccess (Success 200) {int} content.file.title 标题
+     * @apiSuccess (Success 200) {Number} content.file.fileId 文件id
+     * @apiSuccess (Success 200) {Number} content.file.title 标题
      * @apiSuccess (Success 200) {String="word","excel","pdf","ppt"} content.file.fileType 类型
      * @apiSuccess (Success 200) {String} content.file.hightlight 高亮文本
      * @apiSuccess (Success 200) {Array} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
-     * @apiSuccess (Success 200) {int} column.metadataId 元数据id
+     * @apiSuccess (Success 200) {Number} column.metadataId 元数据id
      * @apiSuccess (Success 200) {String} column.metadataName
      * @apiSuccess (Success 200) {Array} column.displayName 爱好
      * @apiSuccess (Success 200) {Object} aggregation 统计数据
      * @apiSuccess (Success 200) {Array} aggregation.archiveContentType 档案类型统计
-     * @apiSuccess (Success 200) {int} aggregation.archiveContentType.id 档案类型id
-     * @apiSuccess (Success 200) {int} aggregation.archiveContentType.name 档案类型名称
-     * @apiSuccess (Success 200) {int} aggregation.archiveContentType.count 数量
-     * @apiSuccess (Success 200) {int} totalElements 总记录数
+     * @apiSuccess (Success 200) {Number} aggregation.archiveContentType.id 档案类型id
+     * @apiSuccess (Success 200) {Number} aggregation.archiveContentType.name 档案类型名称
+     * @apiSuccess (Success 200) {Number} aggregation.archiveContentType.count 数量
+     * @apiSuccess (Success 200) {Number} totalElements 总记录数
      * @apiSuccessExample {json} Success-Response:
      * {
      * "data":{
@@ -408,13 +408,13 @@ public class EntryController {
      * @apiParam {Array} archiveContentType 档案内容类型
      * @apiParam {String="3year","6year","8year"} dateRange 时间
      * @apiSuccess (Success 200) {Array} content 列表内容
-     * @apiSuccess (Success 200) {int} content.archiveId 档案库id
+     * @apiSuccess (Success 200) {Number} content.archiveId 档案库id
      * @apiSuccess (Success 200) {String} content.archiveName 档案库名称
      * @apiSuccess (Success 200) {String} content.fondsName 全宗名称
      * @apiSuccess (Success 200) {Array} content.items 目录数组
-     * @apiSuccess (Success 200) {int} content.items.catalogueId 目录id
-     * @apiSuccess (Success 200) {int=1,2,3} content.items.catalogueType 目录类型 1:卷内 2:案卷 3:项目
-     * @apiSuccess (Success 200) {int} content.items.count 统计结果
+     * @apiSuccess (Success 200) {Number} content.items.catalogueId 目录id
+     * @apiSuccess (Success 200) {Number=1,2,3} content.items.catalogueType 目录类型 1:卷内 2:案卷 3:项目
+     * @apiSuccess (Success 200) {Number} content.items.count 统计结果
      * @apiSuccessExample {json} Success-Response:
      * {
      * "data": {

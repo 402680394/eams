@@ -30,16 +30,16 @@ public class OrganizationController {
      * @api {get} /organization/treeList 获取机构树形列表
      * @apiName treeList
      * @apiGroup organization
-     * @apiParam {int} id 顶层机构ID（url参数）（非必需，默认为1根节点）
-     * @apiParam {int} type 机构类型（url参数）（非必需，默认为0）（可选值：0-获取全部 1-获取类型为公司的机构）
-     * @apiSuccess (Success 200) {int} id 机构ID.
+     * @apiParam {Number} id 顶层机构ID（url参数）（非必需，默认为1根节点）
+     * @apiParam {Number} type 机构类型（url参数）（非必需，默认为0）（可选值：0-获取全部 1-获取类型为公司的机构）
+     * @apiSuccess (Success 200) {Number} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
-     * @apiSuccess (Success 200) {int} parentId 上级机构ID.
-     * @apiSuccess (Success 200) {int} orderNumber 同级排序编号.
-     * @apiSuccess (Success 200) {int} fondsId 关联全宗ID(未关联为null).
-     * @apiSuccess (Success 200) {int} type 机构类型
-     * @apiSuccess (Success 200) {arr} children 子节点信息
+     * @apiSuccess (Success 200) {Number} parentId 上级机构ID.
+     * @apiSuccess (Success 200) {Number} orderNumber 同级排序编号.
+     * @apiSuccess (Success 200) {Number} fondsId 关联全宗ID(未关联为null).
+     * @apiSuccess (Success 200) {Number} type 机构类型
+     * @apiSuccess (Success 200) {Object[]} children 子节点信息
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"id": 机构ID,"code": "机构编码","name": "父机构0","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型},
      * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型,"children": [
@@ -54,12 +54,12 @@ public class OrganizationController {
      * @api {post} /organization 新增机构
      * @apiName save
      * @apiGroup organization
-     * @apiParam {int} parentId 上级机构ID（根机构传1）
-     * @apiParam {String} code 机构编码
-     * @apiParam {String} name 机构名称
-     * @apiParam {String} describe 机构描述（未输入传""值）
-     * @apiParam {String} remark 备注（未输入传""值）
-     * @apiParam {int} type 机构类型（可选值：1-公司；2-部门；3-科室）
+     * @apiParam {Number} parentId 上级机构ID（根机构传1）
+     * @apiParam {String{20}} code 机构编码
+     * @apiParam {String{50}} name 机构名称
+     * @apiParam {String{50}} describe 机构描述（未输入传""值）
+     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {Number} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室；4.科室下无法创建部门.
      * @apiUse ErrorExample
      */
@@ -72,7 +72,7 @@ public class OrganizationController {
      * @api {delete} /organization/{id} 删除机构
      * @apiName delete
      * @apiGroup organization
-     * @apiParam {int} id 机构ID（url占位符）
+     * @apiParam {Number} id 机构ID（url占位符）
      * @apiError (Error 400) message 1.该机构或子机构下存在用户；2.该机构下存在子机构.
      * @apiUse ErrorExample
      */
@@ -85,13 +85,13 @@ public class OrganizationController {
      * @api {put} /organization 修改机构信息
      * @apiName update
      * @apiGroup organization
-     * @apiParam {int} id 机构ID
-     * @apiParam {int} parentId 上级机构ID（根机构传1）
-     * @apiParam {String} code 机构编码
-     * @apiParam {String} name 机构名称
-     * @apiParam {String} describe 机构描述（未输入传""值）
-     * @apiParam {String} remark 备注（未输入传""值）
-     * @apiParam {int} type 机构类型（可选值：1-公司；2-部门；3-科室）
+     * @apiParam {Number} id 机构ID
+     * @apiParam {Number} parentId 上级机构ID（根机构传1）
+     * @apiParam {String{20}} code 机构编码
+     * @apiParam {String{50}} name 机构名称
+     * @apiParam {String{50}} describe 机构描述（未输入传""值）
+     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {Number} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室 4.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
@@ -104,14 +104,14 @@ public class OrganizationController {
      * @api {get} /organization/{id} 获取机构详情
      * @apiName get
      * @apiGroup organization
-     * @apiParam {int} id 机构ID（url占位符）
-     * @apiSuccess (Success 200) {int} id 机构ID.
+     * @apiParam {Number} id 机构ID（url占位符）
+     * @apiSuccess (Success 200) {Number} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
-     * @apiSuccess (Success 200) {int} parentId 上级机构ID.
+     * @apiSuccess (Success 200) {Number} parentId 上级机构ID.
      * @apiSuccess (Success 200) {String} describe 机构描述.
      * @apiSuccess (Success 200) {String} remark 备注.
-     * @apiSuccess (Success 200) {int} type 机构类型（可选值：1-公司；2-部门；3-科室）
+     * @apiSuccess (Success 200) {Number} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"type": 机构类型,"describe": "机构描述","remark": "备注"}}.
      */
@@ -124,8 +124,8 @@ public class OrganizationController {
      * @api {patch} /organization/{upId},{downId}/priority 修改机构排序优先级
      * @apiName priority
      * @apiGroup organization
-     * @apiParam {int} upId 上移机构ID（url占位符）
-     * @apiParam {int} downId 下移机构ID（url占位符）
+     * @apiParam {Number} upId 上移机构ID（url占位符）
+     * @apiParam {Number} downId 下移机构ID（url占位符）
      * @apiError (Error 400) message 1.机构类型或上级机构不一致 2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */

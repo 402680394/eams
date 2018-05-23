@@ -49,9 +49,9 @@ public class UserController {
      * @api {post} /user/login 用户登录
      * @apiName login
      * @apiGroup user
-     * @apiParam {String} username 用户名
-     * @apiParam {String} password 密码
-     * @apiSuccess (Success 200) {int} id 用户ID.
+     * @apiParam {String{20}} username 用户名
+     * @apiParam {String{100}} password 密码
+     * @apiSuccess (Success 200) {Number} id 用户ID.
      * @apiError (Error 401) message 1-用户不存在; 2-密码错误; 3-该用户已被禁止使用.
      * @apiUse ErrorExample
      */
@@ -76,7 +76,7 @@ public class UserController {
      * @api {delete} /user/{id} 删除用户
      * @apiName delete
      * @apiGroup user
-     * @apiParam {int} id 用户ID（url占位符）
+     * @apiParam {Number} id 用户ID（url占位符）
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {
@@ -87,7 +87,7 @@ public class UserController {
      * @api {delete} /user/list 批量删除用户
      * @apiName listDelete
      * @apiGroup user
-     * @apiParam {int} id 用户ID
+     * @apiParam {Number} id 用户ID
      * @apiParamExample {json} Request-Example:
      * [1,2,3]
      */
@@ -97,26 +97,26 @@ public class UserController {
     }
 
     /**
-     * @api {patch} /user/listReset 批量重置用户密码
+     * @api {put} /user/listReset 批量重置用户密码
      * @apiName listReset
      * @apiGroup user
-     * @apiParam {int} id 用户ID
+     * @apiParam {Number} id 用户ID
      * @apiParamExample {json} Request-Example:
      * [1,2,3]
      */
-    @RequestMapping(value = "/listReset", method = RequestMethod.PATCH)
+    @RequestMapping(value = "/listReset", method = RequestMethod.PUT)
     public void listPassReset(@RequestBody List<Integer> list) {
         userService.listPassReset(list);
     }
 
     /**
-     * @api {patch} /user/{id}/lock 锁定|解锁用户
+     * @api {put} /user/{id}/lock 锁定|解锁用户
      * @apiName lock
      * @apiGroup user
-     * @apiParam {int} id 用户ID（url占位符）
-     * @apiParam {int} flag 状态（可选值：0-可用，1-禁用）（url参数）
+     * @apiParam {Number} id 用户ID（url占位符）
+     * @apiParam {Number{0-1}} flag 状态（可选值：0-可用，1-禁用）（url参数）
      */
-    @RequestMapping(value = "/{id}/lock", method = RequestMethod.PATCH)
+    @RequestMapping(value = "/{id}/lock", method = RequestMethod.PUT)
     public void lock(@PathVariable("id") int id, @RequestParam int flag) {
         userService.changeFlag(id, flag);
     }
@@ -125,10 +125,10 @@ public class UserController {
      * @api {get} /user/list 获取用户列表
      * @apiName list
      * @apiGroup user
-     * @apiParam {int} pageNum 页码（默认为1）（url参数）
-     * @apiParam {int} organizationId 机构ID（url参数）
+     * @apiParam {Number} pageNum 页码（默认为1）（url参数）
+     * @apiParam {Number} organizationId 机构ID（url参数）
      * @apiParam {String} key 搜索值（搜索全部不传本值）（url参数）
-     * @apiSuccess (Success 200) {int} id 用户ID.
+     * @apiSuccess (Success 200) {Number} id 用户ID.
      * @apiSuccess (Success 200) {String} name 姓名.
      * @apiSuccess (Success 200) {String} workers 工号.
      * @apiSuccess (Success 200) {String} username 用户名.
@@ -136,8 +136,8 @@ public class UserController {
      * @apiSuccess (Success 200) {String} email 邮箱.
      * @apiSuccess (Success 200) {String} job 职位
      * @apiSuccess (Success 200) {String} remark 备注
-     * @apiSuccess (Success 200) {int} flag 状态
-     * @apiSuccess (Success 200) {int} total 数据总数
+     * @apiSuccess (Success 200) {Number} flag 状态
+     * @apiSuccess (Success 200) {Number} total 数据总数
      * @apiSuccessExample {json} Success-Response:
      * {
      * "data":{
@@ -160,14 +160,14 @@ public class UserController {
      * @api {post} /user 新增用户
      * @apiName save
      * @apiGroup user
-     * @apiParam {String} name 姓名
-     * @apiParam {String} workers 工号（未输入传""值）
-     * @apiParam {String} username 用户名
-     * @apiParam {int} organizationId 所属机构ID
-     * @apiParam {String} phone 电话（未输入传""值）
-     * @apiParam {String} email 邮箱（未输入传""值）
-     * @apiParam {String} job 职位（未输入传""值）
-     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiParam {String{10}} name 姓名
+     * @apiParam {String{20}} workers 工号（未输入传""值）
+     * @apiParam {String{20}} username 用户名
+     * @apiParam {Number} organizationId 所属机构ID
+     * @apiParam {String{20}} phone 电话（未输入传""值）
+     * @apiParam {String{50}} email 邮箱（未输入传""值）
+     * @apiParam {String{20}} job 职位（未输入传""值）
+     * @apiParam {String{100}} remark 备注（未输入传""值）
      * @apiError (Error 400) message 1.用户名已存在;2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
@@ -180,14 +180,15 @@ public class UserController {
      * @api {put} /user 修改用户信息
      * @apiName update
      * @apiGroup user
-     * @apiParam {String} name 姓名
-     * @apiParam {String} workers 工号（未输入传""值）
-     * @apiParam {String} username 用户名
-     * @apiParam {int} organizationId 所属机构ID
-     * @apiParam {String} phone 电话（未输入传""值）
-     * @apiParam {String} email 邮箱（未输入传""值）
-     * @apiParam {String} job 职位（未输入传""值）
-     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiParam {Number} id ID
+     * @apiParam {String{10}} name 姓名
+     * @apiParam {String{20}} workers 工号（未输入传""值）
+     * @apiParam {String{20}} username 用户名
+     * @apiParam {Number} organizationId 所属机构ID
+     * @apiParam {String{20}} phone 电话（未输入传""值）
+     * @apiParam {String{50}} email 邮箱（未输入传""值）
+     * @apiParam {String{20}} job 职位（未输入传""值）
+     * @apiParam {String{100}} remark 备注（未输入传""值）
      * @apiError (Error 400) message 1.用户名已存在;2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
@@ -200,11 +201,11 @@ public class UserController {
      * @api {get} /user/{id} 获取用户信息详情
      * @apiName get
      * @apiGroup user
-     * @apiParam {int} id 用户ID（url占位符）
+     * @apiParam {Number} id 用户ID（url占位符）
      * @apiSuccess (Success 200) {String} name 姓名
      * @apiSuccess (Success 200) {String} workers 工号
      * @apiSuccess (Success 200) {String} username 用户名
-     * @apiSuccess (Success 200) {int} organizationId 所属机构ID
+     * @apiSuccess (Success 200) {Number} organizationId 所属机构ID
      * @apiSuccess (Success 200) {String} phone 电话
      * @apiSuccess (Success 200) {String} email 邮箱
      * @apiSuccess (Success 200) {String} job 职位

@@ -24,8 +24,8 @@ public class RoleController {
      * @api {post} /role 新增角色
      * @apiName save
      * @apiGroup role
-     * @apiParam {String} roleName 角色名称
-     * @apiParam {long} [resourceId] 资源节点id
+     * @apiParam {String{50}} roleName 角色名称
+     * @apiParam {Number} [resourceId] 资源节点id
      * @apiError (Error 400) message 1.角色名称已存在
      * @apiUse ErrorExample
      */
@@ -38,7 +38,7 @@ public class RoleController {
      * @api {delete} /role/{id} 删除角色
      * @apiName delete
      * @apiGroup role
-     * @apiParam {long} id 角色id（url占位符）
+     * @apiParam {Number} id 角色id（url占位符）
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") long id) {
@@ -49,9 +49,9 @@ public class RoleController {
      * @api {put} /role/{id} 修改角色
      * @apiName update
      * @apiGroup role
-     * @apiParam {long} id 角色id（url占位符）.
-     * @apiParam {String} roleName 角色名称.
-     * @apiParam {long} [resourceId] 资源节点id.
+     * @apiParam {Number} id 角色id（url占位符）.
+     * @apiParam {String{50}} roleName 角色名称.
+     * @apiParam {Number} [resourceId] 资源节点id.
      * @apiError (Error 400) message 1.角色名称已存在
      * @apiUse ErrorExample
      */
@@ -65,10 +65,10 @@ public class RoleController {
      * @api {get} /role/{id} 获取角色详情
      * @apiName get
      * @apiGroup role
-     * @apiParam {long} id 角色id（url占位符）
-     * @apiSuccess (Success 200) {int} id 角色id
+     * @apiParam {Number} id 角色id（url占位符）
+     * @apiSuccess (Success 200) {Number} id 角色id
      * @apiSuccess (Success 200) {String} roleName 角色名称
-     * @apiSuccess (Success 200) {long} resourceId 资源节点id
+     * @apiSuccess (Success 200) {Number} resourceId 资源节点id
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"id": 1,"roleName": "角色名称","resourceId": "资源节点id"}}
      */
@@ -85,7 +85,7 @@ public class RoleController {
      * @api {post} /role/{id}/permissions 新增角色拥有的权限
      * @apiName addPermissions
      * @apiGroup role
-     * @apiParam {long} id 角色id（url占位符）
+     * @apiParam {Number} id 角色id（url占位符）
      * @apiParam {String[]} resourceUrls 权限
      * @apiSuccess (Success 200) String[] added 增加成功的权限
      * @apiSuccess (Success 200) String[] existed 已存在的权限
@@ -107,8 +107,8 @@ public class RoleController {
      * @api {post} /role/{id}/users 新增拥有此角色的用户
      * @apiName addUsers
      * @apiGroup role
-     * @apiParam {long} id 角色id（url占位符）
-     * @apiParam {int[]} userIds 用户id
+     * @apiParam {Number} id 角色id（url占位符）
+     * @apiParam {Number[]} userIds 用户id
      * @apiSuccess (Success 200) String[] added 增加成功的用户id
      * @apiSuccess (Success 200) String[] existed 已存在的用户id
      * @apiError (Error 400) message 1.参数userIds错误

@@ -26,7 +26,7 @@ public class FileTypeController {
      * @api {get} /fileType/list 获取文件类型列表
      * @apiName list
      * @apiGroup fileType
-     * @apiSuccess (Success 200) {int} id ID.
+     * @apiSuccess (Success 200) {Number} id ID.
      * @apiSuccess (Success 200) {String} name 名称.
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"id": ID,"name": "名称"}]}}.

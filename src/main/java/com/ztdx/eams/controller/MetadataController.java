@@ -30,21 +30,21 @@ public class MetadataController {
      * @apiName list
      * @apiDescription 用于通过名称与元数据规范ID获取元数据列表
      * @apiGroup metadata
-     * @apiParam {String} metadataStandardsId 元数据规范ID(url参数)
-     * @apiParam {String} name 名称(未输入传""值)(url参数)
-     * @apiSuccess (Success 200) {int} id ID.
+     * @apiParam {Number} metadataStandardsId 元数据规范ID(url参数)
+     * @apiParam {String{30}} name 名称(未输入传""值)(url参数)
+     * @apiSuccess (Success 200) {Number} id ID.
      * @apiSuccess (Success 200) {String} displayName 字段显示名.
      * @apiSuccess (Success 200) {String} name 字段名称.
-     * @apiSuccess (Success 200) {int} fieldProperties 字段属性.
-     * @apiSuccess (Success 200) {int} dataType 数据类型.
+     * @apiSuccess (Success 200) {Number} fieldProperties 字段属性.
+     * @apiSuccess (Success 200) {Number} dataType 数据类型.
      * @apiSuccess (Success 200) {String} fieldWidth 字段宽度.
      * @apiSuccess (Success 200) {String} fieldPrecision 字段精度.
-     * @apiSuccess (Success 200) {int} parentId 父字段ID.
-     * @apiSuccess (Success 200) {int} defaultValue 默认值.
+     * @apiSuccess (Success 200) {Number} parentId 父字段ID.
+     * @apiSuccess (Success 200) {Number} defaultValue 默认值.
      * @apiSuccess (Success 200) {String} definition 定义.
      * @apiSuccess (Success 200) {String} objective 目的.
-     * @apiSuccess (Success 200) {int} constraint 约束性.
-     * @apiSuccess (Success 200) {int} elementType 元素类型.
+     * @apiSuccess (Success 200) {Number} constraint 约束性.
+     * @apiSuccess (Success 200) {Number} elementType 元素类型.
      * @apiSuccess (Success 200) {String} codingModification 编码修饰体系.
      * @apiSuccess (Success 200) {String} relatedElements 相关元素.
      * @apiSuccess (Success 200) {String} range 值域.
@@ -68,24 +68,24 @@ public class MetadataController {
      * @api {post} /metadata 新增元数据
      * @apiName save
      * @apiGroup metadata
-     * @apiParam {String} displayName 字段显示名.
-     * @apiParam {String} name 字段名称.
-     * @apiParam {int} fieldProperties 字段属性.
-     * @apiParam {int} dataType 数据类型.
-     * @apiParam {String} fieldWidth 字段宽度.
-     * @apiParam {String} fieldPrecision 字段精度.
-     * @apiParam {int} parentId 父字段ID.
-     * @apiParam {int} metadataStandardsId 元数据规范ID.
-     * @apiParam {int} defaultValue 默认值.
-     * @apiParam {String} definition 定义.
-     * @apiParam {String} objective 目的.
-     * @apiParam {int} constraint 约束性.
-     * @apiParam {int} elementType 元素类型.
-     * @apiParam {String} codingModification 编码修饰体系.
-     * @apiParam {String} relatedElements 相关元素.
-     * @apiParam {String} range 值域.
-     * @apiParam {String} informationSources 信息来源.
-     * @apiParam {String} remark 备注.
+     * @apiParam {String{30}} displayName 字段显示名.
+     * @apiParam {String{30}} name 字段名称.
+     * @apiParam {Number} fieldProperties 字段属性.
+     * @apiParam {Number} dataType 数据类型.
+     * @apiParam {String{20}} fieldWidth 字段宽度.
+     * @apiParam {String{20}} fieldPrecision 字段精度.
+     * @apiParam {Number} parentId 父字段ID.
+     * @apiParam {Number} metadataStandardsId 元数据规范ID.
+     * @apiParam {Number} defaultValue 默认值.
+     * @apiParam {String{50}} definition 定义.
+     * @apiParam {String{50}} objective 目的.
+     * @apiParam {Number} constraint 约束性.
+     * @apiParam {Number} elementType 元素类型.
+     * @apiParam {String{30}} codingModification 编码修饰体系.
+     * @apiParam {String{30}} relatedElements 相关元素.
+     * @apiParam {String{30}} range 值域.
+     * @apiParam {String{30}} informationSources 信息来源.
+     * @apiParam {String{100}} remark 备注.
      * @apiError (Error 400) message 字段名称已存在.
      * @apiUse ErrorExample
      */
@@ -98,7 +98,7 @@ public class MetadataController {
      * @api {delete} /metadata/{id} 删除元数据
      * @apiName delete
      * @apiGroup metadata
-     * @apiParam {int} id ID（url占位符）
+     * @apiParam {Number} id ID（url占位符）
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {
@@ -109,24 +109,24 @@ public class MetadataController {
      * @api {put} /metadata 修改元数据
      * @apiName update
      * @apiGroup metadata
-     * @apiParam {int} id ID
-     * @apiParam {String} displayName 字段显示名.
-     * @apiParam {String} name 字段名称.
-     * @apiParam {int} fieldProperties 字段属性.
-     * @apiParam {int} dataType 数据类型.
-     * @apiParam {String} fieldWidth 字段宽度.
-     * @apiParam {String} fieldPrecision 字段精度.
-     * @apiParam {int} parentId 父字段ID.
-     * @apiParam {int} defaultValue 默认值.
-     * @apiParam {String} definition 定义.
-     * @apiParam {String} objective 目的.
-     * @apiParam {int} constraint 约束性.
-     * @apiParam {int} elementType 元素类型.
-     * @apiParam {String} codingModification 编码修饰体系.
-     * @apiParam {String} relatedElements 相关元素.
-     * @apiParam {String} range 值域.
-     * @apiParam {String} informationSources 信息来源.
-     * @apiParam {String} remark 备注.
+     * @apiParam {Number} id ID
+     * @apiParam {String{30}} displayName 字段显示名.
+     * @apiParam {String{30}} name 字段名称.
+     * @apiParam {Number} fieldProperties 字段属性.
+     * @apiParam {Number} dataType 数据类型.
+     * @apiParam {String{20}} fieldWidth 字段宽度.
+     * @apiParam {String{20}} fieldPrecision 字段精度.
+     * @apiParam {Number} parentId 父字段ID.
+     * @apiParam {Number} defaultValue 默认值.
+     * @apiParam {String{50}} definition 定义.
+     * @apiParam {String{50}} objective 目的.
+     * @apiParam {Number} constraint 约束性.
+     * @apiParam {Number} elementType 元素类型.
+     * @apiParam {String{30}} codingModification 编码修饰体系.
+     * @apiParam {String{30}} relatedElements 相关元素.
+     * @apiParam {String{30}} range 值域.
+     * @apiParam {String{30}} informationSources 信息来源.
+     * @apiParam {String{100}} remark 备注.
      * @apiError (Error 400) message 字段名称已存在.
      * @apiUse ErrorExample
      */
@@ -139,21 +139,21 @@ public class MetadataController {
      * @api {get} /metadata/{id} 获取元数据详情
      * @apiName get
      * @apiGroup metadata
-     * @apiParam int id 词典ID（url占位符）
-     * @apiSuccess (Success 200) {int} id ID.
+     * @apiParam {Number} id 词典ID（url占位符）
+     * @apiSuccess (Success 200) {Number} id ID.
      * @apiSuccess (Success 200) {String} displayName 字段显示名.
      * @apiSuccess (Success 200) {String} name 字段名称.
-     * @apiSuccess (Success 200) {int} fieldProperties 字段属性.
-     * @apiSuccess (Success 200) {int} dataType 数据类型.
+     * @apiSuccess (Success 200) {Number} fieldProperties 字段属性.
+     * @apiSuccess (Success 200) {Number} dataType 数据类型.
      * @apiSuccess (Success 200) {String} fieldWidth 字段宽度.
      * @apiSuccess (Success 200) {String} fieldPrecision 字段精度.
-     * @apiSuccess (Success 200) {int} parentId 父字段ID.
-     * @apiSuccess (Success 200) {int} metadataStandardsId 元数据规范ID.
-     * @apiSuccess (Success 200) {int} defaultValue 默认值.
+     * @apiSuccess (Success 200) {Number} parentId 父字段ID.
+     * @apiSuccess (Success 200) {Number} metadataStandardsId 元数据规范ID.
+     * @apiSuccess (Success 200) {Number} defaultValue 默认值.
      * @apiSuccess (Success 200) {String} definition 定义.
      * @apiSuccess (Success 200) {String} objective 目的.
-     * @apiSuccess (Success 200) {int} constraint 约束性.
-     * @apiSuccess (Success 200) {int} elementType 元素类型.
+     * @apiSuccess (Success 200) {Number} constraint 约束性.
+     * @apiSuccess (Success 200) {Number} elementType 元素类型.
      * @apiSuccess (Success 200) {String} codingModification 编码修饰体系.
      * @apiSuccess (Success 200) {String} relatedElements 相关元素.
      * @apiSuccess (Success 200) {String} range 值域.
@@ -176,8 +176,8 @@ public class MetadataController {
      * @api {patch} /metadata/{upId},{downId}/priority 修改元数据排序优先级
      * @apiName priority
      * @apiGroup metadata
-     * @apiParam {int} upId 上移词典ID（url占位符）
-     * @apiParam {int} downId 下移词典ID（url占位符）
+     * @apiParam {Number} upId 上移词典ID（url占位符）
+     * @apiParam {Number} downId 下移词典ID（url占位符）
      */
     @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)
     public void priority(@PathVariable("upId") int upId, @PathVariable("downId") int downId) {

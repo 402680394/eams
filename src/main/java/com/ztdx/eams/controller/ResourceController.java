@@ -20,9 +20,9 @@ public class ResourceController {
      * @api {post} /resource 新增资源
      * @apiName save
      * @apiGroup resource
-     * @apiParam {String} resourceName 资源名称
-     * @apiParam {String} resourceUrl 资源url
-     * @apiParam {long} parentId 上级节点id
+     * @apiParam {String{100}} resourceName 资源名称
+     * @apiParam {String{255}} resourceUrl 资源url
+     * @apiParam {Number} parentId 上级节点id
      * @apiParam {String="dir","func"} resourceType 资源类型
      * @apiError (Error 400) message 1.资源路径已存在 2.上级节点id不存在
      * @apiUse ErrorExample
@@ -36,7 +36,7 @@ public class ResourceController {
      * @api {delete} /resource/{id} 删除资源
      * @apiName delete
      * @apiGroup resource
-     * @apiParam {long} id 资源id（url占位符）
+     * @apiParam {Number} id 资源id（url占位符）
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {
@@ -47,9 +47,9 @@ public class ResourceController {
      * @api {put} /resource/{id} 修改资源
      * @apiName update
      * @apiGroup resource
-     * @apiParam {String} resourceName 资源名称
-     * @apiParam {String} resourceUrl 资源url
-     * @apiParam {long} parentId 上级节点id
+     * @apiParam {String{100}} resourceName 资源名称
+     * @apiParam {String{255}} resourceUrl 资源url
+     * @apiParam {Number} parentId 上级节点id
      * @apiParam {String="dir","func"} resourceType 资源类型 dir:目录 func:功能
      * @apiError (Error 400) message 1.资源路径已存在 2.上级节点id不存在
      * @apiUse ErrorExample
@@ -64,11 +64,11 @@ public class ResourceController {
      * @api {get} /resource/{id} 获取资源详情
      * @apiName get
      * @apiGroup resource
-     * @apiParam {long} id 资源id（url占位符）
-     * @apiSuccess (Success 200) {int} id 资源id
+     * @apiParam {Number} id 资源id（url占位符）
+     * @apiSuccess (Success 200) {Number} id 资源id
      * @apiSuccess (Success 200) {String} resourceName 资源名称
      * @apiSuccess (Success 200) {String} resourceUrl 资源url
-     * @apiSuccess (Success 200) {long} parentId 上级id
+     * @apiSuccess (Success 200) {Number} parentId 上级id
      * @apiSuccess (Success 200) {String="dir","func"} resourceType 资源类型 dir:目录 func:功能
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"id": 2,"resourceName": "资源名称", "resourceUrl":"资源url","parentId": 1,"resourceType": "资源类型"}}
@@ -82,8 +82,8 @@ public class ResourceController {
      * @api {patch} /resource/{upId},{downId}/priority 修改资源排序优先级
      * @apiName priority
      * @apiGroup resource
-     * @apiParam {int} upId 上移资源id（url占位符）
-     * @apiParam {int} downId 下移资源id（url占位符）
+     * @apiParam {Number} upId 上移资源id（url占位符）
+     * @apiParam {Number} downId 下移资源id（url占位符）
      * @apiError (Error 400) message 1.不在一个节点上 2.资源不存在.
      * @apiUse ErrorExample
      */

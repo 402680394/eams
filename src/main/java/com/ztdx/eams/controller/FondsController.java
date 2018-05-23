@@ -32,13 +32,13 @@ public class FondsController {
      * @api {get} /fonds/treeList 获取全宗树形列表
      * @apiName treeList
      * @apiGroup fonds
-     * @apiSuccess (Success 200) {int} id 全宗ID.
+     * @apiSuccess (Success 200) {Number} id 全宗ID.
      * @apiSuccess (Success 200) {String} code 全宗号.
      * @apiSuccess (Success 200) {String} name 全宗名称.
-     * @apiSuccess (Success 200) {int} parentId 上级全宗ID.
-     * @apiSuccess (Success 200) {int} orderNumber 同级排序编号.
+     * @apiSuccess (Success 200) {Number} parentId 上级全宗ID.
+     * @apiSuccess (Success 200) {Number} orderNumber 同级排序编号.
      * @apiSuccess (Success 200) {String} remark 备注
-     * @apiSuccess (Success 200) {arr} children 子节点信息
+     * @apiSuccess (Success 200) {Object[]} children 子节点信息
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"id": 全宗ID,"code": "全宗号","name": "父全宗0","parentId": 上级全宗ID,"orderNumber": 同级排序编号},
      * {"id": 全宗ID,"code": "全宗号","name": "父全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号,"children": [
@@ -53,11 +53,11 @@ public class FondsController {
      * @api {post} /fonds 新增全宗
      * @apiName save
      * @apiGroup fonds
-     * @apiParam {int} parentId 上级全宗ID（根节点传1）
-     * @apiParam {String} code 全宗号
-     * @apiParam {String} name 全宗名称
-     * @apiParam {String} remark 备注（未输入传""值）
-     * @apiParam {arr} association 关联机构ID
+     * @apiParam {Number} parentId 上级全宗ID（根节点传1）
+     * @apiParam {String{20}} code 全宗号
+     * @apiParam {String{20}} name 全宗名称
+     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {Number[]} association 关联机构ID
      * @apiError (Error 400) message 1.全宗号已存在 2.请设置关联机构 3.机构已被其它全宗关联.
      * @apiUse ErrorExample
      */
@@ -76,7 +76,7 @@ public class FondsController {
      * @api {delete} /fonds/{id} 删除全宗
      * @apiName delete
      * @apiGroup fonds
-     * @apiParam {int} id 全宗ID（url占位符）
+     * @apiParam {Number} id 全宗ID（url占位符）
      * @apiError (Error 400) message 该全宗下存在子全宗.
      * @apiUse ErrorExample
      */
@@ -89,12 +89,12 @@ public class FondsController {
      * @api {put} /fonds 修改全宗信息
      * @apiName update
      * @apiGroup fonds
-     * @apiParam {int} id 全宗ID
-     * @apiParam {int} parentId 上级全宗ID（根节点传1）
-     * @apiParam {String} code 全宗号
-     * @apiParam {String} name 全宗名称
-     * @apiParam {String} remark 备注（未输入传""值）
-     * @apiParam {arr} association 关联机构ID
+     * @apiParam {Number} id 全宗ID
+     * @apiParam {Number} parentId 上级全宗ID（根节点传1）
+     * @apiParam {String{20}} code 全宗号
+     * @apiParam {String{20}} name 全宗名称
+     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {Number[]} association 关联机构ID
      * @apiError (Error 400) message 1.全宗号已存在 2.请设置关联机构 3.机构已被其它全宗关联
      * @apiUse ErrorExample
      */
@@ -114,12 +114,12 @@ public class FondsController {
      * @api {get} /fonds/{id} 获取全宗详情
      * @apiName get
      * @apiGroup fonds
-     * @apiParam {int} id 全宗ID（url占位符）
-     * @apiSuccess (Success 200) {int} id 全宗ID.
+     * @apiParam {Number} id 全宗ID（url占位符）
+     * @apiSuccess (Success 200) {Number} id 全宗ID.
      * @apiSuccess (Success 200) {String} code 全宗号.
      * @apiSuccess (Success 200) {String} name 全宗名称.
-     * @apiSuccess (Success 200) {int} parentId 上级全宗ID.
-     * @apiSuccess (Success 200) {arr} association 关联机构ID.
+     * @apiSuccess (Success 200) {Number} parentId 上级全宗ID.
+     * @apiSuccess (Success 200) {Number[]} association 关联机构ID.
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"id": 全宗ID,"code": "全宗编码","name": "全宗名称","parentId": 上级全宗ID","association":[1,2,3]}}.
      */
@@ -132,8 +132,8 @@ public class FondsController {
      * @api {patch} /fonds/{upId},{downId}/priority 修改全宗排序优先级
      * @apiName priority
      * @apiGroup fonds
-     * @apiParam {int} upId 上移全宗ID（url占位符）
-     * @apiParam {int} downId 下移全宗ID（url占位符）
+     * @apiParam {Number} upId 上移全宗ID（url占位符）
+     * @apiParam {Number} downId 下移全宗ID（url占位符）
      * @apiError (Error 400) message 上级全宗不一致.
      * @apiUse ErrorExample
      */

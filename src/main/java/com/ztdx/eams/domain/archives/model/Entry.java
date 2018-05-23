@@ -29,6 +29,8 @@ public class Entry {
 
     private Map<String, Object> items;
 
+    private OriginalText[] originalText;
+
     //创建时间
     private Date gmtCreate;
 

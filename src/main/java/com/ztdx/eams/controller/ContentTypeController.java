@@ -28,7 +28,7 @@ public class ContentTypeController {
      * @api {get} /contentType/list 获取档案库类型列表
      * @apiName list
      * @apiGroup contentType
-     * @apiSuccess (Success 200) {int} id ID.
+     * @apiSuccess (Success 200) {Number} id ID.
      * @apiSuccess (Success 200) {String} name 名称.
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"id": ID,"name": "名称"}]}}.

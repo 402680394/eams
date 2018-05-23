@@ -30,7 +30,7 @@ public class DescriptionItemService {
     }
 
     //新增条目数据验证
-    public Entry addVerification(Entry entry, HttpSession session) {
+    public void addVerification(Entry entry, HttpSession session) {
         //获取目录著录项
         List<DescriptionItem> descriptionItemList = descriptionItemRepository.findByCatalogueId(entry.getCatalogueId());
         //著录项数据
@@ -46,52 +46,52 @@ public class DescriptionItemService {
             if ((descriptionItem.getIsNull() == 1 && "" == value) || (descriptionItem.getIsNull() == 1 && null == value)) {
                 throw new InvalidArgumentException(descriptionItem.getDisplayName() + "不能为空");
                 //如果著录项可为空，并且数据也为空且有默认值
-            }else if((descriptionItem.getIsNull() == 0 && "" == value) || (descriptionItem.getIsNull() == 0 && null == value)){
+            } else if ((descriptionItem.getIsNull() == 0 && "" == value) || (descriptionItem.getIsNull() == 0 && null == value)) {
 
-                switch (descriptionItem.getDefaultValue()){
+                switch (descriptionItem.getDefaultValue()) {
                     //当前登录人姓名
-                    case LoginUserName:{
-                        UserCredential userCredential= (UserCredential) session.getAttribute("LOGIN_USER");
+                    case LoginUserName: {
+                        UserCredential userCredential = (UserCredential) session.getAttribute("LOGIN_USER");
                         dataMap.put(metadataName, userCredential.getName());
                     }
                     //当前系统年度
-                    case SystemYear:{
+                    case SystemYear: {
                         dataMap.put(metadataName, DateUtils.getCurrentYear());
                     }
-                    case SystemDate_yyyy_MM_dd:{
+                    case SystemDate_yyyy_MM_dd: {
                         dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyy-MM-dd"));
                     }
-                    case SystemDate_yyyyMMdd:{
+                    case SystemDate_yyyyMMdd: {
                         dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyyMMdd"));
                     }
-                    case SystemDateTime:{
+                    case SystemDateTime: {
                         dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyy-MM-dd HH:mm:ss"));
                     }
-                    case SystemTime:{
+                    case SystemTime: {
                         dataMap.put(metadataName, DateUtils.getCurrentDateTime("HH:mm:ss"));
                     }
                 }
                 //数据不为空时
-            }else if("" != value && null != value){
+            } else if ("" != value && null != value) {
                 //著录项类型为数值型
-                if(descriptionItem.getDataType()==1){
-                    if(!checkString("^[0-9]*$", (String) value)){
+                if (descriptionItem.getDataType() == 1) {
+                    if (!checkString("^[0-9]*$", (String) value)) {
                         throw new InvalidArgumentException(descriptionItem.getDisplayName() + "必须为数值");
                     }
                 }
                 //著录项类型为日期型
-                if(descriptionItem.getDataType()==1){
-                    if(!checkString("((((19|20)\\d{2})-(0?(1|[3-9])|1[012])-(0?[1-9]|[12]\\d|30))|(((19|20)\\d{2})-(0?[13578]|1[02])-31)|(((19|20)\\d{2})-0?2-(0?[1-9]|1\\d|2[0-8]))|((((19|20)([13579][26]|[2468][048]|0[48]))|(2000))-0?2-29))$", (String) value)){
+                if (descriptionItem.getDataType() == 1) {
+                    if (!checkString("((((19|20)\\d{2})-(0?(1|[3-9])|1[012])-(0?[1-9]|[12]\\d|30))|(((19|20)\\d{2})-(0?[13578]|1[02])-31)|(((19|20)\\d{2})-0?2-(0?[1-9]|1\\d|2[0-8]))|((((19|20)([13579][26]|[2468][048]|0[48]))|(2000))-0?2-29))$", (String) value)) {
                         throw new InvalidArgumentException(descriptionItem.getDisplayName() + "必须为yyyy-MM-dd日期格式");
                     }
                 }
             }
         }
-        return entry;
+        entry.setItems(dataMap);
     }
 
     //修改条目数据验证
-    public Entry updateVerification(Entry entry,HttpSession session) {
+    public void updateVerification(Entry entry, HttpSession session) {
         //获取目录著录项
         List<DescriptionItem> descriptionItemList = descriptionItemRepository.findByCatalogueId(entry.getCatalogueId());
         //著录项数据
@@ -110,42 +110,42 @@ public class DescriptionItemService {
                 if ((descriptionItem.getIsNull() == 1 && "" == value) || (descriptionItem.getIsNull() == 1 && null == value)) {
                     throw new InvalidArgumentException(descriptionItem.getDisplayName() + "不能为空");
                     //如果著录项可为空，并且数据也为空且有默认值
-                }else if((descriptionItem.getIsNull() == 0 && "" == value) || (descriptionItem.getIsNull() == 0 && null == value)){
+                } else if ((descriptionItem.getIsNull() == 0 && "" == value) || (descriptionItem.getIsNull() == 0 && null == value)) {
 
-                    switch (descriptionItem.getDefaultValue()){
+                    switch (descriptionItem.getDefaultValue()) {
                         //当前登录人姓名
-                        case LoginUserName:{
-                            UserCredential userCredential= (UserCredential) session.getAttribute("LOGIN_USER");
+                        case LoginUserName: {
+                            UserCredential userCredential = (UserCredential) session.getAttribute("LOGIN_USER");
                             dataMap.put(metadataName, userCredential.getName());
                         }
                         //当前系统年度
-                        case SystemYear:{
+                        case SystemYear: {
                             dataMap.put(metadataName, DateUtils.getCurrentYear());
                         }
-                        case SystemDate_yyyy_MM_dd:{
+                        case SystemDate_yyyy_MM_dd: {
                             dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyy-MM-dd"));
                         }
-                        case SystemDate_yyyyMMdd:{
+                        case SystemDate_yyyyMMdd: {
                             dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyyMMdd"));
                         }
-                        case SystemDateTime:{
+                        case SystemDateTime: {
                             dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyy-MM-dd HH:mm:ss"));
                         }
-                        case SystemTime:{
+                        case SystemTime: {
                             dataMap.put(metadataName, DateUtils.getCurrentDateTime("HH:mm:ss"));
                         }
                     }
                     //数据不为空时
-                }else if("" != value && null != value){
+                } else if ("" != value && null != value) {
                     //著录项类型为数值型
-                    if(descriptionItem.getDataType()==1){
-                        if(!checkString("^[0-9]*$", (String) value)){
+                    if (descriptionItem.getDataType() == 1) {
+                        if (!checkString("^[0-9]*$", (String) value)) {
                             throw new InvalidArgumentException(descriptionItem.getDisplayName() + "必须为数值");
                         }
                     }
                     //著录项类型为日期型
-                    if(descriptionItem.getDataType()==1){
-                        if(!checkString("((((19|20)\\d{2})-(0?(1|[3-9])|1[012])-(0?[1-9]|[12]\\d|30))|(((19|20)\\d{2})-(0?[13578]|1[02])-31)|(((19|20)\\d{2})-0?2-(0?[1-9]|1\\d|2[0-8]))|((((19|20)([13579][26]|[2468][048]|0[48]))|(2000))-0?2-29))$", (String) value)){
+                    if (descriptionItem.getDataType() == 1) {
+                        if (!checkString("((((19|20)\\d{2})-(0?(1|[3-9])|1[012])-(0?[1-9]|[12]\\d|30))|(((19|20)\\d{2})-(0?[13578]|1[02])-31)|(((19|20)\\d{2})-0?2-(0?[1-9]|1\\d|2[0-8]))|((((19|20)([13579][26]|[2468][048]|0[48]))|(2000))-0?2-29))$", (String) value)) {
                             throw new InvalidArgumentException(descriptionItem.getDisplayName() + "必须为yyyy-MM-dd日期格式");
                         }
                     }
@@ -153,10 +153,10 @@ public class DescriptionItemService {
             }
 
         }
-        return entry;
+        entry.setItems(dataMap);
     }
 
-    public boolean checkString(String pattern,String string){
+    public boolean checkString(String pattern, String string) {
         return string.matches(pattern);
     }
 }
