@@ -7,8 +7,6 @@ import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.application.OrganizationService;
 import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.domain.system.application.UserService;
-import com.ztdx.eams.domain.system.model.Fonds;
-import com.ztdx.eams.domain.system.model.Organization;
 import com.ztdx.eams.domain.system.model.Role;
 import com.ztdx.eams.domain.system.model.User;
 import org.springframework.security.core.context.SecurityContextHolder;
