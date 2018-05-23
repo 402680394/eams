@@ -2,6 +2,8 @@ package com.ztdx.eams.domain.system.application;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.UnauthorizedException;
+import com.ztdx.eams.domain.system.model.Fonds;
+import com.ztdx.eams.domain.system.model.Role;
 import com.ztdx.eams.domain.system.model.User;
 import com.ztdx.eams.domain.system.repository.OrganizationRepository;
 import com.ztdx.eams.domain.system.repository.UserRepository;
@@ -141,5 +143,9 @@ public class UserService {
             u.setPassword(pwd);
         }
         userRepository.saveAll(list);
+    }
+
+    public User getByUserName(String userName){
+        return userRepository.findByUsername(userName);
     }
 }

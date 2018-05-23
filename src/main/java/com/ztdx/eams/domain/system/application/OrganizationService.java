@@ -118,4 +118,8 @@ public class OrganizationService {
             }
         }
     }
+
+    public Organization get(int id) {
+        return organizationRepository.findById(id);
+    }
 }

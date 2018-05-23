@@ -3,6 +3,7 @@ package com.ztdx.eams.domain.system.application;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Organization;
+import com.ztdx.eams.domain.system.model.Role;
 import com.ztdx.eams.domain.system.repository.FondsRepository;
 import com.ztdx.eams.domain.system.repository.OrganizationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by li on 2018/4/15.
@@ -113,5 +116,13 @@ public class FondsService {
         }
         fondsRepository.updateOrderNumberById(upId, down.getOrderNumber());
         fondsRepository.updateOrderNumberById(downId, up.getOrderNumber());
+    }
+
+    public Fonds get(Integer fondId) {
+        return fondsRepository.getOne(fondId);
+    }
+
+    public List<Fonds> findAllById(Set<Integer> fondsIds) {
+        return fondsRepository.findAllById(fondsIds);
     }
 }

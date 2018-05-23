@@ -11,4 +11,8 @@ import java.util.List;
 public interface PermissionRepository extends JpaRepository<Permission, Long> {
 
     List<Permission> findByRoleIdAndResourceUrlIn(long roleId, Collection<String> permissions);
+
+    List<Permission> findByRoleIdAndResourceUrlNotIn(long roleId, Collection<String> permissions);
+
+    List<Permission> findByRoleIdIn(Iterable<Long> roleIds);
 }

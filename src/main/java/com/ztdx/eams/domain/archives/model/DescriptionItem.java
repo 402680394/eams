@@ -21,6 +21,10 @@ public class DescriptionItem {
     @Column(name = "id")
     private int id;
 
+    //档案目录标识
+    @Column(name = "catalogue_id")
+    private int catalogueId;
+
     //元数据标识
     @Column(name = "metadata_id")
     private int metadataId;
@@ -29,10 +33,6 @@ public class DescriptionItem {
     @Size(max = 30)
     @Column(name = "metadata_name")
     private String metadataName;
-
-    //档案目录标识
-    @Column(name = "catalogue_id")
-    private int catalogueId;
 
     //显示名称
     @Size(max = 50)

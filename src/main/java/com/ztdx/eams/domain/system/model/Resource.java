@@ -22,7 +22,17 @@ public class Resource {
     @Column(name = "resource_name")
     private String resourceName;
 
-    //资源URL
+    /**
+     * 资源url
+     * global(全局) 100
+     * fonds(全宗) 200
+     * archive(档案库)_[档案库结构] 3xx
+     * archive_use_[档案库结构] 4xx
+     * 库房还未定义
+     */
+    @Column(name = "resource_category")
+    private ResourceCategory resourceCategory;
+
     @Size(max = 255)
     @Column(name = "resource_url")
     private String resourceUrl;
@@ -30,11 +40,6 @@ public class Resource {
     //上级资源id
     @Column(name = "parent_id")
     private Long parentId;
-
-    //资源类型
-    @Pattern(regexp = "^(dir|func)$",message = "格式不正确")
-    @Column(name = "resource_type")
-    private String resourceType;
 
     //顺序
     @Column(name = "order_number")

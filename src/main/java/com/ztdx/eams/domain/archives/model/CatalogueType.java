@@ -10,9 +10,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum CatalogueType {
-    File(1, "卷内"),
-    Folder(2, "案卷"),
-    Subject(3, "项目");
+    File(1, "一文一件"),
+    Folder(2, "传统立卷案卷"),
+    FolderFile(3, "传统立卷卷内"),
+    Subject(4, "项目");
 
 
     private Integer code;

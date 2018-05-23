@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.system.repository;
 
+import com.ztdx.eams.domain.system.model.ResourceCategory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.ztdx.eams.domain.system.model.Resource;
@@ -21,8 +22,8 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
     boolean existsById(long id);
 
     //查询同级全宗优先级最大值
-    @Query("select max (f.orderNumber) from Resource f where f.parentId=:parentId and f.resourceType=:type")
-    Integer findMaxOrderNumber(@Param(value = "parentId")long parentId, @Param(value = "type") String type);
+    @Query("select max (f.orderNumber) from Resource f where nullif(f.parentId,0) =:parentId and f.resourceCategory=:type")
+    Integer findMaxOrderNumber(@Param(value = "parentId")long parentId, @Param(value = "type") ResourceCategory type);
 
     // 通过父ID查询子全宗
     List<Resource> findAllByParentId(Long id);
@@ -35,7 +36,7 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
     //通过ID修改
     @Modifying
-    @Query("update Resource f set f.parentId=:#{#resource.parentId},f.resourceName=:#{#resource.resourceName},f.resourceUrl=:#{#resource.resourceUrl},f.resourceType=:#{#resource.resourceType} where f.id=:#{#resource.id}")
+    @Query("update Resource f set f.parentId=:#{#resource.parentId},f.resourceName=:#{#resource.resourceName},f.resourceUrl=:#{#resource.resourceUrl},f.resourceCategory=:#{#resource.resourceCategory} where f.id=:#{#resource.id}")
     void updateById(@Param(value = "resource")Resource resource);
 
     //设置优先级

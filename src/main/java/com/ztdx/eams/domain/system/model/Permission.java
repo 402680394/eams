@@ -20,6 +20,18 @@ public class Permission {
     @Column(name = "role_id")
     private long roleId;
 
+    //资源id
+    @Column(name = "resource_id")
+    private long resourceId;
+
+    //全宗id
+    @Column(name = "fonds_id")
+    private Integer fondsId;
+
+    //档案库id
+    @Column(name = "archive_id")
+    private Integer archiveId;
+
     //资源URL
     @Size(max = 255)
     @Column(name = "resource_url")

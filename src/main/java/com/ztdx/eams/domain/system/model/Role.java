@@ -18,9 +18,9 @@ public class Role {
     @Column(name = "role_name")
     private String roleName;
 
-    //资源id
-    @Column(name = "resource_id")
-    private Long resourceId;
+    //全宗id
+    @Column(name = "fonds_id")
+    private Integer fondsId;
 
     //创建时间
     @Column(name = "gmt_create")

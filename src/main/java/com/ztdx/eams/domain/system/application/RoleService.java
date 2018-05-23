@@ -1,18 +1,15 @@
 package com.ztdx.eams.domain.system.application;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.domain.system.model.Permission;
-import com.ztdx.eams.domain.system.model.Role;
-import com.ztdx.eams.domain.system.model.RoleOfUser;
-import com.ztdx.eams.domain.system.repository.PermissionRepository;
-import com.ztdx.eams.domain.system.repository.ResourceRepository;
-import com.ztdx.eams.domain.system.repository.RoleOfUserRepository;
-import com.ztdx.eams.domain.system.repository.RoleRepository;
+import com.ztdx.eams.domain.system.model.*;
+import com.ztdx.eams.domain.system.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class RoleService {
@@ -25,21 +22,27 @@ public class RoleService {
 
     private RoleOfUserRepository roleOfUserRepository;
 
+    private FondsRepository fondsRepository;
+
+    private UserRepository userRepository;
+
     @Autowired
-    public RoleService(RoleRepository roleRepository, ResourceRepository resourceRepository, PermissionRepository permissionRepository, RoleOfUserRepository roleOfUserRepository) {
+    public RoleService(RoleRepository roleRepository, ResourceRepository resourceRepository, PermissionRepository permissionRepository, RoleOfUserRepository roleOfUserRepository, FondsRepository fondsRepository, UserRepository userRepository) {
         this.roleRepository = roleRepository;
         this.resourceRepository = resourceRepository;
         this.permissionRepository = permissionRepository;
         this.roleOfUserRepository = roleOfUserRepository;
+        this.fondsRepository = fondsRepository;
+        this.userRepository = userRepository;
     }
 
     public void save(Role role) {
 
-        if (!resourceRepository.existsById(role.getResourceId())) {
-            role.setResourceId(1L);
-        }
+        //if (!resourceRepository.existsById(role.getFondsId())) {
+            //role.setFondsId(null);
+        //}
 
-        if (roleRepository.existsByRoleNameAndResourceId(role.getRoleName(), role.getResourceId())) {
+        if (roleRepository.existsByRoleNameAndFondsId(role.getRoleName(), role.getFondsId())) {
             throw new InvalidArgumentException("角色名称已存在");
         }
 
@@ -64,7 +67,7 @@ public class RoleService {
             return;
         }
 
-        if (roleRepository.existsByRoleNameAndResourceIdAndIdNot(role.getRoleName(), role.getResourceId(), role.getId())) {
+        if (roleRepository.existsByRoleNameAndFondsIdAndIdNot(role.getRoleName(), role.getFondsId(), role.getId())) {
             throw new InvalidArgumentException("角色名称已存在");
         }
         //修改数据
@@ -78,11 +81,7 @@ public class RoleService {
 
     @Transactional
     public Map<String, List<String>> addPermission(long roleId, List<String> resourceUrls) {
-        List<Permission> existsPermissions = permissionRepository.findByRoleIdAndResourceUrlIn(roleId, resourceUrls);
-        LinkedList<String> existsUrl = new LinkedList<>();
-        for (Permission permission : existsPermissions) {
-            existsUrl.add(permission.getResourceUrl());
-        }
+        List<String> existsUrl = permissionRepository.findByRoleIdAndResourceUrlIn(roleId, resourceUrls).stream().map(Object::toString).collect(Collectors.toList());
 
         resourceUrls.removeAll(existsUrl);
         Date now = Calendar.getInstance().getTime();
@@ -97,6 +96,10 @@ public class RoleService {
             batch.add(permission);
         }
         permissionRepository.saveAll(batch);
+
+        //删除掉取消的权限
+        List<Permission> delPermission = permissionRepository.findByRoleIdAndResourceUrlNotIn(roleId, resourceUrls);
+        permissionRepository.deleteInBatch(delPermission);
 
         Map<String, List<String>> result = new HashMap<>();
         result.put("added", resourceUrls);
@@ -130,5 +133,78 @@ public class RoleService {
         result.put("added", addUserIds);
         result.put("existed", existsUserIds);
         return result;
+    }
+
+
+    public List<Role> findByFondsIdIn(Iterable<Integer> fondsId) {
+        return roleRepository.findByFondsIdIn(fondsId);
+    }
+
+    /**
+     * 获取用户可以管理的全宗，以及全宗下的角色
+     * @param userId 用户id
+     * @return 全宗的数组，包括全宗的角色
+     */
+    public List<Object> listGlobalRole(int userId) {
+
+        //TODO lijie 判断用户权限，如果没有全局的权限管理权限则返回null
+        List<Role> roles = roleRepository.findByFondsIdIsNull();
+
+        return roles.stream().map(this::getRoleMap).collect(Collectors.toList());
+    }
+
+    private Map<String, Object> getRoleMap(Role a) {
+        Map<String, Object> mapb = new HashMap<>();
+        mapb.put("id", a.getId());
+        mapb.put("name", a.getRoleName());
+        mapb.put("type", "Role");
+        return mapb;
+    }
+
+    /**
+     * 获取用户可以管理的全宗，以及全宗下的角色
+     * @param userId 用户id
+     * @return 全宗的数组，包括全宗的角色
+     */
+    public List<Object> listFondsRole(int userId) {
+        //查询出当前用户可以管理的全宗
+        //并把角色挂到全宗树上
+
+        //TODO lijie 如果是超级管理员则查看所有全宗
+        Set<Integer> fondsIds = this.findUserManageFonds(userId);
+
+        List<Role> roles = this.findByFondsIdIn(fondsIds);
+
+        List<Fonds> fonds = fondsRepository.findAllById(fondsIds);
+
+        Map<Integer, List<Role>> fondsGroup = roles.stream().collect(Collectors.groupingBy(Role::getFondsId));
+
+        return fonds.stream().map((a) -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", a.getId());
+            map.put("name", a.getName());
+            map.put("type", "Fonds");
+            map.put("allowAdd", true);
+            List<Role> childrenList = fondsGroup.getOrDefault(a.getId(),null);
+            List<Object> children = childrenList.stream().map(this::getRoleMap).collect(Collectors.toList());
+            map.put("children", children);
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * 查找用户管理得全宗id
+     * @param userId 用户id
+     * @return Set<Integer>
+     */
+    public Set<Integer> findUserManageFonds(int userId){
+        List<RoleOfUser> roleOfUsers = roleOfUserRepository.findByUserId(userId);
+        HashSet<Long> roleIds = roleOfUsers.stream().collect(HashSet::new,(a,b)->a.add(b.getRoleId()),HashSet::addAll);
+        List<Permission> permissions = permissionRepository.findByRoleIdIn(roleIds);
+        return permissions.stream().collect(HashSet::new,(a, b)->{
+            if (b.getFondsId() != null) {
+                a.add(b.getFondsId());
+            }
+        },HashSet::addAll);
     }
 }
