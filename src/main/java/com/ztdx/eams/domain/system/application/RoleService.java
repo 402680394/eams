@@ -42,7 +42,11 @@ public class RoleService {
             //role.setFondsId(null);
         //}
 
-        if (roleRepository.existsByRoleNameAndFondsId(role.getRoleName(), role.getFondsId())) {
+        if (role.getFondsId() != null
+                && roleRepository.existsByRoleNameAndFondsId(role.getRoleName(), role.getFondsId())
+                || role.getFondsId() == null
+                && roleRepository.existsByRoleNameAndFondsIdIsNull(role.getRoleName())
+                ) {
             throw new InvalidArgumentException("角色名称已存在");
         }
 
@@ -60,14 +64,19 @@ public class RoleService {
         }
     }
 
+    @Transactional
     public void update(Role role) {
 
-        if (roleRepository.existsById(role.getId())) {
+        if (!roleRepository.existsById(role.getId())) {
             save(role);
             return;
         }
 
-        if (roleRepository.existsByRoleNameAndFondsIdAndIdNot(role.getRoleName(), role.getFondsId(), role.getId())) {
+        if (role.getFondsId() != null
+                && roleRepository.existsByRoleNameAndFondsIdAndIdNot(role.getRoleName(), role.getFondsId(), role.getId())
+                || role.getFondsId() == null
+                && roleRepository.existsByRoleNameAndFondsIdIsNullAndIdNot(role.getRoleName(), role.getId())
+                ) {
             throw new InvalidArgumentException("角色名称已存在");
         }
         //修改数据
