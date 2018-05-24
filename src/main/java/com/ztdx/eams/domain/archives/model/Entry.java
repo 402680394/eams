@@ -27,6 +27,8 @@ public class Entry {
 
     private int archiveContentType;
 
+    private int owner;
+
     private Map<String, Object> items;
 
     private OriginalText[] originalText;

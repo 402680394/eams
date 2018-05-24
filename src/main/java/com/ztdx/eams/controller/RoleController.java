@@ -334,7 +334,8 @@ public class RoleController {
      *     }
      * }
      */
-    public void rolePermission(long id){
-
+    @RequestMapping(value = "/{id}/permissions", method = RequestMethod.GET)
+    public Map rolePermission(@PathVariable("id") long id){
+         return roleService.listRolePermission(id);
     }
 }
