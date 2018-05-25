@@ -30,7 +30,7 @@ public class DescriptionItemService {
     }
 
     //新增条目数据验证
-    public void addVerification(Entry entry, UserCredential userCredential) {
+    public Entry addVerification(Entry entry, UserCredential userCredential) {
         //获取目录著录项
         List<DescriptionItem> descriptionItemList = descriptionItemRepository.findByCatalogueId(entry.getCatalogueId());
         //著录项数据
@@ -91,7 +91,7 @@ public class DescriptionItemService {
     }
 
     //修改条目数据验证
-    public void updateVerification(Entry entry, UserCredential userCredential) {
+    public Entry updateVerification(Entry entry, UserCredential userCredential) {
         //获取目录著录项
         List<DescriptionItem> descriptionItemList = descriptionItemRepository.findByCatalogueId(entry.getCatalogueId());
         //著录项数据
