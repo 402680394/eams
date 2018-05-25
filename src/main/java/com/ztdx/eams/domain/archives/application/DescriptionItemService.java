@@ -30,7 +30,7 @@ public class DescriptionItemService {
     }
 
     //新增条目数据验证
-    public void addVerification(Entry entry, HttpSession session) {
+    public Entry addVerification(Entry entry, HttpSession session) {
         //获取目录著录项
         List<DescriptionItem> descriptionItemList = descriptionItemRepository.findByCatalogueId(entry.getCatalogueId());
         //著录项数据
@@ -88,10 +88,11 @@ public class DescriptionItemService {
             }
         }
         entry.setItems(dataMap);
+        return entry;
     }
 
     //修改条目数据验证
-    public void updateVerification(Entry entry, HttpSession session) {
+    public Entry updateVerification(Entry entry, HttpSession session) {
         //获取目录著录项
         List<DescriptionItem> descriptionItemList = descriptionItemRepository.findByCatalogueId(entry.getCatalogueId());
         //著录项数据
@@ -154,6 +155,7 @@ public class DescriptionItemService {
 
         }
         entry.setItems(dataMap);
+        return entry;
     }
 
     public boolean checkString(String pattern, String string) {

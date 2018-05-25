@@ -6,6 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -60,7 +61,7 @@ public class Entry {
     /**
      * 原文
      */
-    private OriginalText[] originalText;
+    private List<OriginalText> originalText;
 
     /**
      * 创建时间

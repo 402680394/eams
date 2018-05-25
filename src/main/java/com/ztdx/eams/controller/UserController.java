@@ -131,6 +131,7 @@ public class UserController {
      * @apiSuccess (Success 200) {Number} id 用户ID.
      * @apiSuccess (Success 200) {String} name 姓名.
      * @apiSuccess (Success 200) {String} workers 工号.
+     * @apiSuccess (Success 200) {Number} organiztionId 所属机构ID.
      * @apiSuccess (Success 200) {String} username 用户名.
      * @apiSuccess (Success 200) {String} phone 电话.
      * @apiSuccess (Success 200) {String} email 邮箱.
@@ -141,7 +142,7 @@ public class UserController {
      * @apiSuccessExample {json} Success-Response:
      * {
      * "data":{
-     * "items":[{"id": 用户ID,"name": "姓名","workers": "工号","username": "用户名","phone": "电话","email": "邮箱","job": "职位","remark": "备注","flag": 状态}
+     * "items":[{"id": 用户ID,"name": "姓名","organiztionId": 所属机构ID,"workers": "工号","username": "用户名","phone": "电话","email": "邮箱","job": "职位","remark": "备注","flag": 状态}
      * {"id": 用户ID,"name": "姓名","workers": "工号","username": "用户名","phone": "电话","email": "邮箱","job": "职位","remark": "备注","flag": 状态}]
      * "total":数据总数
      * }
