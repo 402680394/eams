@@ -1,12 +1,10 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.domain.system.application.PermissionService;
-import com.ztdx.eams.domain.system.application.ResourceService;
+import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.domain.system.model.ResourceCategory;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -17,8 +15,11 @@ public class PermissionController {
 
     private PermissionService permissionService;
 
-    public PermissionController(PermissionService permissionService) {
+    private RoleService roleService;
+
+    public PermissionController(PermissionService permissionService, RoleService roleService) {
         this.permissionService = permissionService;
+        this.roleService = roleService;
     }
 
     /**
@@ -177,7 +178,9 @@ public class PermissionController {
      *     }
      * }
      */
-    public void myPermission(){
-        
+    @RequestMapping(value = "/my", method = RequestMethod.GET)
+    public Map myPermission(@SessionAttribute UserCredential LOGIN_USER){
+        Iterable<Long> ids = roleService.getUserRoleIds(LOGIN_USER.getUserId());
+        return roleService.listRolePermission(ids);
     }
 }

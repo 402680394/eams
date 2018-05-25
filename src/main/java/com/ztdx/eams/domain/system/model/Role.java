@@ -3,6 +3,7 @@ package com.ztdx.eams.domain.system.model;
 import lombok.Data;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 @Data
@@ -15,8 +16,13 @@ public class Role {
     private long id;
 
     //角色名称
+    @NotNull
     @Column(name = "role_name")
     private String roleName;
+
+    //描述/备注
+    @Column(name = "remark")
+    private String remark;
 
     //全宗id
     @Column(name = "fonds_id")

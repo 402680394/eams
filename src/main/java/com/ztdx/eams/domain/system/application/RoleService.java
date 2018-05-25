@@ -209,8 +209,7 @@ public class RoleService {
      * @return 全宗id列表
      */
     public Set<Integer> findUserManageFonds(int userId){
-        List<RoleOfUser> roleOfUsers = roleOfUserRepository.findByUserId(userId);
-        HashSet<Long> roleIds = roleOfUsers.stream().collect(HashSet::new,(a,b)->a.add(b.getRoleId()),HashSet::addAll);
+        HashSet<Long> roleIds = getUserRoleIds(userId);
         List<Permission> permissions = permissionRepository.findByRoleIdIn(roleIds);
         return permissions.stream().collect(HashSet::new,(a, b)->{
             if (b.getFondsId() != null) {
@@ -219,8 +218,19 @@ public class RoleService {
         },HashSet::addAll);
     }
 
+    public HashSet<Long> getUserRoleIds(int userId) {
+        List<RoleOfUser> roleOfUsers = roleOfUserRepository.findByUserId(userId);
+        return roleOfUsers.stream().collect(HashSet::new,(a,b)->a.add(b.getRoleId()),HashSet::addAll);
+    }
+
     public Map<String, Map> listRolePermission(long roleId) {
-        List<Permission> permissions = permissionRepository.findByRoleId(roleId);
+        List<Long> ids = new ArrayList<>();
+        ids.add(roleId);
+        return this.listRolePermission(ids);
+    }
+
+    public Map<String, Map> listRolePermission(Iterable<Long> roleIds) {
+        List<Permission> permissions = permissionRepository.findByRoleIdIn(roleIds);
         Map<Long, Resource> resourceMap = resourceRepository.findAllById(
                 permissions
                         .stream()
