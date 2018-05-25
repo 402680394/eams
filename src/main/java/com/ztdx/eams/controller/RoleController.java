@@ -1,5 +1,6 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.basic.params.JsonParam;
@@ -39,7 +40,8 @@ public class RoleController {
      * @apiName save
      * @apiGroup role
      * @apiParam {String{50}} roleName 角色名称
-     * @apiParam {Number} [resourceId] 资源节点id
+     * @apiParam {Number} [fondsId] 全宗id
+     * @apiParam {String(200)} remark 描述
      * @apiError (Error 400) message 1.角色名称已存在
      * @apiUse ErrorExample
      */
@@ -66,6 +68,7 @@ public class RoleController {
      * @apiParam {Number} id 角色id（url占位符）
      * @apiParam {String{50}} roleName 角色名称
      * @apiParam {Number} [fondsId] 全宗节点id
+     * @apiParam {String(200)} remark 描述
      * @apiError (Error 400) message 1.角色名称已存在
      * @apiUse ErrorExample
      */
@@ -187,7 +190,7 @@ public class RoleController {
      * @api {get} /role 查询角色列表
      * @apiName listRole
      * @apiGroup role
-     * @apiSuccess (Success 200) {Array} global 全宗角色列表
+     * @apiSuccess (Success 200) {Array} global 全局角色列表
      * @apiSuccess (Success 200) {int} global.id 子节点id
      * @apiSuccess (Success 200) {String="Fonds","Role"} global.type 子节点类型 Fonds:全宗，有children属性 Role:角色，无children属性
      * @apiSuccess (Success 200) {String} global.name 子节点名称
@@ -243,13 +246,15 @@ public class RoleController {
      * }
      */
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public Map<String, Object> listRole(){
+    public Map<String, Object> listRole(@SessionAttribute UserCredential LOGIN_USER){
         //如果是管理员可以查看到全局角色列表
-        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userService.getByUserName(userName);
+        int userId = 1;
+        if (LOGIN_USER != null){
+            userId = LOGIN_USER.getUserId();
+        }
 
-        List<Object> global = roleService.listGlobalRole(1);
-        List<Object> fonds = roleService.listFondsRole(1);
+        List<Object> global = roleService.listGlobalRole(userId);
+        List<Object> fonds = roleService.listFondsRole(userId);
 
         Map<String, Object> result = new HashMap<>();
         result.put("global", global);
