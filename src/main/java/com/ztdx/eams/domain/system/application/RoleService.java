@@ -91,8 +91,8 @@ public class RoleService {
     }
 
     @Transactional
-    public Map<String, List<String>> addPermission(long roleId, List<String> resourceUrls) {
-        List<String> existsUrl = permissionRepository.findByRoleIdAndResourceUrlIn(roleId, resourceUrls).stream().map(Object::toString).collect(Collectors.toList());
+    public Map<String, List<String>> addPermission(long roleId, Map<String, Object> permissions) {
+        /*List<String> existsUrl = permissionRepository.findByRoleIdAndResourceUrlIn(roleId, resourceUrls).stream().map(Object::toString).collect(Collectors.toList());
 
         resourceUrls.removeAll(existsUrl);
         Date now = Calendar.getInstance().getTime();
@@ -115,7 +115,8 @@ public class RoleService {
         Map<String, List<String>> result = new HashMap<>();
         result.put("added", resourceUrls);
         result.put("existed", existsUrl);
-        return result;
+        return result;*/
+        return null;
     }
 
     @Transactional

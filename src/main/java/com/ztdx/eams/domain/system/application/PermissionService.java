@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.system.application;
 
+import com.ztdx.eams.domain.system.model.Permission;
 import com.ztdx.eams.domain.system.model.Resource;
 import com.ztdx.eams.domain.system.model.ResourceCategory;
 import com.ztdx.eams.domain.system.repository.PermissionRepository;
@@ -58,5 +59,10 @@ public class PermissionService {
         result.put("children", new ArrayList<Map>());
 
         return result;
+    }
+
+    public void saveAll(List<Permission> permissions){
+        //TODO lijie 排除已经存在的，删除取消的
+        permissionRepository.saveAll(permissions);
     }
 }

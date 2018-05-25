@@ -1,20 +1,16 @@
 package com.ztdx.eams.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.basic.params.JsonParam;
-import com.ztdx.eams.domain.system.application.FondsService;
-import com.ztdx.eams.domain.system.application.OrganizationService;
-import com.ztdx.eams.domain.system.application.RoleService;
-import com.ztdx.eams.domain.system.application.UserService;
+import com.ztdx.eams.domain.system.application.*;
+import com.ztdx.eams.domain.system.model.Permission;
 import com.ztdx.eams.domain.system.model.Role;
-import com.ztdx.eams.domain.system.model.User;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/role")
@@ -28,11 +24,14 @@ public class RoleController {
 
     private FondsService fondsService;
 
-    public RoleController(RoleService roleService, UserService userService, OrganizationService organizationService, FondsService fondsService) {
+    private PermissionService permissionService;
+
+    public RoleController(RoleService roleService, UserService userService, OrganizationService organizationService, FondsService fondsService, PermissionService permissionService) {
         this.roleService = roleService;
         this.userService = userService;
         this.organizationService = organizationService;
         this.fondsService = fondsService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -122,45 +121,101 @@ public class RoleController {
      * @apiParam {String} archiveCatalogue.catalogueId.permissionKey.resourceUrl 资源url
      * @apiParamExample {json} Request-Example:
      * {
-     *     "data": {
-     *         "global": {
-     *             "role_add": {
-     *                 "id": 1,
+     *     "global": {
+     *         "role_add": {
+     *             "id": 1,
+     *             "name": "添加",
+     *             "resourceUrl": "user_add"
+     *         }
+     *     },
+     *     "fonds": {
+     *         "1": {
+     *             "user_add": {
+     *                 "id": 3,
      *                 "name": "添加",
      *                 "resourceUrl": "user_add"
      *             }
-     *         },
-     *         "fonds": {
-     *             "1": {
-     *                 "user_add": {
-     *                     "id": 3,
-     *                     "name": "添加",
-     *                     "resourceUrl": "user_add"
-     *                 }
-     *             }
-     *         },
-     *         "archiveCatalogue": {
-     *             "1": {
-     *                 "user_add": {
-     *                     "id": 3,
-     *                     "name": "添加",
-     *                     "resourceUrl": "user_add"
-     *                 }
+     *         }
+     *     },
+     *     "archiveCatalogue": {
+     *         "1": {
+     *             "user_add": {
+     *                 "id": 3,
+     *                 "name": "添加",
+     *                 "resourceUrl": "user_add"
      *             }
      *         }
      *     }
      * }
-     * @apiError (Error 400) message 1.参数resourceUrls错误 2.全宗不存在 3.档案库目录不存在
-     * @apiError (Error 403) message 无权限
+     * @apiError (Error 400) message 1.参数permissions错误 2.全宗不存在 3.档案库目录不存在
+     * @apiError (Error 403) message 1.无权限设置全局权限 2.无权限设置全宗权限 3.无权限设置档案库权限
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{id}/permissions", method = RequestMethod.POST)
-    public Map<String, List<String>> addPermission(@PathVariable long id, @JsonParam List<String> resourceUrls) {
-        if (resourceUrls.size() == 0) {
-            throw new InvalidArgumentException("参数resourceUrls错误");
+    public Map<String, List<String>> addPermission(@PathVariable long id, @RequestBody JsonNode permissions) {
+        if (permissions.size() == 0) {
+            throw new InvalidArgumentException("参数permissions错误");
         }
 
-        return roleService.addPermission(id, resourceUrls);
+        List<Permission> list = new ArrayList<>();
+
+        permissions.fieldNames().forEachRemaining(categroy -> {
+            if (!permissions.hasNonNull(categroy)){
+                return;
+            }
+            JsonNode node = permissions.get(categroy);
+            if (!node.isObject() || !node.fieldNames().hasNext()){
+                throw new InvalidArgumentException(node + "参数错误");
+            }
+            switch (categroy) {
+                case "global":
+                    list.addAll(listParsePermission(id, null, null, node));
+                    break;
+                case "fonds":
+                case "archiveCatalogue":
+                    if (!node.fieldNames().hasNext()){
+                        return;
+                    }
+                    node.fieldNames().forEachRemaining(tid -> {
+                        if ("fonds".equals(categroy)){
+                            list.addAll(listParsePermission(id, Integer.parseInt(tid), null, node.get(tid)));
+                        }else{
+                            list.addAll(listParsePermission(id, null, Integer.parseInt(tid), node.get(tid)));
+                        }
+                    });
+
+                    break;
+                default:
+                    break;
+            }
+
+        });
+
+        permissionService.saveAll(list);
+        return null;
+    }
+
+    private List<Permission> listParsePermission(
+            long roleId, Integer fondsId, Integer archiveId, JsonNode PermissionNode){
+        List<Permission> result = new ArrayList<>();
+        PermissionNode.fieldNames().forEachRemaining(field -> {
+            JsonNode node = PermissionNode.get(field);
+            if (!node.isObject() || !node.has("id")){
+                throw new InvalidArgumentException("global参数错误，缺少id字段");
+            }
+            JsonNode idNode = node.get("id");
+            if (!idNode.isInt()){
+                throw new InvalidArgumentException("global参数错误，id字段格式错误");
+            }
+            Permission permission = new Permission();
+            permission.setRoleId(roleId);
+            permission.setResourceUrl(field);
+            permission.setArchiveId(archiveId);
+            permission.setFondsId(fondsId);
+            permission.setResourceId(idNode.asInt());
+            result.add(permission);
+        });
+        return result;
     }
 
     /**
@@ -246,7 +301,7 @@ public class RoleController {
      * }
      */
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public Map<String, Object> listRole(@SessionAttribute UserCredential LOGIN_USER){
+    public Map<String, Object> listRole(@SessionAttribute(required = false) UserCredential LOGIN_USER){
         //如果是管理员可以查看到全局角色列表
         int userId = 1;
         if (LOGIN_USER != null){
