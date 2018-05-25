@@ -1,5 +1,6 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.domain.archives.application.DescriptionItemService;
 import com.ztdx.eams.domain.archives.application.EntryService;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
@@ -56,6 +57,8 @@ public class EntryController {
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody Entry entry, HttpSession session) {
         descriptionItemService.addVerification(entry, session);
+        UserCredential userCredential = (UserCredential) session.getAttribute("LOGIN_USER");
+        entry.setOwner(userCredential.getUserId());
         entryService.save(entry);
     }
 
@@ -198,6 +201,7 @@ public class EntryController {
      */
     @RequestMapping(value = "/search", method = RequestMethod.GET)
     public Map<String, Object> search(@RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size){
+        //TODO 登记库只能查看自己的
         Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size));
 
         Map<String, DescriptionItem> list = descriptionItemService.list(catalogueId);
@@ -440,7 +444,7 @@ public class EntryController {
      * @apiSuccess (Success 200) {String} content.fondsName 全宗名称
      * @apiSuccess (Success 200) {Array} content.items 目录数组
      * @apiSuccess (Success 200) {Number} content.items.catalogueId 目录id
-     * @apiSuccess (Success 200) {Number=1,2,3} content.items.catalogueType 目录类型 1:卷内 2:案卷 3:项目
+     * @apiSuccess (Success 200) {Number=1,2,3,4} content.items.catalogueType 目录类型 1:一文一件 2:传统立卷案卷 3:传统立卷卷内 4:项目
      * @apiSuccess (Success 200) {Number} content.items.count 统计结果
      * @apiSuccessExample {json} Success-Response:
      * {
@@ -458,8 +462,7 @@ public class EntryController {
      *                     }
      *                 ]
      *             }
-     *         ],
-     *         "totalElements": 14
+     *         ]
      *     }
      * }
      */

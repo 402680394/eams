@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,7 +44,11 @@ public class RoleService {
             //role.setFondsId(null);
         //}
 
-        if (roleRepository.existsByRoleNameAndFondsId(role.getRoleName(), role.getFondsId())) {
+        if (role.getFondsId() != null
+                && roleRepository.existsByRoleNameAndFondsId(role.getRoleName(), role.getFondsId())
+                || role.getFondsId() == null
+                && roleRepository.existsByRoleNameAndFondsIdIsNull(role.getRoleName())
+                ) {
             throw new InvalidArgumentException("角色名称已存在");
         }
 
@@ -60,14 +66,19 @@ public class RoleService {
         }
     }
 
+    @Transactional
     public void update(Role role) {
 
-        if (roleRepository.existsById(role.getId())) {
+        if (!roleRepository.existsById(role.getId())) {
             save(role);
             return;
         }
 
-        if (roleRepository.existsByRoleNameAndFondsIdAndIdNot(role.getRoleName(), role.getFondsId(), role.getId())) {
+        if (role.getFondsId() != null
+                && roleRepository.existsByRoleNameAndFondsIdAndIdNot(role.getRoleName(), role.getFondsId(), role.getId())
+                || role.getFondsId() == null
+                && roleRepository.existsByRoleNameAndFondsIdIsNullAndIdNot(role.getRoleName(), role.getId())
+                ) {
             throw new InvalidArgumentException("角色名称已存在");
         }
         //修改数据
@@ -195,7 +206,7 @@ public class RoleService {
     /**
      * 查找用户管理得全宗id
      * @param userId 用户id
-     * @return Set<Integer>
+     * @return 全宗id列表
      */
     public Set<Integer> findUserManageFonds(int userId){
         List<RoleOfUser> roleOfUsers = roleOfUserRepository.findByUserId(userId);
@@ -206,5 +217,54 @@ public class RoleService {
                 a.add(b.getFondsId());
             }
         },HashSet::addAll);
+    }
+
+    public Map<String, Map> listRolePermission(long roleId) {
+        List<Permission> permissions = permissionRepository.findByRoleId(roleId);
+        Map<Long, Resource> resourceMap = resourceRepository.findAllById(
+                permissions
+                        .stream()
+                        .map(Permission::getResourceId)
+                        .collect(Collectors.toList()))
+        .stream().collect(Collectors.toMap(Resource::getId,p -> p));
+
+        Map<Integer, Map<String, Object>> fonds = groupPermission(permissions
+                , a -> a.getFondsId() == null ? 0 : a.getFondsId(), resourceMap );
+
+        Map<Integer, Map<String, Object>> archive = groupPermission(permissions
+                , a -> a.getArchiveId() == null ? 0 : a.getArchiveId(), resourceMap );
+
+        Map<String, Map> result = new HashMap<>();
+        result.put("global", fonds.get(0));
+        fonds.remove(0);
+        archive.remove(0);
+        result.put("fonds", fonds);
+        result.put("archiveCatalogue", archive);
+        return result;
+    }
+
+    private Map<Integer, Map<String, Object>> groupPermission(List<Permission> permissions, Function<Permission, Integer> groupKey, Map<Long, Resource> resourceMap) {
+        Map<Integer, List<Permission>> group = permissions.stream().collect(Collectors.groupingBy(groupKey));
+        Map<Integer, Map<String, Object>> result = new HashMap<>();
+        group.forEach((a, b) -> {
+            result.put(a, b.stream().collect(
+                    Collectors.toMap(
+                            p -> PermissionKeyMap(p, resourceMap), p -> PermissionMap(p, resourceMap))
+            ));
+        });
+        return result;
+    }
+
+    private Map<String, Object> PermissionMap(Permission permission, Map<Long, Resource> resourceMap){
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", permission.getId());
+        map.put("name", resourceMap.get(permission.getResourceId()).getResourceName());
+        map.put("resourceUrl", permission.getResourceUrl());
+
+        return map;
+    }
+
+    private String PermissionKeyMap(Permission permission, Map<Long, Resource> resourceMap){
+        return resourceMap.get(permission.getResourceId()).getResourceUrl();
     }
 }
