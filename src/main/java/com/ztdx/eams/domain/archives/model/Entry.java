@@ -16,26 +16,59 @@ public class Entry {
     @Id
     private UUID id;
 
+    /**
+     * 目录id
+     */
     @IndexNamePostfix
     private int catalogueId;
 
+    /**
+     * 目录类型
+     */
     private CatalogueType catalogueType;
 
+    /**
+     * 档案库id
+     */
     private int archiveId;
 
+    /**
+     * 档案库类型
+     */
     private int archiveType;
 
+    /**
+     * 档案库内容类型
+     */
     private int archiveContentType;
 
+    /**
+     * 全宗id
+     */
+    private int fondsId;
+
+    /**
+     * 创建者
+     */
     private int owner;
 
+    /**
+     * 著录项明细
+     */
     private Map<String, Object> items;
 
+    /**
+     * 原文
+     */
     private OriginalText[] originalText;
 
-    //创建时间
+    /**
+     * 创建时间
+     */
     private Date gmtCreate;
 
-    //修改时间
+    /**
+     * 修改时间
+     */
     private Date gmtModified;
 }
