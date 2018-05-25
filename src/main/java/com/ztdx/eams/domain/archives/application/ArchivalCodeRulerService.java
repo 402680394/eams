@@ -1,8 +1,9 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.domain.archives.model.Entry;
-import com.ztdx.eams.domain.archives.model.archivalcodeRuler.ArchivalcodeRuler;
-import com.ztdx.eams.domain.archives.repository.ArchivalcodeRulerRepository;
+import com.ztdx.eams.domain.archives.model.archivalCodeRuler.ArchivalCodeRuler;
+import com.ztdx.eams.domain.archives.repository.ArchivalCodeRulerRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,27 +14,27 @@ import java.util.*;
  * 档号生成规则业务
  */
 @Service
-public class ArchivalcodeRulerService {
+public class ArchivalCodeRulerService {
 
-    private final ArchivalcodeRulerRepository archivalcodeRulerRepository;
+    private final ArchivalCodeRulerRepository archivalcodeRulerRepository;
     private final EntryMongoRepository entryMongoRepository;
 
     /**
      * 构造函数
      */
     @Autowired
-    public ArchivalcodeRulerService(ArchivalcodeRulerRepository archivalcodeRulerRepository,EntryMongoRepository entryMongoRepository) {
+    public ArchivalCodeRulerService(ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository) {
         this.archivalcodeRulerRepository = archivalcodeRulerRepository;
         this.entryMongoRepository = entryMongoRepository;
     }
 
     /**
-     * 档号生成规则
+     * 生成档号
      */
-    public List<String> archivalCodeRuler(List<UUID> entryIds, int catalogueId) throws Exception {
+    public List<String> generating(List<UUID> entryIds, int catalogueId){
 
         //通过目录id查询到的规则放入规则集合
-        List<ArchivalcodeRuler> archivalcodeRulers = archivalcodeRulerRepository.findByCatalogueId(catalogueId);
+        List<ArchivalCodeRuler> archivalCodeRulers = archivalcodeRulerRepository.findByCatalogueIdOrderByOrderNumber(catalogueId);
 
         //查找条目，要传入条目id和目录id
         Iterable<Entry> entrys = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
@@ -49,28 +50,28 @@ public class ArchivalcodeRulerService {
 
             //如果档号已经存在，则返回错误信息
             if (items.get("archival") != null) {
-                errors.add("档号存在");
+                errors.add("档号已存在");
                 continue;
             }
 
             //档号
             StringBuilder archivalCode = new StringBuilder();
             //遍历规则集合
-            for (ArchivalcodeRuler archivalcodeRuler : archivalcodeRulers) {
+            for (ArchivalCodeRuler archivalCodeRuler : archivalCodeRulers) {
 
                 String str = "";
-                switch (archivalcodeRuler.getType()) {
+                switch (archivalCodeRuler.getType()) {
                     case EntryValue:
-                        String metadataName = archivalcodeRuler.getMetametadataName();
+                        String metadataName = archivalCodeRuler.getMetadataName();
                         String entryValue = items.get(metadataName).toString();
-                        str = entryValue.substring(0, archivalcodeRuler.getInterceptionLength());
+                        str = entryValue.substring(0, archivalCodeRuler.getInterceptionLength());
                         if (str.equals("")) {
                             errors.add(metadataName + "不能为空");
                         }
                         break;
                     case ReferenceCode:
-                        String metadataName1 = archivalcodeRuler.getMetametadataName();
-                        String entryValue1 = (String) Entry.class.getDeclaredMethod(metadataName1).invoke(entry, null);
+                        String metadataName1 = archivalCodeRuler.getMetadataName();
+                        String entryValue1 = items.get(metadataName1).toString();
                         String regex = "\\[[\\s\\S]*\\]";
                         if (entryValue1.matches(regex)) {
                             str = entryValue1.split(regex)[0];
@@ -80,29 +81,54 @@ public class ArchivalcodeRulerService {
                         }
                         break;
                     case FondsCode:
-                        str = archivalcodeRuler.getValue();
+                        str = archivalCodeRuler.getValue();
                         if (str.equals("")) {
                             errors.add("全宗号不能为空");
                         }
                         break;
                     case FixValue:
-                        str = archivalcodeRuler.getValue();
+                        str = archivalCodeRuler.getValue();
                         if (str.equals("")) {
                             errors.add("固定值不能为空");
                         }
                         break;
                 }
                 archivalCode.append(str);
-                items.put("archival", archivalCode);
-                entry.setItems(items);
             }
-            entryMongoRepository.saveAll(entrys);
-
+            items.put("archival", archivalCode);
+            entry.setItems(items);
         }
-
+        entryMongoRepository.saveAll(entrys);
         if (errors.size() > 0) {
             return errors;
         }
         return null;
+    }
+
+    /**
+     * 清除档号
+     */
+    public void clear(List<UUID> entryIds, int catalogueId){
+
+        //查找条目，要传入条目id和目录id
+        Iterable<Entry> entrys = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
+        List<Entry> entries = new ArrayList<>();
+        //遍历条目集合
+        for (Entry entry : entrys) {
+
+            //取条目中的著录项集合
+            Map<String, Object> items = entry.getItems();
+
+            //如果档号已经存在，则返回错误信息
+            if (items.get("archival") == null||items.get("archival").equals("")) {
+                continue;
+            }
+
+            //档号置空
+            items.put("archival", "");
+            entry.setItems(items);
+            entries.add(entry);
+        }
+        entryMongoRepository.saveAll(entries);
     }
 }

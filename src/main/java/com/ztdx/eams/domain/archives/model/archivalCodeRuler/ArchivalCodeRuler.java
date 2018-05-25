@@ -1,4 +1,4 @@
-package com.ztdx.eams.domain.archives.model.archivalcodeRuler;
+package com.ztdx.eams.domain.archives.model.archivalCodeRuler;
 
 import lombok.Data;
 
@@ -11,7 +11,7 @@ import java.util.Date;
 @Data
 @Entity
 @Table(name = "archives_archivalcode_ruler")
-public class ArchivalcodeRuler {
+public class ArchivalCodeRuler {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +27,7 @@ public class ArchivalcodeRuler {
     //元数据
     @Size(max = 20)
     @Column(name = "metadata_name")
-    private String metametadataName;
+    private String metadataName;
 
     //值
     @Size(max = 10)
@@ -46,7 +46,7 @@ public class ArchivalcodeRuler {
     //排序号
     @Min(value = 1)
     @Column(name = "order_number")
-    private int orederNumber;
+    private int orderNumber;
 
     //目录id
     @Column(name = "catalogue_id")

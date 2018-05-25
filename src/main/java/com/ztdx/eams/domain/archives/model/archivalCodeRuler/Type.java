@@ -1,4 +1,4 @@
-package com.ztdx.eams.domain.archives.model.archivalcodeRuler;
+package com.ztdx.eams.domain.archives.model.archivalCodeRuler;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
