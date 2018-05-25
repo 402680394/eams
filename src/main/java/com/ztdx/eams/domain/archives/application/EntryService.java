@@ -1,9 +1,9 @@
 package com.ztdx.eams.domain.archives.application;
 
-import com.vividsolutions.jts.util.Assert;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
+import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
 import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
@@ -34,12 +34,15 @@ public class EntryService {
 
     private ArchivesRepository archivesRepository;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository) {
+    private ArchivesGroupRepository archivesGroupRepository;
+
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
         this.catalogueRepository = catalogueRepository;
         this.archivesRepository = archivesRepository;
+        this.archivesGroupRepository = archivesGroupRepository;
     }
 
     public Entry save(Entry entry) {
@@ -53,10 +56,16 @@ public class EntryService {
             throw new InvalidArgumentException("档案库不存在");
         }
 
+        ArchivesGroup archivesGroup = archivesGroupRepository.findById(archives.getArchivesGroupId()).orElse(null);
+        if (archivesGroup == null) {
+            throw new InvalidArgumentException("档案库分组不存在");
+        }
+
         entry.setArchiveId(catalog.getArchivesId());
         entry.setCatalogueType(CatalogueType.create(catalog.getCatalogueType()));
         entry.setArchiveContentType(archives.getContentTypeId());
         entry.setArchiveType(archives.getType());
+        entry.setFondsId(archivesGroup.getFondsId());
         //TODO 缺少条目数据的验证
         entry.setId(UUID.randomUUID());
         entry.setGmtCreate(new Date());

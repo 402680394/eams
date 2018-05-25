@@ -30,7 +30,7 @@ public class DescriptionItemService {
     }
 
     //新增条目数据验证
-    public Entry addVerification(Entry entry, HttpSession session) {
+    public void addVerification(Entry entry, UserCredential userCredential) {
         //获取目录著录项
         List<DescriptionItem> descriptionItemList = descriptionItemRepository.findByCatalogueId(entry.getCatalogueId());
         //著录项数据
@@ -51,7 +51,6 @@ public class DescriptionItemService {
                 switch (descriptionItem.getDefaultValue()) {
                     //当前登录人姓名
                     case LoginUserName: {
-                        UserCredential userCredential = (UserCredential) session.getAttribute("LOGIN_USER");
                         dataMap.put(metadataName, userCredential.getName());
                     }
                     //当前系统年度
@@ -92,7 +91,7 @@ public class DescriptionItemService {
     }
 
     //修改条目数据验证
-    public Entry updateVerification(Entry entry, HttpSession session) {
+    public void updateVerification(Entry entry, UserCredential userCredential) {
         //获取目录著录项
         List<DescriptionItem> descriptionItemList = descriptionItemRepository.findByCatalogueId(entry.getCatalogueId());
         //著录项数据
@@ -116,7 +115,6 @@ public class DescriptionItemService {
                     switch (descriptionItem.getDefaultValue()) {
                         //当前登录人姓名
                         case LoginUserName: {
-                            UserCredential userCredential = (UserCredential) session.getAttribute("LOGIN_USER");
                             dataMap.put(metadataName, userCredential.getName());
                         }
                         //当前系统年度
