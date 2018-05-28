@@ -56,7 +56,7 @@ public class EntryController {
      */
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody Entry entry, @SessionAttribute UserCredential LOGIN_USER) {
-        descriptionItemService.addVerification(entry, LOGIN_USER);
+        //descriptionItemService.addVerification(entry, LOGIN_USER);
         entry.setOwner(LOGIN_USER.getUserId());
         entryService.save(entry);
     }
@@ -89,7 +89,7 @@ public class EntryController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    public void update(@PathVariable("id") UUID uuid, @RequestBody Entry entry, @SessionAttribute UserCredential LOGIN_USER) {
+    public void update(@PathVariable("id") String uuid, @RequestBody Entry entry, @SessionAttribute UserCredential LOGIN_USER) {
         entry.setId(uuid);
         descriptionItemService.updateVerification(entry, LOGIN_USER);
         entryService.update(entry);
@@ -468,5 +468,10 @@ public class EntryController {
     @RequestMapping(value = "/searchFullArchive", method = RequestMethod.POST)
     public void searchFullArchive() {
 
+    }
+
+    @RequestMapping(value = "/test/{id}", method = RequestMethod.GET)
+    public Object test(@PathVariable("id") String id){
+        return entryService.test(id);
     }
 }

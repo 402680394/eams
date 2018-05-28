@@ -35,7 +35,7 @@ public class ArchivalCodeRulerController {
      *  ]
      */
     @RequestMapping(value = "/generating", method = RequestMethod.POST)
-    public List<String> generating(@JsonParam List<UUID> entryIds, @JsonParam int catalogueId) {
+    public List<String> generating(@JsonParam List<String> entryIds, @JsonParam int catalogueId) {
         return archivalcodeRulerService.generating(entryIds, catalogueId);
 
     }
@@ -53,7 +53,7 @@ public class ArchivalCodeRulerController {
      *  ]
      */
     @RequestMapping(value = "/clear", method = RequestMethod.POST)
-    public void  clear(@JsonParam List<UUID> entryIds,@JsonParam int catalogueId) {
+    public void clear(@JsonParam List<String> entryIds,@JsonParam int catalogueId) {
         archivalcodeRulerService.clear(entryIds, catalogueId);
     }
 }

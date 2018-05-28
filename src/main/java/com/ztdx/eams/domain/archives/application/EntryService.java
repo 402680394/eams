@@ -1,5 +1,7 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.mongodb.Block;
+import com.mongodb.client.MongoDatabase;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
@@ -9,16 +11,21 @@ import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.mongodb.client.model.Filters.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
 @Service
@@ -36,13 +43,16 @@ public class EntryService {
 
     private ArchivesGroupRepository archivesGroupRepository;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository) {
+    private MongoTemplate mongoTemplate;
+
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, MongoTemplate mongoTemplate) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
         this.catalogueRepository = catalogueRepository;
         this.archivesRepository = archivesRepository;
         this.archivesGroupRepository = archivesGroupRepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public Entry save(Entry entry) {
@@ -66,7 +76,7 @@ public class EntryService {
         entry.setArchiveContentType(archives.getContentTypeId());
         entry.setArchiveType(archives.getType());
         entry.setFondsId(archivesGroup.getFondsId());
-        entry.setId(UUID.randomUUID());
+        entry.setId(UUID.randomUUID().toString());
         entry.setGmtCreate(new Date());
         entry.setGmtModified(new Date());
         this.convertEntryItems(entry);
@@ -159,5 +169,24 @@ public class EntryService {
 
     private Map<String, DescriptionItem> getDescriptionItems(int catalogueId) {
         return descriptionItemRepository.findByCatalogueId(catalogueId).stream().collect(Collectors.toMap(DescriptionItem::getMetadataName, (d) -> d, (d1, d2) -> d2));
+    }
+
+    public Object test(String uuid) {
+        List<String> a = new ArrayList<>();
+        a.add(uuid);
+        Object result =  entryMongoRepository.findAllById(a, "archive_record_1");
+
+        Object c = entryMongoRepository.findAll("archive_record_1");
+        //Object c = entryMongoRepository.findById(b, "archive_record_1");
+
+        List<Entry> list = new ArrayList<>();
+        Block<Entry> printBlock = list::add;
+
+        mongoTemplate.getDb().getCollection("archive_record_1",Entry.class).find(
+                gt("items.age", 10)
+        ).forEach(printBlock);
+
+
+        return result;
     }
 }

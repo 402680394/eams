@@ -30,7 +30,7 @@ public class ArchivalCodeRulerService {
     /**
      * 生成档号
      */
-    public List<String> generating(List<UUID> entryIds, int catalogueId){
+    public List<String> generating(List<String> entryIds, int catalogueId){
 
         //创建错误信息集合
         List<String> errors = new ArrayList<>();
@@ -113,7 +113,7 @@ public class ArchivalCodeRulerService {
     /**
      * 清除档号
      */
-    public void clear(List<UUID> entryIds, int catalogueId){
+    public void clear(List<String> entryIds, int catalogueId){
 
 
 
