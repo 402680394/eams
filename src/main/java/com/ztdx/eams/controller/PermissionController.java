@@ -117,34 +117,45 @@ public class PermissionController {
      *
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":[
-     *         {
-     *             "id":1,
-     *             "name":"系统管理",
-     *             "type":"FunctionGroup",
-     *             "children":[
-     *                 {
-     *                     "id":2,
-     *                     "name":"用户管理",
-     *                     "type":"FunctionGroup",
-     *                     "children":[
-     *                         {
-     *                             "id":1,
-     *                             "name":"添加",
-     *                             "type":"Function",
-     *                             "resourceUrl":"user_add"
-     *                         }
-     *                     ]
-     *                 }
-     *             ]
-     *         },
-     *         {
-     *             "id":2,
-     *             "name":"权限管理",
-     *             "type":"Function",
-     *             "resourceUrl":"permission_manage"
-     *         }
-     *     ]
+     *     "data": {
+     *         "Global": [
+     *             {
+     *                 "id": 1,
+     *                 "name": "系统管理",
+     *                 "type": "FunctionGroup",
+     *                 "children": [
+     *                     {
+     *                         "id": 2,
+     *                         "name": "用户管理",
+     *                         "type": "FunctionGroup",
+     *                         "children": [
+     *                             {
+     *                                 "id": 1,
+     *                                 "name": "添加",
+     *                                 "type": "Function",
+     *                                 "resourceUrl": "user_add"
+     *                             }
+     *                         ]
+     *                     }
+     *                 ]
+     *             },
+     *             {
+     *                 "id": 2,
+     *                 "name": "权限管理",
+     *                 "type": "Function",
+     *                 "resourceUrl": "permission_manage"
+     *             }
+     *         ],
+     *         "Fonds": [],
+     *         "CatalogueFile": [],
+     *         "CatalogueFolder": [],
+     *         "CatalogueFolderInside": [],
+     *         "CatalogueSubject": [],
+     *         "CatalogueUseFile": [],
+     *         "CatalogueUseFolder": [],
+     *         "CatalogueUseFolderInside": [],
+     *         "CatalogueUseSubject": []
+     *     }
      * }
      */
     @RequestMapping(value = "/metadata", method = RequestMethod.GET)
