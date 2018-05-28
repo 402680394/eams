@@ -7,6 +7,7 @@ import com.ztdx.eams.domain.system.repository.PermissionRepository;
 import com.ztdx.eams.domain.system.repository.ResourceRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -61,8 +62,56 @@ public class PermissionService {
         return result;
     }
 
+    @Transactional
     public void saveAll(List<Permission> permissions){
         //TODO lijie 排除已经存在的，删除取消的
-        permissionRepository.saveAll(permissions);
+        Map<String, List<Permission>> list= permissions.stream().collect(
+                Collectors.groupingBy(this::getGroupKey));
+
+        List<Long> roleIds = permissions.stream().map(Permission::getRoleId).collect(Collectors.toList());
+
+        Map<String, List<Permission>> existsPermissions = permissionRepository.findByRoleIdIn(
+                roleIds).stream().collect(Collectors.groupingBy(this::getGroupKey));
+
+        List<Permission> save = new ArrayList<>();
+        List<Permission> delete = new ArrayList<>();
+
+        list.forEach((groupKey, rolePermissions) ->{
+            if (!existsPermissions.containsKey(groupKey)){
+                save.addAll(rolePermissions);
+            }
+        });
+
+        existsPermissions.forEach((groupKey, rolePermissions) -> {
+            if (!list.containsKey(groupKey)){
+                delete.addAll(rolePermissions);
+            }
+        });
+
+
+        permissionRepository.saveAll(save);
+        permissionRepository.deleteInBatch(delete);
+    }
+
+    private String getGroupKey(Permission permission){
+        StringBuilder sb = new StringBuilder();
+        sb.append(permission.getRoleId());
+
+        sb.append("_");
+        sb.append(permission.getResourceId());
+
+        Integer fondsId = permission.getFondsId();
+        if (fondsId != null) {
+            sb.append("_");
+            sb.append(permission.getFondsId());
+        }
+
+        Integer archievId = permission.getArchiveId();
+        if (archievId != null) {
+            sb.append("_");
+            sb.append(permission.getArchiveId());
+        }
+
+        return sb.toString();
     }
 }

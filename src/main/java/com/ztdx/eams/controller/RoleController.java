@@ -249,6 +249,8 @@ public class RoleController {
      * @apiSuccess (Success 200) {int} global.id 子节点id
      * @apiSuccess (Success 200) {String="Fonds","Role"} global.type 子节点类型 Fonds:全宗，有children属性 Role:角色，无children属性
      * @apiSuccess (Success 200) {String} global.name 子节点名称
+     * @apiSuccess (Success 200) {Number} global.fondsId 全宗id，全局角色值为Null
+     * @apiSuccess (Success 200) {String} global.remark 备注
      * @apiSuccess (Success 200) {Array} fonds 全宗列表
      * @apiSuccess (Success 200) {int} fonds.id 全宗id
      * @apiSuccess (Success 200) {String="Fonds","Role"} fonds.type 节点类型 Fonds:全宗，有children属性 Role:角色，无children属性
@@ -258,6 +260,8 @@ public class RoleController {
      * @apiSuccess (Success 200) {int} fonds.children.id 子节点id
      * @apiSuccess (Success 200) {String="Fonds","Role"} fonds.children.type 子节点类型 Fonds:全宗，有children属性 Role:角色，无children属性
      * @apiSuccess (Success 200) {String} fonds.children.name 子节点名称
+     * @apiSuccess (Success 200) {Number} fonds.children.fondsId 全宗id，全局角色值为Null
+     * @apiSuccess (Success 200) {String} fonds.children.remark 备注
      * @apiSuccess (Success 200) {bool} [fonds.children.allowAdd] 是否可以添加角色，节点类型为"Fonds"有此属性
      * @apiSuccess (Success 200) {Array} [fonds.children.children] 子节点 节点类型为"Fonds"有此属性
      *
@@ -269,12 +273,16 @@ public class RoleController {
      *             {
      *                 "id":4,
      *                 "name":"全局角色D",
-     *                 "type":"Role"
+     *                 "type":"Role",
+     *                 "fondsId": null,
+     *                 "remark": "备注"
      *             },
      *             {
      *                 "id":5,
      *                 "name":"全局角色E",
-     *                 "type":"Role"
+     *                 "type":"Role",
+     *                 "fondsId": null,
+     *                 "remark": "备注"
      *             }
      *         ],
      *         "fonds":[
@@ -287,12 +295,16 @@ public class RoleController {
      *                     {
      *                         "id":1,
      *                         "name":"全局角色A",
-     *                         "type":"Role"
+     *                         "type":"Role",
+     *                         "fondsId": 1,
+     *                         "remark": "备注"
      *                     }
      *                     {
      *                         "id":2,
      *                         "name":"全局角色B",
-     *                         "type":"Role"
+     *                         "type":"Role",
+     *                         "fondsId": 1,
+     *                         "remark": "备注"
      *                     }
      *                 ]
      *             }

@@ -170,6 +170,8 @@ public class RoleService {
         mapb.put("id", a.getId());
         mapb.put("name", a.getRoleName());
         mapb.put("type", "Role");
+        mapb.put("fondsId", a.getFondsId());
+        mapb.put("remark", a.getRemark());
         return mapb;
     }
 
