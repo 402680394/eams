@@ -200,7 +200,7 @@ public class EntryController {
      */
     @RequestMapping(value = "/search", method = RequestMethod.GET)
     public Map<String, Object> search(@RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size){
-        //TODO 登记库只能查看自己的
+        //TODO @lijie 登记库只能查看自己的
         Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size));
 
         Map<String, DescriptionItem> list = descriptionItemService.list(catalogueId);

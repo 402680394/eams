@@ -64,7 +64,7 @@ public class PermissionService {
 
     @Transactional
     public void saveAll(List<Permission> permissions){
-        //TODO lijie 排除已经存在的，删除取消的
+
         Map<String, List<Permission>> list= permissions.stream().collect(
                 Collectors.groupingBy(this::getGroupKey));
 

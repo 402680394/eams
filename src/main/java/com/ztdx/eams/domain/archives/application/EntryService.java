@@ -66,7 +66,6 @@ public class EntryService {
         entry.setArchiveContentType(archives.getContentTypeId());
         entry.setArchiveType(archives.getType());
         entry.setFondsId(archivesGroup.getFondsId());
-        //TODO 缺少条目数据的验证
         entry.setId(UUID.randomUUID());
         entry.setGmtCreate(new Date());
         entry.setGmtModified(new Date());

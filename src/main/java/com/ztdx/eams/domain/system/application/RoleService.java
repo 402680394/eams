@@ -159,7 +159,7 @@ public class RoleService {
      */
     public List<Object> listGlobalRole(int userId) {
 
-        //TODO lijie 判断用户权限，如果没有全局的权限管理权限则返回null
+        //TODO @lijie 判断用户权限，如果没有全局的权限管理权限则返回null
         List<Role> roles = roleRepository.findByFondsIdIsNull();
 
         return roles.stream().map(this::getRoleMap).collect(Collectors.toList());
@@ -184,7 +184,7 @@ public class RoleService {
         //查询出当前用户可以管理的全宗
         //并把角色挂到全宗树上
 
-        //TODO lijie 如果是超级管理员则查看所有全宗
+        //TODO @lijie 如果是超级管理员则查看所有全宗
         Set<Integer> fondsIds = this.findUserManageFonds(userId);
 
         List<Role> roles = this.findByFondsIdIn(fondsIds);
