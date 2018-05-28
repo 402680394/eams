@@ -375,7 +375,7 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable> exten
         query.setId(this.stringIdRepresentation(this.getId(entity)));
         query.setIndexName(this.getIndexName(entity));
         query.setType(this.getIndexType());
-        //TODO 没有启用版本控制和父节点
+        //TODO @lijie 没有启用版本控制和父节点
         //query.setVersion(this.extractVersionFromBean(entity));
         //query.setParentId(this.extractParentIdFromBean(entity));
         return query;

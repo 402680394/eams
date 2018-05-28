@@ -6,6 +6,8 @@ import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.domain.system.model.ResourceCategory;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,6 +86,96 @@ public class PermissionController {
     @RequestMapping(value = "/metadata/{id}", method = RequestMethod.GET)
     public List<Map> listCategoryPermission(@PathVariable("id") int id){
         return permissionService.listCategoryPermission(ResourceCategory.create(id));
+    }
+
+
+    /**
+     * @api {get} /permission/metadata 查询权限定义
+     * @apiName listCategoryPermission
+     * @apiGroup permission
+     * @apiSuccess (Success 200) {Object} data 档案目录权限列表
+     * @apiSuccess (Success 200) {Array}  data.Global 全局权限列表
+     * @apiSuccess (Success 200) {number} data.Global.id 子节点id
+     * @apiSuccess (Success 200) {String="FunctionGroup","Function"} data.Global.type 子节点类型
+     * @apiSuccess (Success 200) {String} data.Global.name 子节点名称
+     * @apiSuccess (Success 200) {Array} [data.Global.children] 子节点 节点类型为"FunctionGroup"有此属性
+     * @apiSuccess (Success 200) {number} data.Global.children.id 子节点id
+     * @apiSuccess (Success 200) {String="FunctionGroup","Function"} data.Global.children.type 子节点类型
+     * @apiSuccess (Success 200) {String} data.Global.children.name 子节点名称
+     * @apiSuccess (Success 200) {Array} [data.Global.children.children] 子节点 节点类型为"FunctionGroup"有此属性
+     * @apiSuccess (Success 200) {Array} [data.Global.children.resourceUrl] 资源url 节点类型为"Function"有此属性
+     * @apiSuccess (Success 200) {Array}  Fonds 全局权限列表
+     * @apiSuccess (Success 200) {Array}  data.CatalogueFile 档案管理-一文一件权限列表
+     * @apiSuccess (Success 200) {Array}  data.CatalogueFolder 档案管理-传统立卷案卷权限列表
+     * @apiSuccess (Success 200) {Array}  data.CatalogueFolderInside 档案管理-传统立卷卷内权限列表
+     * @apiSuccess (Success 200) {Array}  data.CatalogueSubject 档案管理-项目档案权限列表
+     * @apiSuccess (Success 200) {Array}  data.CatalogueUseFile 档案利用-一文一件档案
+     * @apiSuccess (Success 200) {Array}  data.CatalogueUseFolder 档案利用-传统立卷案卷
+     * @apiSuccess (Success 200) {Array}  data.CatalogueUseFolderInside 档案利用-传统立卷卷内
+     * @apiSuccess (Success 200) {Array}  data.CatalogueUseSubject 档案利用-项目档案
+     *
+     *
+     * @apiSuccessExample {json} Success-Response:
+     * {
+     *     "data": {
+     *         "Global": [
+     *             {
+     *                 "id": 1,
+     *                 "name": "系统管理",
+     *                 "type": "FunctionGroup",
+     *                 "children": [
+     *                     {
+     *                         "id": 2,
+     *                         "name": "用户管理",
+     *                         "type": "FunctionGroup",
+     *                         "children": [
+     *                             {
+     *                                 "id": 1,
+     *                                 "name": "添加",
+     *                                 "type": "Function",
+     *                                 "resourceUrl": "user_add"
+     *                             }
+     *                         ]
+     *                     }
+     *                 ]
+     *             },
+     *             {
+     *                 "id": 2,
+     *                 "name": "权限管理",
+     *                 "type": "Function",
+     *                 "resourceUrl": "permission_manage"
+     *             }
+     *         ],
+     *         "Fonds": [],
+     *         "CatalogueFile": [],
+     *         "CatalogueFolder": [],
+     *         "CatalogueFolderInside": [],
+     *         "CatalogueSubject": [],
+     *         "CatalogueUseFile": [],
+     *         "CatalogueUseFolder": [],
+     *         "CatalogueUseFolderInside": [],
+     *         "CatalogueUseSubject": []
+     *     }
+     * }
+     */
+    @RequestMapping(value = "/metadata", method = RequestMethod.GET)
+    public Map<String, Object> listCategoryPermission(){
+        Map<String, Object> result = new HashMap<>();
+
+        for (int i = 0; i < ResourceCategory.values().length; i++){
+            ResourceCategory resourceCategory = ResourceCategory.values()[i];
+
+            if(resourceCategory.equals(ResourceCategory.Node)
+                    ||resourceCategory.equals(ResourceCategory.FunctionGroup)
+                    ||resourceCategory.equals(ResourceCategory.Function)){
+                continue;
+            }
+
+            List<Map> map = permissionService.listCategoryPermission(resourceCategory);
+            result.put(resourceCategory.toString(), map);
+        }
+
+        return result;
     }
 
     /**

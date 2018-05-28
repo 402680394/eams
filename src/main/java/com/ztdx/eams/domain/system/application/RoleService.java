@@ -91,8 +91,8 @@ public class RoleService {
     }
 
     @Transactional
-    public Map<String, List<String>> addPermission(long roleId, List<String> resourceUrls) {
-        List<String> existsUrl = permissionRepository.findByRoleIdAndResourceUrlIn(roleId, resourceUrls).stream().map(Object::toString).collect(Collectors.toList());
+    public Map<String, List<String>> addPermission(long roleId, Map<String, Object> permissions) {
+        /*List<String> existsUrl = permissionRepository.findByRoleIdAndResourceUrlIn(roleId, resourceUrls).stream().map(Object::toString).collect(Collectors.toList());
 
         resourceUrls.removeAll(existsUrl);
         Date now = Calendar.getInstance().getTime();
@@ -115,7 +115,8 @@ public class RoleService {
         Map<String, List<String>> result = new HashMap<>();
         result.put("added", resourceUrls);
         result.put("existed", existsUrl);
-        return result;
+        return result;*/
+        return null;
     }
 
     @Transactional
@@ -158,7 +159,7 @@ public class RoleService {
      */
     public List<Object> listGlobalRole(int userId) {
 
-        //TODO lijie 判断用户权限，如果没有全局的权限管理权限则返回null
+        //TODO @lijie 判断用户权限，如果没有全局的权限管理权限则返回null
         List<Role> roles = roleRepository.findByFondsIdIsNull();
 
         return roles.stream().map(this::getRoleMap).collect(Collectors.toList());
@@ -169,6 +170,8 @@ public class RoleService {
         mapb.put("id", a.getId());
         mapb.put("name", a.getRoleName());
         mapb.put("type", "Role");
+        mapb.put("fondsId", a.getFondsId());
+        mapb.put("remark", a.getRemark());
         return mapb;
     }
 
@@ -181,7 +184,7 @@ public class RoleService {
         //查询出当前用户可以管理的全宗
         //并把角色挂到全宗树上
 
-        //TODO lijie 如果是超级管理员则查看所有全宗
+        //TODO @lijie 如果是超级管理员则查看所有全宗
         Set<Integer> fondsIds = this.findUserManageFonds(userId);
 
         List<Role> roles = this.findByFondsIdIn(fondsIds);
