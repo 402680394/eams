@@ -152,58 +152,12 @@ public class RoleService {
         return roleRepository.findByFondsIdIn(fondsId);
     }
 
-    /**
-     * 获取用户可以管理的全宗，以及全宗下的角色
-     * @param userId 用户id
-     * @return 全宗的数组，包括全宗的角色
-     */
-    public List<Object> listGlobalRole(int userId) {
-
-        //TODO @lijie 判断用户权限，如果没有全局的权限管理权限则返回null
-        List<Role> roles = roleRepository.findByFondsIdIsNull();
-
-        return roles.stream().map(this::getRoleMap).collect(Collectors.toList());
+    public List<Role> findByFondsIdIsNull() {
+        return roleRepository.findByFondsIdIsNull();
     }
 
-    private Map<String, Object> getRoleMap(Role a) {
-        Map<String, Object> mapb = new HashMap<>();
-        mapb.put("id", a.getId());
-        mapb.put("name", a.getRoleName());
-        mapb.put("type", "Role");
-        mapb.put("fondsId", a.getFondsId());
-        mapb.put("remark", a.getRemark());
-        return mapb;
-    }
-
-    /**
-     * 获取用户可以管理的全宗，以及全宗下的角色
-     * @param userId 用户id
-     * @return 全宗的数组，包括全宗的角色
-     */
-    public List<Object> listFondsRole(int userId) {
-        //查询出当前用户可以管理的全宗
-        //并把角色挂到全宗树上
-
-        //TODO @lijie 如果是超级管理员则查看所有全宗
-        Set<Integer> fondsIds = this.findUserManageFonds(userId);
-
-        List<Role> roles = this.findByFondsIdIn(fondsIds);
-
-        List<Fonds> fonds = fondsRepository.findAllById(fondsIds);
-
-        Map<Integer, List<Role>> fondsGroup = roles.stream().collect(Collectors.groupingBy(Role::getFondsId));
-
-        return fonds.stream().map((a) -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", a.getId());
-            map.put("name", a.getName());
-            map.put("type", "Fonds");
-            map.put("allowAdd", true);
-            List<Role> childrenList = fondsGroup.getOrDefault(a.getId(),null);
-            List<Object> children = childrenList.stream().map(this::getRoleMap).collect(Collectors.toList());
-            map.put("children", children);
-            return map;
-        }).collect(Collectors.toList());
+    public List<Role> findByFondsIdIsNotNull() {
+        return roleRepository.findByFondsIdIsNotNull();
     }
 
     /**
@@ -254,6 +208,11 @@ public class RoleService {
         result.put("fonds", fonds);
         result.put("archiveCatalogue", archive);
         return result;
+    }
+
+    public Map<String, Map> listUserPermission(int userId) {
+        Iterable<Long> ids = this.getUserRoleIds(userId);
+        return this.listRolePermission(ids);
     }
 
     private Map<Integer, Map<String, Object>> groupPermission(List<Permission> permissions, Function<Permission, Integer> groupKey, Map<Long, Resource> resourceMap) {

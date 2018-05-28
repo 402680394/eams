@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 @Configuration
-@EnableGlobalMethodSecurity(securedEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean

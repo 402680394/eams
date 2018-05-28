@@ -1,11 +1,13 @@
 package com.ztdx.eams.domain.system.application;
 
+import com.vividsolutions.jts.util.Assert;
 import com.ztdx.eams.domain.system.model.Permission;
 import com.ztdx.eams.domain.system.model.Resource;
 import com.ztdx.eams.domain.system.model.ResourceCategory;
 import com.ztdx.eams.domain.system.repository.PermissionRepository;
 import com.ztdx.eams.domain.system.repository.ResourceRepository;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,6 +93,20 @@ public class PermissionService {
 
         permissionRepository.saveAll(save);
         permissionRepository.deleteInBatch(delete);
+    }
+
+    public boolean hasAuthority(Collection<? extends GrantedAuthority> authorities, String expectedAuthority){
+        return this.hasAnyAuthority(authorities, expectedAuthority);
+    }
+
+    public boolean hasAnyAuthority(Collection<? extends GrantedAuthority> authorities, String... expectedAuthorities) {
+
+        for (String role : expectedAuthorities) {
+            if (authorities.contains(role)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getGroupKey(Permission permission){

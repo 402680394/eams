@@ -2,15 +2,22 @@ package com.ztdx.eams.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.system.application.*;
+import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Permission;
 import com.ztdx.eams.domain.system.model.Role;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/role")
@@ -313,22 +320,90 @@ public class RoleController {
      * }
      */
     @RequestMapping(value = "", method = RequestMethod.GET)
+    //@PreAuthorize("hasAnyRole('global_role_query', 'ADMIN')")
     public Map<String, Object> listRole(@SessionAttribute(required = false) UserCredential LOGIN_USER){
         //如果是管理员可以查看到全局角色列表
         int userId = 1;
         if (LOGIN_USER != null){
             userId = LOGIN_USER.getUserId();
+        }else{
+            throw new ForbiddenException("拒绝访问");
         }
 
-        List<Object> global = roleService.listGlobalRole(userId);
-        List<Object> fonds = roleService.listFondsRole(userId);
+        Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+
+        List<Object> global = null;
+        if (permissionService.hasAnyAuthority(authorities, "global_role_query", "ROLE_ADMIN")) {
+            global = this.listGlobalRole();
+        }
+
+        List<Fonds> fonds;
+        List<Role> roles;
+        if (permissionService.hasAnyAuthority(authorities, "global_role_query", "ROLE_ADMIN")) {
+            fonds = fondsService.findAll();
+            roles = roleService.findByFondsIdIsNotNull();
+        }else{
+            Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
+            List<Integer> filterFondsIds = fondsIds.stream().filter(
+                    a -> permissionService.hasAuthority(authorities, String.format("fonds_role_query_%d", a)))
+            .collect(Collectors.toList());
+            fonds = fondsService.findAllById(filterFondsIds);
+            roles = roleService.findByFondsIdIn(fondsIds);
+        }
+        List<Object> fondsMap = this.listFondsRole(roles, fonds);
 
         Map<String, Object> result = new HashMap<>();
         result.put("global", global);
-        result.put("fonds", fonds);
+        result.put("fonds", fondsMap);
 
         return result;
 
+    }
+
+    /**
+     * 获取用户可以管理的全宗，以及全宗下的角色
+     * @return 全宗的数组，包括全宗的角色
+     */
+    private List<Object> listGlobalRole() {
+
+        List<Role> roles = roleService.findByFondsIdIsNull();
+
+        return roles.stream().map(this::getRoleMap).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取全宗角色
+     * @param roles 全宗的角色
+     * @param fonds 全宗
+     * @return 全宗角色列表
+     */
+    private List<Object> listFondsRole(List<Role> roles, List<Fonds> fonds) {
+        //查询出当前用户可以管理的全宗
+        //并把角色挂到全宗树上
+
+        Map<Integer, List<Role>> fondsGroup = roles.stream().collect(Collectors.groupingBy(Role::getFondsId));
+
+        return fonds.stream().map((a) -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", a.getId());
+            map.put("name", a.getName());
+            map.put("type", "Fonds");
+            map.put("allowAdd", true);
+            List<Role> childrenList = fondsGroup.getOrDefault(a.getId(),null);
+            List<Object> children = childrenList.stream().map(this::getRoleMap).collect(Collectors.toList());
+            map.put("children", children);
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    private Map<String, Object> getRoleMap(Role a) {
+        Map<String, Object> mapb = new HashMap<>();
+        mapb.put("id", a.getId());
+        mapb.put("name", a.getRoleName());
+        mapb.put("type", "Role");
+        mapb.put("fondsId", a.getFondsId());
+        mapb.put("remark", a.getRemark());
+        return mapb;
     }
 
 

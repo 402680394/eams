@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -122,7 +123,11 @@ public class FondsService {
         return fondsRepository.getOne(fondId);
     }
 
-    public List<Fonds> findAllById(Set<Integer> fondsIds) {
+    public List<Fonds> findAllById(Collection<Integer> fondsIds) {
         return fondsRepository.findAllById(fondsIds);
+    }
+
+    public List<Fonds> findAll() {
+        return fondsRepository.findAll();
     }
 }
