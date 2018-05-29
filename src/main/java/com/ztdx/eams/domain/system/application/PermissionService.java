@@ -60,6 +60,9 @@ public class PermissionService {
         result.put("name", resource.getResourceName());
         result.put("type", resource.getResourceCategory().toString());
         result.put("children", new ArrayList<Map>());
+        if (resource.getResourceCategory() == ResourceCategory.Function){
+            result.put("resourceUrl", resource.getResourceUrl());
+        }
 
         return result;
     }
