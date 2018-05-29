@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -37,6 +38,12 @@ public class ArchivalCodeRulerController {
     @RequestMapping(value = "/generating", method = RequestMethod.POST)
     public List<String> generating(@JsonParam List<UUID> entryIds, @JsonParam int catalogueId) {
         return archivalcodeRulerService.generating(entryIds, catalogueId);
+
+    }
+
+    @RequestMapping(value = "/a", method = RequestMethod.GET)
+    public Map a() {
+        return null;
 
     }
 
