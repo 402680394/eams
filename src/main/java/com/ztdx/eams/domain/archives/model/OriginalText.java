@@ -4,11 +4,9 @@ import com.ztdx.eams.basic.repository.annotation.IndexNamePostfix;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.UUID;
 
 /**
  * Created by li on 2018/5/22.
@@ -18,14 +16,12 @@ import java.util.UUID;
 public class OriginalText {
 
     @Id
-    private UUID id;
+    private String id;
 
     @IndexNamePostfix
     private int catalogueId;
 
-    private int archiveId;
-
-    private UUID entryId;
+    private String entryId;
 
     private String title;
 
@@ -43,7 +39,7 @@ public class OriginalText {
 
     private HashMap<String, Object> fileAttributesMap;
 
-    private String ftpPath;
+    private String ftpFileMD5;
 
     //创建时间
     private Date gmtCreate;
