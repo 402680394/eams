@@ -43,10 +43,17 @@ public class Interceptor implements HandlerInterceptor {
     private void appendToResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Exception exception) throws IOException {
 
         int errorCode = 500;
+        String message =exception.getMessage();
         if (exception instanceof ApplicationException) {
             errorCode = ((ApplicationException) exception).getCode();
+        }else {
+            message+="(" +exception.getClass().toString()+")";
         }
-        String response = "{\"error\":{\"timestamp\":" + System.currentTimeMillis() + ",\"code\":" + errorCode + ",\"message\":\"" + exception.getMessage().replaceAll("\"","'") + "\",\"path\":\"" + httpServletRequest.getServletPath() + "\"}}";
+
+        if(message !=null){
+            message =message.replaceAll("\"","'");
+        }
+        String response = "{\"error\":{\"timestamp\":" + System.currentTimeMillis() + ",\"code\":" + errorCode + ",\"message\":\"" + message + "\",\"path\":\"" + httpServletRequest.getServletPath() + "\"}}";
 
         String origin = httpServletRequest.getHeader("Origin");
         httpServletResponse.setHeader("Access-Control-Allow-Origin", origin);

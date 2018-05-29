@@ -55,7 +55,7 @@ public class ArchivalCodeRulerService {
             //取条目中的著录项集合
             Map<String, Object> items = entry.getItems();
             //如果档号已经存在，则返回错误信息
-            if (items.get("archival") != null && !items.get("archival").equals("")) {
+            if (items.get("archival") != null || !items.get("archival").equals("")) {
                 errors.add("档号已存在");
                 continue;
             }
