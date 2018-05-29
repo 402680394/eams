@@ -14,7 +14,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import java.lang.reflect.Field;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -76,69 +75,69 @@ public class CustomMongoRepositoryImpl<T, ID> extends SimpleMongoRepository<T, I
         }
     }
 
-    public boolean existsById(ID id, String indexName) {
+    public boolean existsById(ID id, String collectionName) {
         Assert.notNull(id, "The given id must not be null!");
-        return this.mongoOperations.exists(this.getIdQuery(id), this.entityInformation.getJavaType(), indexName);
+        return this.mongoOperations.exists(this.getIdQuery(id), this.entityInformation.getJavaType(), collectionName);
     }
 
 
-    public long count(String indexName) {
-        return this.mongoOperations.getCollection(indexName).count();
+    public long count(String collectionName) {
+        return this.mongoOperations.getCollection(collectionName).count();
     }
 
 
-    public List<T> findAll(String indexName) {
-        return this.findAll(new Query(), indexName);
+    public List<T> findAll(String collectionName) {
+        return this.findAll(new Query(), collectionName);
     }
 
 
-    public List<T> findAll(Sort sort, String indexName) {
+    public List<T> findAll(Sort sort, String collectionName) {
         Assert.notNull(sort, "Sort must not be null!");
-        return this.findAll((new Query()).with(sort), indexName);
+        return this.findAll((new Query()).with(sort), collectionName);
     }
 
-    public <S extends T> List<S> findAll(Example<S> example, String indexName) {
-        return this.findAll(example, Sort.unsorted(), indexName);
+    public <S extends T> List<S> findAll(Example<S> example, String collectionName) {
+        return this.findAll(example, Sort.unsorted(), collectionName);
     }
 
 
-    public <S extends T> List<S> findAll(Example<S> example, Sort sort, String indexName) {
+    public <S extends T> List<S> findAll(Example<S> example, Sort sort, String collectionName) {
         Assert.notNull(example, "Sample must not be null!");
         Assert.notNull(sort, "Sort must not be null!");
         Query q = (new Query((new Criteria()).alike(example))).with(sort);
-        return this.mongoOperations.find(q, example.getProbeType(), indexName);
+        return this.mongoOperations.find(q, example.getProbeType(), collectionName);
     }
 
 
-    public Page<T> findAll(Pageable pageable, String indexName) {
+    public Page<T> findAll(Pageable pageable, String collectionName) {
         Assert.notNull(pageable, "Pageable must not be null!");
-        Long count = this.count(indexName);
-        List<T> list = this.findAll((new Query()).with(pageable), indexName);
+        Long count = this.count(collectionName);
+        List<T> list = this.findAll((new Query()).with(pageable), collectionName);
         return PageableExecutionUtils.getPage(list, pageable, () -> count);
     }
 
-    public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable, String indexName) {
-        return findAll(example, pageable, Sort.unsorted(), indexName);
+    public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable, String collectionName) {
+        return findAll(example, pageable, Sort.unsorted(), collectionName);
     }
 
-    public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable, Sort sort, String indexName) {
+    public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable, Sort sort, String collectionName) {
         Assert.notNull(example, "Sample must not be null!");
         Assert.notNull(pageable, "Pageable must not be null!");
         Assert.notNull(sort, "Sort must not be null!");
         Query q = (new Query((new Criteria()).alike(example))).with(pageable).with(sort);
-        List<S> list = this.mongoOperations.find(q, example.getProbeType(), indexName);
+        List<S> list = this.mongoOperations.find(q, example.getProbeType(), collectionName);
         return PageableExecutionUtils.getPage(list, pageable,
-                () -> this.mongoOperations.count(q, example.getProbeType(), indexName));
+                () -> this.mongoOperations.count(q, example.getProbeType(), collectionName));
     }
 
-    public Optional<T> findById(ID id, String indexName) {
+    public Optional<T> findById(ID id, String collectionName) {
         Assert.notNull(id, "The given id must not be null!");
-        return Optional.of(this.mongoOperations.findById(id, this.entityInformation.getJavaType(), indexName));
+        return Optional.of(this.mongoOperations.findById(id, this.entityInformation.getJavaType(), collectionName));
     }
 
 
-    public Iterable<T> findAllById(Iterable<ID> ids, String indexName) {
-        return this.findAll(new Query((new Criteria(this.entityInformation.getIdAttribute())).in((Collection) Streamable.of(ids).stream().collect(StreamUtils.toUnmodifiableList()))), indexName);
+    public Iterable<T> findAllById(Iterable<ID> ids, String collectionName) {
+        return this.findAll(new Query((new Criteria(this.entityInformation.getIdAttribute())).in(Streamable.of(ids).stream().collect(StreamUtils.toUnmodifiableList()))), collectionName);
     }
 
     public void delete(T entity) {
@@ -146,13 +145,17 @@ public class CustomMongoRepositoryImpl<T, ID> extends SimpleMongoRepository<T, I
         this.deleteById(this.entityInformation.getRequiredId(entity), getCollectionName(entity));
     }
 
-    public void deleteById(ID id, String indexName) {
+    public void deleteById(ID id, String collectionName) {
         Assert.notNull(id, "The given id must not be null!");
-        this.mongoOperations.remove(this.getIdQuery(id), this.entityInformation.getJavaType(), indexName);
+        this.mongoOperations.remove(this.getIdQuery(id), this.entityInformation.getJavaType(), collectionName);
     }
 
-    public void deleteAll(String indexName) {
-        this.mongoOperations.remove(new Query(), indexName);
+    public List<T> findAll(@Nullable Query query, String collectionName) {
+        return query == null ? Collections.emptyList() : this.mongoOperations.find(query, this.entityInformation.getJavaType(), collectionName);
+    }
+
+    public void deleteAll(String collectionName) {
+        this.mongoOperations.remove(new Query(), collectionName);
     }
 
     private Query getIdQuery(Object id) {
@@ -161,10 +164,6 @@ public class CustomMongoRepositoryImpl<T, ID> extends SimpleMongoRepository<T, I
 
     private Criteria getIdCriteria(Object id) {
         return Criteria.where(this.entityInformation.getIdAttribute()).is(id);
-    }
-
-    private List<T> findAll(@Nullable Query query, String indexName) {
-        return query == null ? Collections.emptyList() : this.mongoOperations.find(query, this.entityInformation.getJavaType(), indexName);
     }
 
     private String getCollectionName(T entity) {

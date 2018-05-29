@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum CatalogueType {
+    Undefined(0, "未定义"),
     File(1, "一文一件"),
     Folder(2, "传统立卷案卷"),
     FolderFile(3, "传统立卷卷内"),

@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
+import javax.persistence.Convert;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,7 @@ import java.util.UUID;
 @org.springframework.data.mongodb.core.mapping.Document(collection = "archive_record")
 public class Entry {
     @Id
-    private UUID id;
+    private String id;
 
     /**
      * 目录id
@@ -26,6 +27,7 @@ public class Entry {
     /**
      * 目录类型
      */
+    @Convert(converter = CatalogueType.EnumConverter.class)
     private CatalogueType catalogueType;
 
     /**

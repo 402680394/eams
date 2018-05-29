@@ -272,7 +272,6 @@ public class PermissionController {
      */
     @RequestMapping(value = "/my", method = RequestMethod.GET)
     public Map myPermission(@SessionAttribute UserCredential LOGIN_USER){
-        Iterable<Long> ids = roleService.getUserRoleIds(LOGIN_USER.getUserId());
-        return roleService.listRolePermission(ids);
+        return roleService.listUserPermission(LOGIN_USER.getUserId());
     }
 }

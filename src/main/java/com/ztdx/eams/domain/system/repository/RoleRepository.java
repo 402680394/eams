@@ -37,4 +37,6 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
     List<Role> findByFondsIdIsNull();
 
     List<Role> findByIdIn(Iterable<Long> ids);
+
+    List<Role> findByFondsIdIsNotNull();
 }

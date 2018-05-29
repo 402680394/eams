@@ -31,7 +31,7 @@ public class ArchivalCodeRulerService {
     /**
      * 生成档号
      */
-    public List<String> generating(List<UUID> entryIds, int catalogueId){
+    public List<String> generating(List<String> entryIds, int catalogueId){
 
         UUID uuid1 = UUID.fromString("f04c094a-d1b4-3e62-02c4-e6d47da73aa2");
         UUID uuid2 = UUID.fromString("0b4fbf8a-6a7b-51b9-8039-52f61a37aa92");
@@ -125,7 +125,7 @@ public class ArchivalCodeRulerService {
     /**
      * 清除档号
      */
-    public void clear(List<UUID> entryIds, int catalogueId){
+    public void clear(List<String> entryIds, int catalogueId){
 
 
 
