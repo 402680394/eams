@@ -38,9 +38,9 @@ public class ArchivalCodeRulerService {
 
         //通过目录id查询到的规则放入规则集合
         List<ArchivalCodeRuler> archivalCodeRulers = archivalcodeRulerRepository.findByCatalogueIdOrderByOrderNumber(catalogueId);
-
-        if(archivalCodeRulers.size()==0){
-            throw new BusinessException("该目录未设置档号生成规则");
+        //如果规则集合为空，则抛异常
+        if (archivalCodeRulers.size() > 0) {
+            new BusinessException("该目录未设置档号生成规则");
         }
 
         //查找条目，要传入条目id和目录id
@@ -121,8 +121,6 @@ public class ArchivalCodeRulerService {
      * 清除档号
      */
     public void clear(List<String> entryIds, int catalogueId){
-
-
 
         //查找条目，要传入条目id和目录id
         Iterable<Entry> entries = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
