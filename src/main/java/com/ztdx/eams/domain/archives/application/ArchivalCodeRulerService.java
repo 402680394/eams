@@ -33,11 +33,6 @@ public class ArchivalCodeRulerService {
      */
     public List<String> generating(List<String> entryIds, int catalogueId){
 
-        UUID uuid1 = UUID.fromString("f04c094a-d1b4-3e62-02c4-e6d47da73aa2");
-        UUID uuid2 = UUID.fromString("0b4fbf8a-6a7b-51b9-8039-52f61a37aa92");
-        List<UUID> uuids =new ArrayList<>();
-        uuids.add(uuid1);
-        uuids.add(uuid2);
         //创建错误信息集合
         List<String> errors = new ArrayList<>();
 
@@ -49,7 +44,7 @@ public class ArchivalCodeRulerService {
         }
 
         //查找条目，要传入条目id和目录id
-        Iterable<Entry> entries = entryMongoRepository.findAllById(uuids, "archive_record_" + catalogueId);
+        Iterable<Entry> entries = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
 
         //创建新条目集合存入MongoDB
         List<Entry> newEntries = new ArrayList<>();
