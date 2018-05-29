@@ -128,6 +128,6 @@ public class FondsService {
     }
 
     public List<Fonds> findAll() {
-        return fondsRepository.findAll();
+        return fondsRepository.findByParentIdNotNull();
     }
 }

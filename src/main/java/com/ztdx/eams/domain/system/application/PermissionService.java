@@ -105,7 +105,7 @@ public class PermissionService {
     public boolean hasAnyAuthority(Collection<? extends GrantedAuthority> authorities, String... expectedAuthorities) {
 
         for (String role : expectedAuthorities) {
-            if (authorities.contains(role)) {
+            if (authorities.stream().anyMatch(a -> ((GrantedAuthority) a).getAuthority().equals(role))) {
                 return true;
             }
         }

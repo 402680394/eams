@@ -39,6 +39,9 @@ public interface FondsRepository extends JpaRepository<Fonds, Integer> {
     //通过ID查询
     Fonds findById(int id);
 
+    //查询所有的全宗
+    List<Fonds> findByParentIdNotNull();
+
     //通过ID修改
     @Modifying
     @Query("update Fonds f set f.parentId=:#{#fonds.parentId},f.code=:#{#fonds.code},f.name=:#{#fonds.name},f.remark=:#{#fonds.remark} where f.id=:#{#fonds.id}")
