@@ -101,7 +101,9 @@ public class EntryService {
 
     public Page<Entry> search(int catalogueId, String queryString, Map<String, Object> itemQuery, Pageable pageable) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
-        query.must(queryStringQuery(queryString));
+        if (queryString != null && queryString.length() > 0) {
+            query.must(queryStringQuery(queryString));
+        }
         query.must().addAll(parseQuery(catalogueId, itemQuery));
 
         return entryElasticsearchRepository.search(query, pageable, new String[]{"archive_record_"+catalogueId});
