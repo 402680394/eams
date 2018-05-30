@@ -219,7 +219,13 @@ public class EntryController {
         //TODO @lijie 登记库只能查看自己的
         Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size));
 
-        Map<String, DescriptionItem> list = descriptionItemService.list(catalogueId);
+        Map<String, Object> list = descriptionItemService.list(catalogueId, a -> {
+            Map<String, Object> result = new HashMap<>();
+            result.put("metadataId", a.getMetadataId());
+            result.put("metadataName", a.getMetadataName());
+            result.put("displayName", a.getDisplayName());
+            return result;
+        });
 
         Map<String, Object> result = new HashMap<>();
         result.put("content", content.getContent());
@@ -472,7 +478,7 @@ public class EntryController {
      *                 "items":[
      *                     {
      *                         "catalogueId": 1,
-     *      *                  "catalogueType": 1,
+     *                         "catalogueType": 1,
      *                         "count": 1
      *                     }
      *                 ]
