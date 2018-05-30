@@ -9,7 +9,7 @@ import javax.persistence.Converter;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum Type {
+public enum RulerType {
 
     /**
      * 著入项值
@@ -33,16 +33,16 @@ public enum Type {
 
     private Integer code;
     private String descpriont;
-    private static final Map<Integer, Type> enumMap = new HashMap<>();
+    private static final Map<Integer, RulerType> enumMap = new HashMap<>();
 
 
-    Type(Integer code, String descpriont) {
+    RulerType(Integer code, String descpriont) {
         this.code = code;
         this.descpriont=descpriont;
     }
 
     static {
-        for (Type item : values()) {
+        for (RulerType item : values()) {
             enumMap.put(item.getCode(), item);
         }
     }
@@ -66,7 +66,7 @@ public enum Type {
      * 创建枚举的工厂方法
      */
     @JsonCreator
-    public static Type create(int code) {
+    public static RulerType create(int code) {
         if (!enumMap.containsKey(code))
             throw new BusinessException("不存在类型为" + code + "的档案库类型");
 
@@ -74,16 +74,16 @@ public enum Type {
     }
 
     @Converter(autoApply = true)
-    public static class EnumConverter implements AttributeConverter<Type, Integer> {
+    public static class EnumConverter implements AttributeConverter<RulerType, Integer> {
 
         @Override
-        public Integer convertToDatabaseColumn(Type attribute) {
+        public Integer convertToDatabaseColumn(RulerType attribute) {
             return attribute.getCode();
         }
 
         @Override
-        public Type convertToEntityAttribute(Integer dbData) {
-            return Type.create(dbData);
+        public RulerType convertToEntityAttribute(Integer dbData) {
+            return RulerType.create(dbData);
         }
     }
 

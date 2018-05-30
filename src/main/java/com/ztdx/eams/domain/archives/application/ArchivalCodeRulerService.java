@@ -36,36 +36,37 @@ public class ArchivalCodeRulerService {
         //创建错误信息集合
         List<String> errors = new ArrayList<>();
 
+        //定义档号
+        StringBuilder archivalCode = new StringBuilder();
+
         //通过目录id查询到的规则放入规则集合
         List<ArchivalCodeRuler> archivalCodeRulers = archivalcodeRulerRepository.findByCatalogueIdOrderByOrderNumber(catalogueId);
-
-        if(archivalCodeRulers.size()==0){
+        //如果规则集合为空，则抛异常
+        if (archivalCodeRulers.size() == 0) {
             throw new BusinessException("该目录未设置档号生成规则");
         }
 
         //查找条目，要传入条目id和目录id
-        Iterable<Entry> entries = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
-
+        Iterable<Entry> entryList = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
         //创建新条目集合存入MongoDB
         List<Entry> newEntries = new ArrayList<>();
 
         //遍历条目集合
-        for (Entry entry : entries) {
+        for (Entry entry : entryList) {
 
             //取条目中的著录项集合
             Map<String, Object> items = entry.getItems();
             //如果档号已经存在，则返回错误信息
-            if (items.get("archival") != null || !items.get("archival").equals("")) {
+            if (items.get("archivalCode") != null && !items.get("archivalCode").equals("")) {
                 errors.add("档号已存在");
                 continue;
             }
 
-            //档号
-            StringBuilder archivalCode = new StringBuilder();
             //遍历规则集合
             for (ArchivalCodeRuler archivalCodeRuler : archivalCodeRulers) {
 
                 String str = "";
+
                 switch (archivalCodeRuler.getType()) {
                     case EntryValue:
                         String metadataName = archivalCodeRuler.getMetadataName();
@@ -80,14 +81,15 @@ public class ArchivalCodeRulerService {
                         String entryValue1 = items.get(metadataName1).toString();
                         String regex = "\\[[\\s\\S]*\\]";
                         if (entryValue1.matches(regex)) {
-                            str = entryValue1.split(regex)[0];
+                            String referenceCode = entryValue1.split(regex)[0];
+                            str = referenceCode.substring(0, archivalCodeRuler.getInterceptionLength());
                         }
                         if (str.equals("")) {
                             errors.add(entryValue1 + "不能为空");
                         }
                         break;
                     case FondsCode:
-                        str = archivalCodeRuler.getValue();
+                        str = entry.getFondsId()+"";
                         if (str.equals("")) {
                             errors.add("全宗号不能为空");
                         }
@@ -95,25 +97,28 @@ public class ArchivalCodeRulerService {
                     case FixValue:
                         str = archivalCodeRuler.getValue();
                         if (str.equals("")) {
-                            errors.add("固定值不能为空");
+                           errors.add("固定值不能为空");
                         }
                         break;
                 }
+
                 archivalCode.append(str);
+                items.put("archivalCode", archivalCode.toString());
+                entry.setItems(items);
+                newEntries.add(entry);
             }
-            items.put("archival", archivalCode);
-            entry.setItems(items);
-            newEntries.add(entry);
+
         }
         //把条目集合存入MongoDB
         if (newEntries.size() > 0){
-            entryMongoRepository.saveAll(entries);
+            entryMongoRepository.saveAll(newEntries);
         }
 
         //返回错误信息集合
         if (errors.size() > 0) {
             return errors;
         }
+
         return null;
     }
 
@@ -121,8 +126,6 @@ public class ArchivalCodeRulerService {
      * 清除档号
      */
     public void clear(List<String> entryIds, int catalogueId){
-
-
 
         //查找条目，要传入条目id和目录id
         Iterable<Entry> entries = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
@@ -133,13 +136,13 @@ public class ArchivalCodeRulerService {
 
             //取条目中的著录项集合
             Map<String, Object> items = entry.getItems();
-            //如果档号已经存在，则返回错误信息
-            if (items.get("archival") == null||items.get("archival").equals("")) {
+            //如果档号不存在，则跳过
+            if (items.get("archivalCode") == null && items.get("archivalCode").equals("")) {
                 continue;
             }
 
             //档号置空
-            items.put("archival", "");
+            items.put("archivalCode", "");
             entry.setItems(items);
             newEntries.add(entry);
 
@@ -149,7 +152,6 @@ public class ArchivalCodeRulerService {
         if (newEntries.size() > 0){
             entryMongoRepository.saveAll(newEntries);
         }
-
 
     }
 }

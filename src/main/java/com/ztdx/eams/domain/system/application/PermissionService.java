@@ -60,6 +60,9 @@ public class PermissionService {
         result.put("name", resource.getResourceName());
         result.put("type", resource.getResourceCategory().toString());
         result.put("children", new ArrayList<Map>());
+        if (resource.getResourceCategory() == ResourceCategory.Function){
+            result.put("resourceUrl", resource.getResourceUrl());
+        }
 
         return result;
     }
@@ -102,7 +105,7 @@ public class PermissionService {
     public boolean hasAnyAuthority(Collection<? extends GrantedAuthority> authorities, String... expectedAuthorities) {
 
         for (String role : expectedAuthorities) {
-            if (authorities.contains(role)) {
+            if (authorities.stream().anyMatch(a -> ((GrantedAuthority) a).getAuthority().equals(role))) {
                 return true;
             }
         }

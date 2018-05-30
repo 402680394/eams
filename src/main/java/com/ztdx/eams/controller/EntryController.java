@@ -1,16 +1,17 @@
 package com.ztdx.eams.controller;
 
 import com.ztdx.eams.basic.UserCredential;
-import com.ztdx.eams.domain.archives.application.DescriptionItemService;
-import com.ztdx.eams.domain.archives.application.EntryService;
-import com.ztdx.eams.domain.archives.model.DescriptionItem;
-import com.ztdx.eams.domain.archives.model.Entry;
+import com.ztdx.eams.basic.params.JsonParam;
+import com.ztdx.eams.domain.archives.application.*;
+import com.ztdx.eams.domain.archives.model.*;
+import com.ztdx.eams.domain.system.application.FondsService;
+import com.ztdx.eams.domain.system.model.Fonds;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import javax.servlet.http.HttpSession;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/entry")
@@ -20,9 +21,21 @@ public class EntryController {
 
     private DescriptionItemService descriptionItemService;
 
-    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService) {
+    private CatalogueService catalogueService;
+
+    private ArchivesService archivesService;
+
+    private ArchivesGroupService archivesGroupService;
+
+    private FondsService fondsService;
+
+    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService) {
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
+        this.catalogueService = catalogueService;
+        this.archivesService = archivesService;
+        this.archivesGroupService = archivesGroupService;
+        this.fondsService = fondsService;
     }
 
 
@@ -100,9 +113,9 @@ public class EntryController {
      * @apiName search_simple
      * @apiGroup entry
      * @apiParam {Number} cid 目录id(QueryString)
-     * @apiParam {String} q 关键字(QueryString)
-     * @apiParam {Number} page 页码(QueryString)
-     * @apiParam {Number} size 页行数(QueryString)
+     * @apiParam {String} [q] 关键字(QueryString)
+     * @apiParam {Number} [page] 页码(QueryString)
+     * @apiParam {Number} [size] 页行数(QueryString)
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.id 条目id
      * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
@@ -199,7 +212,10 @@ public class EntryController {
      * }
      */
     @RequestMapping(value = "/search", method = RequestMethod.GET)
-    public Map<String, Object> search(@RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size){
+    public Map<String, Object> search(@RequestParam("cid") int catalogueId
+            , @RequestParam(value = "q", required = false, defaultValue = "") String queryString
+            , @RequestParam(value = "page", required = false, defaultValue = "0") int page
+            , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
         //TODO @lijie 登记库只能查看自己的
         Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size));
 
@@ -466,8 +482,55 @@ public class EntryController {
      * }
      */
     @RequestMapping(value = "/searchFullArchive", method = RequestMethod.POST)
-    public void searchFullArchive() {
+    public List searchFullArchive(
+            @JsonParam List<Integer> catalogueIds
+            ,@JsonParam List<Integer> archiveContentType
+            ,@JsonParam String keyWord
+    ) {
+        Map<Integer, Long> aggs = entryService.aggsCatalogueCount(catalogueIds, archiveContentType, keyWord);
 
+        List<Catalogue> catalogues =catalogueService.findAllById(aggs.keySet());
+
+        List<Integer> archiveIds = catalogues.stream().map(Catalogue::getArchivesId).collect(Collectors.toList());
+
+        List<Archives> archives = archivesService.findAllById(archiveIds);
+
+        Map<Integer, Archives> archivesMap = archives.stream().collect(Collectors.toMap(Archives::getId, a -> a));
+
+        List<Integer> archiveGroupIds = archives.stream().map(Archives::getArchivesGroupId).collect(Collectors.toList());
+
+        List<ArchivesGroup> archivesGroups = archivesGroupService.findAllById(archiveGroupIds);
+
+        Map<Integer, ArchivesGroup> archivesGroupMap = archivesGroups.stream().collect(Collectors.toMap(ArchivesGroup::getId, a-> a));
+
+        List<Integer> fondsIds = archivesGroups.stream().map(ArchivesGroup::getFondsId).collect(Collectors.toList());
+
+        List<Fonds> fonds = fondsService.findAllById(fondsIds);
+
+        Map<Integer, Fonds> fondsMap = fonds.stream().collect(Collectors.toMap(Fonds::getId, a -> a));
+
+        Map<Integer, List<Catalogue>> catalogueGroup = catalogues.stream().collect(Collectors.groupingBy(Catalogue::getArchivesId));
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        catalogueGroup.forEach((aid, c) -> {
+            Map<String, Object> archive = new HashMap<>();
+            archive.put("archiveId", aid);
+            archive.put("archiveName", archivesMap.get(aid).getName());
+            archive.put("fondsName", fondsMap.get(
+                    archivesGroupMap.get(archivesMap.get(aid).getArchivesGroupId()).getFondsId()).getName());
+            archive.put("items", c.stream().map(a ->mapCatalogue(a, aggs)).collect(Collectors.toList()));
+            result.add(archive);
+        });
+
+        return result;
+    }
+
+    private Map<String, Object> mapCatalogue(Catalogue catalogue, Map<Integer, Long> aggs){
+        Map<String, Object> result = new HashMap<>();
+        result.put("catalogueId", catalogue.getId());
+        result.put("catalogueType", catalogue.getCatalogueType());
+        result.put("count", aggs.get(catalogue.getId()));
+        return result;
     }
 
     @RequestMapping(value = "/test/{id}", method = RequestMethod.GET)

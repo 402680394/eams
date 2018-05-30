@@ -390,8 +390,10 @@ public class RoleController {
             map.put("type", "Fonds");
             map.put("allowAdd", true);
             List<Role> childrenList = fondsGroup.getOrDefault(a.getId(),null);
-            List<Object> children = childrenList.stream().map(this::getRoleMap).collect(Collectors.toList());
-            map.put("children", children);
+            if (childrenList != null) {
+                List<Object> children = childrenList.stream().map(this::getRoleMap).collect(Collectors.toList());
+                map.put("children", children);
+            }
             return map;
         }).collect(Collectors.toList());
     }
