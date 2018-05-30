@@ -105,8 +105,18 @@ public class EntryService {
             query.must(queryStringQuery(queryString));
         }
         query.must().addAll(parseQuery(catalogueId, itemQuery));
+        query.filter(termQuery("gmtDeleted", 0));
 
-        return entryElasticsearchRepository.search(query, pageable, new String[]{"archive_record_"+catalogueId});
+        Page<Entry> result = entryElasticsearchRepository.search(
+                query, pageable, new String[]{"archive_record_" + catalogueId}
+        );
+        result.stream().forEach(a -> {
+            //TODO lijie 显示前需要按照著录项要求做输出的转换
+            convertEntryItems(a);
+            Map<String, Object> items = a.getItems();
+            items.put("id", a.getId());
+        });
+        return result;
     }
 
     private List<QueryBuilder> parseQuery(int catalogueId, Map<String, Object> itemQuery) {

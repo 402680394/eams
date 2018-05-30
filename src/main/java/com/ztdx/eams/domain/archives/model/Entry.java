@@ -74,6 +74,11 @@ public class Entry {
      */
     private Date gmtModified;
 
+    /**
+     * 是否删除
+     */
+    private int gmtDeleted;
+
     /*@Converter(autoApply = false)
     public static class EntryDateConverter implements AttributeConverter<Date, String> {
 
