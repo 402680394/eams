@@ -1,10 +1,12 @@
 package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.domain.archives.model.Archives;
+import com.ztdx.eams.domain.archives.model.Catalogue;
 import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,5 +35,9 @@ public class ArchivesService {
     public Archives get(Integer id){
         Optional<Archives> archives = archivesRepository.findById(id);
         return  archives.get();
+    }
+
+    public List<Archives> findAllById(List<Integer> archiveIds) {
+        return archivesRepository.findAllById(archiveIds);
     }
 }

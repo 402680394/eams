@@ -1,7 +1,6 @@
 package com.ztdx.eams.domain.archives.application;
 
 import com.mongodb.Block;
-import com.mongodb.client.MongoDatabase;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
@@ -11,14 +10,18 @@ import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
-import org.bson.Document;
-import org.bson.types.ObjectId;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.global.Global;
+import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
@@ -43,16 +46,16 @@ public class EntryService {
 
     private ArchivesGroupRepository archivesGroupRepository;
 
-    private MongoTemplate mongoTemplate;
+    private ElasticsearchOperations elasticsearchOperations;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, MongoTemplate mongoTemplate) {
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
         this.catalogueRepository = catalogueRepository;
         this.archivesRepository = archivesRepository;
         this.archivesGroupRepository = archivesGroupRepository;
-        this.mongoTemplate = mongoTemplate;
+        this.elasticsearchOperations = elasticsearchOperations;
     }
 
     public Entry save(Entry entry) {
@@ -172,20 +175,45 @@ public class EntryService {
     }
 
     public Object test(String uuid) {
-        List<String> a = new ArrayList<>();
-        a.add(uuid);
-        Object result =  entryMongoRepository.findAllById(a, "archive_record_1");
+        /*SearchRequestBuilder sb = elasticsearchOperations.getClient().prepareSearch("archive_record_*");
 
-        Object c = entryMongoRepository.findAll("archive_record_1");
-        //Object c = entryMongoRepository.findById(b, "archive_record_1");
+        sb.addAggregation(AggregationBuilders
+                .global("agg")
+                .subAggregation(AggregationBuilders.terms("catalogueId").field("catalogueId")));
+        sb.setQuery(QueryBuilders.matchAllQuery());
+        Global agg = sb.get().getAggregations().get("agg");
+        return ((LongTerms)agg.getAggregations().asList().get(0)).getBuckets().get(0);*/
+        return aggsCatalogueCount(null,null,"");
+    }
 
-        List<Entry> list = new ArrayList<>();
-        Block<Entry> printBlock = list::add;
+    public Map<Integer, Long> aggsCatalogueCount(List<Integer> catalogueIds, List<Integer> archiveContentType, String keyWord) {
+        Collection<String> indices = new ArrayList<>();
+        if (catalogueIds == null || catalogueIds.size() == 0){
+            indices.add("archive_record_*");
+        }else{
+            catalogueIds.forEach(a -> indices.add(String.format("archive_record_%d", a)));
+        }
 
-        mongoTemplate.getDb().getCollection("archive_record_1",Entry.class).find(
-                gt("items.age", 10)
-        ).forEach(printBlock);
+        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(indices.toArray(new String[0]));
 
+        srBuilder.addAggregation(AggregationBuilders.terms("catalogueId").field("catalogueId"));
+        BoolQueryBuilder query;
+        if (archiveContentType != null && archiveContentType.size() > 0) {
+            query = QueryBuilders.boolQuery().must(
+                    QueryBuilders.termsQuery("archiveContentType", archiveContentType));
+        }else{
+            query = QueryBuilders.boolQuery();
+        }
+
+        if (keyWord != null && !"".equals(keyWord)){
+            query.must(QueryBuilders.queryStringQuery(keyWord));
+        }
+
+        srBuilder.setQuery(query);
+        Map<Integer, Long> result = new HashMap<>();
+        ((Terms)srBuilder.get().getAggregations().asList().get(0)).getBuckets().forEach(a -> {
+            result.put(a.getKeyAsNumber().intValue(),a.getDocCount());
+        });
 
         return result;
     }
