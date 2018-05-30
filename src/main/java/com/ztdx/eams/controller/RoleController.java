@@ -364,22 +364,22 @@ public class RoleController {
             throw new ForbiddenException("拒绝访问");
         }
 
-        Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+
 
         List<Object> global = null;
-        if (permissionService.hasAnyAuthority(authorities, "global_role_query", "ROLE_ADMIN")) {
+        if (permissionService.hasAnyAuthority("global_role_query", "ROLE_ADMIN")) {
             global = this.listGlobalRole();
         }
 
         List<Fonds> fonds;
         List<Role> roles;
-        if (permissionService.hasAnyAuthority(authorities, "global_role_query", "ROLE_ADMIN")) {
+        if (permissionService.hasAnyAuthority("global_role_query", "ROLE_ADMIN")) {
             fonds = fondsService.findAll();
             roles = roleService.findByFondsIdIsNotNull();
         }else{
             Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
             List<Integer> filterFondsIds = fondsIds.stream().filter(
-                    a -> permissionService.hasAuthority(authorities, String.format("fonds_role_query_%d", a)))
+                    a -> permissionService.hasAuthority(String.format("fonds_role_query_%d", a)))
             .collect(Collectors.toList());
             fonds = fondsService.findAllById(filterFondsIds);
             roles = roleService.findByFondsIdIn(fondsIds);
