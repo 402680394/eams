@@ -1,6 +1,8 @@
 package com.ztdx.eams.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
@@ -9,10 +11,10 @@ import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.system.application.*;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Permission;
+import com.ztdx.eams.domain.system.model.Resource;
 import com.ztdx.eams.domain.system.model.Role;
-import org.springframework.security.access.prepost.PreAuthorize;
+import jdk.nashorn.internal.runtime.regexp.joni.constants.NodeType;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,12 +35,15 @@ public class RoleController {
 
     private PermissionService permissionService;
 
-    public RoleController(RoleService roleService, UserService userService, OrganizationService organizationService, FondsService fondsService, PermissionService permissionService) {
+    private ResourceService resourceService;
+
+    public RoleController(RoleService roleService, UserService userService, OrganizationService organizationService, FondsService fondsService, PermissionService permissionService, ResourceService resourceService) {
         this.roleService = roleService;
         this.userService = userService;
         this.organizationService = organizationService;
         this.fondsService = fondsService;
         this.permissionService = permissionService;
+        this.resourceService = resourceService;
     }
 
     /**
@@ -154,6 +159,16 @@ public class RoleController {
      *         }
      *     }
      * }
+     * @apiParamExample {json} Request-Example1:
+     * {
+     *     "global": [1,2,3],
+     *     "fonds": {
+     *         "1": [1,2,3]
+     *     },
+     *     "archiveCatalogue": {
+     *         "1": [1,2,3]
+     *     }
+     * }
      * @apiError (Error 400) message 1.参数permissions错误 2.全宗不存在 3.档案库目录不存在
      * @apiError (Error 403) message 1.无权限设置全局权限 2.无权限设置全宗权限 3.无权限设置档案库权限
      * @apiUse ErrorExample
@@ -171,9 +186,9 @@ public class RoleController {
                 return;
             }
             JsonNode node = permissions.get(categroy);
-            if (!node.isObject() || !node.fieldNames().hasNext()){
+            /*if (!node.isObject() || !node.fieldNames().hasNext()){
                 throw new InvalidArgumentException(node + "参数错误");
-            }
+            }*/
             switch (categroy) {
                 case "global":
                     list.addAll(listParsePermission(id, null, null, node));
@@ -203,26 +218,45 @@ public class RoleController {
     }
 
     private List<Permission> listParsePermission(
-            long roleId, Integer fondsId, Integer archiveId, JsonNode PermissionNode){
+            long roleId, Integer fondsId, Integer archiveId, JsonNode permissionNode){
         List<Permission> result = new ArrayList<>();
-        PermissionNode.fieldNames().forEachRemaining(field -> {
-            JsonNode node = PermissionNode.get(field);
-            if (!node.isObject() || !node.has("id")){
-                throw new InvalidArgumentException("global参数错误，缺少id字段");
-            }
-            JsonNode idNode = node.get("id");
-            if (!idNode.isInt()){
-                throw new InvalidArgumentException("global参数错误，id字段格式错误");
-            }
-            Permission permission = new Permission();
-            permission.setRoleId(roleId);
-            permission.setResourceUrl(field);
-            permission.setArchiveId(archiveId);
-            permission.setFondsId(fondsId);
-            permission.setResourceId(idNode.asInt());
-            result.add(permission);
-        });
+
+        if (permissionNode.getNodeType() == JsonNodeType.ARRAY){
+            permissionNode.forEach(a -> {
+                if (a.isInt()){
+                    result.add(makePermission(a.asLong(), roleId, fondsId, archiveId));
+                }
+            });
+        }else if (permissionNode.getNodeType() == JsonNodeType.OBJECT) {
+            permissionNode.fieldNames().forEachRemaining(field -> {
+                JsonNode node = permissionNode.get(field);
+                if (!node.isObject() || !node.has("id")) {
+                    throw new InvalidArgumentException("参数错误，缺少id字段");
+                }
+                JsonNode idNode = node.get("id");
+                if (!idNode.isInt()) {
+                    throw new InvalidArgumentException("参数错误，id字段格式错误");
+                }
+                result.add(makePermission(idNode.asLong(), roleId, fondsId, archiveId));
+            });
+        }
+
         return result;
+    }
+
+    private Permission makePermission(long resourceId,long roleId, Integer fondsId, Integer archiveId){
+        //TODO lijie resourceService.getResource 必须使用缓存
+        Resource resource = resourceService.getResource(resourceId);
+        if (resource == null){
+            throw new InvalidArgumentException("权限("+resourceId+")不存在");
+        }
+        Permission permission = new Permission();
+        permission.setRoleId(roleId);
+        permission.setResourceUrl(resource.getResourceUrl());
+        permission.setArchiveId(archiveId);
+        permission.setFondsId(fondsId);
+        permission.setResourceId(resourceId);
+        return permission;
     }
 
     /**
