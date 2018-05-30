@@ -229,9 +229,9 @@ public class RoleService {
 
     private Map<String, Object> PermissionMap(Permission permission, Map<Long, Resource> resourceMap){
         Map<String, Object> map = new HashMap<>();
-        map.put("id", permission.getId());
+        map.put("id", permission.getResourceId());
         map.put("name", resourceMap.get(permission.getResourceId()).getResourceName());
-        map.put("resourceUrl", permission.getResourceUrl());
+        map.put("resourceUrl", resourceMap.get(permission.getResourceId()).getResourceUrl());
 
         return map;
     }
