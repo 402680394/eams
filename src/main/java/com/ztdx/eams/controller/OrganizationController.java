@@ -121,7 +121,7 @@ public class OrganizationController {
     }
 
     /**
-     * @api {patch} /organization/{upId},{downId}/priority 修改机构排序优先级
+     * @api {put} /organization/{upId},{downId}/priority 修改机构排序优先级
      * @apiName priority
      * @apiGroup organization
      * @apiParam {Number} upId 上移机构ID（url占位符）
@@ -129,7 +129,7 @@ public class OrganizationController {
      * @apiError (Error 400) message 1.机构类型或上级机构不一致 2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
-    @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)
+    @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PUT)
     public void priority(@PathVariable("upId") int upId, @PathVariable("downId") int downId) {
         organizationService.priority(upId, downId);
     }
