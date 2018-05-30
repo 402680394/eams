@@ -3,6 +3,7 @@ package com.ztdx.eams.controller;
 import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.system.application.FondsService;
+import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.query.SystemQuery;
@@ -28,11 +29,14 @@ public class FondsController {
 
     private final RoleService roleService;
 
+    private final PermissionService permissionService;
+
     @Autowired
-    public FondsController(FondsService fondsService, SystemQuery systemQuery, RoleService roleService) {
+    public FondsController(FondsService fondsService, SystemQuery systemQuery, RoleService roleService, PermissionService permissionService) {
         this.fondsService = fondsService;
         this.systemQuery = systemQuery;
         this.roleService = roleService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -63,7 +67,13 @@ public class FondsController {
         Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
 
         //全宗树
-        return systemQuery.getFondsTreeMap(fondsIds);
+        return systemQuery.getFondsTreeMap(a -> {
+            if (permissionService.hasAnyAuthority("ROLE_ADMIN")){
+                return true;
+            }else{
+                return fondsIds.contains(a);
+            }
+        });
     }
 
     /**

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * Created by li on 2018/4/11.
@@ -254,12 +255,12 @@ public class SystemQuery {
     /**
      * 获取全部全宗树形列表.
      */
-    public Map<String, Object> getFondsTreeMap(Set<Integer> fondsIds) {
+    public Map<String, Object> getFondsTreeMap(Function<Integer, Boolean> hasPermission) {
         Map<String, Object> resultMap = new HashMap<>();
         //伪造根全宗，便于递归查询子全宗
         resultMap.put("id", UInteger.valueOf(1));
         //查询
-        resultMap = getSubFondsTreeMap(getAllFondsList(), resultMap, fondsIds);
+        resultMap = getSubFondsTreeMap(getAllFondsList(), resultMap, hasPermission);
         //拼装返回数据信息
         if (null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -292,13 +293,13 @@ public class SystemQuery {
     /**
      * 递归获取全宗子列表.
      */
-    public Map<String, Object> getSubFondsTreeMap(List<Map<String, Object>> dataList, Map<String, Object> treeMap, Set<Integer> fondsIds) {
+    public Map<String, Object> getSubFondsTreeMap(List<Map<String, Object>> dataList, Map<String, Object> treeMap, Function<Integer, Boolean> hasPermission) {
         //创建一个空的子列表
         List<Map<String, Object>> childrenList = new ArrayList<Map<String, Object>>();
         //遍历全宗数据，并递归添加子全宗下级全宗
         for (Map<String, Object> map : dataList) {
             if (treeMap.get("id").equals(map.get("parentId"))) {
-                map = getSubFondsTreeMap(dataList, map, fondsIds);
+                map = getSubFondsTreeMap(dataList, map, hasPermission);
                 if (map != null) {
                     //将递归添加后的子全宗放入子列表
                     childrenList.add(map);
@@ -310,7 +311,7 @@ public class SystemQuery {
             treeMap.put("children", childrenList);
         }else{
             int fondsId = ((UInteger)treeMap.get("id")).intValue();
-            if (!fondsIds.contains(fondsId)){
+            if (!hasPermission.apply(fondsId)){
                 return null;
             }
         }
