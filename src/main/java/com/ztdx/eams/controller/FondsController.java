@@ -1,6 +1,9 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.system.application.FondsService;
+import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.query.SystemQuery;
 import org.jooq.types.UInteger;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by li on 2018/4/15.
@@ -22,10 +26,13 @@ public class FondsController {
 
     private final SystemQuery systemQuery;
 
+    private final RoleService roleService;
+
     @Autowired
-    public FondsController(FondsService fondsService, SystemQuery systemQuery) {
+    public FondsController(FondsService fondsService, SystemQuery systemQuery, RoleService roleService) {
         this.fondsService = fondsService;
         this.systemQuery = systemQuery;
+        this.roleService = roleService;
     }
 
     /**
@@ -45,8 +52,18 @@ public class FondsController {
      * {"id": 全宗ID,"code": "全宗号","name": "子全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
-    public Map<String, Object> treeList() {
-        return systemQuery.getFondsTreeMap();
+    public Map<String, Object> treeList(@SessionAttribute(required = false) UserCredential LOGIN_USER) {
+        int userId;
+        if (LOGIN_USER != null){
+            userId = LOGIN_USER.getUserId();
+        }else{
+            throw new ForbiddenException("拒绝访问");
+        }
+        //可以管理的全宗
+        Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
+
+        //全宗树
+        return systemQuery.getFondsTreeMap(fondsIds);
     }
 
     /**

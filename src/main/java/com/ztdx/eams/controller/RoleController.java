@@ -357,7 +357,7 @@ public class RoleController {
     //@PreAuthorize("hasAnyRole('global_role_query', 'ADMIN')")
     public Map<String, Object> listRole(@SessionAttribute(required = false) UserCredential LOGIN_USER){
         //如果是管理员可以查看到全局角色列表
-        int userId = 1;
+        int userId;
         if (LOGIN_USER != null){
             userId = LOGIN_USER.getUserId();
         }else{
