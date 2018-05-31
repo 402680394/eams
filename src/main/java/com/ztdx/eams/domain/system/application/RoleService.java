@@ -11,6 +11,7 @@ import javax.transaction.Transactional;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
@@ -91,35 +92,6 @@ public class RoleService {
     }
 
     @Transactional
-    public Map<String, List<String>> addPermission(long roleId, Map<String, Object> permissions) {
-        /*List<String> existsUrl = permissionRepository.findByRoleIdAndResourceUrlIn(roleId, resourceUrls).stream().map(Object::toString).collect(Collectors.toList());
-
-        resourceUrls.removeAll(existsUrl);
-        Date now = Calendar.getInstance().getTime();
-
-        HashSet<Permission> batch = new HashSet<>();
-
-        for (String url :resourceUrls){
-            Permission permission = new Permission();
-            permission.setRoleId(roleId);
-            permission.setResourceUrl(url);
-            permission.setGmtCreate(now);
-            batch.add(permission);
-        }
-        permissionRepository.saveAll(batch);
-
-        //删除掉取消的权限
-        List<Permission> delPermission = permissionRepository.findByRoleIdAndResourceUrlNotIn(roleId, resourceUrls);
-        permissionRepository.deleteInBatch(delPermission);
-
-        Map<String, List<String>> result = new HashMap<>();
-        result.put("added", resourceUrls);
-        result.put("existed", existsUrl);
-        return result;*/
-        return null;
-    }
-
-    @Transactional
     public Map<String, List<Integer>> addUser(long roleId, List<Integer> addUserIds) {
         List<RoleOfUser> existsUsers = roleOfUserRepository.findByRoleIdAndUserIdIn(roleId, addUserIds);
         LinkedList<Integer> existsUserIds = new LinkedList<>();
@@ -161,18 +133,27 @@ public class RoleService {
     }
 
     /**
+     * 查找用户管理得档案目录id
+     * @param userId 用户id
+     * @return 档案目录id列表
+     */
+    public Set<Integer> findUserManageArchiveCatalogue(int userId){
+        return findUserPermissions(userId, Permission::getArchiveId, Collectors.toSet());
+    }
+
+    /**
      * 查找用户管理得全宗id
      * @param userId 用户id
      * @return 全宗id列表
      */
     public Set<Integer> findUserManageFonds(int userId){
+        return findUserPermissions(userId, Permission::getFondsId, Collectors.toSet());
+    }
+
+    private <M, A, R> R findUserPermissions(int userId, Function<Permission, M> map, Collector<M,A,R> to){
         HashSet<Long> roleIds = getUserRoleIds(userId);
         List<Permission> permissions = permissionRepository.findByRoleIdIn(roleIds);
-        return permissions.stream().collect(HashSet::new,(a, b)->{
-            if (b.getFondsId() != null) {
-                a.add(b.getFondsId());
-            }
-        },HashSet::addAll);
+        return permissions.stream().map(map).collect(to);
     }
 
     public HashSet<Long> getUserRoleIds(int userId) {

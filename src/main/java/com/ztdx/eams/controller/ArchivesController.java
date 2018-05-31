@@ -1,16 +1,16 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.ArchivesService;
-import com.ztdx.eams.domain.archives.model.Archives;
-import com.ztdx.eams.domain.archives.model.Structure;
+import com.ztdx.eams.domain.system.application.PermissionService;
+import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping(value = "/archives")
@@ -20,10 +20,16 @@ public class ArchivesController {
 
     private final ArchivesQuery archivesQuery;
 
+    private final RoleService roleService;
+
+    private final PermissionService permissionService;
+
     @Autowired
-    public ArchivesController(ArchivesService archivesService, ArchivesQuery archivesQuery) {
+    public ArchivesController(ArchivesService archivesService, ArchivesQuery archivesQuery, RoleService roleService, PermissionService permissionService) {
         this.archivesService = archivesService;
         this.archivesQuery = archivesQuery;
+        this.roleService = roleService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -60,7 +66,28 @@ public class ArchivesController {
      * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
-    public Map<String, Object> treeList() {
-        return archivesQuery.getCatalogueTreeMap();
+    public Map<String, Object> treeList(@SessionAttribute(required = false) UserCredential LOGIN_USER) {
+        int userId;
+        if (LOGIN_USER != null){
+            userId = LOGIN_USER.getUserId();
+        }else{
+            throw new ForbiddenException("拒绝访问");
+        }
+        //可以管理的全宗
+        Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
+        Set<Integer> catalogueIds = roleService.findUserManageArchiveCatalogue(userId);
+
+        return archivesQuery.getCatalogueTreeMap(
+                a -> hasPermission(fondsIds, a)
+                ,a -> hasPermission(catalogueIds, a));
+    }
+
+    private boolean hasPermission(Set<Integer> ids, int id){
+        if (permissionService.hasAnyAuthority("ROLE_ADMIN")){
+            return true;
+        }else{
+            return ids.contains(id);
+        }
+
     }
 }
