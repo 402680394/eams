@@ -10,6 +10,7 @@ import com.ztdx.eams.domain.system.model.Fonds;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -127,6 +128,7 @@ public class EntryController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/", method = RequestMethod.DELETE)
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_delete_' + #cid)")
     public void delete(@JsonParam() int cid, @JsonParam List<String> deletes){
         Catalogue catalogue = catalogueService.get(cid);
         if (catalogue == null){
