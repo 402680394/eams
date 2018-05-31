@@ -229,4 +229,11 @@ public class EntryService {
 
         return result;
     }
+
+    public void delete(int catalogueId, List<String> deletes) {
+        Iterable<Entry> list = entryMongoRepository.findAllById(deletes, "archive_record_" + catalogueId);
+        list.forEach(a -> a.setGmtDeleted(1));
+        entryMongoRepository.saveAll(list);
+        entryElasticsearchRepository.saveAll(list);
+    }
 }

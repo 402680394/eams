@@ -18,4 +18,8 @@ public class CatalogueService {
     public List<Catalogue> findAllById(Collection<Integer> ids){
         return catalogueRepository.findAllById(ids);
     }
+
+    public Catalogue get(int id){
+        return catalogueRepository.findById(id).orElse(null);
+    }
 }

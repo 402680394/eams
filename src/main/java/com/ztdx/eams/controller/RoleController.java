@@ -454,65 +454,21 @@ public class RoleController {
      * @apiSuccess (Success 200) {String} global.permissionKey.name 权限的名称
      * @apiSuccess (Success 200) {String} global.permissionKey.resourceUrl 资源url
      * @apiSuccess (Success 200) {Object} fonds 全宗权限列表
-     * @apiSuccess (Success 200) {Object} fonds.fondsId 全宗id
-     * @apiSuccess (Success 200) {Object} fonds.fondsId.permissionKey 权限的key
-     * @apiSuccess (Success 200) {String} fonds.fondsId.permissionKey.id 权限的id
-     * @apiSuccess (Success 200) {String} fonds.fondsId.permissionKey.name 权限的名称
-     * @apiSuccess (Success 200) {String} fonds.fondsId.permissionKey.resourceUrl 资源url
+     * @apiSuccess (Success 200) {Array} fonds.fondsId 全宗id(动态值)，内容为权限的id数组
      * @apiSuccess (Success 200) {Object} archiveCatalogue 档案目录权限列表
-     * @apiSuccess (Success 200) {Object} archiveCatalogue.catalogueId 全宗id
-     * @apiSuccess (Success 200) {Object} archiveCatalogue.catalogueId.permissionKey 权限的key
-     * @apiSuccess (Success 200) {String} archiveCatalogue.catalogueId.permissionKey.id 权限的id
-     * @apiSuccess (Success 200) {String} archiveCatalogue.catalogueId.permissionKey.name 权限的名称
-     * @apiSuccess (Success 200) {String} archiveCatalogue.catalogueId.permissionKey.resourceUrl 资源url
-     *
+     * @apiSuccess (Success 200) {Array} archiveCatalogue.catalogueId 档案库目录id(动态值)，内容为权限的id数组
      *
      * @apiSuccessExample {json} Success-Response:
      * {
      *     "data": {
-     *         "global": {
-     *             "role_add": {
-     *                 "id": 1,
-     *                 "name": "添加",
-     *                 "resourceUrl": "user_add"
-     *             },
-     *             "permission_manage": {
-     *                 "id": 2,
-     *                 "name": "权限管理",
-     *                 "resourceUrl": "permission_manage"
-     *             }
-     *         },
+     *         "global": [1, 2, 3],
      *         "fonds": {
-     *             "1": {
-     *                 "user_add": {
-     *                     "id": 3,
-     *                     "name": "添加",
-     *                     "resourceUrl": "user_add"
-     *                 }
-     *             },
-     *             "2": {
-     *                 "user_add": {
-     *                     "id": 3,
-     *                     "name": "添加",
-     *                     "resourceUrl": "user_add"
-     *                 }
-     *             }
+     *             "1": [3, 4, 5],
+     *             "2": [3, 4, 5]
      *         },
      *         "archiveCatalogue": {
-     *             "1": {
-     *                 "user_add": {
-     *                     "id": 3,
-     *                     "name": "添加",
-     *                     "resourceUrl": "user_add"
-     *                 }
-     *             },
-     *             "2": {
-     *                 "user_add": {
-     *                     "id": 3,
-     *                     "name": "添加",
-     *                     "resourceUrl": "user_add"
-     *                 }
-     *             }
+     *             "1": [3, 4, 5],
+     *             "2": [3, 4, 5]
      *         }
      *     }
      * }

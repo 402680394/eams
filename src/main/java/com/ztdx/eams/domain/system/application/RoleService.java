@@ -11,6 +11,7 @@ import javax.transaction.Transactional;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
@@ -91,35 +92,6 @@ public class RoleService {
     }
 
     @Transactional
-    public Map<String, List<String>> addPermission(long roleId, Map<String, Object> permissions) {
-        /*List<String> existsUrl = permissionRepository.findByRoleIdAndResourceUrlIn(roleId, resourceUrls).stream().map(Object::toString).collect(Collectors.toList());
-
-        resourceUrls.removeAll(existsUrl);
-        Date now = Calendar.getInstance().getTime();
-
-        HashSet<Permission> batch = new HashSet<>();
-
-        for (String url :resourceUrls){
-            Permission permission = new Permission();
-            permission.setRoleId(roleId);
-            permission.setResourceUrl(url);
-            permission.setGmtCreate(now);
-            batch.add(permission);
-        }
-        permissionRepository.saveAll(batch);
-
-        //删除掉取消的权限
-        List<Permission> delPermission = permissionRepository.findByRoleIdAndResourceUrlNotIn(roleId, resourceUrls);
-        permissionRepository.deleteInBatch(delPermission);
-
-        Map<String, List<String>> result = new HashMap<>();
-        result.put("added", resourceUrls);
-        result.put("existed", existsUrl);
-        return result;*/
-        return null;
-    }
-
-    @Transactional
     public Map<String, List<Integer>> addUser(long roleId, List<Integer> addUserIds) {
         List<RoleOfUser> existsUsers = roleOfUserRepository.findByRoleIdAndUserIdIn(roleId, addUserIds);
         LinkedList<Integer> existsUserIds = new LinkedList<>();
@@ -161,18 +133,27 @@ public class RoleService {
     }
 
     /**
+     * 查找用户管理得档案目录id
+     * @param userId 用户id
+     * @return 档案目录id列表
+     */
+    public Set<Integer> findUserManageArchiveCatalogue(int userId){
+        return findUserPermissions(userId, Permission::getArchiveId, Collectors.toSet());
+    }
+
+    /**
      * 查找用户管理得全宗id
      * @param userId 用户id
      * @return 全宗id列表
      */
     public Set<Integer> findUserManageFonds(int userId){
+        return findUserPermissions(userId, Permission::getFondsId, Collectors.toSet());
+    }
+
+    private <M, A, R> R findUserPermissions(int userId, Function<Permission, M> map, Collector<M,A,R> to){
         HashSet<Long> roleIds = getUserRoleIds(userId);
         List<Permission> permissions = permissionRepository.findByRoleIdIn(roleIds);
-        return permissions.stream().collect(HashSet::new,(a, b)->{
-            if (b.getFondsId() != null) {
-                a.add(b.getFondsId());
-            }
-        },HashSet::addAll);
+        return permissions.stream().map(map).collect(to);
     }
 
     public HashSet<Long> getUserRoleIds(int userId) {
@@ -180,28 +161,32 @@ public class RoleService {
         return roleOfUsers.stream().collect(HashSet::new,(a,b)->a.add(b.getRoleId()),HashSet::addAll);
     }
 
-    public Map<String, Map> listRolePermission(long roleId) {
+    public Map<String, Object> listRolePermission(long roleId) {
         List<Long> ids = new ArrayList<>();
         ids.add(roleId);
-        return this.listRolePermission(ids);
+        return this.listRolePermissionArray(ids);
     }
 
-    public Map<String, Map> listRolePermission(Iterable<Long> roleIds) {
+    public Map<String, Object> listRolePermissionArray(Iterable<Long> roleIds) {
         List<Permission> permissions = permissionRepository.findByRoleIdIn(roleIds);
         Map<Long, Resource> resourceMap = resourceRepository.findAllById(
                 permissions
                         .stream()
                         .map(Permission::getResourceId)
                         .collect(Collectors.toList()))
-        .stream().collect(Collectors.toMap(Resource::getId,p -> p));
+                .stream().collect(Collectors.toMap(Resource::getId,p -> p));
 
-        Map<Integer, Map<String, Object>> fonds = groupPermission(permissions
-                , a -> a.getFondsId() == null ? 0 : a.getFondsId(), resourceMap );
+        Map<Integer, List<Long>> fonds = groupPermission(permissions
+                , "fonds", a -> a.getFondsId() == null ? 0 : a.getFondsId(), resourceMap );
 
-        Map<Integer, Map<String, Object>> archive = groupPermission(permissions
-                , a -> a.getArchiveId() == null ? 0 : a.getArchiveId(), resourceMap );
+        Map<Integer, List<Long>> archive = groupPermission(permissions
+                , "archive", a -> a.getArchiveId() == null ? 0 : a.getArchiveId(), resourceMap );
 
-        Map<String, Map> result = new HashMap<>();
+        return formatRolePermission(fonds, archive);
+    }
+
+    private <R> Map<String, Object> formatRolePermission(Map<Integer, R> fonds, Map<Integer, R> archive) {
+        Map<String, Object> result = new HashMap<>();
         result.put("global", fonds.get(0));
         fonds.remove(0);
         archive.remove(0);
@@ -210,12 +195,66 @@ public class RoleService {
         return result;
     }
 
-    public Map<String, Map> listUserPermission(int userId) {
+    public Map<String, Object> listRolePermission(Iterable<Long> roleIds) {
+        List<Permission> permissions = permissionRepository.findByRoleIdIn(roleIds);
+        Map<Long, Resource> resourceMap = resourceRepository.findAllById(
+                permissions
+                        .stream()
+                        .map(Permission::getResourceId)
+                        .collect(Collectors.toList()))
+                .stream().collect(Collectors.toMap(Resource::getId,p -> p));
+
+        Map<Integer, Map<String, Object>> fonds = groupPermission(permissions
+                , a -> a.getFondsId() == null ? 0 : a.getFondsId(), resourceMap );
+
+        Map<Integer, Map<String, Object>> archive = groupPermission(permissions
+                , a -> a.getArchiveId() == null ? 0 : a.getArchiveId(), resourceMap );
+
+        return formatRolePermission(fonds, archive);
+    }
+
+    public Map<String, Object> listUserPermission(int userId) {
         Iterable<Long> ids = this.getUserRoleIds(userId);
         return this.listRolePermission(ids);
     }
 
-    private Map<Integer, Map<String, Object>> groupPermission(List<Permission> permissions, Function<Permission, Integer> groupKey, Map<Long, Resource> resourceMap) {
+    private Map<Integer, List<Long>> groupPermission(
+            List<Permission> permissions
+            , String groupColumn
+            , Function<Permission, Integer> groupKey
+            , Map<Long, Resource> resourceMap
+    ) {
+        return permissions.stream().collect(
+                HashMap::new,(a,b) -> {
+                    Integer k = groupKey.apply(b);
+                    Resource resource = resourceMap.getOrDefault(b.getResourceId(), null);
+                    if (resource == null
+                            || (!groupColumn.equals(resource.getResourceUrl().split("_")[0])
+                                && !"global".equals(resource.getResourceUrl().split("_")[0])
+                            || resource.getResourceCategory() != ResourceCategory.Function
+                    )
+                    ){
+                        return;
+                    }
+
+                    List<Long> l = new ArrayList<>();
+                    l.add(b.getResourceId());
+                    a.merge(k, l, (o, n) -> {
+                        o.addAll(n);
+                        return o;
+                    });
+                },(a, b) -> b.forEach((bk, bv) ->{
+                    a.merge(bk, bv, (o, n) -> {
+                        o.addAll(n);
+                        return o;
+                    });
+                }));
+    }
+
+    private Map<Integer, Map<String, Object>> groupPermission(
+            List<Permission> permissions
+            , Function<Permission, Integer> groupKey
+            , Map<Long, Resource> resourceMap) {
         Map<Integer, List<Permission>> group = permissions.stream().collect(Collectors.groupingBy(groupKey));
         Map<Integer, Map<String, Object>> result = new HashMap<>();
         group.forEach((a, b) -> {

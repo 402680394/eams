@@ -1,6 +1,7 @@
 package com.ztdx.eams.controller;
 
 import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.archives.application.*;
 import com.ztdx.eams.domain.archives.model.*;
@@ -8,6 +9,7 @@ import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -106,6 +108,31 @@ public class EntryController {
         entry.setId(uuid);
         descriptionItemService.updateVerification(entry, LOGIN_USER);
         entryService.update(entry);
+    }
+
+    /**
+     * @api {delete} /entry 删除条目
+     * @apiName delete_entry
+     * @apiGroup entry
+     * @apiParam {Number} cid 档案目录id
+     * @apiParam {String[]} deletes 要删除的条目id数组
+     * @apiParamExample {json} Request-Example:
+     * {
+     *     "cid": 1,
+     *     "deletes": [
+     *         "322c3c75-08a5-4a01-a60f-084b6a6f9be9"
+     *     ]
+     * }
+     * @apiError (Error 400) message 1.档案目录不存在
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "/", method = RequestMethod.DELETE)
+    public void delete(@JsonParam() int cid, @JsonParam List<String> deletes){
+        Catalogue catalogue = catalogueService.get(cid);
+        if (catalogue == null){
+            throw new InvalidArgumentException("档案目录不存在");
+        }
+        entryService.delete(cid, deletes);
     }
 
     /**
@@ -217,7 +244,7 @@ public class EntryController {
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
         //TODO @lijie 登记库只能查看自己的
-        Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size));
+        Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "getGmtCreate")));
 
         Map<String, Object> list = descriptionItemService.list(catalogueId, a -> {
             Map<String, Object> result = new HashMap<>();
@@ -328,7 +355,7 @@ public class EntryController {
     @RequestMapping(value = "/search", method = RequestMethod.POST)
     public Page<Entry> searchAdv(@RequestBody Entry entry, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size) {
         //, @RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size
-        return entryService.search(entry.getCatalogueId(), queryString, entry.getItems(), PageRequest.of(page, size));
+        return entryService.search(entry.getCatalogueId(), queryString, entry.getItems(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "getGmtCreate")));
     }
 
     /**

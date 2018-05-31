@@ -303,10 +303,12 @@ public class SystemQuery {
         //查询
         resultMap = getSubFondsTreeMap(getAllFondsList(), resultMap, hasPermission);
         //拼装返回数据信息
-        if (null != resultMap.get("children")) {
+        if (null != resultMap && null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
         } else {
+            resultMap = new HashMap<>();
             resultMap.put("items", new ArrayList<Map<String, Object>>());
+            return resultMap;
         }
         //去除根全宗数据
         resultMap.remove("id");
