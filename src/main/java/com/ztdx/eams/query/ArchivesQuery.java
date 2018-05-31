@@ -99,7 +99,7 @@ public class ArchivesQuery {
         List<Map<String, Object>> subClassificationList = new ArrayList<Map<String, Object>>();
         //遍历档案分类数据，并递归添加子档案分类的下级档案分类
         for (Map<String, Object> map : dataList) {
-            if (map.get("parentId").equals(treeMap.get("id"))) {
+            if (treeMap.get("id").equals(map.get("parentId"))) {
                 map = getSubClassificationTreeMap(dataList, map);
                 //将递归添加后的子档案分类放入子档案分类列表
                 subClassificationList.add(map);
@@ -658,7 +658,7 @@ public class ArchivesQuery {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = dslContext.select(
                 archivesDescriptionItem.ID.as("id"),
-                archivesDescriptionItem.DISPALY_NAME.as("dispalyName"),
+                archivesDescriptionItem.DISPLAY_NAME.as("displayName"),
                 archivesDescriptionItem.PROPERTY_TYPE.as("propertyType"),
                 archivesDescriptionItem.DEFAULT_VALUE.as("defaultValue"),
                 archivesDescriptionItem.DATA_TYPE.as("dataType"),

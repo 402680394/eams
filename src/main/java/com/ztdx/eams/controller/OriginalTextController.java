@@ -4,7 +4,6 @@ import com.ztdx.eams.domain.archives.application.OriginalTextService;
 import com.ztdx.eams.domain.archives.model.OriginalText;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -62,7 +61,8 @@ public class OriginalTextController {
      * @apiGroup originalText
      * @apiParam {String} id ID
      * @apiParam {Number} catalogueId 目录ID
-     * @apiParamExample Request-Example:[{"id":"d500af0c-a136-4e43-bd0c-66dc6a4304e8","catalogueId":1}]
+     * @apiParamExample {json} Request-Example:
+     * [{"id":"d500af0c-a136-4e43-bd0c-66dc6a4304e8","catalogueId":1}]
      */
     @RequestMapping(value = "", method = RequestMethod.DELETE)
     public void deleteBatch(@RequestBody List<Map<String, Object>> list) {
@@ -196,7 +196,7 @@ public class OriginalTextController {
                                     @RequestParam(required = false, name = "size", defaultValue = "20") int size) {
         Map result = new HashMap<String, Object>();
         List list = new ArrayList<Map<String, Object>>();
-        Page<OriginalText> originalTextPage = originalTextService.list(catalogueId, entryId, title, PageRequest.of(page, size));
+        Page<OriginalText> originalTextPage = originalTextService.list(catalogueId, entryId, title, page, size);
         for (OriginalText originalText : originalTextPage.getContent()) {
             HashMap map = new HashMap<String, Object>();
             map.put("id", originalText.getId());
@@ -221,11 +221,11 @@ public class OriginalTextController {
      * @apiParam {String} upId 上移原文ID（url参数）
      * @apiParam {String} downId 下移原文ID（url参数）
      * @apiParam {Number} catalogueId 目录ID（url参数）
-     * @apiError (Error 400) message
+     * @apiError (Error 400) message 原文记录不存在
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/sort", method = RequestMethod.PUT)
     public void sort(@RequestParam("upId") String upId, @RequestParam("downId") String downId, @RequestParam("catalogueId") int catalogueId) {
-        originalTextService.sort(upId, downId,catalogueId);
+        originalTextService.sort(upId, downId, catalogueId);
     }
 }

@@ -16,6 +16,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -144,7 +145,7 @@ public class OriginalTextService {
             fos.close();
             bos.close();
 
-            //获取文件属性
+            //TODO li 获取文件属性
 //            Metadata metadata = JpegMetadataReader.readMetadata(tmpFile);
 //            HashMap fileAttributesMap = new HashMap<String, Object>();
 //            for (Directory directory : metadata.getDirectories()) {
@@ -230,14 +231,12 @@ public class OriginalTextService {
         }
     }
 
-    public Page<OriginalText> list(int catalogueId, String entryId, String title, PageRequest page) {
+    public Page<OriginalText> list(int catalogueId, String entryId, String title, int page, int size) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
         query.must(QueryBuilders.wildcardQuery("title",
                 "*" + title + "*"));
         query.must(QueryBuilders.matchQuery("entryId", entryId));
-//        query.must().sort();
-//        SortBuilders.fieldSort("orderNumber").order(SortOrder.DESC);
-        return originalTextElasticsearchRepository.search(query, page, new String[]{"archive_record_" + catalogueId});
+        return originalTextElasticsearchRepository.search(query, PageRequest.of(page, size, Sort.by(Sort.Order.asc("orderNumber"))), new String[]{"archive_record_" + catalogueId});
     }
 
     public void sort(String upId, String downId, int catalogueId) {
@@ -247,7 +246,7 @@ public class OriginalTextService {
             throw new InvalidArgumentException("原文记录不存在");
         } else {
             int tmpOrderNumber;
-            tmpOrderNumber=upFind.get().getOrderNumber();
+            tmpOrderNumber = upFind.get().getOrderNumber();
             upFind.get().setOrderNumber(downFind.get().getOrderNumber());
             downFind.get().setOrderNumber(tmpOrderNumber);
 
