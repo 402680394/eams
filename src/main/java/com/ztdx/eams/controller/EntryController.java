@@ -246,7 +246,7 @@ public class EntryController {
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
         //TODO @lijie 登记库只能查看自己的
-        Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "getGmtCreate")));
+        Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtDeleted")));
 
         Map<String, Object> list = descriptionItemService.list(catalogueId, a -> {
             Map<String, Object> result = new HashMap<>();
@@ -357,7 +357,7 @@ public class EntryController {
     @RequestMapping(value = "/search", method = RequestMethod.POST)
     public Page<Entry> searchAdv(@RequestBody Entry entry, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size) {
         //, @RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size
-        return entryService.search(entry.getCatalogueId(), queryString, entry.getItems(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "getGmtCreate")));
+        return entryService.search(entry.getCatalogueId(), queryString, entry.getItems(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtDeleted")));
     }
 
     /**
