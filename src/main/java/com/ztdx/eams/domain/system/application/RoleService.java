@@ -161,28 +161,32 @@ public class RoleService {
         return roleOfUsers.stream().collect(HashSet::new,(a,b)->a.add(b.getRoleId()),HashSet::addAll);
     }
 
-    public Map<String, Map> listRolePermission(long roleId) {
+    public Map<String, Object> listRolePermission(long roleId) {
         List<Long> ids = new ArrayList<>();
         ids.add(roleId);
-        return this.listRolePermission(ids);
+        return this.listRolePermissionArray(ids);
     }
 
-    public Map<String, Map> listRolePermission(Iterable<Long> roleIds) {
+    public Map<String, Object> listRolePermissionArray(Iterable<Long> roleIds) {
         List<Permission> permissions = permissionRepository.findByRoleIdIn(roleIds);
         Map<Long, Resource> resourceMap = resourceRepository.findAllById(
                 permissions
                         .stream()
                         .map(Permission::getResourceId)
                         .collect(Collectors.toList()))
-        .stream().collect(Collectors.toMap(Resource::getId,p -> p));
+                .stream().collect(Collectors.toMap(Resource::getId,p -> p));
 
-        Map<Integer, Map<String, Object>> fonds = groupPermission(permissions
-                , a -> a.getFondsId() == null ? 0 : a.getFondsId(), resourceMap );
+        Map<Integer, List<Long>> fonds = groupPermission(permissions
+                , "fonds", a -> a.getFondsId() == null ? 0 : a.getFondsId(), resourceMap );
 
-        Map<Integer, Map<String, Object>> archive = groupPermission(permissions
-                , a -> a.getArchiveId() == null ? 0 : a.getArchiveId(), resourceMap );
+        Map<Integer, List<Long>> archive = groupPermission(permissions
+                , "archive", a -> a.getArchiveId() == null ? 0 : a.getArchiveId(), resourceMap );
 
-        Map<String, Map> result = new HashMap<>();
+        return formatRolePermission(fonds, archive);
+    }
+
+    private <R> Map<String, Object> formatRolePermission(Map<Integer, R> fonds, Map<Integer, R> archive) {
+        Map<String, Object> result = new HashMap<>();
         result.put("global", fonds.get(0));
         fonds.remove(0);
         archive.remove(0);
@@ -191,12 +195,66 @@ public class RoleService {
         return result;
     }
 
-    public Map<String, Map> listUserPermission(int userId) {
+    public Map<String, Object> listRolePermission(Iterable<Long> roleIds) {
+        List<Permission> permissions = permissionRepository.findByRoleIdIn(roleIds);
+        Map<Long, Resource> resourceMap = resourceRepository.findAllById(
+                permissions
+                        .stream()
+                        .map(Permission::getResourceId)
+                        .collect(Collectors.toList()))
+                .stream().collect(Collectors.toMap(Resource::getId,p -> p));
+
+        Map<Integer, Map<String, Object>> fonds = groupPermission(permissions
+                , a -> a.getFondsId() == null ? 0 : a.getFondsId(), resourceMap );
+
+        Map<Integer, Map<String, Object>> archive = groupPermission(permissions
+                , a -> a.getArchiveId() == null ? 0 : a.getArchiveId(), resourceMap );
+
+        return formatRolePermission(fonds, archive);
+    }
+
+    public Map<String, Object> listUserPermission(int userId) {
         Iterable<Long> ids = this.getUserRoleIds(userId);
         return this.listRolePermission(ids);
     }
 
-    private Map<Integer, Map<String, Object>> groupPermission(List<Permission> permissions, Function<Permission, Integer> groupKey, Map<Long, Resource> resourceMap) {
+    private Map<Integer, List<Long>> groupPermission(
+            List<Permission> permissions
+            , String groupColumn
+            , Function<Permission, Integer> groupKey
+            , Map<Long, Resource> resourceMap
+    ) {
+        return permissions.stream().collect(
+                HashMap::new,(a,b) -> {
+                    Integer k = groupKey.apply(b);
+                    Resource resource = resourceMap.getOrDefault(b.getResourceId(), null);
+                    if (resource == null
+                            || (!groupColumn.equals(resource.getResourceUrl().split("_")[0])
+                                && !"global".equals(resource.getResourceUrl().split("_")[0])
+                            || resource.getResourceCategory() != ResourceCategory.Function
+                    )
+                    ){
+                        return;
+                    }
+
+                    List<Long> l = new ArrayList<>();
+                    l.add(b.getResourceId());
+                    a.merge(k, l, (o, n) -> {
+                        o.addAll(n);
+                        return o;
+                    });
+                },(a, b) -> b.forEach((bk, bv) ->{
+                    a.merge(bk, bv, (o, n) -> {
+                        o.addAll(n);
+                        return o;
+                    });
+                }));
+    }
+
+    private Map<Integer, Map<String, Object>> groupPermission(
+            List<Permission> permissions
+            , Function<Permission, Integer> groupKey
+            , Map<Long, Resource> resourceMap) {
         Map<Integer, List<Permission>> group = permissions.stream().collect(Collectors.groupingBy(groupKey));
         Map<Integer, Map<String, Object>> result = new HashMap<>();
         group.forEach((a, b) -> {
