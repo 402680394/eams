@@ -173,7 +173,7 @@ public class RoleService {
                 permissions
                         .stream()
                         .map(Permission::getResourceId)
-                        .collect(Collectors.toList()))
+                        .collect(Collectors.toSet()))
                 .stream().collect(Collectors.toMap(Resource::getId,p -> p));
 
         Map<Integer, List<Long>> fonds = groupPermission(permissions
@@ -201,7 +201,7 @@ public class RoleService {
                 permissions
                         .stream()
                         .map(Permission::getResourceId)
-                        .collect(Collectors.toList()))
+                        .collect(Collectors.toSet()))
                 .stream().collect(Collectors.toMap(Resource::getId,p -> p));
 
         Map<Integer, Map<String, Object>> fonds = groupPermission(permissions
@@ -259,8 +259,17 @@ public class RoleService {
         Map<Integer, Map<String, Object>> result = new HashMap<>();
         group.forEach((a, b) -> {
             result.put(a, b.stream().collect(
-                    Collectors.toMap(
-                            p -> PermissionKeyMap(p, resourceMap), p -> PermissionMap(p, resourceMap))
+                    HashMap::new,(a1,b1) -> {
+                        Resource resource = resourceMap.getOrDefault(b1.getResourceId(), null);
+                        if (resource == null){
+                            return;
+                        }
+
+                        a1.put(
+                                PermissionKeyMap(b1, resourceMap)
+                                , PermissionMap(b1, resourceMap)
+                        );
+                    }, HashMap::putAll
             ));
         });
         return result;
