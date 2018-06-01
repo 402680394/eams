@@ -27,10 +27,10 @@ public class OrganizationController {
     }
 
     /**
-     * @api {get} /organization/treeList 获取机构树形列表
+     * @api {get} /organization/treeList 通过上级机构节点与机构类型获取下级机构树
      * @apiName treeList
      * @apiGroup organization
-     * @apiParam {Number} id 顶层机构ID（url参数）（非必需，默认为1根节点）
+     * @apiParam {Number} id 上级机构ID（url参数）（非必需，默认为1根机构节点）
      * @apiParam {Number} type 机构类型（url参数）（非必需，默认为0）（可选值：0-获取全部 1-获取类型为公司的机构）
      * @apiSuccess (Success 200) {Number} id 机构ID.
      * @apiSuccess (Success 200) {String} code 机构编码.
@@ -46,8 +46,31 @@ public class OrganizationController {
      * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
-    public Map<String, Object> treeList(@RequestParam(required = false, defaultValue = "1") int id, @RequestParam(required = false, defaultValue = "0") int type) {
+    public Map<String, Object> treeList(@RequestParam(required = false, defaultValue = "1", name = "id") int id, @RequestParam(name = "type", required = false, defaultValue = "0") int type) {
         return systemQuery.getOrganizationTreeMap(id, type);
+    }
+
+    /**
+     * @api {get} /organization/treeListByFonds 获取全宗关联的组织机构树
+     * @apiName treeListByFonds
+     * @apiGroup organization
+     * @apiParam {Number} fondsId 关联全宗ID（url参数）
+     * @apiSuccess (Success 200) {Number} id 机构ID.
+     * @apiSuccess (Success 200) {String} code 机构编码.
+     * @apiSuccess (Success 200) {String} name 机构名称.
+     * @apiSuccess (Success 200) {Number} parentId 上级机构ID.
+     * @apiSuccess (Success 200) {Number} orderNumber 同级排序编号.
+     * @apiSuccess (Success 200) {Number} fondsId 关联全宗ID(未关联为null).
+     * @apiSuccess (Success 200) {Number} type 机构类型
+     * @apiSuccess (Success 200) {Object[]} children 子节点信息
+     * @apiSuccessExample {json} Success-Response:
+     * {"data": {"items": [{"id": 机构ID,"code": "机构编码","name": "父机构0","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型},
+     * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型,"children": [
+     * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型}]}]}}.
+     */
+    @RequestMapping(value = "/treeListByFonds", method = RequestMethod.GET)
+    public Map<String, Object> treeListByFonds(@RequestParam("fondsId") int fondsId) {
+        return systemQuery.getOrganizationTreeMapByFondsId(UInteger.valueOf(fondsId));
     }
 
     /**
@@ -121,7 +144,7 @@ public class OrganizationController {
     }
 
     /**
-     * @api {patch} /organization/{upId},{downId}/priority 修改机构排序优先级
+     * @api {put} /organization/{upId},{downId}/priority 修改机构排序优先级
      * @apiName priority
      * @apiGroup organization
      * @apiParam {Number} upId 上移机构ID（url占位符）
@@ -129,7 +152,7 @@ public class OrganizationController {
      * @apiError (Error 400) message 1.机构类型或上级机构不一致 2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
-    @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)
+    @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PUT)
     public void priority(@PathVariable("upId") int upId, @PathVariable("downId") int downId) {
         organizationService.priority(upId, downId);
     }

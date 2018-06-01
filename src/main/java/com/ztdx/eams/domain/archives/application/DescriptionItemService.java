@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,8 +27,13 @@ public class DescriptionItemService {
         this.descriptionItemRepository = descriptionItemRepository;
     }
 
-    public Map<String, DescriptionItem> list(int catalogueId) {
-        return descriptionItemRepository.findByCatalogueId(catalogueId).stream().collect(Collectors.toMap(DescriptionItem::getMetadataName, (d) -> d, (d1, d2) -> d2));
+    public <R> Map<String, R> list(int catalogueId, Function<DescriptionItem, R> map) {
+        return descriptionItemRepository.findByCatalogueId(catalogueId).stream()
+                .collect(
+                        Collectors.toMap(
+                                DescriptionItem::getMetadataName
+                                , map
+                                , (d1, d2) -> d2));
     }
 
     //新增条目数据验证

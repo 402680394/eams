@@ -101,10 +101,22 @@ public class EntryService {
 
     public Page<Entry> search(int catalogueId, String queryString, Map<String, Object> itemQuery, Pageable pageable) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
-        query.must(queryStringQuery(queryString));
+        if (queryString != null && queryString.length() > 0) {
+            query.must(queryStringQuery(queryString));
+        }
         query.must().addAll(parseQuery(catalogueId, itemQuery));
+        query.filter(termQuery("gmtDeleted", 0));
 
-        return entryElasticsearchRepository.search(query, pageable, new String[]{"archive_record_"+catalogueId});
+        Page<Entry> result = entryElasticsearchRepository.search(
+                query, pageable, new String[]{"archive_record_" + catalogueId}
+        );
+        result.stream().forEach(a -> {
+            //TODO lijie 显示前需要按照著录项要求做输出的转换
+            convertEntryItems(a);
+            Map<String, Object> items = a.getItems();
+            items.put("id", a.getId());
+        });
+        return result;
     }
 
     private List<QueryBuilder> parseQuery(int catalogueId, Map<String, Object> itemQuery) {
@@ -216,5 +228,16 @@ public class EntryService {
         });
 
         return result;
+    }
+
+    public void delete(int catalogueId, List<String> deletes) {
+        Iterable<Entry> list = entryMongoRepository.findAllById(deletes, "archive_record_" + catalogueId);
+        list.forEach(a -> a.setGmtDeleted(1));
+        entryMongoRepository.saveAll(list);
+        entryElasticsearchRepository.saveAll(list);
+    }
+
+    public Entry get(int catalogueId, String id) {
+        return entryMongoRepository.findById(id, "archive_record_" + catalogueId).orElse(null);
     }
 }

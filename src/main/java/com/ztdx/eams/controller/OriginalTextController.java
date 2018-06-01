@@ -3,11 +3,14 @@ package com.ztdx.eams.controller;
 import com.ztdx.eams.domain.archives.application.OriginalTextService;
 import com.ztdx.eams.domain.archives.model.OriginalText;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,8 +61,8 @@ public class OriginalTextController {
      * @apiGroup originalText
      * @apiParam {String} id ID
      * @apiParam {Number} catalogueId 目录ID
-     * @apiParam {String} entryId 条目ID
-     * @apiParamExample Request-Example:[{"id":"d500af0c-a136-4e43-bd0c-66dc6a4304e8","entryId":"9fba8809-37b4-4b21-8e79-af9325dcb56a","catalogueId":1}]
+     * @apiParamExample {json} Request-Example:
+     * [{"id":"d500af0c-a136-4e43-bd0c-66dc6a4304e8","catalogueId":1}]
      */
     @RequestMapping(value = "", method = RequestMethod.DELETE)
     public void deleteBatch(@RequestBody List<Map<String, Object>> list) {
@@ -139,13 +142,90 @@ public class OriginalTextController {
      * @apiName download
      * @apiGroup originalText
      * @apiParam {Number} catalogueId 目录ID(url参数)
-     * @apiParam {String} entryId 条目ID(url参数)
      * @apiParam {String} id 原文ID(url参数)
      * @apiError (Error 400) message 1.目录不存在;2.档案库不存在;3.条目不存在或已被删除.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/download", method = RequestMethod.GET)
-    public void download(@RequestParam("catalogueId") int catalogueId, @RequestParam("entryId") String entryId, @RequestParam("id") String id, HttpServletResponse response) {
-        originalTextService.fileDownload(catalogueId, entryId, id, response);
+    public void download(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id, HttpServletResponse response) {
+        originalTextService.fileDownload(catalogueId, id, response);
+    }
+
+    /**
+     * @api {get} /originalText/list 获取原文列表
+     * @apiName get
+     * @apiGroup originalText
+     * @apiParam {Number} catalogueId 目录ID(url参数)
+     * @apiParam {String} entryId 条目ID(url参数)
+     * @apiParam {String} title 标题(url参数)(非必须)
+     * @apiParam {Number} page 页码(url参数)
+     * @apiParam {Number} size 每页条数(url参数)
+     * @apiSuccess (Success 200) {String} id ID.
+     * @apiSuccess (Success 200) {String} title 标题.
+     * @apiSuccess (Success 200) {Number} type 类型(可选值：1-正文；2-改稿；3-副本).
+     * @apiSuccess (Success 200) {String} version 版本.
+     * @apiSuccess (Success 200) {String} name 名称.
+     * @apiSuccess (Success 200) {String} size 文件大小.
+     * @apiSuccess (Success 200) {String} remark 备注.
+     * @apiSuccess (Success 200) {Number} createTime 创建时间.
+     * @apiSuccess (Success 200) {Number} total 总条数.
+     * @apiSuccessExample {json} Success-Response:
+     * {
+     * "data": {
+     * "total": 8,
+     * "items": [
+     * {
+     * "size": "482491",
+     * "createTime": 1527663874308,
+     * "name": "DAT 1-2000 档案工作基本术语.pdf",
+     * "remark": "备注",
+     * "id": "e60b9591-fc7f-4de5-be4c-f5beddaf510d",
+     * "title": "顺丰55677",
+     * "type": 1,
+     * "version": "1.0"
+     * }
+     * ]
+     * }
+     * }
+     */
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public Map<String, Object> list(@RequestParam("catalogueId") int catalogueId,
+                                    @RequestParam("entryId") String entryId,
+                                    @RequestParam(required = false, name = "title", defaultValue = "") String title,
+                                    @RequestParam(required = false, name = "page", defaultValue = "0") int page,
+                                    @RequestParam(required = false, name = "size", defaultValue = "20") int size) {
+        Map result = new HashMap<String, Object>();
+        List list = new ArrayList<Map<String, Object>>();
+        Page<OriginalText> originalTextPage = originalTextService.list(catalogueId, entryId, title, page, size);
+        for (OriginalText originalText : originalTextPage.getContent()) {
+            HashMap map = new HashMap<String, Object>();
+            map.put("id", originalText.getId());
+            map.put("title", originalText.getTitle());
+            map.put("type", originalText.getType());
+            map.put("version", originalText.getVersion());
+            map.put("name", originalText.getName());
+            map.put("size", originalText.getSize());
+            map.put("remark", originalText.getRemark());
+            map.put("createTime", originalText.getCreateTime());
+            list.add(map);
+        }
+        result.put("items", list);
+        result.put("total", originalTextPage.getTotalElements());
+        return result;
+    }
+
+    /**
+     * @api {put} /originalText/sort 原文排序
+     * @apiName sort
+     * @apiGroup originalText
+     * @apiParam {String} upId 上移原文ID（url参数）
+     * @apiParam {String} downId 下移原文ID（url参数）
+     * @apiParam {Number} catalogueId 目录ID（url参数）
+     * @apiError (Error 400) message 原文记录不存在
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "/sort", method = RequestMethod.PUT)
+    public void sort(@RequestParam("upId") String upId, @RequestParam("downId") String downId, @RequestParam("catalogueId") int catalogueId) {
+        originalTextService.sort(upId, downId, catalogueId);
     }
 }

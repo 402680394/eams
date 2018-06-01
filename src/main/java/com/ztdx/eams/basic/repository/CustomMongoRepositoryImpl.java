@@ -132,7 +132,7 @@ public class CustomMongoRepositoryImpl<T, ID> extends SimpleMongoRepository<T, I
 
     public Optional<T> findById(ID id, String collectionName) {
         Assert.notNull(id, "The given id must not be null!");
-        return Optional.of(this.mongoOperations.findById(id, this.entityInformation.getJavaType(), collectionName));
+        return Optional.ofNullable(this.mongoOperations.findById(id, this.entityInformation.getJavaType(), collectionName));
     }
 
 

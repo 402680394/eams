@@ -1,6 +1,8 @@
 package com.ztdx.eams.controller;
 
 import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.InvalidArgumentException;
+import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.archives.application.*;
 import com.ztdx.eams.domain.archives.model.*;
@@ -8,6 +10,8 @@ import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -38,6 +42,56 @@ public class EntryController {
         this.fondsService = fondsService;
     }
 
+    /**
+     * @api {get} /entry/{id}?cid={cid} 获取条目详细信息
+     * @apiName get_entry
+     * @apiGroup entry
+     * @apiParam {String} id 条目id (Path变量)
+     * @apiSuccess (Success 200) {Number} id 条目id
+     * @apiSuccess (Success 200) {Number} catalogueId 目录id
+     * @apiSuccess (Success 200) {Number=1,2,3} catalogueType 目录类型 1:一文一件 2:传统立卷案卷 3:传统立卷卷内 4:项目
+     * @apiSuccess (Success 200) {Number} archiveId 档案库id
+     * @apiSuccess (Success 200) {Number=1,2} archiveType 档案库类型 1:登记库 2:归档库
+     * @apiSuccess (Success 200) {Number} archiveContentType 档案库内容类型
+     * @apiSuccess (Success 200) {Array} items 条目字段信息(以下内容每个档案库目录都不同，字段定义在data.column中)
+     * @apiSuccess (Success 200) {date} items.birthday 生日
+     * @apiSuccess (Success 200) {double} items.amount 资产
+     * @apiSuccess (Success 200) {Array} items.aihao 爱好
+     * @apiSuccess (Success 200) {String} items.name 姓名
+     * @apiSuccess (Success 200) {int} items.age 年龄
+     * @apiSuccessExample {json} Response-Example:
+     * {
+     *     "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     *     "catalogueId":1,
+     *     "catalogueType":1,
+     *     "archiveId":0,
+     *     "archiveType":0,
+     *     "archiveContentType":0,
+     *     "items":{
+     *         "birthday":"2018-05-16T14:44:56.328+0800",
+     *         "amount":73824039.1873,
+     *         "aihao":[
+     *             "电影",
+     *             "足球",
+     *             "汽车"
+     *         ],
+     *         "name":"里斯1",
+     *         "age":41
+     *     },
+     *     "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     *     "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * }
+     * @apiError (Error 404) message 1.条目不存在
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public Entry get(@PathVariable("id") String id, @RequestParam("cid") int catalogueId){
+        Entry entry = entryService.get(catalogueId, id);
+        if (entry == null){
+            throw new NotFoundException("条目不存在");
+        }
+        return entry;
+    }
 
     /**
      * @api {post} /entry 新增条目
@@ -109,6 +163,32 @@ public class EntryController {
     }
 
     /**
+     * @api {delete} /entry 删除条目
+     * @apiName delete_entry
+     * @apiGroup entry
+     * @apiParam {Number} cid 档案目录id
+     * @apiParam {String[]} deletes 要删除的条目id数组
+     * @apiParamExample {json} Request-Example:
+     * {
+     *     "cid": 1,
+     *     "deletes": [
+     *         "322c3c75-08a5-4a01-a60f-084b6a6f9be9"
+     *     ]
+     * }
+     * @apiError (Error 400) message 1.档案目录不存在
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "", method = RequestMethod.DELETE)
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_delete_' + #cid)")
+    public void delete(@JsonParam() int cid, @JsonParam List<String> deletes){
+        Catalogue catalogue = catalogueService.get(cid);
+        if (catalogue == null){
+            throw new InvalidArgumentException("档案目录不存在");
+        }
+        entryService.delete(cid, deletes);
+    }
+
+    /**
      * @api {get} /entry/search?cid={cid}&q={q}&page={page}&size={size} 按关键字搜索条目
      * @apiName search_simple
      * @apiGroup entry
@@ -119,9 +199,8 @@ public class EntryController {
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.id 条目id
      * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
-     * @apiSuccess (Success 200) {Number=1,2,3} content.catalogueType 目录类型 1:卷内 2:案卷 3:项目
+     * @apiSuccess (Success 200) {Number=1,2,3} content.catalogueType 目录类型 1:一文一件 2:传统立卷案卷 3:传统立卷卷内 4:项目
      * @apiSuccess (Success 200) {Number} content.archiveId 档案库id
-     * @apiSuccess (Success 200) {String} content.archiveName 档案库名称
      * @apiSuccess (Success 200) {Number=1,2} content.archiveType 档案库类型 1:登记库 2:归档库
      * @apiSuccess (Success 200) {Number} content.archiveContentType 档案库内容类型
      * @apiSuccess (Success 200) {Array} content.items 条目字段信息(以下内容每个档案库目录都不同，字段定义在data.column中)
@@ -161,7 +240,6 @@ public class EntryController {
      *                 "catalogueId":1,
      *                 "catalogueType":1,
      *                 "archiveId":0,
-     *                 "archiveName":"一文一件库",
      *                 "archiveType":0,
      *                 "archiveContentType":0,
      *                 "items":{
@@ -217,9 +295,15 @@ public class EntryController {
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
         //TODO @lijie 登记库只能查看自己的
-        Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size));
+        Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtDeleted")));
 
-        Map<String, DescriptionItem> list = descriptionItemService.list(catalogueId);
+        Map<String, Object> list = descriptionItemService.list(catalogueId, a -> {
+            Map<String, Object> result = new HashMap<>();
+            result.put("metadataId", a.getMetadataId());
+            result.put("metadataName", a.getMetadataName());
+            result.put("displayName", a.getDisplayName());
+            return result;
+        });
 
         Map<String, Object> result = new HashMap<>();
         result.put("content", content.getContent());
@@ -246,9 +330,8 @@ public class EntryController {
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.id 条目id
      * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
-     * @apiSuccess (Success 200) {Number=1,2,3} content.catalogueType 目录类型 1:卷内 2:案卷 3:项目
+     * @apiSuccess (Success 200) {Number=1,2,3} content.catalogueType 目录类型 1:一文一件 2:传统立卷案卷 3:传统立卷卷内 4:项目
      * @apiSuccess (Success 200) {Number} content.archiveId 档案库id
-     * @apiSuccess (Success 200) {String} content.archiveName 档案库名称
      * @apiSuccess (Success 200) {Number=1,2} content.archiveType 档案库类型 1:登记库 2:归档库
      * @apiSuccess (Success 200) {Number} content.archiveContentType 档案库内容类型
      * @apiSuccess (Success 200) {Array} content.items 条目字段信息(以下内容每个档案库目录都不同，字段定义在data.column中)
@@ -270,7 +353,6 @@ public class EntryController {
      *                 "catalogueId":1,
      *                 "catalogueType":1,
      *                 "archiveId":0,
-     *                 "archiveName":"一文一件库",
      *                 "archiveType":0,
      *                 "archiveContentType":0,
      *                 "items":{
@@ -322,7 +404,7 @@ public class EntryController {
     @RequestMapping(value = "/search", method = RequestMethod.POST)
     public Page<Entry> searchAdv(@RequestBody Entry entry, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size) {
         //, @RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size
-        return entryService.search(entry.getCatalogueId(), queryString, entry.getItems(), PageRequest.of(page, size));
+        return entryService.search(entry.getCatalogueId(), queryString, entry.getItems(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtDeleted")));
     }
 
     /**
@@ -339,7 +421,7 @@ public class EntryController {
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.id 条目id
      * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
-     * @apiSuccess (Success 200) {Number=1,2,3} content.catalogueType 目录类型 1:卷内 2:案卷 3:项目
+     * @apiSuccess (Success 200) {Number=1,2,3} content.catalogueType 目录类型 1:一文一件 2:传统立卷案卷 3:传统立卷卷内 4:项目
      * @apiSuccess (Success 200) {Number} content.archiveId 档案库id
      * @apiSuccess (Success 200) {String} content.archiveName 档案库名称
      * @apiSuccess (Success 200) {String} content.fondsName 全宗名称
@@ -472,7 +554,7 @@ public class EntryController {
      *                 "items":[
      *                     {
      *                         "catalogueId": 1,
-     *      *                  "catalogueType": 1,
+     *                         "catalogueType": 1,
      *                         "count": 1
      *                     }
      *                 ]

@@ -27,7 +27,7 @@ public class ClassificationController {
     }
 
     /**
-     * @api {get} /classification/treeList 档案分类表单树
+     * @api {get} /classification/treeList 获取全宗所属档案分类表单树
      * @apiName treeList
      * @apiGroup classification
      * @apiParam {Number} fondsId 所属全宗ID(全局为1)(url参数)
@@ -78,8 +78,8 @@ public class ClassificationController {
     }
 
     /**
-     * @api {get} /classification/treeList 著录项输入下拉树
-     * @apiName treeList
+     * @api {get} /classification/treeListByParentId 通过上级档案分类节点获取档案分类下拉树
+     * @apiName treeListByParentId
      * @apiGroup classification
      * @apiParam {Number} parentId 父档案分类ID(根节点为1)(url参数)
      * @apiSuccess (Success 200) {Number} id 档案分类ID.
@@ -95,8 +95,8 @@ public class ClassificationController {
      * {"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","children": [
      * {"id": 档案分类ID,"code": "档案分类编码","name": "子档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"}]}]}}.
      */
-    @RequestMapping(value = "/parent/{parentId}/treeList", method = RequestMethod.GET)
-    public Map<String, Object> treeListByParentId(@PathVariable("parentId") int parentId) {
+    @RequestMapping(value = "/treeListByParentId", method = RequestMethod.GET)
+    public Map<String, Object> treeListByParentId(@RequestParam("parentId") int parentId) {
         return archivesQuery.getClassificationTreeMapByParent(UInteger.valueOf(parentId));
     }
 
