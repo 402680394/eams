@@ -29,7 +29,7 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
     boolean existsByRoleNameAndFondsIdIsNullAndIdNot(String roleName, long roleId );
 
     @Modifying
-    @Query(value = "update Role set roleName = :#{#role.roleName} where id = :#{#role.id}")
+    @Query(value = "update Role set roleName = :#{#role.roleName},remark = :#{#role.remark} where id = :#{#role.id}")
     void updateById(@Param("role") Role role);
 
     List<Role> findByFondsIdIn(Iterable<Integer> fondsId);
