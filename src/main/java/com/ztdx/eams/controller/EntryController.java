@@ -43,7 +43,7 @@ public class EntryController {
     }
 
     /**
-     * @api {get} /entry/{id} 获取条目详细信息
+     * @api {get} /entry/{id}?cid={cid} 获取条目详细信息
      * @apiName get_entry
      * @apiGroup entry
      * @apiParam {String} id 条目id (Path变量)
@@ -85,8 +85,8 @@ public class EntryController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public Entry get(@PathVariable("id") String id){
-        Entry entry = entryService.get(id);
+    public Entry get(@PathVariable("id") String id, @RequestParam("cid") int catalogueId){
+        Entry entry = entryService.get(catalogueId, id);
         if (entry == null){
             throw new NotFoundException("条目不存在");
         }

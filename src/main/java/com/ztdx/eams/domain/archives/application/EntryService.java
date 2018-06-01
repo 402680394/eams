@@ -237,7 +237,7 @@ public class EntryService {
         entryElasticsearchRepository.saveAll(list);
     }
 
-    public Entry get(String id) {
-        return entryMongoRepository.findById(id).orElse(null);
+    public Entry get(int catalogueId, String id) {
+        return entryMongoRepository.findById(id, "archive_record_" + catalogueId).orElse(null);
     }
 }
