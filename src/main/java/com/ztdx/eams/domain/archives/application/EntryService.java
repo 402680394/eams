@@ -236,4 +236,8 @@ public class EntryService {
         entryMongoRepository.saveAll(list);
         entryElasticsearchRepository.saveAll(list);
     }
+
+    public Entry get(String id) {
+        return entryMongoRepository.findById(id).orElse(null);
+    }
 }
