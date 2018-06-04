@@ -5,5 +5,5 @@ import com.ztdx.eams.domain.system.model.OperationLog;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface OperationLogRepository extends CustomMongoRepository<OperationLog, String> {
+public interface  OperationLogRepository extends CustomMongoRepository<OperationLog, String> {
 }

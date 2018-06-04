@@ -20,12 +20,12 @@ import java.util.OptionalLong;
 @Aspect
 public class LogAspect {
 
-    private final OperationLogService operationLogService;
-
-    @Autowired
-    public LogAspect(OperationLogService operationLogService) {
-        this.operationLogService = operationLogService;
-    }
+//    private final OperationLogService operationLogService;
+//
+//    @Autowired
+//    public LogAspect(OperationLogService operationLogService) {
+//        this.operationLogService = operationLogService;
+//    }
 
 
     @Before("execution(* *.*(..)) && @annotation(logInfo)")
@@ -45,7 +45,7 @@ public class LogAspect {
         }
 
 
-        operationLogService.add(new OperationLog());
+        //operationLogService.add(new OperationLog());
 
     }
 

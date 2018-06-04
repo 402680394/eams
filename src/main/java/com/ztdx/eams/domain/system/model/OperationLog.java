@@ -12,15 +12,15 @@ import java.util.UUID;
 @Document(collection = "operation_log")
 public class OperationLog {
 
-    public OperationLog(){
-
-    }
-
-    public OperationLog(String message,int operatorId,int operatorName){
-        id =UUID.randomUUID().toString();
-        gmtCreate =new Date();
-        gmtModified=new Date();
-    }
+//    public OperationLog(){
+//
+//    }
+//
+//    public OperationLog(String message,int operatorId,int operatorName){
+//        id =UUID.randomUUID().toString();
+//        gmtCreate =new Date();
+//        gmtModified=new Date();
+//    }
 
     /**
      * 主键
