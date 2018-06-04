@@ -34,7 +34,7 @@ public class OriginalText {
 
     private String size;
 
-    private long createTime;
+    private Date createTime;
 
     private String version;
 

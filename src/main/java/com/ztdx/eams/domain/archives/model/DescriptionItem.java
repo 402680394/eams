@@ -73,6 +73,17 @@ public class DescriptionItem {
     @Column(name = "is_null")
     private int isNull;
 
+    //是否自增
+    @Min(value = 0)
+    @Max(value = 1)
+    @Column(name = "is_increment")
+    private int isIncrement;
+
+    //自增数值
+    @Min(value = 0)
+    @Column(name = "increment")
+    private int increment;
+
     //是否使用字典
     @Min(value = 0)
     @Max(value = 1)

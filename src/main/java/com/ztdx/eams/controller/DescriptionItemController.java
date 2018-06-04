@@ -30,6 +30,7 @@ public class DescriptionItemController {
      * @apiGroup descriptionItem
      * @apiParam {Number} catalogueId 所属目录ID(url参数)
      * @apiSuccess (Success 200) {Number} id 著录项ID.
+     * @apiSuccess (Success 200) {String} metadataName 元数据名称.
      * @apiSuccess (Success 200) {String} displayName 显示名称.
      * @apiSuccess (Success 200) {Number} propertyType 属性类型标识.
      * @apiSuccess (Success 200) {String} defaultValue 默认值.

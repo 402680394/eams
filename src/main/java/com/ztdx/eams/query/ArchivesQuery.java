@@ -739,6 +739,7 @@ public class ArchivesQuery {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = dslContext.select(
                 archivesDescriptionItem.ID.as("id"),
+                archivesDescriptionItem.METADATA_NAME.as("metadataName"),
                 archivesDescriptionItem.DISPLAY_NAME.as("displayName"),
                 archivesDescriptionItem.PROPERTY_TYPE.as("propertyType"),
                 archivesDescriptionItem.DEFAULT_VALUE.as("defaultValue"),

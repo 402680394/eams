@@ -176,7 +176,7 @@ public class OriginalTextController {
      * "items": [
      * {
      * "size": "482491",
-     * "createTime": 1527663874308,
+     * "createTime": 1527663874,
      * "name": "DAT 1-2000 档案工作基本术语.pdf",
      * "remark": "备注",
      * "id": "e60b9591-fc7f-4de5-be4c-f5beddaf510d",

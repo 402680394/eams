@@ -88,7 +88,7 @@ public class OriginalTextService {
         }
         originalText.setOrderNumber(orderNumber + 1);
         originalText.setId(String.valueOf(UUID.randomUUID()));
-        originalText.setCreateTime(new Date().getTime());
+        originalText.setCreateTime(new Date());
         originalText.setGmtCreate(new Date());
         originalText.setGmtModified(new Date());
         //存入MongoDB
@@ -136,14 +136,14 @@ public class OriginalTextService {
     private void fileUpload(OriginalText originalText, MultipartFile file) {
         //文件上传
         File tmpFile = new File(file.getOriginalFilename());
+        FileOutputStream fos = null;
+        BufferedOutputStream bos = null;
         try {
             //先存入本地
             byte[] bytes = file.getBytes();
-            FileOutputStream fos = new FileOutputStream(tmpFile);
-            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            fos = new FileOutputStream(tmpFile);
+            bos = new BufferedOutputStream(fos);
             bos.write(bytes);
-            fos.close();
-            bos.close();
 
             //TODO li 获取文件属性
 //            Metadata metadata = JpegMetadataReader.readMetadata(tmpFile);
@@ -164,6 +164,13 @@ public class OriginalTextService {
         } finally {
             //删除本地临时文件
             tmpFile.delete();
+            try {
+                bos.close();
+                fos.close();
+            } catch (IOException e) {
+                throw new BusinessException("文件上传失败");
+            }
+
         }
     }
 
@@ -221,6 +228,7 @@ public class OriginalTextService {
                 if (bis != null) {
                     try {
                         bis.close();
+                        os.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
