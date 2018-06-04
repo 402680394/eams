@@ -1,6 +1,7 @@
 package com.ztdx.eams.domain.archives.model;
 
 import lombok.Data;
+import org.hibernate.validator.constraints.Range;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
@@ -38,14 +39,17 @@ public class Metadata {
     private int dataType;
 
     //字段宽度
-    @Size(max = 20)
     @Column(name = "field_width")
-    private String fieldWidth;
+    private Integer fieldWidth;
 
     //字段精度
-    @Size(max = 20)
     @Column(name = "field_precision")
-    private String fieldPrecision;
+    private Integer fieldPrecision;
+
+    //字段格式
+    @Size(max = 100)
+    @Column(name = "field_format")
+    private String fieldFormat;
 
     //元数据规范ID
     @Column(name = "metadata_standards_id")

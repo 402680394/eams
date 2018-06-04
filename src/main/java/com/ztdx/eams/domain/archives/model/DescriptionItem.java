@@ -55,6 +55,19 @@ public class DescriptionItem {
     @Column(name = "data_type")
     private int dataType;
 
+    //字段宽度
+    @Column(name = "field_width")
+    private Integer fieldWidth;
+
+    //字段精度
+    @Column(name = "field_precision")
+    private Integer fieldPrecision;
+
+    //字段格式
+    @Size(max = 100)
+    @Column(name = "field_format")
+    private String fieldFormat;
+
     //是否建立索引
     @Min(value = 0)
     @Max(value = 1)
@@ -72,6 +85,17 @@ public class DescriptionItem {
     @Max(value = 1)
     @Column(name = "is_null")
     private int isNull;
+
+    //是否自增
+    @Min(value = 0)
+    @Max(value = 1)
+    @Column(name = "is_increment")
+    private int isIncrement;
+
+    //自增数值
+    @Min(value = 0)
+    @Column(name = "increment")
+    private int increment;
 
     //是否使用字典
     @Min(value = 0)
