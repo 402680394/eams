@@ -55,6 +55,19 @@ public class DescriptionItem {
     @Column(name = "data_type")
     private int dataType;
 
+    //字段宽度
+    @Column(name = "field_width")
+    private Integer fieldWidth;
+
+    //字段精度
+    @Column(name = "field_precision")
+    private Integer fieldPrecision;
+
+    //字段格式
+    @Size(max = 100)
+    @Column(name = "field_format")
+    private String fieldFormat;
+
     //是否建立索引
     @Min(value = 0)
     @Max(value = 1)
