@@ -50,10 +50,11 @@ public class DescriptionItem {
     private DefaultValue defaultValue;
 
     //数据类型(1 数值 2 字符串 3 日期 4 浮点)
+    @Convert(converter = DescriptionItemDataType.EnumConverter.class)
     @Min(value = 1)
     @Max(value = 4)
     @Column(name = "data_type")
-    private int dataType;
+    private DescriptionItemDataType dataType;
 
     //字段宽度
     @Column(name = "field_width")

@@ -7,7 +7,7 @@ import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
 public class EntryItemConverter {
 
     public static Object from(Object value, DescriptionItem descriptionItem) {
-        DescriptionItemDataType dataType = DescriptionItemDataType.create(descriptionItem.getDataType());
+        DescriptionItemDataType dataType = descriptionItem.getDataType();
         switch (dataType) {
             case Integer:
                 return new IntegerEntryItemValue(descriptionItem, value).get();

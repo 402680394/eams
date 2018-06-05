@@ -69,6 +69,7 @@ public class EntryService {
         }
 
         entry.setArchiveId(catalog.getArchivesId());
+        entry.setCatalogueType(catalog.getCatalogueType());
         entry.setArchiveContentType(archives.getContentTypeId());
         entry.setArchiveType(archives.getType());
         entry.setFondsId(archivesGroup.getFondsId());
@@ -122,7 +123,7 @@ public class EntryService {
         itemQuery.forEach((key, value) -> {
             DescriptionItem item = descriptionItemMap.get(key);
             if (item != null) {
-                DescriptionItemDataType dataType = DescriptionItemDataType.create(item.getDataType());
+                DescriptionItemDataType dataType = item.getDataType();
                 switch (dataType) {
                     case String: {
                         query.add(QueryBuilders.wildcardQuery(key, value + "*"));
