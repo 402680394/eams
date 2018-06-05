@@ -2,10 +2,10 @@ package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.basic.utils.FtpFileUtil;
-import com.ztdx.eams.domain.archives.model.Catalogue;
+import com.ztdx.eams.basic.utils.FtpUtil;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.OriginalText;
+import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
 import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
@@ -41,38 +41,35 @@ public class OriginalTextService {
 
     private final ArchivesRepository archivesRepository;
 
-    private final FtpFileUtil ftpFileUtil;
+    private final ArchivesGroupRepository archivesGroupRepository;
+
+    private final FtpUtil ftpUtil;
 
     @Autowired
-    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, FtpFileUtil ftpFileUtil) {
+    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.originalTextMongoRepository = originalTextMongoRepository;
         this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
         this.catalogueRepository = catalogueRepository;
         this.archivesRepository = archivesRepository;
-        this.ftpFileUtil = ftpFileUtil;
+        this.archivesGroupRepository = archivesGroupRepository;
+        this.ftpUtil = ftpUtil;
     }
 
     public void save(OriginalText originalText, MultipartFile file) {
         if (file.isEmpty()) {
             throw new InvalidArgumentException("原文文件未上传");
         }
-        Catalogue catalog = catalogueRepository.findById(originalText.getCatalogueId()).orElse(null);
-        if (catalog == null) {
-            throw new InvalidArgumentException("目录不存在");
-        }
-        if (null == archivesRepository.findById(catalog.getArchivesId()).orElse(null)) {
-            throw new InvalidArgumentException("档案库不存在");
+        Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(originalText.getCatalogueId());
+        if (null == fondsId) {
+            throw new InvalidArgumentException("全宗档案库不存在");
         }
         Optional<Entry> find = entryElasticsearchRepository.findById(originalText.getEntryId(), "archive_record_" + originalText.getCatalogueId());
         if (!find.isPresent()) {
-            throw new InvalidArgumentException("条目不存在或已被删除");
+            throw new InvalidArgumentException("条目不存在");
         }
-        //读取文件名称
-        originalText.setName(file.getOriginalFilename());
-
         //文件上传到本地服务器读取文件属性,然后上传至ftp
-        fileUpload(originalText, file);
+        fileUpload(fondsId, originalText, file);
 
         //设置排序号
         BoolQueryBuilder query = QueryBuilders.boolQuery();
@@ -111,17 +108,18 @@ public class OriginalTextService {
     }
 
     public void update(OriginalText originalText, MultipartFile file) {
+        Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(originalText.getCatalogueId());
+        if (null == fondsId) {
+            throw new InvalidArgumentException("全宗档案库不存在");
+        }
         Optional<OriginalText> find = originalTextMongoRepository.findById(originalText.getId(), "archive_record_originalText_" + originalText.getCatalogueId());
         if (!find.isPresent()) {
             save(originalText, file);
             return;
         }
         if (!file.isEmpty()) {
-            //读取文件基本属性
-            originalText.setName(file.getOriginalFilename());
-
             //文件上传到本地服务器读取文件属性,然后上传至ftp
-            fileUpload(originalText, file);
+            fileUpload(fondsId, originalText, file);
         }
         originalText.setCreateTime(find.get().getCreateTime());
         originalText.setGmtCreate(find.get().getGmtCreate());
@@ -133,17 +131,20 @@ public class OriginalTextService {
         originalTextElasticsearchRepository.save(originalText);
     }
 
-    private void fileUpload(OriginalText originalText, MultipartFile file) {
+    private void fileUpload(int fondsId, OriginalText originalText, MultipartFile file) {
         //文件上传
         File tmpFile = new File(file.getOriginalFilename());
         FileOutputStream fos = null;
         BufferedOutputStream bos = null;
+        FileInputStream fis = null;
+        BufferedInputStream bis = null;
         try {
             //先存入本地
             byte[] bytes = file.getBytes();
             fos = new FileOutputStream(tmpFile);
             bos = new BufferedOutputStream(fos);
             bos.write(bytes);
+            bos.flush();
 
             //TODO li 获取文件属性
 //            Metadata metadata = JpegMetadataReader.readMetadata(tmpFile);
@@ -154,9 +155,10 @@ public class OriginalTextService {
 //                    System.out.println(tag.getTagName() + ":" + tag.getDescription());
 //              }
 //            }
+            originalText.setName(file.getOriginalFilename());
             originalText.setSize(String.valueOf(tmpFile.length()));
             //上传文件到FTP
-            originalText.setFtpFileMD5(ftpFileUtil.uploadFile(tmpFile));
+            originalText.setFtpFileMD5(ftpUtil.uploadFile(fondsId, tmpFile));
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
@@ -168,7 +170,7 @@ public class OriginalTextService {
                 bos.close();
                 fos.close();
             } catch (IOException e) {
-                throw new BusinessException("文件上传失败");
+                throw new BusinessException("文件传输流未关闭");
             }
 
         }
@@ -196,9 +198,13 @@ public class OriginalTextService {
     }
 
     public void fileDownload(int catalogueId, String id, HttpServletResponse response) {
+        Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(catalogueId);
+        if (null == fondsId) {
+            throw new InvalidArgumentException("全宗档案库不存在");
+        }
         Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
         if (find.isPresent()) {
-            File file = ftpFileUtil.downloadFile(find.get().getFtpFileMD5(), find.get().getName());
+            File file = ftpUtil.downloadFile(fondsId, find.get().getFtpFileMD5(), find.get().getName());
             String filename = null;
             try {
                 filename = URLEncoder.encode(find.get().getName(), "UTF-8");
@@ -230,12 +236,12 @@ public class OriginalTextService {
                         bis.close();
                         os.close();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        throw new BusinessException("文件传输流未关闭");
                     }
                 }
             }
         } else {
-            throw new BusinessException("文件不存在或已被删除");
+            throw new BusinessException("文件下载失败");
         }
     }
 

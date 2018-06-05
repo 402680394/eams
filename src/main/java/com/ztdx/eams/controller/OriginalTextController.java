@@ -4,7 +4,6 @@ import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.OriginalTextService;
 import com.ztdx.eams.domain.archives.model.OriginalText;
 import com.ztdx.eams.domain.system.application.PermissionService;
-import com.ztdx.eams.domain.system.application.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,12 +41,12 @@ public class OriginalTextController {
      * @apiParam {Number} catalogueId 目录ID(form-data参数)
      * @apiParam {String} entryId 条目ID(form-data参数)
      * @apiParam {String} title 文件标题(form-data参数)
-     * @apiParam {Number} type 文件类型(form-data参数)
+     * @apiParam {String} type 文件类型(form-data参数)
      * @apiParam {String} version 文件版本(form-data参数)
      * @apiParam {String} remark 备注(form-data参数)
      * @apiParam {File} file 原文文件(form-data参数)
-     * @apiError (Error 400) message 1.目录不存在;2.档案库不存在;3.条目不存在或已被删除;4.原文文件未上传.
-     * @apiError (Error 500) message 1.文件上传失败;2.连接ftp服务异常;3.ftp服务未正常关闭.
+     * @apiError (Error 400) message 1.全宗档案库不存在;2.条目不存在;3.原文文件未上传.
+     * @apiError (Error 500) message 1.文件上传失败;2.未连接到ftp服务;3.ftp服务未正常关闭.4.文件传输流未关闭.
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_write_' + #request.getParameter(\"catalogueId\"))")
@@ -57,7 +56,7 @@ public class OriginalTextController {
         originalText.setCatalogueId(Integer.parseInt(request.getParameter("catalogueId")));
         originalText.setEntryId(request.getParameter("entryId"));
         originalText.setTitle(request.getParameter("title"));
-        originalText.setType(Integer.parseInt(request.getParameter("type")));
+        originalText.setType(request.getParameter("type"));
         originalText.setVersion(request.getParameter("version"));
         originalText.setRemark(request.getParameter("remark"));
         originalTextService.save(originalText, file);
@@ -79,7 +78,7 @@ public class OriginalTextController {
                     "ROLE_ADMIN"
                     , "archive_file_write_"
                             + a.getOrDefault("catalogueId", "").toString())
-                    ){
+                    ) {
                 throw new ForbiddenException("没有权限删除原文");
             }
         });
@@ -94,12 +93,12 @@ public class OriginalTextController {
      * @apiParam {String} entryId 条目ID(form-data参数)
      * @apiParam {String} id 原文ID(form-data参数)
      * @apiParam {String} title 文件标题(form-data参数)
-     * @apiParam {Number} type 文件类型(form-data参数)
+     * @apiParam {String} type 文件类型(form-data参数)
      * @apiParam {String} version 文件版本(form-data参数)
      * @apiParam {String} remark 备注(form-data参数)
      * @apiParam {File} file 原文文件(form-data参数)
-     * @apiError (Error 400) message 1.目录不存在;2.档案库不存在;3.条目不存在或已被删除;4.原文文件未上传.
-     * @apiError (Error 500) message 1.文件上传失败;2.连接ftp服务异常;3.ftp服务未正常关闭.
+     * @apiError (Error 400) message 全宗档案库不存在
+     * @apiError (Error 500) message 1.文件上传失败;2.未连接到ftp服务;3.ftp服务未正常关闭;4.文件传输流未关闭.
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_write_' + #request.getParameter(\"catalogueId\"))")
@@ -110,7 +109,7 @@ public class OriginalTextController {
         originalText.setEntryId(request.getParameter("entryId"));
         originalText.setId(request.getParameter("id"));
         originalText.setTitle(request.getParameter("title"));
-        originalText.setType(Integer.parseInt(request.getParameter("type")));
+        originalText.setType(request.getParameter("type"));
         originalText.setVersion(request.getParameter("version"));
         originalText.setRemark(request.getParameter("remark"));
         originalTextService.update(originalText, file);
@@ -127,7 +126,6 @@ public class OriginalTextController {
      * @apiSuccess (Success 200) {String} data.标题 原文文件属性示例.
      * @apiSuccess (Success 200) {String} data.主题 原文文件属性示例.
      * @apiSuccess (Success 200) {String} data.像素 原文文件属性示例.
-     * @apiError (Error 400) message 1.目录不存在;2.档案库不存在;3.条目不存在或已被删除.
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
@@ -145,10 +143,9 @@ public class OriginalTextController {
      * @apiParam {String} id 原文ID(url参数)
      * @apiSuccess (Success 200) {String} id ID.
      * @apiSuccess (Success 200) {String} title 标题.
-     * @apiSuccess (Success 200) {String} type 类型(可选值：1-正文；2-改稿；3-副本).
+     * @apiSuccess (Success 200) {String} type 类型.
      * @apiSuccess (Success 200) {String} version 版本.
      * @apiSuccess (Success 200) {String} remark 备注.
-     * @apiError (Error 400) message 1.目录不存在;2.档案库不存在;3.条目不存在或已被删除.
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
@@ -163,7 +160,7 @@ public class OriginalTextController {
      * @apiGroup originalText
      * @apiParam {Number} catalogueId 目录ID(url参数)
      * @apiParam {String} id 原文ID(url参数)
-     * @apiError (Error 400) message 1.目录不存在;2.档案库不存在;3.条目不存在或已被删除.
+     * @apiError (Error 400) message 1.全宗档案库不存在;2.文件下载失败;3.ftp服务未正常关闭;4.文件传输流未关闭.
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
@@ -183,7 +180,7 @@ public class OriginalTextController {
      * @apiParam {Number} size 每页条数(url参数)
      * @apiSuccess (Success 200) {String} id ID.
      * @apiSuccess (Success 200) {String} title 标题.
-     * @apiSuccess (Success 200) {Number} type 类型(可选值：1-正文；2-改稿；3-副本).
+     * @apiSuccess (Success 200) {String} type 类型.
      * @apiSuccess (Success 200) {String} version 版本.
      * @apiSuccess (Success 200) {String} name 名称.
      * @apiSuccess (Success 200) {String} size 文件大小.

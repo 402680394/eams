@@ -13,7 +13,7 @@ import java.io.*;
  * Created by li on 2018/5/25.
  */
 @Component
-public class FtpFileUtil {
+public class FtpUtil {
     //ftp服务器ip地址
     @Value("${ftp.address}")
     private String FTP_ADDRESS;
@@ -48,7 +48,7 @@ public class FtpFileUtil {
     /*
      * 上传文件
      */
-    public String uploadFile(File file) {
+    public String uploadFile(int fondsId, File file) {
 
         FTPClient ftp = getFTPClient();
         ftp.setControlEncoding("UTF-8");
@@ -63,7 +63,10 @@ public class FtpFileUtil {
             String MD5 = DigestUtils.md5Hex(fisMD5);
 
             //设置存放路径
-            String path = FTP_BASEPATH + MD5.substring(0, 2);
+            String path = FTP_BASEPATH + fondsId;
+            ftp.makeDirectory(path);
+            ftp.changeWorkingDirectory(path);
+            path = MD5.substring(0, 2);
             ftp.makeDirectory(path);
             ftp.changeWorkingDirectory(path);
             path = MD5.substring(2, 4);
@@ -93,7 +96,7 @@ public class FtpFileUtil {
         }
     }
 
-    public File downloadFile(String MD5, String fileName) {
+    public File downloadFile(int fondsId, String MD5, String fileName) {
 
         FTPClient ftp = getFTPClient();
         ftp.setControlEncoding("UTF-8");
@@ -101,7 +104,10 @@ public class FtpFileUtil {
         try {
             ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
             ftp.enterLocalPassiveMode();
-            String path = FTP_BASEPATH + MD5.substring(0, 2);
+
+            String path = FTP_BASEPATH + fondsId;
+            ftp.changeWorkingDirectory(path);
+            path = MD5.substring(0, 2);
             ftp.changeWorkingDirectory(path);
             path = MD5.substring(2, 4);
             ftp.changeWorkingDirectory(path);
