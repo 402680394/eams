@@ -158,21 +158,20 @@ public class OriginalTextService {
             originalText.setName(file.getOriginalFilename());
             originalText.setSize(String.valueOf(tmpFile.length()));
             //上传文件到FTP
-            originalText.setFtpFileMD5(ftpUtil.uploadFile(fondsId, tmpFile));
+            originalText.setMd5(ftpUtil.uploadFile(fondsId, tmpFile));
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
             throw new BusinessException("文件上传失败");
         } finally {
-            //删除本地临时文件
-            tmpFile.delete();
             try {
                 bos.close();
                 fos.close();
             } catch (IOException e) {
                 throw new BusinessException("文件传输流未关闭");
             }
-
+            //删除本地临时文件
+            tmpFile.delete();
         }
     }
 
@@ -204,7 +203,7 @@ public class OriginalTextService {
         }
         Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
         if (find.isPresent()) {
-            File file = ftpUtil.downloadFile(fondsId, find.get().getFtpFileMD5(), find.get().getName());
+            File file = ftpUtil.downloadFile(fondsId, find.get().getMd5(), find.get().getName());
             String filename = null;
             try {
                 filename = URLEncoder.encode(find.get().getName(), "UTF-8");
@@ -230,7 +229,6 @@ public class OriginalTextService {
             } catch (IOException e) {
                 throw new BusinessException("文件下载失败");
             } finally {
-                file.delete();
                 if (bis != null) {
                     try {
                         bis.close();
@@ -239,6 +237,7 @@ public class OriginalTextService {
                         throw new BusinessException("文件传输流未关闭");
                     }
                 }
+                file.delete();
             }
         } else {
             throw new BusinessException("文件下载失败");

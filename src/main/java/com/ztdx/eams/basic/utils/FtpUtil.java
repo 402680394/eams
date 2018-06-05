@@ -56,7 +56,6 @@ public class FtpUtil {
         FileInputStream fis = null;
         try {
             ftp.enterLocalPassiveMode();
-            ftp.setFileTransferMode(FTPClient.BINARY_FILE_TYPE);
             ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
             //计算文件MD5
             fisMD5 = new FileInputStream(file);
@@ -75,7 +74,6 @@ public class FtpUtil {
             fis = new FileInputStream(file);
             //上传
             ftp.storeFile(MD5, fis);
-            ftp.logout();
             return MD5;
         } catch (IOException e) {
             throw new BusinessException("文件上传失败");
@@ -83,9 +81,11 @@ public class FtpUtil {
             try {
                 fisMD5.close();
                 fis.close();
+                ftp.logout();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             if (ftp.isConnected()) {
                 try {
                     ftp.disconnect();
@@ -102,8 +102,8 @@ public class FtpUtil {
         ftp.setControlEncoding("UTF-8");
         OutputStream os = null;
         try {
-            ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
             ftp.enterLocalPassiveMode();
+            ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
 
             String path = FTP_BASEPATH + fondsId;
             ftp.changeWorkingDirectory(path);
@@ -115,13 +115,13 @@ public class FtpUtil {
             File localFile = new File(fileName);
             os = new FileOutputStream(localFile);
             ftp.retrieveFile(MD5, os);
-            ftp.logout();
             return localFile;
         } catch (Exception e) {
             throw new BusinessException("文件下载失败");
         } finally {
             try {
                 os.close();
+                ftp.logout();
             } catch (IOException e) {
                 e.printStackTrace();
             }
