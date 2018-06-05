@@ -69,7 +69,6 @@ public class EntryService {
         }
 
         entry.setArchiveId(catalog.getArchivesId());
-        entry.setCatalogueType(CatalogueType.create(catalog.getCatalogueType()));
         entry.setArchiveContentType(archives.getContentTypeId());
         entry.setArchiveType(archives.getType());
         entry.setFondsId(archivesGroup.getFondsId());
