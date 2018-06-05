@@ -273,7 +273,7 @@ public class RoleController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/{id}/users", method = RequestMethod.POST)
-    public Map<String, List<Integer>> addUser(@PathVariable long id, @JsonParam List<Integer> userIds) {
+    public Map<String, Object> addUser(@PathVariable long id, @JsonParam List<Integer> userIds) {
         if (userIds.size() == 0) {
             throw new InvalidArgumentException("参数userIds错误");
         }
@@ -476,5 +476,31 @@ public class RoleController {
     @RequestMapping(value = "/{id}/permissions", method = RequestMethod.GET)
     public Map rolePermission(@PathVariable("id") long id){
          return roleService.listRolePermission(id);
+    }
+
+    /**
+     * @api {get} /role/{id}/users 查询角色的权限
+     * @apiName roleUsers
+     * @apiGroup role
+     * @apiParam {long} id 角色id path参数
+     * @apiSuccess (Success 200) {Array} data 用户列表
+     * @apiSuccess (Success 200) {Number} data.id 用户id
+     * @apiSuccess (Success 200) {String} data.name 用户姓名
+     * @apiSuccess (Success 200) {String} data.organization 公司
+     *
+     * @apiSuccessExample {json} Success-Response:
+     * {
+     *     "data": [
+     *         {
+     *             "id": 1,
+     *             "name": "姓名",
+     *             "organization": "公司"
+     *         }
+     *     ]
+     * }
+     */
+    @RequestMapping(value = "/{id}/users", method = RequestMethod.GET)
+    public List<Map<String, Object>> roleUsers(@PathVariable("id") long id){
+        return roleService.roleUsers(id);
     }
 }

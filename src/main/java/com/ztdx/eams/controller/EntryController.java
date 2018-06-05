@@ -84,6 +84,7 @@ public class EntryController {
      * @apiError (Error 404) message 1.条目不存在
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Entry get(@PathVariable("id") String id, @RequestParam("cid") int catalogueId){
         Entry entry = entryService.get(catalogueId, id);
@@ -121,6 +122,7 @@ public class EntryController {
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody Entry entry, @SessionAttribute UserCredential LOGIN_USER) {
         //descriptionItemService.addVerification(entry, LOGIN_USER);
@@ -155,10 +157,11 @@ public class EntryController {
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public void update(@PathVariable("id") String uuid, @RequestBody Entry entry, @SessionAttribute UserCredential LOGIN_USER) {
         entry.setId(uuid);
-        descriptionItemService.updateVerification(entry, LOGIN_USER);
+        //descriptionItemService.updateVerification(entry, LOGIN_USER);
         entryService.update(entry);
     }
 
@@ -179,7 +182,7 @@ public class EntryController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.DELETE)
-    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_delete_' + #cid)")
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #cid)")
     public void delete(@JsonParam() int cid, @JsonParam List<String> deletes){
         Catalogue catalogue = catalogueService.get(cid);
         if (catalogue == null){
@@ -289,6 +292,7 @@ public class EntryController {
      *     }
      * }
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
     @RequestMapping(value = "/search", method = RequestMethod.GET)
     public Map<String, Object> search(@RequestParam("cid") int catalogueId
             , @RequestParam(value = "q", required = false, defaultValue = "") String queryString
@@ -401,6 +405,7 @@ public class EntryController {
      *     }
      * }
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #entry.catalogueId)")
     @RequestMapping(value = "/search", method = RequestMethod.POST)
     public Page<Entry> searchAdv(@RequestBody Entry entry, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size) {
         //, @RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size

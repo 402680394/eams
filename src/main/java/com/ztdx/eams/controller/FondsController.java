@@ -9,6 +9,7 @@ import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.query.SystemQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -88,6 +89,7 @@ public class FondsController {
      * @apiError (Error 400) message 1.全宗号已存在 2.请设置关联机构 3.机构已被其它全宗关联.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_fonds_write')")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody HashMap<String, Object> map) {
         Fonds fonds = new Fonds();
@@ -107,6 +109,7 @@ public class FondsController {
      * @apiError (Error 400) message 该全宗下存在子全宗.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_fonds_write')")
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {
         fondsService.delete(id);
@@ -125,6 +128,7 @@ public class FondsController {
      * @apiError (Error 400) message 1.全宗号已存在 2.请设置关联机构 3.机构已被其它全宗关联
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_fonds_write')")
     @RequestMapping(value = "", method = RequestMethod.PUT)
     public void update(@RequestBody HashMap<String, Object> map) {
         Fonds fonds = new Fonds();
@@ -150,6 +154,7 @@ public class FondsController {
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"id": 全宗ID,"code": "全宗编码","name": "全宗名称","parentId": 上级全宗ID","association":[1,2,3]}}.
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_fonds_read')")
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
         return systemQuery.getFondsAndAssociationId(UInteger.valueOf(id));
@@ -164,6 +169,7 @@ public class FondsController {
      * @apiError (Error 400) message 上级全宗不一致.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_fonds_write')")
     @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)
     public void priority(@PathVariable("upId") int upId, @PathVariable("downId") int downId) {
         fondsService.priority(upId, downId);

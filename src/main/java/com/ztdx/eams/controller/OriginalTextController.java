@@ -1,9 +1,13 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.OriginalTextService;
 import com.ztdx.eams.domain.archives.model.OriginalText;
+import com.ztdx.eams.domain.system.application.PermissionService;
+import com.ztdx.eams.domain.system.application.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,9 +27,12 @@ public class OriginalTextController {
 
     private final OriginalTextService originalTextService;
 
+    private final PermissionService permissionService;
+
     @Autowired
-    public OriginalTextController(OriginalTextService originalTextService) {
+    public OriginalTextController(OriginalTextService originalTextService, PermissionService permissionService) {
         this.originalTextService = originalTextService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -43,6 +50,7 @@ public class OriginalTextController {
      * @apiError (Error 500) message 1.文件上传失败;2.连接ftp服务异常;3.ftp服务未正常关闭.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_write_' + #request.getParameter(\"catalogueId\"))")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(HttpServletRequest request, MultipartFile file) {
         OriginalText originalText = new OriginalText();
@@ -66,6 +74,15 @@ public class OriginalTextController {
      */
     @RequestMapping(value = "", method = RequestMethod.DELETE)
     public void deleteBatch(@RequestBody List<Map<String, Object>> list) {
+        list.forEach(a -> {
+            if (!permissionService.hasAnyAuthority(
+                    "ROLE_ADMIN"
+                    , "archive_file_write_"
+                            + a.getOrDefault("catalogueId", "").toString())
+                    ){
+                throw new ForbiddenException("没有权限删除原文");
+            }
+        });
         originalTextService.deleteBatch(list);
     }
 
@@ -85,6 +102,7 @@ public class OriginalTextController {
      * @apiError (Error 500) message 1.文件上传失败;2.连接ftp服务异常;3.ftp服务未正常关闭.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_write_' + #request.getParameter(\"catalogueId\"))")
     @RequestMapping(value = "", method = RequestMethod.PUT)
     public void update(HttpServletRequest request, MultipartFile file) {
         OriginalText originalText = new OriginalText();
@@ -112,6 +130,7 @@ public class OriginalTextController {
      * @apiError (Error 400) message 1.目录不存在;2.档案库不存在;3.条目不存在或已被删除.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
     @RequestMapping(value = "/fileAttributes", method = RequestMethod.PUT)
     public Map<String, Object> fileAttributes(@RequestParam("catalogueId") int catalogueId, @RequestParam("entryId") String entryId, @RequestParam("id") String id) {
         return originalTextService.fileAttributes(catalogueId, entryId, id);
@@ -132,6 +151,7 @@ public class OriginalTextController {
      * @apiError (Error 400) message 1.目录不存在;2.档案库不存在;3.条目不存在或已被删除.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
     @RequestMapping(value = "", method = RequestMethod.GET)
     public Map<String, Object> get(@RequestParam("catalogueId") int catalogueId, @RequestParam("entryId") String entryId, @RequestParam("id") String id) {
         return originalTextService.get(catalogueId, id);
@@ -146,6 +166,7 @@ public class OriginalTextController {
      * @apiError (Error 400) message 1.目录不存在;2.档案库不存在;3.条目不存在或已被删除.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
     @RequestMapping(value = "/download", method = RequestMethod.GET)
     public void download(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id, HttpServletResponse response) {
         originalTextService.fileDownload(catalogueId, id, response);
@@ -188,6 +209,7 @@ public class OriginalTextController {
      * }
      * }
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam("catalogueId") int catalogueId,
                                     @RequestParam("entryId") String entryId,
@@ -224,6 +246,7 @@ public class OriginalTextController {
      * @apiError (Error 400) message 原文记录不存在
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
     @RequestMapping(value = "/sort", method = RequestMethod.PUT)
     public void sort(@RequestParam("upId") String upId, @RequestParam("downId") String downId, @RequestParam("catalogueId") int catalogueId) {
         originalTextService.sort(upId, downId, catalogueId);
