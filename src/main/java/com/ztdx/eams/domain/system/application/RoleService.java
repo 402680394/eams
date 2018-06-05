@@ -120,7 +120,7 @@ public class RoleService {
         );
 
         Map<String, Object> result = new HashMap<>();
-        result.put("added", addUserIds);
+        result.put("added", addUserIdSet);
         result.put("deleted", existsUserIds);
         return result;
     }
