@@ -29,7 +29,12 @@ public enum RulerType {
     /**
      * 固定值
      */
-    FixValue(4,"固定值");
+    FixValue(4,"固定值"),
+
+    /**
+     * 序号
+     */
+    SerialNumber (5,"序号");
 
     private Integer code;
     private String descpriont;
