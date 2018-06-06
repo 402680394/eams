@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @Configuration
 @EnableMongoRepositories(
-        basePackages = "com.ztdx.eams.domain.archives.repository.mongo",
+        basePackages = {"com.ztdx.eams.domain.archives.repository.mongo","com.ztdx.eams.domain.system.repository"},
         repositoryBaseClass = CustomMongoRepositoryImpl.class
 )
 public class MongoDbConfig {

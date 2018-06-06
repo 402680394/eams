@@ -1,6 +1,9 @@
 package com.ztdx.eams.controller;
 
 import com.ztdx.eams.controller.operationLog.LogInfo;
+import com.ztdx.eams.domain.system.application.OperationLogService;
+import com.ztdx.eams.domain.system.model.OperationLog;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,18 +17,28 @@ import java.util.Random;
 @RequestMapping(value = "/home")
 public class HomeController {
 
+    final OperationLogService operationLogService;
+
+    @Autowired
+    public HomeController(OperationLogService operationLogService) {
+        this.operationLogService = operationLogService;
+    }
+
     @RequestMapping(value = "/index/{id}")
-    @LogInfo(message = "'HELLO world' + args[0]")
-    public void get(@PathVariable("id") int id){
+    @LogInfo(message = "'操作了A' + args[0] +'返回值为' + result")
+    public Integer get(@PathVariable("id") int id) {
 
-        Random random =new Random();
+        OperationLog operationLog = operationLogService.get("cd8331b4-03ef-44c4-b03c-aca3b24afb32");
 
-        List<Integer> list =new ArrayList<>();
-        for (int i=0;i<100;i++){
+        Random random = new Random();
+
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
             list.add(random.nextInt());
         }
 
-        Integer max = list.stream().max(Comparator.comparing(u->u)).get();
 
+        Integer max = list.stream().max(Comparator.comparing(u -> u)).get();
+        return max;
     }
 }

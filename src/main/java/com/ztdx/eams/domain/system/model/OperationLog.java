@@ -12,15 +12,17 @@ import java.util.UUID;
 @Document(collection = "operation_log")
 public class OperationLog {
 
-//    public OperationLog(){
-//
-//    }
-//
-//    public OperationLog(String message,int operatorId,int operatorName){
-//        id =UUID.randomUUID().toString();
-//        gmtCreate =new Date();
-//        gmtModified=new Date();
-//    }
+    protected OperationLog(){
+
+    }
+
+    public OperationLog(String message,int operatorId,String operatorName){
+        this.message=message;
+        id =UUID.randomUUID().toString();
+        isSuccess =true;
+        gmtCreate =new Date();
+        gmtModified=new Date();
+    }
 
     /**
      * 主键
@@ -36,12 +38,12 @@ public class OperationLog {
     /**
      * 是否成功
      */
-    private boolean isException;
+    private Boolean isSuccess;
 
     /**
      * 操作人Id
      */
-    private int operatorId;
+    private Integer operatorId;
 
     /**
      * 操作人姓名
@@ -51,7 +53,7 @@ public class OperationLog {
     /**
      * 异常内容
      */
-    private Exception exception;
+    private Throwable exception;
 
     /**
      * 创建时间
@@ -62,4 +64,5 @@ public class OperationLog {
      * 修改时间
      */
     private Date gmtModified;
+
 }

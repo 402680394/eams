@@ -20,52 +20,65 @@ import java.util.OptionalLong;
 @Aspect
 public class LogAspect {
 
-//    private final OperationLogService operationLogService;
-//
-//    @Autowired
-//    public LogAspect(OperationLogService operationLogService) {
-//        this.operationLogService = operationLogService;
-//    }
+    private final OperationLogService operationLogService;
 
-
-    @Before("execution(* *.*(..)) && @annotation(logInfo)")
-    public void checkEntity(JoinPoint joinPoint, LogInfo logInfo) {
-
-        StringBuilder message = new StringBuilder();
-
-        if (joinPoint.getArgs() != null) {
-            LogContext logContext = new LogContext();
-            logContext.setArgs(joinPoint.getArgs());
-
-            ExpressionParser expressionParser = new SpelExpressionParser();
-            EvaluationContext evaluationContext = new StandardEvaluationContext(logContext);
-            message.append(expressionParser.parseExpression(logInfo.message()).getValue(evaluationContext).toString());
-        } else {
-            message.append(logInfo.message());
-        }
-
-
-        //operationLogService.add(new OperationLog());
-
+    @Autowired
+    public LogAspect(OperationLogService operationLogService) {
+        this.operationLogService = operationLogService;
     }
+
+
+//    @Before("execution(* *.*(..)) && @annotation(logInfo)")
+//    public void checkEntity(JoinPoint joinPoint, LogInfo logInfo) {
+//
+//        StringBuilder message = new StringBuilder();
+//
+//        if (joinPoint.getArgs() != null) {
+//            LogContext logContext = new LogContext();
+//            logContext.setArgs(joinPoint.getArgs());
+//
+//            ExpressionParser expressionParser = new SpelExpressionParser();
+//            EvaluationContext evaluationContext = new StandardEvaluationContext(logContext);
+//            message.append(expressionParser.parseExpression(logInfo.message()).getValue(evaluationContext).toString());
+//        } else {
+//            message.append(logInfo.message());
+//        }
+//
+//
+//        //operationLogService.add(new OperationLog());
+//
+//    }
 
 
     //环绕
     @Around("execution(public * *(..)) && @annotation(logInfo)")
-    public void AroundAspect(ProceedingJoinPoint joinPoint, LogInfo logInfo) {
+    public Object AroundAspect(ProceedingJoinPoint joinPoint, LogInfo logInfo) {
 
         LogContext logContext = new LogContext();
         logContext.setArgs(joinPoint.getArgs());
-
+        Throwable exception =null;
+        Boolean isSuccess =true;
 
         try {
-            joinPoint.proceed();
+            Object result = joinPoint.proceed();
+            logContext.setResult(result);
+            return result;
         } catch (Throwable e) {
-            e.printStackTrace();
-        }finally {
+            exception=e;
+            isSuccess =false;
+            throw new RuntimeException(e);
+        } finally {
+            String message = null;
+            ExpressionParser expressionParser = new SpelExpressionParser();
+            EvaluationContext evaluationContext = new StandardEvaluationContext(logContext);
+            message = expressionParser.parseExpression(logInfo.message()).getValue(evaluationContext).toString();
 
+            OperationLog operationLog = new OperationLog(message, 1, "test");
+            operationLog.setException(exception);
+            operationLog.setIsSuccess(isSuccess);
+            operationLogService.add(operationLog);
         }
-        System.out.println("环绕后增强");
+
     }
 
 }
