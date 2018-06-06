@@ -2,9 +2,14 @@ package com.ztdx.eams.basic.repository;
 
 import com.ztdx.eams.basic.repository.annotation.IndexNamePostfix;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.global.Global;
+import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.*;
@@ -28,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import static org.elasticsearch.search.aggregations.AggregationBuilders.global;
 
 @NoRepositoryBean
 public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable> extends AbstractElasticsearchRepository<T, ID> {
@@ -389,5 +396,15 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable> exten
     
     public Page<T> findAll(Pageable pageable) {
         return findAll(pageable, this.getIndexNamePrefix());
+    }
+
+    public void arg(){
+        SearchRequestBuilder sb = elasticsearchOperations.getClient().prepareSearch("archive_record_1").setTypes("record");
+
+        sb.addAggregation(AggregationBuilders
+                .global("agg")
+                .subAggregation(AggregationBuilders.terms("catalogueId").field("catalogueId")));
+        sb.setQuery(QueryBuilders.matchAllQuery());
+        Global agg = sb.get().getAggregations().get("agg");
     }
 }

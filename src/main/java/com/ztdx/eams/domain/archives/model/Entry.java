@@ -9,7 +9,6 @@ import javax.persistence.Convert;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Data
 @Document(indexName = "archive_record", type = "record", createIndex = false)
@@ -74,4 +73,27 @@ public class Entry {
      * 修改时间
      */
     private Date gmtModified;
+
+    /**
+     * 是否删除
+     */
+    private int gmtDeleted;
+
+    /*@Converter(autoApply = false)
+    public static class EntryDateConverter implements AttributeConverter<Date, String> {
+
+        @Override
+        public String convertToDatabaseColumn(Date attribute) {
+            return java.text.DateFormat.getDateInstance().format(attribute);
+        }
+
+        @Override
+        public Date convertToEntityAttribute(String dbData) {
+            try {
+                return java.text.DateFormat.getDateInstance().parse(dbData);
+            } catch (ParseException e) {
+                throw new EntryValueConverException("值("+dbData+")无法转换为Date类型");
+            }
+        }
+    }*/
 }

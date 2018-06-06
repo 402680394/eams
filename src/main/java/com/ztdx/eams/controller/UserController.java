@@ -1,12 +1,18 @@
 package com.ztdx.eams.controller;
 
 import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.ForbiddenException;
+import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.params.JsonParam;
+import com.ztdx.eams.domain.system.application.OrganizationService;
+import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.system.application.UserService;
+import com.ztdx.eams.domain.system.model.Organization;
 import com.ztdx.eams.domain.system.model.User;
 import com.ztdx.eams.query.SystemQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -32,11 +38,17 @@ public class UserController {
 
     private final AuthenticationManager authenticationManager;
 
+    private final PermissionService permissionService;
+
+    private final OrganizationService organizationService;
+
     @Autowired
-    public UserController(UserService userService, SystemQuery systemQuery, AuthenticationManager authenticationManager) {
+    public UserController(UserService userService, SystemQuery systemQuery, AuthenticationManager authenticationManager, PermissionService permissionService, OrganizationService organizationService) {
         this.userService = userService;
         this.systemQuery = systemQuery;
         this.authenticationManager = authenticationManager;
+        this.permissionService = permissionService;
+        this.organizationService = organizationService;
     }
 
     /**
@@ -78,6 +90,7 @@ public class UserController {
      * @apiGroup user
      * @apiParam {Number} id 用户ID（url占位符）
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_user_admin')")
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {
         userService.delete(id);
@@ -91,6 +104,7 @@ public class UserController {
      * @apiParamExample {json} Request-Example:
      * [1,2,3]
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_user_admin')")
     @RequestMapping(value = "/list", method = RequestMethod.DELETE)
     public void listDelete(@RequestBody List<Integer> list) {
         userService.listDelete(list);
@@ -104,6 +118,7 @@ public class UserController {
      * @apiParamExample {json} Request-Example:
      * [1,2,3]
      */
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @RequestMapping(value = "/listReset", method = RequestMethod.PUT)
     public void listPassReset(@RequestBody List<Integer> list) {
         userService.listPassReset(list);
@@ -117,6 +132,7 @@ public class UserController {
      * @apiParam {Number{0-1}} flag 状态（可选值：0-可用，1-禁用）（url参数）
      */
     @RequestMapping(value = "/{id}/lock", method = RequestMethod.PUT)
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_user_admin')")
     public void lock(@PathVariable("id") int id, @RequestParam int flag) {
         userService.changeFlag(id, flag);
     }
@@ -150,6 +166,18 @@ public class UserController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam("organizationId") int organizationId, @RequestParam(name = "key", required = false, defaultValue = "") String key, @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
+        Organization organization = organizationService.get(organizationId);
+        if (organization == null){
+            throw new InvalidArgumentException("组织机构不存在");
+        }
+
+        if (!permissionService.hasAnyAuthority(
+                "ROLE_ADMIN"
+                , "global_organization_read"
+                , "fonds_role_user_set_" + organization.getFondsId())){
+            throw new ForbiddenException("没有此组织机构的权限");
+        }
+
         //判断是否查询所有用户
         if (organizationId == 1) {
             return systemQuery.getUserList(key, pageNum);
@@ -172,6 +200,7 @@ public class UserController {
      * @apiError (Error 400) message 1.用户名已存在;2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_user_admin')")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody User user) {
         userService.save(user);
@@ -193,6 +222,7 @@ public class UserController {
      * @apiError (Error 400) message 1.用户名已存在;2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_user_admin')")
     @RequestMapping(value = "", method = RequestMethod.PUT)
     public void update(@RequestBody User user) {
         userService.update(user);

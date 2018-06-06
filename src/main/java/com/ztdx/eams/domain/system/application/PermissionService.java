@@ -1,13 +1,15 @@
 package com.ztdx.eams.domain.system.application;
 
-import com.vividsolutions.jts.util.Assert;
+import com.ztdx.eams.basic.spel.TemplateParserContext;
 import com.ztdx.eams.domain.system.model.Permission;
 import com.ztdx.eams.domain.system.model.Resource;
 import com.ztdx.eams.domain.system.model.ResourceCategory;
 import com.ztdx.eams.domain.system.repository.PermissionRepository;
 import com.ztdx.eams.domain.system.repository.ResourceRepository;
 import org.springframework.data.domain.Sort;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +23,12 @@ public class PermissionService {
 
     private ResourceRepository resourceRepository;
 
-    public PermissionService(PermissionRepository permissionRepository, ResourceRepository resourceRepository) {
+    private ExpressionParser parser;
+
+    public PermissionService(PermissionRepository permissionRepository, ResourceRepository resourceRepository, ExpressionParser parser) {
         this.permissionRepository = permissionRepository;
         this.resourceRepository = resourceRepository;
+        this.parser = parser;
     }
 
     public List<Map> listCategoryPermission(ResourceCategory resourceCategory) {
@@ -60,6 +65,9 @@ public class PermissionService {
         result.put("name", resource.getResourceName());
         result.put("type", resource.getResourceCategory().toString());
         result.put("children", new ArrayList<Map>());
+        if (resource.getResourceCategory() == ResourceCategory.Function){
+            result.put("resourceUrl", resource.getResourceUrl());
+        }
 
         return result;
     }
@@ -90,19 +98,29 @@ public class PermissionService {
             }
         });
 
+        save.forEach(a -> {
+            a.setResourceUrl(
+                    parser.parseExpression(
+                            a.getResourceUrl()
+                            , new TemplateParserContext()
+                    ).getValue(a, String.class)
+            );
+        });
 
         permissionRepository.saveAll(save);
         permissionRepository.deleteInBatch(delete);
     }
 
-    public boolean hasAuthority(Collection<? extends GrantedAuthority> authorities, String expectedAuthority){
-        return this.hasAnyAuthority(authorities, expectedAuthority);
+    public boolean hasAuthority(String expectedAuthority){
+        return this.hasAnyAuthority(expectedAuthority);
     }
 
-    public boolean hasAnyAuthority(Collection<? extends GrantedAuthority> authorities, String... expectedAuthorities) {
+    public boolean hasAnyAuthority(String... expectedAuthorities) {
+
+        Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
 
         for (String role : expectedAuthorities) {
-            if (authorities.contains(role)) {
+            if (authorities.stream().anyMatch(a -> a.getAuthority().equals(role))) {
                 return true;
             }
         }

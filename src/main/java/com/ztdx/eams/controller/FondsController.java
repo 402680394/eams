@@ -1,15 +1,21 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.system.application.FondsService;
+import com.ztdx.eams.domain.system.application.PermissionService;
+import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.query.SystemQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by li on 2018/4/15.
@@ -22,10 +28,16 @@ public class FondsController {
 
     private final SystemQuery systemQuery;
 
+    private final RoleService roleService;
+
+    private final PermissionService permissionService;
+
     @Autowired
-    public FondsController(FondsService fondsService, SystemQuery systemQuery) {
+    public FondsController(FondsService fondsService, SystemQuery systemQuery, RoleService roleService, PermissionService permissionService) {
         this.fondsService = fondsService;
         this.systemQuery = systemQuery;
+        this.roleService = roleService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -45,8 +57,24 @@ public class FondsController {
      * {"id": 全宗ID,"code": "全宗号","name": "子全宗1","parentId": 上级全宗ID,"orderNumber": 同级排序编号}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
-    public Map<String, Object> treeList() {
-        return systemQuery.getFondsTreeMap();
+    public Map<String, Object> treeList(@SessionAttribute(required = false) UserCredential LOGIN_USER) {
+        int userId;
+        if (LOGIN_USER != null){
+            userId = LOGIN_USER.getUserId();
+        }else{
+            throw new ForbiddenException("拒绝访问");
+        }
+        //可以管理的全宗
+        Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
+
+        //全宗树
+        return systemQuery.getFondsTreeMap(a -> {
+            if (permissionService.hasAnyAuthority("ROLE_ADMIN")){
+                return true;
+            }else{
+                return fondsIds.contains(a);
+            }
+        });
     }
 
     /**
@@ -61,6 +89,7 @@ public class FondsController {
      * @apiError (Error 400) message 1.全宗号已存在 2.请设置关联机构 3.机构已被其它全宗关联.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_fonds_write')")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody HashMap<String, Object> map) {
         Fonds fonds = new Fonds();
@@ -80,6 +109,7 @@ public class FondsController {
      * @apiError (Error 400) message 该全宗下存在子全宗.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_fonds_write')")
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {
         fondsService.delete(id);
@@ -98,6 +128,7 @@ public class FondsController {
      * @apiError (Error 400) message 1.全宗号已存在 2.请设置关联机构 3.机构已被其它全宗关联
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_fonds_write')")
     @RequestMapping(value = "", method = RequestMethod.PUT)
     public void update(@RequestBody HashMap<String, Object> map) {
         Fonds fonds = new Fonds();
@@ -123,6 +154,7 @@ public class FondsController {
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"id": 全宗ID,"code": "全宗编码","name": "全宗名称","parentId": 上级全宗ID","association":[1,2,3]}}.
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_fonds_read')")
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
         return systemQuery.getFondsAndAssociationId(UInteger.valueOf(id));
@@ -137,6 +169,7 @@ public class FondsController {
      * @apiError (Error 400) message 上级全宗不一致.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_fonds_write')")
     @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)
     public void priority(@PathVariable("upId") int upId, @PathVariable("downId") int downId) {
         fondsService.priority(upId, downId);

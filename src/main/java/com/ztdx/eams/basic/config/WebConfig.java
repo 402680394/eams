@@ -7,6 +7,8 @@ import com.ztdx.eams.basic.params.JsonParamResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -85,6 +87,11 @@ public class WebConfig extends WebMvcConfigurationSupport {
         };
         mappingJackson2HttpMessageConverter.setObjectMapper(jsonMapper);
         return  mappingJackson2HttpMessageConverter;
+    }
+
+    @Bean
+    public ExpressionParser getExpressionParser(){
+        return new SpelExpressionParser();
     }
 
     @Override
