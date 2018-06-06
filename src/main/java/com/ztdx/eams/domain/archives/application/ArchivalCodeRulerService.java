@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.fasterxml.jackson.databind.util.ArrayIterator;
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.domain.archives.model.CatalogueType;
 import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
@@ -13,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * 档号生成规则业务
@@ -36,6 +40,9 @@ public class ArchivalCodeRulerService {
 
     /**
      * 生成档号
+     * @param entryIds 条目id集合
+     * @param catalogueId 目录id
+     * @return 返回错误明细
      */
     public List<String> generating(List<String> entryIds, int catalogueId){
 
@@ -43,25 +50,32 @@ public class ArchivalCodeRulerService {
         List<String> errors = new ArrayList<>();
         //创建新条目集合存入MongoDB
         List<Entry> newEntries = new ArrayList<>();
+        //创建新卷内条目集合存入MongoDB
+        List<Entry> newFolderAndFileEntries = new ArrayList<>();
 
         //得到目录类型
-        CatalogueType catalogueType = CatalogueType.create(catalogueRepository.getOne(catalogueId).getCatalogueType());
+        CatalogueType catalogueType = catalogueRepository.getOne(catalogueId).getCatalogueType();
         //判断各个类型，走不同的档号生成规则
         switch (catalogueType){
             case File: //一文一件
-                newEntries = generatingFileAndFolder(entryIds,catalogueId,errors,newEntries,catalogueType);
+                generatingFileAndFolder(entryIds,catalogueId,errors,newEntries,catalogueType,newFolderAndFileEntries);
                 break;
             case Folder: //案卷
-                newEntries = generatingFileAndFolder(entryIds,catalogueId,errors,newEntries,catalogueType);
+                generatingFileAndFolder(entryIds,catalogueId,errors,newEntries,catalogueType,newFolderAndFileEntries);
                 break;
             case FolderFile: //卷内
-                generatingFolderFileArchivalCode(entryIds,catalogueId,newEntries);
+                generatingFolderFileArchivalCode(entryIds,catalogueId,newFolderAndFileEntries);
                 break;
         }
 
         //把条目集合存入MongoDB
         if (newEntries.size() > 0){
             entryMongoRepository.saveAll(newEntries);
+        }
+
+        //把卷内条目集合存入MongoDB
+        if (newFolderAndFileEntries.size() > 0){
+            entryMongoRepository.saveAll(newFolderAndFileEntries);
         }
 
         //返回错误信息集合
@@ -74,6 +88,8 @@ public class ArchivalCodeRulerService {
 
     /**
      * 清除档号
+     * @param entryIds 条目id集合
+     * @param catalogueId 目录id
      */
     public void clear(List<String> entryIds, int catalogueId){
 
@@ -108,8 +124,14 @@ public class ArchivalCodeRulerService {
 
     /**
      * 案卷和一文一件的档号生成
+     * @param entryIds  案卷/一文一件 id集合
+     * @param catalogueId 目录id
+     * @param errors 错误信息集合
+     * @param newEntries 案卷/一文一件条目放入新集合存到MongoDb
+     * @param catalogueType 目录类型
+     * @param newFolderAndFileEntries 卷卷内条目放入新集合存到MongoDb
      */
-    private List<Entry> generatingFileAndFolder(List<String> entryIds, int catalogueId,List<String> errors,List<Entry> newEntries,CatalogueType catalogueType){
+    private void generatingFileAndFolder(List<String> entryIds, int catalogueId,List<String> errors,List<Entry> newEntries,CatalogueType catalogueType,List<Entry> newFolderAndFileEntries){
 
         //定义档号
         StringBuilder archivalCode = new StringBuilder();
@@ -117,8 +139,8 @@ public class ArchivalCodeRulerService {
         String splicingContent="";
         //定义序号
         String serialNumber = "";
-
-
+        //创建卷内条目集合
+        Iterable<Entry> folderFileEntryList = new ArrayList<>();
 
         //通过目录id查询到的规则放入规则集合
         List<ArchivalCodeRuler> archivalCodeRulers = archivalcodeRulerRepository.findByCatalogueIdOrderByOrderNumber(catalogueId);
@@ -138,6 +160,16 @@ public class ArchivalCodeRulerService {
         //查找条目，要传入条目id和目录id
         Iterable<Entry> entryList = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
 
+        //如果是案卷则查找所有卷内条目集合
+        if (catalogueType == CatalogueType.Folder){
+            //案卷id
+            List<String> folderIds = new ArrayList<>();
+            //通过流遍历获取案卷id
+            Stream.of(entryList).forEach(entries -> entries.forEach(entry -> folderIds.add(entry.getId())));
+            //通过案卷条目id和目录id获取所有卷内条目集合
+            folderFileEntryList = entryMongoRepository.findAllById(folderIds, "archive_record_" + catalogueId);
+        }
+
         //遍历条目集合
         for (Entry entry : entryList) {
 
@@ -149,40 +181,32 @@ public class ArchivalCodeRulerService {
                 continue;
             }
 
-            /*//通过案卷条目id和目录id获取卷内条目集合
-            List<Entry> folderFileEntryList = entryMongoRepository.findById(entry.getId(),"archive_record_" + catalogueId);
-            //获取卷内条目集合
-            for (Entry folderFileEntry : folderFileEntryList) {
-                Map<String,Object> folderFileItems = folderFileEntry.getItems();
-                //如果档号已经存在，则执行下一条
-                if (folderFileItems.get("archivalCode") != null && !folderFileItems.get("archivalCode").equals("")) {
-                    continue;
-                }
-            }*/
-
             //遍历规则集合
             for (ArchivalCodeRuler archivalCodeRuler : archivalCodeRulers) {
 
                 //如果规则集合有序号
                 if (archivalCodeRuler.getType()==RulerType.SerialNumber){
-                    //如果条目中有序号
-                    if(items.get("serialNumber")!= null && !items.get("serialNumber").equals("")){
-                        //直接档号生成规则
-                        splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry);
-                    }else{  //如果条目中没有序号
+                    //如果条目中没有序号
+                    if(items.get("serialNumber")== null && items.get("serialNumber").equals("")){
                         //生成序号
                         serialNumber = generatingSerialNumber(groupList,items);
                         //生成档号（多加了序号）
                         splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry)+serialNumber;
                     }
-                }else{//如果规则没有序号
-                    //直接档号生成规则
-                    splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry);
-
                 }
 
+                //如果规则集合没有序号或者条目中有序号都会走这一步
+                splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry);
+
                 //生成卷内档号
-                //folderAndFolderFileArchivalCode(folderFileEntryList,errors,splicingContent,newEntries);
+                if (folderFileEntryList!=null){//如果所有卷内集合不为空
+                    //if (entry.getId()==folderFileEntryList.){//如果案卷的id等于卷内的案卷id
+                        //通过此案卷id和目录id获取到所属卷内集合
+                        //循环卷内集合
+                        folderAndFolderFileArchivalCode(folderFileEntryList,splicingContent,newFolderAndFileEntries);
+                    //}
+
+                }
 
                 archivalCode.append(splicingContent);
                 items.put("archivalCode", archivalCode.toString());
@@ -193,14 +217,15 @@ public class ArchivalCodeRulerService {
 
         }
 
-        return newEntries;
-
     }
 
     /**
      * 卷内档号生成
+     * @param entryIds 卷内id集合
+     * @param catalogueId 目录id
+     * @param newFolderAndFileEntries 卷内条目放入新集合存到MongoDb
      */
-    private List<Entry> generatingFolderFileArchivalCode (List<String> entryIds, int catalogueId,List<Entry> newEntries){
+    private void generatingFolderFileArchivalCode (List<String> entryIds, int catalogueId,List<Entry> newFolderAndFileEntries){
 
         //创建错误信息集合
         List<String> errors = new ArrayList<>();
@@ -212,61 +237,53 @@ public class ArchivalCodeRulerService {
         Iterable<Entry> entryList = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
 
         //生成档号
-        newEntries = folderAndFolderFileArchivalCode(entryList,errors,folderArchivalCode,newEntries);
+        folderAndFolderFileArchivalCode(entryList,folderArchivalCode,newFolderAndFileEntries);
 
-        return newEntries;
 
     }
 
     /**
-     * 案卷及卷内档号生成相同部分
+     * 案卷卷内档号及卷内档号生成相同部分
+     * @param folderFileEntryList 卷内条目集合
+     * @param folderArchivalCode 案卷档号
+     * @param newFolderAndFileEntries 卷内条目放入新集合存到MongoDb
      */
-    private List<Entry>  folderAndFolderFileArchivalCode(Iterable<Entry> folderFileEntryList, List<String> errors,String folderArchivalCode,List<Entry> newEntries){
+    private void folderAndFolderFileArchivalCode(Iterable<Entry> folderFileEntryList,String folderArchivalCode,List<Entry> newFolderAndFileEntries){
 
         //定义档号
         String archivalCode = "";
         //定义卷内顺序号
-        Integer serialNumber = -1;
+        Integer serialNumber = 0;
 
+        //循环卷内
         for (Entry entry : folderFileEntryList) {
 
-            //定义条目
-            Map<String,Object> items = entry.getItems();
-            //如果档号已经存在，则执行下一条
-            if (items.get("archivalCode") != null && !items.get("archivalCode").equals("")) {
-                errors.add("档号已存在");
-                continue;
-            }
+            //获取卷内条目
+            Map<String, Object> items = entry.getItems();
 
-            serialNumber = (Integer) items.get("serialNumber");
-
-            //如果有卷内顺序号
-            if(serialNumber != null && !serialNumber.equals("")){
-                //直接生成卷内档号 (案卷档号+卷内顺序号)
-                archivalCode = folderArchivalCode + serialNumber;
-            }else {
-                //生成卷内顺序号
-                //调用仓储层得到最大序号
-                String maxSerialNumber = "1";
-                //得到顺序号
-                serialNumber = Integer.parseInt(generatingAllTypeSerialNumber(maxSerialNumber,serialNumber,items));
-                //生成档号
-                archivalCode = folderArchivalCode + serialNumber;
-            }
+            serialNumber++;
+            //得到顺序号
+            serialNumber = Integer.parseInt(generatingAllTypeSerialNumber(serialNumber));
+            //生成档号
+            archivalCode = folderArchivalCode + serialNumber;
 
             //存入MongoDB
             items.put("archivalCode", archivalCode);
             entry.setItems(items);
-            newEntries.add(entry);
+            newFolderAndFileEntries.add(entry);
 
         }
-        return newEntries;
 
     }
 
 
     /**
      * 生成档号规则
+     * @param archivalCodeRuler 档号规则
+     * @param items 条目
+     * @param errors 错误信息
+     * @param entry 条目
+     * @return 返回根据档号规则获取的要拼接的内容
      */
     private String archivalCodeRuler (ArchivalCodeRuler archivalCodeRuler,Map<String, Object> items,List<String> errors,Entry entry){
 
@@ -317,7 +334,10 @@ public class ArchivalCodeRulerService {
     }
 
     /**
-     *生成案卷及一文一件序号
+     * 生成案卷及一文一件序号
+     * @param groupList 归档分组中的被选中的著录项集合
+     * @param items 条目
+     * @return 返回序号
      */
     private String generatingSerialNumber(List<String> groupList,Map<String, Object> items){
 
@@ -325,7 +345,6 @@ public class ArchivalCodeRulerService {
         String value = "";
         //序号
         Integer serialNumber = -1;
-
         //where后语句的查询条件
         StringBuilder queryCondition = new StringBuilder();
 
@@ -334,7 +353,6 @@ public class ArchivalCodeRulerService {
 
             //根据著录项去items取对应的值
             value = (String)items.get(entryValue);
-
             //开始拼接
             queryCondition.append(entryValue + "=\"" + value +"\""+" " + "and");
 
@@ -344,12 +362,6 @@ public class ArchivalCodeRulerService {
         //调用仓储层得到最大序号
         String maxSerialNumber = "1";
 
-        //返回序号
-        return generatingAllTypeSerialNumber(maxSerialNumber,serialNumber,items);
-
-    }
-
-    private String generatingAllTypeSerialNumber(String maxSerialNumber,Integer serialNumber,Map<String, Object> items){
         //如果这一组分类中要生成第一个序号  (也就是最大序号为空)
         if (maxSerialNumber.equals("")){
             serialNumber = 1;
@@ -359,13 +371,27 @@ public class ArchivalCodeRulerService {
             serialNumber++;
         }
 
+        serialNumber = Integer.parseInt(generatingAllTypeSerialNumber(serialNumber));
+
+        //放入条目
+        items.put("serialNumber",serialNumber);
+
+        //返回序号
+        return serialNumber.toString();
+
+    }
+
+    /**
+     * 案卷、一文一件及卷内序号的位数补零
+     * @param serialNumber 序号
+     * @return 补零后的序号
+     */
+    private String generatingAllTypeSerialNumber(Integer serialNumber){
+
         //调用仓储层得到序号长度
         Integer i = 4;
         //补零  (%表示结果为字面值 0 代表前面补充0 4 代表长度为4 d 代表参数为正数型)
         String newSerialNumber = String.format("%0"+i+"d", serialNumber);
-
-        //放入条目
-        items.put("serialNumber",newSerialNumber);
 
         return newSerialNumber;
     }
