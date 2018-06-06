@@ -13,7 +13,7 @@ import java.io.*;
  * Created by li on 2018/5/25.
  */
 @Component
-public class FtpFileUtil {
+public class FtpUtil {
     //ftp服务器ip地址
     @Value("${ftp.address}")
     private String FTP_ADDRESS;
@@ -48,7 +48,7 @@ public class FtpFileUtil {
     /*
      * 上传文件
      */
-    public String uploadFile(File file) {
+    public String uploadFile(int fondsId, File file) {
 
         FTPClient ftp = getFTPClient();
         ftp.setControlEncoding("UTF-8");
@@ -56,14 +56,16 @@ public class FtpFileUtil {
         FileInputStream fis = null;
         try {
             ftp.enterLocalPassiveMode();
-            ftp.setFileTransferMode(FTPClient.BINARY_FILE_TYPE);
             ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
             //计算文件MD5
             fisMD5 = new FileInputStream(file);
             String MD5 = DigestUtils.md5Hex(fisMD5);
 
             //设置存放路径
-            String path = FTP_BASEPATH + MD5.substring(0, 2);
+            String path = FTP_BASEPATH + fondsId;
+            ftp.makeDirectory(path);
+            ftp.changeWorkingDirectory(path);
+            path = MD5.substring(0, 2);
             ftp.makeDirectory(path);
             ftp.changeWorkingDirectory(path);
             path = MD5.substring(2, 4);
@@ -72,7 +74,6 @@ public class FtpFileUtil {
             fis = new FileInputStream(file);
             //上传
             ftp.storeFile(MD5, fis);
-            ftp.logout();
             return MD5;
         } catch (IOException e) {
             throw new BusinessException("文件上传失败");
@@ -80,9 +81,11 @@ public class FtpFileUtil {
             try {
                 fisMD5.close();
                 fis.close();
+                ftp.logout();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             if (ftp.isConnected()) {
                 try {
                     ftp.disconnect();
@@ -93,15 +96,18 @@ public class FtpFileUtil {
         }
     }
 
-    public File downloadFile(String MD5, String fileName) {
+    public File downloadFile(int fondsId, String MD5, String fileName) {
 
         FTPClient ftp = getFTPClient();
         ftp.setControlEncoding("UTF-8");
         OutputStream os = null;
         try {
-            ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
             ftp.enterLocalPassiveMode();
-            String path = FTP_BASEPATH + MD5.substring(0, 2);
+            ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
+
+            String path = FTP_BASEPATH + fondsId;
+            ftp.changeWorkingDirectory(path);
+            path = MD5.substring(0, 2);
             ftp.changeWorkingDirectory(path);
             path = MD5.substring(2, 4);
             ftp.changeWorkingDirectory(path);
@@ -109,13 +115,13 @@ public class FtpFileUtil {
             File localFile = new File(fileName);
             os = new FileOutputStream(localFile);
             ftp.retrieveFile(MD5, os);
-            ftp.logout();
             return localFile;
         } catch (Exception e) {
             throw new BusinessException("文件下载失败");
         } finally {
             try {
                 os.close();
+                ftp.logout();
             } catch (IOException e) {
                 e.printStackTrace();
             }

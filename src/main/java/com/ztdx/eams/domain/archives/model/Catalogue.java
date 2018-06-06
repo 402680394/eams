@@ -25,7 +25,8 @@ public class Catalogue {
     @Min(value = 1)
     @Max(value = 3)
     @Column(name = "catalogue_type")
-    private int catalogueType;
+    @Convert(converter = CatalogueType.EnumConverter.class)
+    private CatalogueType catalogueType;
 
     //档案库标识
     @Column(name = "archives_id")

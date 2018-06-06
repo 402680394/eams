@@ -18,7 +18,7 @@ public class ArchivalCodeRuler {
     @Column(name = "id")
     private int  id;
 
-    //选择类型(1 著入项值；2 著录项所对应的参照编码；3 档案库所属单位全宗号 4 固定值)
+    //选择类型(1 著入项值；2 著录项所对应的参照编码；3 档案库所属单位全宗号 4 固定值 5流水号)
     @Min(value = 1)
     @Max(value = 4)
     @Convert(converter = RulerType.EnumConverter.class)
@@ -51,6 +51,12 @@ public class ArchivalCodeRuler {
     //目录id
     @Column(name = "catalogue_id")
     private int catalogueId;
+
+    //是否建立索引
+    @Min(value = 0)
+    @Max(value = 1)
+    @Column(name = "is_group")
+    private int isGroup;
 
     //创建时间
     @Column(name = "gmt_create")

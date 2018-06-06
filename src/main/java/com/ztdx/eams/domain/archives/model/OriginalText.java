@@ -42,7 +42,7 @@ public class OriginalText {
 
     private HashMap<String, Object> fileAttributesMap;
 
-    private String ftpFileMD5;
+    private String md5;
 
     //创建时间
     private Date gmtCreate;

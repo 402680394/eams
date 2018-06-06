@@ -69,7 +69,6 @@ public class EntryService {
         }
 
         entry.setArchiveId(catalog.getArchivesId());
-        entry.setCatalogueType(CatalogueType.create(catalog.getCatalogueType()));
         entry.setArchiveContentType(archives.getContentTypeId());
         entry.setArchiveType(archives.getType());
         entry.setFondsId(archivesGroup.getFondsId());
@@ -82,6 +81,9 @@ public class EntryService {
     }
 
     public Entry update(Entry entry) {
+        if (entry.getCatalogueId() == 0){
+            throw new InvalidArgumentException("目录id不存在");
+        }
         Optional<Entry> find = entryMongoRepository.findById(entry.getId(), "archive_record_" + entry.getCatalogueId());
         if (!find.isPresent()) {
             return save(entry);

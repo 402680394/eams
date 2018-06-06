@@ -5,6 +5,7 @@ import com.ztdx.eams.domain.system.model.Organization;
 import com.ztdx.eams.query.SystemQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -45,6 +46,7 @@ public class OrganizationController {
      * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型,"children": [
      * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型}]}]}}.
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_read', 'global_role_user_set')")
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList(@RequestParam(required = false, defaultValue = "1", name = "id") int id, @RequestParam(name = "type", required = false, defaultValue = "0") int type) {
         return systemQuery.getOrganizationTreeMap(id, type);
@@ -68,6 +70,7 @@ public class OrganizationController {
      * {"id": 机构ID,"code": "机构编码","name": "父机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型,"children": [
      * {"id": 机构ID,"code": "机构编码","name": "子机构1","parentId": 上级机构ID,"orderNumber": 同级排序编号,"fondsId": 关联全宗ID,"type": 机构类型}]}]}}.
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_read', 'fonds_role_user_set_' + #fondsId)")
     @RequestMapping(value = "/treeListByFonds", method = RequestMethod.GET)
     public Map<String, Object> treeListByFonds(@RequestParam("fondsId") int fondsId) {
         return systemQuery.getOrganizationTreeMapByFondsId(UInteger.valueOf(fondsId));
@@ -86,6 +89,7 @@ public class OrganizationController {
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室；4.科室下无法创建部门.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_write')")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody Organization organization) {
         organizationService.save(organization);
@@ -99,6 +103,7 @@ public class OrganizationController {
      * @apiError (Error 400) message 1.该机构或子机构下存在用户；2.该机构下存在子机构.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_write')")
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {
         organizationService.delete(id);
@@ -118,6 +123,7 @@ public class OrganizationController {
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室 4.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_write')")
     @RequestMapping(value = "", method = RequestMethod.PUT)
     public void update(@RequestBody Organization organization) {
         organizationService.update(organization);
@@ -152,6 +158,7 @@ public class OrganizationController {
      * @apiError (Error 400) message 1.机构类型或上级机构不一致 2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_write')")
     @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PUT)
     public void priority(@PathVariable("upId") int upId, @PathVariable("downId") int downId) {
         organizationService.priority(upId, downId);

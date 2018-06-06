@@ -4,12 +4,10 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.system.model.*;
 import com.ztdx.eams.domain.system.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -29,14 +27,17 @@ public class RoleService {
 
     private UserRepository userRepository;
 
+    private OrganizationRepository organizationRepository;
+
     @Autowired
-    public RoleService(RoleRepository roleRepository, ResourceRepository resourceRepository, PermissionRepository permissionRepository, RoleOfUserRepository roleOfUserRepository, FondsRepository fondsRepository, UserRepository userRepository) {
+    public RoleService(RoleRepository roleRepository, ResourceRepository resourceRepository, PermissionRepository permissionRepository, RoleOfUserRepository roleOfUserRepository, FondsRepository fondsRepository, UserRepository userRepository, OrganizationRepository organizationRepository) {
         this.roleRepository = roleRepository;
         this.resourceRepository = resourceRepository;
         this.permissionRepository = permissionRepository;
         this.roleOfUserRepository = roleOfUserRepository;
         this.fondsRepository = fondsRepository;
         this.userRepository = userRepository;
+        this.organizationRepository = organizationRepository;
     }
 
     public void save(Role role) {
@@ -92,19 +93,18 @@ public class RoleService {
     }
 
     @Transactional
-    public Map<String, List<Integer>> addUser(long roleId, List<Integer> addUserIds) {
-        List<RoleOfUser> existsUsers = roleOfUserRepository.findByRoleIdAndUserIdIn(roleId, addUserIds);
-        LinkedList<Integer> existsUserIds = new LinkedList<>();
-        for (RoleOfUser user : existsUsers) {
-            existsUserIds.add(user.getUserId());
-        }
+    public Map<String, Object> addUser(long roleId, List<Integer> addUserIds) {
+        List<RoleOfUser> existsUsers = roleOfUserRepository.findByRoleId(roleId);
+        Set<Integer> existsUserIds = existsUsers.stream().map(RoleOfUser::getUserId).collect(Collectors.toSet());
 
-        addUserIds.removeAll(existsUserIds);
+        Set<Integer> addUserIdSet = addUserIds.stream().collect(Collectors.toSet());
+
+        addUserIdSet.removeAll(existsUserIds);
         Date now = Calendar.getInstance().getTime();
 
         HashSet<RoleOfUser> batch = new HashSet<>();
 
-        for (Integer userId :addUserIds){
+        for (Integer userId :addUserIdSet){
             RoleOfUser user = new RoleOfUser();
             user.setRoleId(roleId);
             user.setUserId(userId);
@@ -113,9 +113,15 @@ public class RoleService {
         }
         roleOfUserRepository.saveAll(batch);
 
-        Map<String, List<Integer>> result = new HashMap<>();
-        result.put("added", addUserIds);
-        result.put("existed", existsUserIds);
+        existsUserIds.removeAll(addUserIds);
+
+        roleOfUserRepository.deleteInBatch(
+                roleOfUserRepository.findByRoleIdAndUserIdIn(roleId, existsUserIds)
+        );
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("added", addUserIdSet);
+        result.put("deleted", existsUserIds);
         return result;
     }
 
@@ -189,6 +195,7 @@ public class RoleService {
         Map<String, Object> result = new HashMap<>();
         result.put("global", fonds.get(0));
         fonds.remove(0);
+        fonds.remove(-1);
         archive.remove(0);
         result.put("fonds", fonds);
         result.put("archiveCatalogue", archive);
@@ -205,7 +212,7 @@ public class RoleService {
                 .stream().collect(Collectors.toMap(Resource::getId,p -> p));
 
         Map<Integer, Map<String, Object>> fonds = groupPermission(permissions
-                , a -> a.getFondsId() == null ? 0 : a.getFondsId(), resourceMap );
+                , a -> a.getFondsId() == null ? (a.getArchiveId() == null ? 0 : -1) : a.getFondsId(), resourceMap );
 
         Map<Integer, Map<String, Object>> archive = groupPermission(permissions
                 , a -> a.getArchiveId() == null ? 0 : a.getArchiveId(), resourceMap );
@@ -286,5 +293,22 @@ public class RoleService {
 
     private String PermissionKeyMap(Permission permission, Map<Long, Resource> resourceMap){
         return resourceMap.get(permission.getResourceId()).getResourceUrl();
+    }
+
+    public List<Map<String, Object>> roleUsers(long roleId) {
+        List<RoleOfUser> list = roleOfUserRepository.findByRoleId(roleId);
+        Set<Integer> userids = list.stream().map(RoleOfUser::getUserId).collect(Collectors.toSet());
+        List<User> users = userRepository.findAllById(userids);
+        Set<Integer> organizationIds = users.stream().map(User::getOrganizationId).collect(Collectors.toSet());
+        Map<Integer, String> organizations = organizationRepository.findAllById(organizationIds)
+                .stream().collect(Collectors.toMap(Organization::getId, Organization::getName));
+
+        return users.stream().map(u -> {
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", u.getId());
+            result.put("name", u.getName());
+            result.put("organization", organizations.getOrDefault(u.getOrganizationId(), ""));
+            return result;
+        }).collect(Collectors.toList());
     }
 }

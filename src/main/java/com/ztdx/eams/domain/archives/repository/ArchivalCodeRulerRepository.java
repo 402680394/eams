@@ -11,4 +11,7 @@ public interface ArchivalCodeRulerRepository extends JpaRepository<ArchivalCodeR
 
     List<ArchivalCodeRuler> findByCatalogueIdOrderByOrderNumber(int catalogueId);
 
+    String findByIsGroup(int isGroup);
+
+
 }
