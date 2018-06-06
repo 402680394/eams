@@ -28,7 +28,7 @@ public class OriginalText {
 
     private String title;
 
-    private String type;
+    private int type;
 
     private String name;
 

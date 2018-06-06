@@ -41,7 +41,7 @@ public class OriginalTextController {
      * @apiParam {Number} catalogueId 目录ID(form-data参数)
      * @apiParam {String} entryId 条目ID(form-data参数)
      * @apiParam {String} title 文件标题(form-data参数)
-     * @apiParam {String} type 文件类型(form-data参数)
+     * @apiParam {Number} type 文件类型(form-data参数)
      * @apiParam {String} version 文件版本(form-data参数)
      * @apiParam {String} remark 备注(form-data参数)
      * @apiParam {File} file 原文文件(form-data参数)
@@ -56,7 +56,7 @@ public class OriginalTextController {
         originalText.setCatalogueId(Integer.parseInt(request.getParameter("catalogueId")));
         originalText.setEntryId(request.getParameter("entryId"));
         originalText.setTitle(request.getParameter("title"));
-        originalText.setType(request.getParameter("type"));
+        originalText.setType(Integer.parseInt(request.getParameter("type")));
         originalText.setVersion(request.getParameter("version"));
         originalText.setRemark(request.getParameter("remark"));
         originalTextService.save(originalText, file);
@@ -93,7 +93,7 @@ public class OriginalTextController {
      * @apiParam {String} entryId 条目ID(form-data参数)
      * @apiParam {String} id 原文ID(form-data参数)
      * @apiParam {String} title 文件标题(form-data参数)
-     * @apiParam {String} type 文件类型(form-data参数)
+     * @apiParam {Number} type 文件类型(form-data参数)
      * @apiParam {String} version 文件版本(form-data参数)
      * @apiParam {String} remark 备注(form-data参数)
      * @apiParam {File} file 原文文件(form-data参数)
@@ -109,7 +109,7 @@ public class OriginalTextController {
         originalText.setEntryId(request.getParameter("entryId"));
         originalText.setId(request.getParameter("id"));
         originalText.setTitle(request.getParameter("title"));
-        originalText.setType(request.getParameter("type"));
+        originalText.setType(Integer.parseInt(request.getParameter("type")));
         originalText.setVersion(request.getParameter("version"));
         originalText.setRemark(request.getParameter("remark"));
         originalTextService.update(originalText, file);
