@@ -1,7 +1,6 @@
 package com.ztdx.eams.basic.utils;
 
 import com.ztdx.eams.basic.exception.BusinessException;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,38 +47,31 @@ public class FtpUtil {
     /*
      * 上传文件
      */
-    public String uploadFile(int fondsId, File file) {
+    public void uploadFile(String[] path, String fileName, File file) {
 
         FTPClient ftp = getFTPClient();
         ftp.setControlEncoding("UTF-8");
-        FileInputStream fisMD5 = null;
         FileInputStream fis = null;
         try {
             ftp.enterLocalPassiveMode();
             ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
-            //计算文件MD5
-            fisMD5 = new FileInputStream(file);
-            String MD5 = DigestUtils.md5Hex(fisMD5);
 
             //设置存放路径
-            String path = FTP_BASEPATH + fondsId;
-            ftp.makeDirectory(path);
-            ftp.changeWorkingDirectory(path);
-            path = MD5.substring(0, 2);
-            ftp.makeDirectory(path);
-            ftp.changeWorkingDirectory(path);
-            path = MD5.substring(2, 4);
-            ftp.makeDirectory(path);
-            ftp.changeWorkingDirectory(path);
+            ftp.makeDirectory(FTP_BASEPATH);
+            ftp.changeWorkingDirectory(FTP_BASEPATH);
+
+            for (int i = 0; i < path.length; i++) {
+                ftp.makeDirectory(path[i]);
+                ftp.changeWorkingDirectory(path[i]);
+            }
+
             fis = new FileInputStream(file);
             //上传
-            ftp.storeFile(MD5, fis);
-            return MD5;
+            ftp.storeFile(fileName, fis);
         } catch (IOException e) {
             throw new BusinessException("文件上传失败");
         } finally {
             try {
-                fisMD5.close();
                 fis.close();
                 ftp.logout();
             } catch (IOException e) {
@@ -96,7 +88,8 @@ public class FtpUtil {
         }
     }
 
-    public File downloadFile(int fondsId, String MD5, String fileName) {
+
+    public void downloadFile(String[] path, String fileName, File file) {
 
         FTPClient ftp = getFTPClient();
         ftp.setControlEncoding("UTF-8");
@@ -105,17 +98,13 @@ public class FtpUtil {
             ftp.enterLocalPassiveMode();
             ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
 
-            String path = FTP_BASEPATH + fondsId;
-            ftp.changeWorkingDirectory(path);
-            path = MD5.substring(0, 2);
-            ftp.changeWorkingDirectory(path);
-            path = MD5.substring(2, 4);
-            ftp.changeWorkingDirectory(path);
+            ftp.changeWorkingDirectory(FTP_BASEPATH);
 
-            File localFile = new File(fileName);
-            os = new FileOutputStream(localFile);
-            ftp.retrieveFile(MD5, os);
-            return localFile;
+            for (int i = 0; i < path.length; i++) {
+                ftp.changeWorkingDirectory(path[i]);
+            }
+            os = new FileOutputStream(file);
+            ftp.retrieveFile(fileName, os);
         } catch (Exception e) {
             throw new BusinessException("文件下载失败");
         } finally {

@@ -171,7 +171,7 @@ public class OriginalTextController {
 
     /**
      * @api {get} /originalText/list 获取原文列表
-     * @apiName get
+     * @apiName list
      * @apiGroup originalText
      * @apiParam {Number} catalogueId 目录ID(url参数)
      * @apiParam {String} entryId 条目ID(url参数)
