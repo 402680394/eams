@@ -3,8 +3,11 @@ package com.ztdx.eams.controller.operationLog;
 import com.ztdx.eams.basic.UserCredential;
 import lombok.Data;
 
+/**
+ * 操作上下问
+ */
 @Data
-class LogContext {
+class OperationContext {
 
     /**
      * 参数

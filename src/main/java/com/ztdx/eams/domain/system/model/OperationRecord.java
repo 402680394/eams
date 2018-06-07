@@ -10,13 +10,13 @@ import java.util.UUID;
 
 @Data
 @Document(collection = "operation_log")
-public class OperationLog {
+public class OperationRecord {
 
-    protected OperationLog(){
+    protected OperationRecord(){
 
     }
 
-    public OperationLog(String message,int operatorId,String operatorName){
+    public OperationRecord(String message, int operatorId, String operatorName){
         this.message=message;
         id =UUID.randomUUID().toString();
         isSuccess =true;

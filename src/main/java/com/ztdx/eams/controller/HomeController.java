@@ -1,9 +1,8 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.basic.WorkContext;
-import com.ztdx.eams.controller.operationLog.LogInfo;
-import com.ztdx.eams.domain.system.application.OperationLogService;
-import com.ztdx.eams.domain.system.model.OperationLog;
+import com.ztdx.eams.controller.operationLog.OperationInfo;
+import com.ztdx.eams.domain.system.application.OperationRecordService;
+import com.ztdx.eams.domain.system.model.OperationRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,19 +17,19 @@ import java.util.Random;
 @RequestMapping(value = "/home")
 public class HomeController {
 
-    final OperationLogService operationLogService;
+    private final OperationRecordService operationRecordService;
 
     @Autowired
-    public HomeController(OperationLogService operationLogService) {
-        this.operationLogService = operationLogService;
+    public HomeController(OperationRecordService operationRecordService) {
+        this.operationRecordService = operationRecordService;
     }
 
     @RequestMapping(value = "/index/{id}")
-    @LogInfo(message = "'操作了A' + args[0] +'返回值为' + result")
+    @OperationInfo(message = "'操作了A' + args[0] +'返回值为' + result")
     public Integer get(@PathVariable("id") int id) {
 
 
-        OperationLog operationLog = operationLogService.get("b0f051e1-faa5-448e-9f3e-b453274a3886");
+        OperationRecord operationRecord = operationRecordService.get("b0f051e1-faa5-448e-9f3e-b453274a3886");
 
         Random random = new Random();
 
@@ -40,7 +39,6 @@ public class HomeController {
         }
 
 
-        Integer max = list.stream().max(Comparator.comparing(u -> u)).get();
-        return max;
+        return list.stream().max(Comparator.comparing(u -> u)).get();
     }
 }
