@@ -79,6 +79,8 @@ public class Entry {
      */
     private int gmtDeleted;
 
+    private String parentId;
+
     /*@Converter(autoApply = false)
     public static class EntryDateConverter implements AttributeConverter<Date, String> {
 

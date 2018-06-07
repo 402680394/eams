@@ -1,6 +1,7 @@
 package com.ztdx.eams.domain.archives.repository;
 
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import com.ztdx.eams.domain.archives.model.PropertyType;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -17,4 +18,9 @@ import java.util.List;
 @Qualifier("descriptionItemRepository")
 public interface DescriptionItemRepository extends JpaRepository<DescriptionItem, Integer> {
     List<DescriptionItem> findByCatalogueId(int catalogueId);
+
+    /**
+     * 获取目录下的对应的属性类型
+     */
+    DescriptionItem findByCatalogueIdAndPropertyType(int catalogueId, PropertyType propertyType);
 }
