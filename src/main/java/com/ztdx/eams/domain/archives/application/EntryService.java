@@ -9,6 +9,7 @@ import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
+import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -23,9 +24,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -49,7 +50,9 @@ public class EntryService {
 
     private ElasticsearchOperations elasticsearchOperations;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations) {
+    private OriginalTextElasticsearchRepository originalTextElasticsearchRepository;
+
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
@@ -57,6 +60,7 @@ public class EntryService {
         this.archivesRepository = archivesRepository;
         this.archivesGroupRepository = archivesGroupRepository;
         this.elasticsearchOperations = elasticsearchOperations;
+        this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
     }
 
     public Entry save(Entry entry) {
@@ -87,10 +91,24 @@ public class EntryService {
         this.convertEntryItems(entry, EntryItemConverter::from);
         entryMongoRepository.save(entry);
 
+        /*try {
+            originalTextElasticsearchRepository.createIndex(this.getIndexName(entry.getCatalogueId()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
         initIndex(entry.getCatalogueId());
         entryElasticsearchRepository.save(entry);
 
-
+        /*OriginalText originalText = new OriginalText();
+        originalText.setCatalogueId(entry.getCatalogueId());
+        originalText.setEntryId(entry.getId());
+        originalText.setTitle("测试");
+        originalText.setType("测试");
+        originalText.setCreateTime(Date.from(Instant.now()));
+        originalText.setGmtCreate(Date.from(Instant.now()));
+        originalText.setGmtModified(Date.from(Instant.now()));
+        originalTextElasticsearchRepository.save(originalText);*/
 
         entry.setIsIndex(1);
         return entryMongoRepository.save(entry);
@@ -242,6 +260,7 @@ public class EntryService {
         }
 
         SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(indices.toArray(new String[0]));
+        srBuilder.setTypes("record");
 
         srBuilder.addAggregation(AggregationBuilders.terms("catalogueId").field("catalogueId"));
         BoolQueryBuilder query;

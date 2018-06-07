@@ -87,6 +87,9 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable>
     public boolean createIndex(String indexName) throws IOException {
         if (!this.elasticsearchOperations.indexExists(indexName)){
             this.elasticsearchOperations.createIndex(indexName);
+        }
+
+        if (!this.elasticsearchOperations.typeExists(indexName, this.getIndexType())){
             XContentBuilder mapping = MappingBuilder.buildMapping(
                     this.getEntityClass(), this.getIndexType(), this.getIdFieldName(), this.getParentType());
             return this.elasticsearchOperations.putMapping(indexName, getIndexType(), mapping);
