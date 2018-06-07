@@ -1,7 +1,6 @@
 package com.ztdx.eams.domain.system.model;
 
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 import javax.validation.constraints.Max;
@@ -33,7 +32,7 @@ public class Organization {
 
     //上级机构
     @Column(name = "parent_id")
-    private int parentId;
+    private Integer parentId;
 
     //同级排序优先级
     @Min(value = 1)

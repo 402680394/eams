@@ -53,6 +53,7 @@ public class OriginalTextController {
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(HttpServletRequest request, MultipartFile file) {
         OriginalText originalText = new OriginalText();
+        System.out.println(request.getParameter("catalogueId"));
         originalText.setCatalogueId(Integer.parseInt(request.getParameter("catalogueId")));
         originalText.setEntryId(request.getParameter("entryId"));
         originalText.setTitle(request.getParameter("title"));
