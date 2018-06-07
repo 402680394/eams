@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 /**
  * Created by li on 2018/4/11.
  */
@@ -88,7 +86,7 @@ public class OrganizationService {
     public void priority(int upId, int downId) {
         Organization up = organizationRepository.findById(upId);
         Organization down = organizationRepository.findById(downId);
-        if(up==null||down==null){
+        if (up == null || down == null) {
             throw new InvalidArgumentException("机构不存在或已被删除");
         }
 
@@ -109,7 +107,7 @@ public class OrganizationService {
                 throw new InvalidArgumentException("根节点无法创建部门与科室");
             }
         } else {
-            Organization parent = organizationRepository.findById(organization.getParentId());
+            Organization parent = organizationRepository.findById((int) organization.getParentId());
             if (organization.getType() == 1 && parent.getType() == 2) {
                 throw new InvalidArgumentException("部门下无法创建公司");
             }
