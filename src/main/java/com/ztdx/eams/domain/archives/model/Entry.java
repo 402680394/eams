@@ -3,7 +3,11 @@ package com.ztdx.eams.domain.archives.model;
 import com.ztdx.eams.basic.repository.annotation.IndexNamePostfix;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.persistence.Convert;
 import java.util.Date;
@@ -15,6 +19,7 @@ import java.util.Map;
 @org.springframework.data.mongodb.core.mapping.Document(collection = "archive_record")
 public class Entry {
     @Id
+    @Field(type = FieldType.keyword)
     private String id;
 
     /**
@@ -60,18 +65,15 @@ public class Entry {
     private Map<String, Object> items;
 
     /**
-     * 原文
-     */
-    private List<OriginalText> originalText;
-
-    /**
      * 创建时间
      */
+    @Field(type = FieldType.Date)
     private Date gmtCreate;
 
     /**
      * 修改时间
      */
+    @Field(type = FieldType.Date)
     private Date gmtModified;
 
     /**
@@ -79,21 +81,14 @@ public class Entry {
      */
     private int gmtDeleted;
 
-    /*@Converter(autoApply = false)
-    public static class EntryDateConverter implements AttributeConverter<Date, String> {
+    /**
+     * 版本号
+     */
+    @Version
+    private Long version;
 
-        @Override
-        public String convertToDatabaseColumn(Date attribute) {
-            return java.text.DateFormat.getDateInstance().format(attribute);
-        }
-
-        @Override
-        public Date convertToEntityAttribute(String dbData) {
-            try {
-                return java.text.DateFormat.getDateInstance().parse(dbData);
-            } catch (ParseException e) {
-                throw new EntryValueConverException("值("+dbData+")无法转换为Date类型");
-            }
-        }
-    }*/
+    /**
+     * 是否已经索引
+     */
+    private Integer isIndex;
 }
