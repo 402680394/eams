@@ -1,5 +1,6 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.WorkContext;
 import com.ztdx.eams.controller.operationLog.LogInfo;
 import com.ztdx.eams.domain.system.application.OperationLogService;
 import com.ztdx.eams.domain.system.model.OperationLog;
@@ -28,7 +29,8 @@ public class HomeController {
     @LogInfo(message = "'操作了A' + args[0] +'返回值为' + result")
     public Integer get(@PathVariable("id") int id) {
 
-        OperationLog operationLog = operationLogService.get("cd8331b4-03ef-44c4-b03c-aca3b24afb32");
+
+        OperationLog operationLog = operationLogService.get("b0f051e1-faa5-448e-9f3e-b453274a3886");
 
         Random random = new Random();
 

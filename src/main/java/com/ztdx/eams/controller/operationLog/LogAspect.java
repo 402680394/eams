@@ -1,5 +1,7 @@
 package com.ztdx.eams.controller.operationLog;
 
+import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.WorkContext;
 import com.ztdx.eams.domain.system.application.OperationLogService;
 import com.ztdx.eams.domain.system.model.OperationLog;
 import org.aspectj.lang.JoinPoint;
@@ -27,33 +29,12 @@ public class LogAspect {
         this.operationLogService = operationLogService;
     }
 
-
-//    @Before("execution(* *.*(..)) && @annotation(logInfo)")
-//    public void checkEntity(JoinPoint joinPoint, LogInfo logInfo) {
-//
-//        StringBuilder message = new StringBuilder();
-//
-//        if (joinPoint.getArgs() != null) {
-//            LogContext logContext = new LogContext();
-//            logContext.setArgs(joinPoint.getArgs());
-//
-//            ExpressionParser expressionParser = new SpelExpressionParser();
-//            EvaluationContext evaluationContext = new StandardEvaluationContext(logContext);
-//            message.append(expressionParser.parseExpression(logInfo.message()).getValue(evaluationContext).toString());
-//        } else {
-//            message.append(logInfo.message());
-//        }
-//
-//
-//        //operationLogService.add(new OperationLog());
-//
-//    }
-
-
-    //环绕
+    /**
+     * 环绕拦截处理
+     */
     @Around("execution(public * *(..)) && @annotation(logInfo)")
     public Object AroundAspect(ProceedingJoinPoint joinPoint, LogInfo logInfo) {
-
+        UserCredential userCredential = (UserCredential) WorkContext.getSession().getAttribute(UserCredential.KEY);
         LogContext logContext = new LogContext();
         logContext.setArgs(joinPoint.getArgs());
         Throwable exception =null;
@@ -76,9 +57,12 @@ public class LogAspect {
             OperationLog operationLog = new OperationLog(message, 1, "test");
             operationLog.setException(exception);
             operationLog.setIsSuccess(isSuccess);
+            if(userCredential !=null){
+                operationLog.setOperatorId(userCredential.getUserId());
+                operationLog.setOperatorName(userCredential.getName());
+            }
             operationLogService.add(operationLog);
         }
-
     }
 
 }

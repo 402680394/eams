@@ -72,7 +72,7 @@ public class UserController {
 
         User user = userService.login(username, password);
         UserCredential userCredential = new UserCredential(user.getId(),user.getName());
-        session.setAttribute("LOGIN_USER", userCredential);
+        session.setAttribute(UserCredential.KEY, userCredential);
         HashMap resultMap = new HashMap();
         resultMap.put("id", user.getId());
 

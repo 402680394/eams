@@ -25,6 +25,7 @@ public class Interceptor implements HandlerInterceptor {
                 }
             }
         }*/
+        WorkContext.setRequest(httpServletRequest);
         return true;
     }
 

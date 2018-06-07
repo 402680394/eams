@@ -10,6 +10,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class UserCredential {
 
+    public static final String KEY ="LOGIN_USER";
+
     /**
      * 用户标识
      */
