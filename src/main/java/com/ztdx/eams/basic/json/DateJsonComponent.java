@@ -41,7 +41,7 @@ public class DateJsonComponent {
 
             //如果是时间字符串
             try {
-                return StdDateFormat.instance.parse(raw);
+                return StdDateFormat.getDateInstance().parse(raw);
             } catch (ParseException e) {
                 throw new IOException("无法识别的Date格式");
             }

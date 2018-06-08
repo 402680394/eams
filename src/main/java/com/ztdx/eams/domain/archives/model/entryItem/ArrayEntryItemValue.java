@@ -21,6 +21,11 @@ public class ArrayEntryItemValue extends AbstractEntryItemValue<ArrayList> {
     }
 
     @Override
+    public String toString() {
+        return value.toString();
+    }
+
+    @Override
     protected ArrayList parse(String value) {
         try {
             return jsonMapper.readValue(value, ArrayList.class);

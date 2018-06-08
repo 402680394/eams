@@ -4,6 +4,7 @@ import com.ztdx.eams.basic.repository.annotation.IndexNamePostfix;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Parent;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ public class OriginalText {
     @IndexNamePostfix
     private int catalogueId;
     //所属条目
+    @Parent(type = "record")
     private String entryId;
     //排序号
     private int orderNumber;

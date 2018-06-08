@@ -1,19 +1,18 @@
 package com.ztdx.eams.basic.repository;
 
 import com.ztdx.eams.basic.repository.annotation.IndexNamePostfix;
+import javafx.util.Pair;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.global.Global;
-import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.core.DefaultResultMapper;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ResultsMapper;
@@ -25,19 +24,18 @@ import org.springframework.data.elasticsearch.repository.support.AbstractElastic
 import org.springframework.data.elasticsearch.repository.support.ElasticsearchEntityInformation;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static org.elasticsearch.search.aggregations.AggregationBuilders.global;
+import java.util.*;
 
 @NoRepositoryBean
-public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable> extends AbstractElasticsearchRepository<T, ID> {
+public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable>
+        extends AbstractElasticsearchRepository<T, ID>
+        implements CustomElasticsearchRepository<T, ID> {
     private ResultsMapper resultsMapper;
 
     public CustomElasticsearchRepositoryImpl(ElasticsearchOperations elasticsearchOperations) {
@@ -71,6 +69,7 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable> exten
         return this.entityClass != null;
     }
 
+    @SuppressWarnings("unchecked")
     private Class<T> resolveReturnedClassFromGenericType() {
         ParameterizedType parameterizedType = this.resolveReturnedClassFromGenericType(this.getClass());
         return (Class)parameterizedType.getActualTypeArguments()[0];
@@ -79,16 +78,28 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable> exten
     private ParameterizedType resolveReturnedClassFromGenericType(Class<?> clazz) {
         Object genericSuperclass = clazz.getGenericSuperclass();
         if (genericSuperclass instanceof ParameterizedType) {
-            ParameterizedType parameterizedType = (ParameterizedType)genericSuperclass;
-            //Type rawtype = parameterizedType.getRawType();
-            //if (SimpleElasticsearchRepository.class.equals(rawtype)) {
-                return parameterizedType;
-            //}
+            return (ParameterizedType) genericSuperclass;
         }
 
         return this.resolveReturnedClassFromGenericType(clazz.getSuperclass());
     }
 
+    public boolean createIndex(String indexName) throws IOException {
+        if (!this.elasticsearchOperations.indexExists(indexName)){
+            this.elasticsearchOperations.createIndex(indexName);
+        }
+
+        if (!this.elasticsearchOperations.typeExists(indexName, this.getIndexType())){
+            XContentBuilder mapping = MappingBuilder.buildMapping(
+                    this.getEntityClass(), this.getIndexType(), this.getIdFieldName(), this.getParentType());
+            return this.elasticsearchOperations.putMapping(indexName, getIndexType(), mapping);
+        }
+        return false;
+    }
+
+    public boolean putMapping(String indexName, Object mapping) {
+        return this.elasticsearchOperations.putMapping(indexName, getIndexType(), mapping);
+    }
     
     public <S extends T> S index(S entity) {
         return this.save(entity);
@@ -367,6 +378,29 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable> exten
         return getEntityClass().getSimpleName();
     }
 
+    private String getIdFieldName(){
+        Field[] fields = getEntityClass().getDeclaredFields();
+
+        for (Field field: fields) {
+            if (field.isAnnotationPresent(Id.class)){
+                return field.getName();
+            }
+        }
+        return "";
+    }
+
+    private String getParentType(){
+        Field[] fields = getEntityClass().getDeclaredFields();
+
+        for (Field field: fields) {
+            if (field.isAnnotationPresent(Parent.class)){
+                Parent parent = field.getAnnotation(Parent.class);
+                return parent.type();
+            }
+        }
+        return "";
+    }
+
     private String getIndexNamePrefix(){
         Class<T> clazz = getEntityClass();
         if (clazz.isAnnotationPresent(Document.class)) {
@@ -382,9 +416,8 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable> exten
         query.setId(this.stringIdRepresentation(this.getId(entity)));
         query.setIndexName(this.getIndexName(entity));
         query.setType(this.getIndexType());
-        //TODO @lijie 没有启用版本控制和父节点
-        //query.setVersion(this.extractVersionFromBean(entity));
-        //query.setParentId(this.extractParentIdFromBean(entity));
+        query.setVersion(this.extractVersionFromBean(entity));
+        query.setParentId(this.extractParentIdFromBean(entity));
         return query;
     }
 
@@ -398,13 +431,11 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable> exten
         return findAll(pageable, this.getIndexNamePrefix());
     }
 
-    public void arg(){
-        SearchRequestBuilder sb = elasticsearchOperations.getClient().prepareSearch("archive_record_1").setTypes("record");
+    private Long extractVersionFromBean(T entity) {
+        return this.entityInformation.getVersion(entity);
+    }
 
-        sb.addAggregation(AggregationBuilders
-                .global("agg")
-                .subAggregation(AggregationBuilders.terms("catalogueId").field("catalogueId")));
-        sb.setQuery(QueryBuilders.matchAllQuery());
-        Global agg = sb.get().getAggregations().get("agg");
+    private String extractParentIdFromBean(T entity) {
+        return this.entityInformation.getParentId(entity);
     }
 }

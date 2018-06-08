@@ -8,6 +8,7 @@ import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Optional;
 
@@ -39,4 +40,8 @@ public interface CustomElasticsearchRepository<T, ID extends Serializable> exten
     void deleteById(ID id, String indexName);
 
     void deleteAll(String indexName);
+
+    boolean createIndex(String indexName) throws IOException;
+
+    boolean putMapping(String indexName, Object mapping);
 }

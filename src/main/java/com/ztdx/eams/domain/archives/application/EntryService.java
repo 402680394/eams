@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
@@ -8,6 +9,7 @@ import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
+import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -19,14 +21,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
 @Service
 public class EntryService {
+
+    private String indexNamePrefix = "archive_record_";
 
     private EntryElasticsearchRepository entryElasticsearchRepository;
 
@@ -42,7 +50,9 @@ public class EntryService {
 
     private ElasticsearchOperations elasticsearchOperations;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations) {
+    private OriginalTextElasticsearchRepository originalTextElasticsearchRepository;
+
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
@@ -50,6 +60,7 @@ public class EntryService {
         this.archivesRepository = archivesRepository;
         this.archivesGroupRepository = archivesGroupRepository;
         this.elasticsearchOperations = elasticsearchOperations;
+        this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
     }
 
     public Entry save(Entry entry) {
@@ -69,30 +80,75 @@ public class EntryService {
         }
 
         entry.setArchiveId(catalog.getArchivesId());
+        entry.setCatalogueType(catalog.getCatalogueType());
         entry.setArchiveContentType(archives.getContentTypeId());
         entry.setArchiveType(archives.getType());
         entry.setFondsId(archivesGroup.getFondsId());
         entry.setId(UUID.randomUUID().toString());
         entry.setGmtCreate(new Date());
         entry.setGmtModified(new Date());
-        this.convertEntryItems(entry);
+        entry.setIsIndex(0);
+        this.convertEntryItems(entry, EntryItemConverter::from);
         entryMongoRepository.save(entry);
-        return entryElasticsearchRepository.save(entry);
+
+        /*try {
+            originalTextElasticsearchRepository.createIndex(this.getIndexName(entry.getCatalogueId()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
+        initIndex(entry.getCatalogueId());
+        entryElasticsearchRepository.save(entry);
+
+        /*OriginalText originalText = new OriginalText();
+        originalText.setCatalogueId(entry.getCatalogueId());
+        originalText.setEntryId(entry.getId());
+        originalText.setTitle("测试");
+        originalText.setType("测试");
+        originalText.setCreateTime(Date.from(Instant.now()));
+        originalText.setGmtCreate(Date.from(Instant.now()));
+        originalText.setGmtModified(Date.from(Instant.now()));
+        originalTextElasticsearchRepository.save(originalText);*/
+
+        entry.setIsIndex(1);
+        return entryMongoRepository.save(entry);
     }
 
     public Entry update(Entry entry) {
         if (entry.getCatalogueId() == 0){
             throw new InvalidArgumentException("目录id不存在");
         }
-        Optional<Entry> find = entryMongoRepository.findById(entry.getId(), "archive_record_" + entry.getCatalogueId());
+
+        if (StringUtils.isEmpty(entry.getId())){
+            throw new InvalidArgumentException("id字段不存在");
+        }
+
+        Optional<Entry> find = entryMongoRepository.findById(entry.getId(), getIndexName(entry.getCatalogueId()));
         if (!find.isPresent()) {
             return save(entry);
         }
-        find.get().setItems(entry.getItems());
-        find.get().setGmtModified(new Date());
-        this.convertEntryItems(entry);
-        entryMongoRepository.save(find.get());
-        return entryElasticsearchRepository.save(find.get());
+        Entry update = find.get();
+        update.setItems(entry.getItems());
+        update.setGmtModified(new Date());
+        update.setIsIndex(0);
+        update.setVersion(entry.getVersion());
+        this.convertEntryItems(entry, EntryItemConverter::from);
+        entryMongoRepository.save(update);
+
+        initIndex(entry.getCatalogueId());
+        entryElasticsearchRepository.save(update);
+
+        update.setIsIndex(1);
+        update.setVersion(entry.getVersion() + 1);
+        return entryMongoRepository.save(update);
+    }
+
+    private void initIndex(int catalogueId) {
+        try {
+            entryElasticsearchRepository.createIndex(this.getIndexName(catalogueId));
+        } catch (IOException e) {
+            throw new BusinessException("索引初始化失败", e);
+        }
     }
 
     public Page<Entry> search(int catalogueId, String queryString, Map<String, Object> itemQuery, Pageable pageable) {
@@ -103,12 +159,13 @@ public class EntryService {
         query.must().addAll(parseQuery(catalogueId, itemQuery));
         query.filter(termQuery("gmtDeleted", 0));
 
+        initIndex(catalogueId);
+
         Page<Entry> result = entryElasticsearchRepository.search(
-                query, pageable, new String[]{"archive_record_" + catalogueId}
+                query, pageable, new String[]{getIndexName(catalogueId)}
         );
         result.stream().forEach(a -> {
-            //TODO lijie 显示前需要按照著录项要求做输出的转换
-            convertEntryItems(a);
+            convertEntryItems(a, EntryItemConverter::format);
             Map<String, Object> items = a.getItems();
             items.put("id", a.getId());
         });
@@ -122,7 +179,7 @@ public class EntryService {
         itemQuery.forEach((key, value) -> {
             DescriptionItem item = descriptionItemMap.get(key);
             if (item != null) {
-                DescriptionItemDataType dataType = DescriptionItemDataType.create(item.getDataType());
+                DescriptionItemDataType dataType = item.getDataType();
                 switch (dataType) {
                     case String: {
                         query.add(QueryBuilders.wildcardQuery(key, value + "*"));
@@ -163,13 +220,13 @@ public class EntryService {
         return query;
     }
 
-    private void convertEntryItems(Entry entry) {
+    private void convertEntryItems(Entry entry, BiFunction<Object, DescriptionItem, Object> operator) {
         Map<String, DescriptionItem> descriptionItemMap = this.getDescriptionItems(entry.getCatalogueId());
         Map<String, Object> convert = new HashMap<>();
         entry.getItems().forEach((key, vaule) -> {
             DescriptionItem item = descriptionItemMap.get(key);
             if (item != null) {
-                Object val = EntryItemConverter.from(vaule, item);
+                Object val = operator.apply(vaule, item);
                 if (val != null) {
                     convert.put(key, val);
                 }
@@ -197,12 +254,13 @@ public class EntryService {
     public Map<Integer, Long> aggsCatalogueCount(List<Integer> catalogueIds, List<Integer> archiveContentType, String keyWord) {
         Collection<String> indices = new ArrayList<>();
         if (catalogueIds == null || catalogueIds.size() == 0){
-            indices.add("archive_record_*");
+            indices.add(indexNamePrefix+"*");
         }else{
-            catalogueIds.forEach(a -> indices.add(String.format("archive_record_%d", a)));
+            catalogueIds.forEach(a -> indices.add(getIndexName(a)));
         }
 
         SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(indices.toArray(new String[0]));
+        srBuilder.setTypes("record");
 
         srBuilder.addAggregation(AggregationBuilders.terms("catalogueId").field("catalogueId"));
         BoolQueryBuilder query;
@@ -227,13 +285,17 @@ public class EntryService {
     }
 
     public void delete(int catalogueId, List<String> deletes) {
-        Iterable<Entry> list = entryMongoRepository.findAllById(deletes, "archive_record_" + catalogueId);
+        Iterable<Entry> list = entryMongoRepository.findAllById(deletes, getIndexName(catalogueId));
         list.forEach(a -> a.setGmtDeleted(1));
         entryMongoRepository.saveAll(list);
         entryElasticsearchRepository.saveAll(list);
     }
 
     public Entry get(int catalogueId, String id) {
-        return entryMongoRepository.findById(id, "archive_record_" + catalogueId).orElse(null);
+        return entryMongoRepository.findById(id, getIndexName(catalogueId)).orElse(null);
+    }
+
+    public String getIndexName(int catalogueId){
+        return String.format(indexNamePrefix + "%d", catalogueId);
     }
 }

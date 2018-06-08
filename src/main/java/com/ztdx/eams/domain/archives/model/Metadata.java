@@ -4,6 +4,8 @@ import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 
 import javax.persistence.*;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 import java.util.Date;
 
@@ -31,12 +33,16 @@ public class Metadata {
     private String displayName;
 
     //字段属性
+    @Convert(converter = PropertyType.EnumConverter.class)
     @Column(name = "field_properties")
-    private int fieldProperties;
+    private PropertyType fieldProperties;
 
     //数据类型
+    @Convert(converter = DescriptionItemDataType.EnumConverter.class)
+    @Min(value = 1)
+    @Max(value = 4)
     @Column(name = "data_type")
-    private int dataType;
+    private DescriptionItemDataType dataType;
 
     //字段宽度
     @Column(name = "field_width")
@@ -56,8 +62,9 @@ public class Metadata {
     private int metadataStandardsId;
 
     //默认值
+    @Convert(converter = DefaultValue.EnumConverter.class)
     @Column(name = "default_value")
-    private int defaultValue;
+    private DefaultValue defaultValue;
 
     //定义
     @Size(max = 50)

@@ -4,6 +4,7 @@ import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.utils.DateUtils;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +78,7 @@ public class DescriptionItemService {
                 //数据不为空时
             } else if ("" != value && null != value) {
                 //著录项类型为数值型
-                if (descriptionItem.getDataType() == 1) {
+                if (descriptionItem.getDataType() == DescriptionItemDataType.Integer) {
                     try {
                         Integer.parseInt(String.valueOf(value));
                     } catch (NumberFormatException e) {
@@ -85,13 +86,13 @@ public class DescriptionItemService {
                     }
                 }
                 //著录项类型为日期型
-                if (descriptionItem.getDataType() == 3) {
+                if (descriptionItem.getDataType() == DescriptionItemDataType.Date) {
                     if (!checkString("((((19|20)\\d{2})-(0?(1|[3-9])|1[012])-(0?[1-9]|[12]\\d|30))|(((19|20)\\d{2})-(0?[13578]|1[02])-31)|(((19|20)\\d{2})-0?2-(0?[1-9]|1\\d|2[0-8]))|((((19|20)([13579][26]|[2468][048]|0[48]))|(2000))-0?2-29))$", (String) value)) {
                         throw new InvalidArgumentException(descriptionItem.getDisplayName() + "必须为yyyy-MM-dd日期格式");
                     }
                 }
                 //著录项类型为数值型
-                if (descriptionItem.getDataType() == 4) {
+                if (descriptionItem.getDataType() == DescriptionItemDataType.Double) {
                     try {
                         Double.parseDouble(String.valueOf(value));
                     } catch (NumberFormatException e) {
@@ -151,7 +152,7 @@ public class DescriptionItemService {
                     //数据不为空时
                 } else if ("" != value && null != value) {
                     //著录项类型为数值型
-                    if (descriptionItem.getDataType() == 1) {
+                    if (descriptionItem.getDataType() == DescriptionItemDataType.Integer) {
                         try {
                             Integer.parseInt(String.valueOf(value));
                         } catch (NumberFormatException e) {
@@ -159,13 +160,13 @@ public class DescriptionItemService {
                         }
                     }
                     //著录项类型为日期型
-                    if (descriptionItem.getDataType() == 3) {
+                    if (descriptionItem.getDataType() == DescriptionItemDataType.Date) {
                         if (!checkString("((((19|20)\\d{2})-(0?(1|[3-9])|1[012])-(0?[1-9]|[12]\\d|30))|(((19|20)\\d{2})-(0?[13578]|1[02])-31)|(((19|20)\\d{2})-0?2-(0?[1-9]|1\\d|2[0-8]))|((((19|20)([13579][26]|[2468][048]|0[48]))|(2000))-0?2-29))$", (String) value)) {
                             throw new InvalidArgumentException(descriptionItem.getDisplayName() + "必须为yyyy-MM-dd日期格式");
                         }
                     }
                     //著录项类型为数值型
-                    if (descriptionItem.getDataType() == 4) {
+                    if (descriptionItem.getDataType() == DescriptionItemDataType.Double) {
                         try {
                             Double.parseDouble(String.valueOf(value));
                         } catch (NumberFormatException e) {
