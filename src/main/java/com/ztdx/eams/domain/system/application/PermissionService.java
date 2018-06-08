@@ -63,6 +63,8 @@ public class PermissionService {
         HashMap<String, Object> result = new HashMap<>();
         result.put("id", resource.getId());
         result.put("name", resource.getResourceName());
+        result.put("value", resource.getId());
+        result.put("label", resource.getResourceName());
         result.put("type", resource.getResourceCategory().toString());
         result.put("children", new ArrayList<Map>());
         if (resource.getResourceCategory() == ResourceCategory.Function){
