@@ -109,9 +109,6 @@ public class EntryService {
             e.printStackTrace();
         }*/
 
-        initIndex(entry.getCatalogueId());
-        entryElasticsearchRepository.save(entry);
-
         /*OriginalText originalText = new OriginalText();
         originalText.setCatalogueId(entry.getCatalogueId());
         originalText.setEntryId(entry.getId());
@@ -146,9 +143,6 @@ public class EntryService {
         this.convertEntryItems(entry, EntryItemConverter::from);
         update = entryMongoRepository.save(update);
 
-        initIndex(entry.getCatalogueId());
-        entryElasticsearchRepository.save(update);
-
         index(update);
         return update;
     }
@@ -179,16 +173,18 @@ public class EntryService {
                 .startObject(getIndexType(Entry.class))
                 .startObject("properties");
 
-        for (DescriptionItem descriptionItem : list) {
-            addSingleFieldMapping(contentBuilder, descriptionItem);
-        }
-
         contentBuilder
                 .startObject("full_content")
                 .field("type", FieldType.text.name().toLowerCase())
                 .endObject();
 
-        contentBuilder.endObject().endObject().endObject();
+        contentBuilder.startObject("items")
+                .startObject("properties");
+        for (DescriptionItem descriptionItem : list) {
+            addSingleFieldMapping(contentBuilder, descriptionItem);
+        }
+
+        contentBuilder.endObject().endObject().endObject().endObject().endObject();
 
         entryElasticsearchRepository.putMapping(this.getIndexName(catalogueId), contentBuilder);
     }
