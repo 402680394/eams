@@ -60,6 +60,11 @@ public class Entry {
     private int owner;
 
     /**
+     * 上级条目id
+     */
+    private String parentId;
+
+    /**
      * 著录项明细
      */
     private Map<String, Object> items;
@@ -88,7 +93,7 @@ public class Entry {
     private Long version;
 
     /**
-     * 是否已经索引
+     * 索引的版本号，要使用mongo原生api更新
      */
-    private Integer isIndex;
+    private Long indexVersion;
 }

@@ -12,6 +12,8 @@ import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearch
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -19,22 +21,29 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.BasicQuery.query;
+
 
 @Service
 public class EntryService {
 
-    private String indexNamePrefix = "archive_record_";
+    private static final String FULL_CONTENT = "full_content";
+    private static final String INDEX_NAME_PREFIX = "archive_record_";
 
     private EntryElasticsearchRepository entryElasticsearchRepository;
 
@@ -50,9 +59,12 @@ public class EntryService {
 
     private ElasticsearchOperations elasticsearchOperations;
 
+    //这个暂时留着做测试用，测试条目和原文的级联关系
     private OriginalTextElasticsearchRepository originalTextElasticsearchRepository;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository) {
+    private MongoOperations mongoOperations;
+
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, MongoOperations mongoOperations) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
@@ -61,6 +73,7 @@ public class EntryService {
         this.archivesGroupRepository = archivesGroupRepository;
         this.elasticsearchOperations = elasticsearchOperations;
         this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
+        this.mongoOperations = mongoOperations;
     }
 
     public Entry save(Entry entry) {
@@ -87,9 +100,8 @@ public class EntryService {
         entry.setId(UUID.randomUUID().toString());
         entry.setGmtCreate(new Date());
         entry.setGmtModified(new Date());
-        entry.setIsIndex(0);
         this.convertEntryItems(entry, EntryItemConverter::from);
-        entryMongoRepository.save(entry);
+        entry = entryMongoRepository.save(entry);
 
         /*try {
             originalTextElasticsearchRepository.createIndex(this.getIndexName(entry.getCatalogueId()));
@@ -110,8 +122,8 @@ public class EntryService {
         originalText.setGmtModified(Date.from(Instant.now()));
         originalTextElasticsearchRepository.save(originalText);*/
 
-        entry.setIsIndex(1);
-        return entryMongoRepository.save(entry);
+        index(entry);
+        return entry;
     }
 
     public Entry update(Entry entry) {
@@ -130,17 +142,24 @@ public class EntryService {
         Entry update = find.get();
         update.setItems(entry.getItems());
         update.setGmtModified(new Date());
-        update.setIsIndex(0);
         update.setVersion(entry.getVersion());
         this.convertEntryItems(entry, EntryItemConverter::from);
-        entryMongoRepository.save(update);
+        update = entryMongoRepository.save(update);
 
         initIndex(entry.getCatalogueId());
         entryElasticsearchRepository.save(update);
 
-        update.setIsIndex(1);
-        update.setVersion(entry.getVersion() + 1);
-        return entryMongoRepository.save(update);
+        index(update);
+        return update;
+    }
+
+    public void index(Entry entry){
+        initIndex(entry.getCatalogueId());
+        entryElasticsearchRepository.save(entry);
+        mongoOperations.updateFirst(
+                query(where("_id").is(entry.getId()))
+                , Update.update("indexVersion", entry.getVersion())
+                , this.getIndexName(entry.getCatalogueId()));
     }
 
     private void initIndex(int catalogueId) {
@@ -149,6 +168,75 @@ public class EntryService {
         } catch (IOException e) {
             throw new BusinessException("索引初始化失败", e);
         }
+    }
+
+    public void putMapping(int catalogueId) throws IOException {
+        initIndex(catalogueId);
+
+        List<DescriptionItem> list = descriptionItemRepository.findByCatalogueId(catalogueId);
+        XContentBuilder contentBuilder;
+        contentBuilder = XContentFactory.jsonBuilder().startObject()
+                .startObject(getIndexType(Entry.class))
+                .startObject("properties");
+
+        for (DescriptionItem descriptionItem : list) {
+            addSingleFieldMapping(contentBuilder, descriptionItem);
+        }
+
+        contentBuilder
+                .startObject("full_content")
+                .field("type", FieldType.text.name().toLowerCase())
+                .endObject();
+
+        contentBuilder.endObject().endObject().endObject();
+
+        entryElasticsearchRepository.putMapping(this.getIndexName(catalogueId), contentBuilder);
+    }
+
+    private FieldType convertDescriptionItemDateType(DescriptionItemDataType dataType){
+        switch (dataType){
+            case Date:
+                return FieldType.Date;
+            case Double:
+                return FieldType.Double;
+            case Integer:
+                return FieldType.Integer;
+            case Array:
+                return FieldType.text;
+            case String:
+                return FieldType.keyword;
+            case Text:
+                return FieldType.text;
+        }
+        return FieldType.Auto;
+    }
+
+    private void addSingleFieldMapping(XContentBuilder xContentBuilder, DescriptionItem descriptionItem) throws IOException {
+        xContentBuilder.startObject(descriptionItem.getMetadataName());
+
+        FieldType fieldType = convertDescriptionItemDateType(descriptionItem.getDataType());
+        if (FieldType.Auto != fieldType) {
+            xContentBuilder.field("type", fieldType.name().toLowerCase());
+        }
+
+        if (descriptionItem.getIsIndex() == 1){
+            xContentBuilder.field("copy_to", FULL_CONTENT);
+        }
+
+        xContentBuilder.field("index", true);
+
+        //xContentBuilder.field("search_analyzer", "");
+        //xContentBuilder.field("analyzer", "");
+
+        xContentBuilder.endObject();
+    }
+
+    private <T> String getIndexType(Class<T> clazz){
+        if (clazz.isAnnotationPresent(Document.class)) {
+            Document document = clazz.getAnnotation(Document.class);
+            return document.type().isEmpty()?clazz.getSimpleName():document.type();
+        }
+        return clazz.getSimpleName();
     }
 
     public Page<Entry> search(int catalogueId, String queryString, Map<String, Object> itemQuery, Pageable pageable) {
@@ -240,21 +328,18 @@ public class EntryService {
     }
 
     public Object test(String uuid) {
-        /*SearchRequestBuilder sb = elasticsearchOperations.getClient().prepareSearch("archive_record_*");
-
-        sb.addAggregation(AggregationBuilders
-                .global("agg")
-                .subAggregation(AggregationBuilders.terms("catalogueId").field("catalogueId")));
-        sb.setQuery(QueryBuilders.matchAllQuery());
-        Global agg = sb.get().getAggregations().get("agg");
-        return ((LongTerms)agg.getAggregations().asList().get(0)).getBuckets().get(0);*/
-        return aggsCatalogueCount(null,null,"");
+        try {
+            putMapping(Integer.parseInt(uuid));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public Map<Integer, Long> aggsCatalogueCount(List<Integer> catalogueIds, List<Integer> archiveContentType, String keyWord) {
         Collection<String> indices = new ArrayList<>();
         if (catalogueIds == null || catalogueIds.size() == 0){
-            indices.add(indexNamePrefix+"*");
+            indices.add(INDEX_NAME_PREFIX +"*");
         }else{
             catalogueIds.forEach(a -> indices.add(getIndexName(a)));
         }
@@ -295,7 +380,7 @@ public class EntryService {
         return entryMongoRepository.findById(id, getIndexName(catalogueId)).orElse(null);
     }
 
-    public String getIndexName(int catalogueId){
-        return String.format(indexNamePrefix + "%d", catalogueId);
+    private String getIndexName(int catalogueId){
+        return String.format(INDEX_NAME_PREFIX + "%d", catalogueId);
     }
 }
