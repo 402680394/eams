@@ -60,6 +60,11 @@ public class Entry {
     private int owner;
 
     /**
+     * 上级档案目录id
+     */
+    private int parentCatalogueId;
+
+    /**
      * 上级条目id
      */
     private String parentId;
