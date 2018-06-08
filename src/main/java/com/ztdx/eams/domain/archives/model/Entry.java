@@ -62,7 +62,7 @@ public class Entry {
     /**
      * 上级档案目录id
      */
-    private int parentCatalogueId;
+    private Integer parentCatalogueId;
 
     /**
      * 上级条目id
