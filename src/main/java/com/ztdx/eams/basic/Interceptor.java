@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.AccessDeniedException;
 
 @Component
 public class Interceptor implements HandlerInterceptor {
@@ -46,7 +47,10 @@ public class Interceptor implements HandlerInterceptor {
         String message =exception.getMessage();
         if (exception instanceof ApplicationException) {
             errorCode = ((ApplicationException) exception).getCode();
-        }else {
+        } else {
+            if (exception instanceof AccessDeniedException) {
+                errorCode = 403;
+            }
             message+="(" +exception.getClass().toString()+")";
         }
 

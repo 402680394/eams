@@ -536,7 +536,7 @@ public class ArchivesQuery {
                 , hasCataloguePermission
         );
         //添加查询后的下级档案库分组节点数据到本节点
-        if (archivesGroupTreeMap.get("children") != null) {
+        if (null != archivesGroupTreeMap.get("children")) {
             childrenList = (List) archivesGroupTreeMap.get("children");
         }
 
@@ -555,7 +555,7 @@ public class ArchivesQuery {
                         , hasFondsPermission
                         , hasCataloguePermission
                 );
-                if (childrenMap != null) {
+                if (null != childrenMap) {
                     childrenList.add(childrenMap);
                 }
 
@@ -564,19 +564,20 @@ public class ArchivesQuery {
         //添加查询后的下级全宗节点数据到本节点
         if (!childrenList.isEmpty()) {
             boolean hasChildFonds = childrenList.stream().anyMatch(
-                    a -> "Fonds".equals(a.getOrDefault("childrenType",null))
+                    a -> "Fonds".equals(a.getOrDefault("childrenType", null))
             );
             if (hasChildFonds) {
                 treeMap.put("children", childrenList);
-            }else{
-                int fondsId = ((UInteger)treeMap.get("id")).intValue();
-                if (!hasFondsPermission.apply(fondsId)){
+            } else {
+                int fondsId = ((UInteger) treeMap.get("id")).intValue();
+                if (!hasFondsPermission.apply(fondsId)) {
                     return null;
                 }
+                treeMap.put("children", childrenList);
             }
-        }else{
-            int fondsId = ((UInteger)treeMap.get("id")).intValue();
-            if (!hasFondsPermission.apply(fondsId)){
+        } else {
+            int fondsId = ((UInteger) treeMap.get("id")).intValue();
+            if (!hasFondsPermission.apply(fondsId)) {
                 return null;
             }
         }
@@ -609,7 +610,7 @@ public class ArchivesQuery {
                 );
                 Object childrenMapChildren = childrenMap.getOrDefault("children", null);
                 if (!(childrenMapChildren instanceof List)
-                        || ((List)childrenMapChildren).size() == 0){
+                        || ((List) childrenMapChildren).size() == 0) {
                     continue;
                 }
                 childrenList.add(childrenMap);
@@ -650,7 +651,7 @@ public class ArchivesQuery {
         List<Map<String, Object>> childrenList = new ArrayList<>();
         //遍历目录数据，获取下级目录节点
         for (Map<String, Object> map : dataCatalogueList) {
-            int catalogueId = ((UInteger)map.get("id")).intValue();
+            int catalogueId = ((UInteger) map.get("id")).intValue();
             if (treeMap.get("id").equals(map.get("archivesId"))
                     && hasCataloguePermission.apply(catalogueId)
                     ) {

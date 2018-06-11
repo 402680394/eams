@@ -4,6 +4,9 @@ import com.ztdx.eams.basic.repository.annotation.IndexNamePostfix;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Parent;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -18,35 +21,48 @@ public class OriginalText {
 
     @Id
     private String id;
-
+    //所属目录
     @IndexNamePostfix
     private int catalogueId;
-
+    //所属条目
+    @Parent(type = "record")
     private String entryId;
-
+    //排序号
     private int orderNumber;
-
+    //标题
+    @Field(type = FieldType.text)
     private String title;
-
+    //文件类型id
     private int type;
-
+    //文件全名
+    @Field(type = FieldType.text)
     private String name;
-
+    //文件大小
+    @Field(type = FieldType.keyword)
     private String size;
-
-    private Date createTime;
-
-    private String version;
-
-    private String remark;
-
-    private HashMap<String, Object> fileAttributesMap;
-
-    private String md5;
-
     //创建时间
+    @Field(type = FieldType.Date)
+    private Date createTime;
+    //版本
+    @Field(type = FieldType.keyword)
+    private String version;
+    //备注
+    @Field(type = FieldType.text)
+    private String remark;
+    @Field(type = FieldType.text)
+    //全文索引
+    private String contentIndex;
+    //全文索引状态(0-未生成  1-已生成)
+    private int contentIndexStatus;
+    //元数据信息
+    private HashMap<String, Object> fileAttributesMap;
+    //原始文件MD5值
+    @Field(type = FieldType.keyword)
+    private String md5;
+    //创建时间
+    @Field(type = FieldType.Date)
     private Date gmtCreate;
-
     //修改时间
+    @Field(type = FieldType.Date)
     private Date gmtModified;
 }

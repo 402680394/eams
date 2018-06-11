@@ -2,10 +2,24 @@ package com.ztdx.eams.domain.archives.model.entryItem;
 
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import org.springframework.util.StringUtils;
+
+import java.text.SimpleDateFormat;
 
 public class DoubleEntryItemValue extends AbstractEntryItemValue<Double> {
+
     public DoubleEntryItemValue(DescriptionItem descriptionItem, Object value) {
         super(descriptionItem, value);
+    }
+
+    @Override
+    public String toString() {
+        String format = descriptionItem.getFieldFormat();
+        if (StringUtils.isEmpty(format)){
+            format = "%f";
+        }
+
+        return String.format(format, value);
     }
 
     @Override

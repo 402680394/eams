@@ -2,6 +2,7 @@ package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
+import com.ztdx.eams.basic.utils.FileReaderUtils;
 import com.ztdx.eams.basic.utils.FtpUtil;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.OriginalText;
@@ -11,6 +12,7 @@ import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.OriginalTextMongoRepository;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +58,9 @@ public class OriginalTextService {
         this.ftpUtil = ftpUtil;
     }
 
+    /**
+     * 新增原文
+     */
     public void save(OriginalText originalText, MultipartFile file) {
         if (file.isEmpty()) {
             throw new InvalidArgumentException("原文文件未上传");
@@ -95,6 +100,9 @@ public class OriginalTextService {
         originalTextElasticsearchRepository.save(originalText);
     }
 
+    /**
+     * 删除原文
+     */
     public void deleteBatch(List<Map<String, Object>> list) {
         for (Map map : list) {
             String id = (String) map.get("id");
@@ -107,6 +115,9 @@ public class OriginalTextService {
         }
     }
 
+    /**
+     * 修改原文
+     */
     public void update(OriginalText originalText, MultipartFile file) {
         Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(originalText.getCatalogueId());
         if (null == fondsId) {
@@ -131,50 +142,68 @@ public class OriginalTextService {
         originalTextElasticsearchRepository.save(originalText);
     }
 
+    /**
+     * 原文文件上传
+     */
     private void fileUpload(int fondsId, OriginalText originalText, MultipartFile file) {
-        //文件上传
+        //先存入本地
         File tmpFile = new File(file.getOriginalFilename());
         FileOutputStream fos = null;
         BufferedOutputStream bos = null;
-        FileInputStream fis = null;
-        BufferedInputStream bis = null;
+        FileInputStream fisMD5 = null;
         try {
-            //先存入本地
             byte[] bytes = file.getBytes();
             fos = new FileOutputStream(tmpFile);
             bos = new BufferedOutputStream(fos);
             bos.write(bytes);
             bos.flush();
-
+            //计算MD5
+            fisMD5 = new FileInputStream(tmpFile);
+            String MD5 = DigestUtils.md5Hex(fisMD5);
+            //设置路径
+            String[] path = new String[]{String.valueOf(fondsId), MD5.substring(0, 2), MD5.substring(2, 4)};
             //TODO li 获取文件属性
-//            Metadata metadata = JpegMetadataReader.readMetadata(tmpFile);
-//            HashMap fileAttributesMap = new HashMap<String, Object>();
-//            for (Directory directory : metadata.getDirectories()) {
-//                fileAttributesMap.put(directory.getName(), directory.getTags());
-//                for (Tag tag : directory.getTags()) {
-//                    System.out.println(tag.getTagName() + ":" + tag.getDescription());
-//              }
-//            }
+
             originalText.setName(file.getOriginalFilename());
             originalText.setSize(String.valueOf(tmpFile.length()));
+            originalText.setMd5(MD5);
             //上传文件到FTP
-            originalText.setMd5(ftpUtil.uploadFile(fondsId, tmpFile));
+            ftpUtil.uploadFile(path, MD5, tmpFile);
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new BusinessException("文件上传失败");
         } finally {
-            try {
-                bos.close();
-                fos.close();
-            } catch (IOException e) {
-                throw new BusinessException("文件传输流未关闭");
+            if (fisMD5 != null) {
+                try {
+                    fisMD5.close();
+                } catch (IOException e) {
+                    throw new BusinessException("文件传输流未关闭");
+                }
+            }
+            if (bos != null) {
+                try {
+                    bos.close();
+                } catch (IOException e) {
+                    throw new BusinessException("文件传输流未关闭");
+                }
+            }
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    throw new BusinessException("文件传输流未关闭");
+                }
             }
             //删除本地临时文件
             tmpFile.delete();
         }
     }
 
+    /**
+     * 获取原文文件元数据
+     */
     public Map<String, Object> fileAttributes(int catalogueId, String entryId, String id) {
         Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
         if (find.isPresent()) {
@@ -183,6 +212,9 @@ public class OriginalTextService {
         return new HashMap<>();
     }
 
+    /**
+     * 获取原文
+     */
     public Map<String, Object> get(int catalogueId, String id) {
         HashMap resultMap = new HashMap<String, Object>();
         Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
@@ -196,6 +228,9 @@ public class OriginalTextService {
         return resultMap;
     }
 
+    /**
+     * 原文文件下载
+     */
     public void fileDownload(int catalogueId, String id, HttpServletResponse response) {
         Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(catalogueId);
         if (null == fondsId) {
@@ -203,23 +238,22 @@ public class OriginalTextService {
         }
         Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
         if (find.isPresent()) {
-            File file = ftpUtil.downloadFile(fondsId, find.get().getMd5(), find.get().getName());
-            String filename = null;
-            try {
-                filename = URLEncoder.encode(find.get().getName(), "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            response.setHeader("content-type", "application/octet-stream");
-            response.setContentType("application/octet-stream");
-            response.setHeader("Content-Disposition", "attachment;filename=" + filename);
+            File file = new File(find.get().getName());
+            //设置路径
+            String[] path = new String[]{String.valueOf(fondsId), find.get().getMd5().substring(0, 2), find.get().getMd5().substring(2, 4)};
+            ftpUtil.downloadFile(path, find.get().getMd5(), file);
 
             byte[] buff = new byte[1024];
+            FileInputStream fis = null;
             BufferedInputStream bis = null;
             OutputStream os = null;
             try {
+                response.setContentType("application/octet-stream");
+                response.setHeader("content-type", "application/octet-stream");
+                response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(find.get().getName(), "UTF-8"));
                 os = response.getOutputStream();
-                bis = new BufferedInputStream(new FileInputStream(file));
+                fis = new FileInputStream(file);
+                bis = new BufferedInputStream(fis);
                 int i = bis.read(buff);
                 while (i != -1) {
                     os.write(buff, 0, buff.length);
@@ -229,9 +263,22 @@ public class OriginalTextService {
             } catch (IOException e) {
                 throw new BusinessException("文件下载失败");
             } finally {
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException e) {
+                        throw new BusinessException("文件传输流未关闭");
+                    }
+                }
                 if (bis != null) {
                     try {
                         bis.close();
+                    } catch (IOException e) {
+                        throw new BusinessException("文件传输流未关闭");
+                    }
+                }
+                if (os != null) {
+                    try {
                         os.close();
                     } catch (IOException e) {
                         throw new BusinessException("文件传输流未关闭");
@@ -244,6 +291,9 @@ public class OriginalTextService {
         }
     }
 
+    /**
+     * 原文列表
+     */
     public Page<OriginalText> list(int catalogueId, String entryId, String title, int page, int size) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
         query.must(QueryBuilders.wildcardQuery("title",
@@ -252,6 +302,9 @@ public class OriginalTextService {
         return originalTextElasticsearchRepository.search(query, PageRequest.of(page, size, Sort.by(Sort.Order.asc("orderNumber"))), new String[]{"archive_record_" + catalogueId});
     }
 
+    /**
+     * 原文排序
+     */
     public void sort(String upId, String downId, int catalogueId) {
         Optional<OriginalText> upFind = originalTextMongoRepository.findById(upId, "archive_record_originalText_" + catalogueId);
         Optional<OriginalText> downFind = originalTextMongoRepository.findById(downId, "archive_record_originalText_" + catalogueId);
@@ -267,6 +320,50 @@ public class OriginalTextService {
             originalTextElasticsearchRepository.save(upFind.get());
             originalTextMongoRepository.save(downFind.get());
             originalTextElasticsearchRepository.save(downFind.get());
+        }
+    }
+
+    /**
+     * 生成全文索引
+     */
+    public void createContentIndex(String id, int catalogueId) {
+        Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(catalogueId);
+        if (null == fondsId) {
+            throw new InvalidArgumentException("全宗档案库不存在");
+        }
+        Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
+        if (find.isPresent()) {
+            String name = find.get().getName();
+            if (name.endsWith(".txt") || name.endsWith(".doc") || name.endsWith(".docx")) {
+                //临时文件
+                File file = new File(name);
+                try {
+                    //设置路径
+                    String[] path = new String[]{String.valueOf(fondsId), find.get().getMd5().substring(0, 2), find.get().getMd5().substring(2, 4)};
+                    //下载到临时文件
+                    ftpUtil.downloadFile(path, find.get().getMd5(), file);
+                    //读取内容
+                    if (name.endsWith(".txt")) {
+                        find.get().setContentIndex(FileReaderUtils.txtRead(file));
+                    }
+                    if (name.endsWith(".doc")) {
+                        find.get().setContentIndex(FileReaderUtils.docRead(file));
+                    }
+                    if (name.endsWith(".docx")) {
+                        find.get().setContentIndex(FileReaderUtils.docxRead(file));
+                    }
+                    find.get().setContentIndexStatus(1);
+                    originalTextElasticsearchRepository.save(find.get());
+                    originalTextMongoRepository.save(find.get());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    //删除临时文件
+                    if (file.exists()) {
+                        file.delete();
+                    }
+                }
+            }
         }
     }
 }

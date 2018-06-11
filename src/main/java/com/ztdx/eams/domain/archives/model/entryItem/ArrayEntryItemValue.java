@@ -16,6 +16,11 @@ public class ArrayEntryItemValue extends AbstractEntryItemValue<ArrayList> {
     }
 
     @Override
+    public String toString() {
+        return value.toString();
+    }
+
+    @Override
     protected ArrayList getDefault() {
         return new ArrayList();
     }
