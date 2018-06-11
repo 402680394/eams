@@ -7,13 +7,9 @@ import org.springframework.util.StringUtils;
 import java.text.SimpleDateFormat;
 
 public class DoubleEntryItemValue extends AbstractEntryItemValue<Double> {
+
     public DoubleEntryItemValue(DescriptionItem descriptionItem, Object value) {
         super(descriptionItem, value);
-    }
-
-    @Override
-    protected Double getDefault() {
-        return 0D;
     }
 
     @Override
@@ -24,6 +20,11 @@ public class DoubleEntryItemValue extends AbstractEntryItemValue<Double> {
         }
 
         return String.format(format, value);
+    }
+
+    @Override
+    protected Double getDefault() {
+        return 0D;
     }
 
     @Override
