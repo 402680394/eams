@@ -11,15 +11,20 @@ import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.join.query.JoinQueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlighterContext;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -240,7 +245,7 @@ public class EntryService {
         if (queryString != null && queryString.length() > 0) {
             query.must(queryStringQuery(queryString));
         }
-        query.must().addAll(parseQuery(catalogueId, itemQuery));
+        query.filter().addAll(parseQuery(catalogueId, itemQuery));
         query.filter(termQuery("gmtDeleted", 0));
 
         initIndex(catalogueId);
@@ -346,7 +351,7 @@ public class EntryService {
         srBuilder.addAggregation(AggregationBuilders.terms("catalogueId").field("catalogueId"));
         BoolQueryBuilder query;
         if (archiveContentType != null && archiveContentType.size() > 0) {
-            query = QueryBuilders.boolQuery().must(
+            query = QueryBuilders.boolQuery().filter(
                     QueryBuilders.termsQuery("archiveContentType", archiveContentType));
         }else{
             query = QueryBuilders.boolQuery();
@@ -378,5 +383,46 @@ public class EntryService {
 
     private String getIndexName(int catalogueId){
         return String.format(INDEX_NAME_PREFIX + "%d", catalogueId);
+    }
+
+    public Object searchFulltext(List<Integer> archiveContentType
+            , Set<SearchFulltextOption> searchParams
+            , String includeWords
+            , String rejectWords
+            , Pageable pageable) {
+        BoolQueryBuilder query = QueryBuilders.boolQuery();
+        BoolQueryBuilder parentQuery = QueryBuilders.boolQuery();
+
+        if (!StringUtils.isEmpty(includeWords)) {
+            query.must(queryStringQuery(includeWords));
+            parentQuery.must(queryStringQuery(includeWords).field(FULL_CONTENT));
+        }
+
+        if (!StringUtils.isEmpty(includeWords)) {
+            query.mustNot(queryStringQuery(rejectWords));
+            parentQuery.mustNot(queryStringQuery(rejectWords).field(FULL_CONTENT));
+        }
+
+        if (archiveContentType != null && archiveContentType.size() > 0) {
+            parentQuery.filter(QueryBuilders.termsQuery("archiveContentType", archiveContentType));
+        }
+
+        query.filter(termQuery("gmtDeleted", 0));
+
+        query.must(JoinQueryBuilders.hasParentQuery(
+                "record",
+                parentQuery,
+                false));
+
+        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(INDEX_NAME_PREFIX + "*");
+        srBuilder.setTypes("originalText");
+
+        srBuilder.setQuery(query);
+
+        srBuilder.setFrom(pageable.getPageNumber() * pageable.getPageSize()).setSize(pageable.getPageSize());
+
+        srBuilder.highlighter((new HighlightBuilder()).field("contentIndex", 100,2));
+
+        return srBuilder.get();
     }
 }
