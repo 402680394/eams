@@ -1,0 +1,26 @@
+package com.ztdx.eams.domain.store.repository;
+
+import com.ztdx.eams.domain.archives.model.MetadataStandards;
+import com.ztdx.eams.domain.store.model.Storage;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import javax.persistence.Table;
+
+@Repository
+@Table(name = "store_storage")
+@Qualifier("storageRepository")
+public interface StorageRepository extends JpaRepository<Storage, Integer> {
+
+    boolean existsByNumber(String number);
+
+    //通过ID修改
+    @Modifying
+    @Query("update Storage s set s.name=:#{#storage.name},s.number=:#{#storage.number},s.description=:#{#storage.description} where s.id=:#{#storage.id}")
+    void updateById(@Param(value = "storage") Storage storage);
+
+}
