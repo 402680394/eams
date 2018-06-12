@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
+import java.util.Collection;
 import java.util.List;
 
 
@@ -23,4 +24,6 @@ public interface DescriptionItemRepository extends JpaRepository<DescriptionItem
      * 获取目录下的对应的属性类型
      */
     DescriptionItem findByCatalogueIdAndPropertyType(int catalogueId, PropertyType propertyType);
+
+    List<DescriptionItem> findByCatalogueIdIn(Collection<Integer> catalogueId);
 }

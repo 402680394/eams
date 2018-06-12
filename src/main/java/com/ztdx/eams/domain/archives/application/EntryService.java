@@ -13,6 +13,7 @@ import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasti
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -29,14 +30,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
+import org.springframework.data.elasticsearch.core.query.IndexBoost;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.data.mongodb.core.query.Update;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -112,13 +119,16 @@ public class EntryService {
             originalTextElasticsearchRepository.createIndex(this.getIndexName(entry.getCatalogueId()));
         } catch (IOException e) {
             e.printStackTrace();
-        }*/
+        }
 
-        /*OriginalText originalText = new OriginalText();
+        OriginalText originalText = new OriginalText();
+        originalText.setId(UUID.randomUUID().toString());
         originalText.setCatalogueId(entry.getCatalogueId());
         originalText.setEntryId(entry.getId());
         originalText.setTitle("测试");
-        originalText.setType("测试");
+        originalText.setType(1);
+        originalText.setContentIndex("测试，这是一个全文检索的内容。10日下午，上海合作组织成员国领导人共同会见记者，习近平主席发表重要讲话，介绍峰会成果。本次峰会发表了《上海合作组织成员国元首理事会青岛宣言》、《上海合作组织成员国元首关于贸易便利化的联合声明》，批准了《上海合作组织成员国长期睦邻友好合作条约》未来5年实施纲要。各方还就相关问题达成了“六个一致”。\n" +
+                "　　习近平主席在上海合作组织青岛峰会上发表的一系列重要讲话中，有哪些新阐述？其中又透露了什么信号？峰会的一系列成果将对当前的世界形势带来哪些影响？");
         originalText.setCreateTime(Date.from(Instant.now()));
         originalText.setGmtCreate(Date.from(Instant.now()));
         originalText.setGmtModified(Date.from(Instant.now()));
@@ -330,6 +340,9 @@ public class EntryService {
 
     public Object test(String uuid) {
         try {
+            originalTextElasticsearchRepository.createIndex(this.getIndexName(Integer.parseInt(uuid)));
+
+            initIndex(Integer.parseInt(uuid));
             putMapping(Integer.parseInt(uuid));
         } catch (IOException e) {
             e.printStackTrace();
@@ -381,12 +394,16 @@ public class EntryService {
         return entryMongoRepository.findById(id, getIndexName(catalogueId)).orElse(null);
     }
 
-    private String getIndexName(int catalogueId){
-        return String.format(INDEX_NAME_PREFIX + "%d", catalogueId);
+    private String getIndexName(Integer catalogueId){
+        if (catalogueId == null) {
+            return INDEX_NAME_PREFIX + "*";
+        }else{
+            return String.format(INDEX_NAME_PREFIX + "%d", catalogueId);
+        }
     }
 
-    public Object searchFulltext(List<Integer> archiveContentType
-            , Set<SearchFulltextOption> searchParams
+    public AggregatedPage<OriginalText> searchFulltext(Set<Integer> archiveContentType
+            , Set<String> searchParams
             , String includeWords
             , String rejectWords
             , Pageable pageable) {
@@ -394,12 +411,16 @@ public class EntryService {
         BoolQueryBuilder parentQuery = QueryBuilders.boolQuery();
 
         if (!StringUtils.isEmpty(includeWords)) {
-            query.must(queryStringQuery(includeWords));
+            if (searchParams.contains(SearchFulltextOption.file.name())) {
+                query.must(queryStringQuery(includeWords));
+            }
             parentQuery.must(queryStringQuery(includeWords).field(FULL_CONTENT));
         }
 
-        if (!StringUtils.isEmpty(includeWords)) {
-            query.mustNot(queryStringQuery(rejectWords));
+        if (!StringUtils.isEmpty(rejectWords)) {
+            if (searchParams.contains(SearchFulltextOption.file.name())) {
+                query.mustNot(queryStringQuery(rejectWords));
+            }
             parentQuery.mustNot(queryStringQuery(rejectWords).field(FULL_CONTENT));
         }
 
@@ -407,22 +428,36 @@ public class EntryService {
             parentQuery.filter(QueryBuilders.termsQuery("archiveContentType", archiveContentType));
         }
 
-        query.filter(termQuery("gmtDeleted", 0));
+        parentQuery.filter(termQuery("gmtDeleted", 0));
 
-        query.must(JoinQueryBuilders.hasParentQuery(
-                "record",
-                parentQuery,
-                false));
+        if (searchParams.contains(SearchFulltextOption.entry.name())) {
+            query.should(JoinQueryBuilders.hasParentQuery(
+                    "record",
+                    parentQuery,
+                    false));
+        }
 
-        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(INDEX_NAME_PREFIX + "*");
-        srBuilder.setTypes("originalText");
+        NativeSearchQueryBuilder builder = new NativeSearchQueryBuilder();
+        //builder.withIndices(INDEX_NAME_PREFIX + "*");
+        //builder.withTypes("originalText");
+        builder.withQuery(query);
+        builder.withPageable(pageable);
 
-        srBuilder.setQuery(query);
+        HighlightBuilder.Field field = new HighlightBuilder.Field("contentIndex");
+        field.requireFieldMatch(false);
+        field.fragmentSize(100);
+        field.numOfFragments(2);
 
-        srBuilder.setFrom(pageable.getPageNumber() * pageable.getPageSize()).setSize(pageable.getPageSize());
+        builder.withHighlightFields(field);
 
-        srBuilder.highlighter((new HighlightBuilder()).field("contentIndex", 100,2));
+        return (AggregatedPage<OriginalText>) originalTextElasticsearchRepository.search(builder.build(),new String[] {INDEX_NAME_PREFIX + "*"});
+    }
 
-        return srBuilder.get();
+    public Iterable<Entry> findAllById(Set<String> entryIds, Integer catalogueId) {
+        if (catalogueId == null) {
+            return entryElasticsearchRepository.search(QueryBuilders.termsQuery("id.keyword", entryIds), new String[]{getIndexName(null)});
+        }else {
+            return entryElasticsearchRepository.findAllById(entryIds, getIndexName(catalogueId));
+        }
     }
 }

@@ -11,6 +11,7 @@ import com.ztdx.eams.domain.system.model.Fonds;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -436,12 +437,7 @@ public class EntryController {
      * @apiSuccess (Success 200) {String} content.fondsName 全宗名称
      * @apiSuccess (Success 200) {Number=1,2} content.archiveType 档案库类型 1:登记库 2:归档库
      * @apiSuccess (Success 200) {Number} content.archiveContentType 档案库内容类型
-     * @apiSuccess (Success 200) {Object} content.items 条目字段信息(以下内容每个档案库目录都不同，字段定义在data.column中)
-     * @apiSuccess (Success 200) {date} content.items.birthday 生日
-     * @apiSuccess (Success 200) {double} content.items.amount 资产
-     * @apiSuccess (Success 200) {Array} content.items.aihao 爱好
-     * @apiSuccess (Success 200) {String} content.items.name 姓名
-     * @apiSuccess (Success 200) {Number} content.items.age 年龄
+     * @apiSuccess (Success 200) {Object} content.items 条目字段信息
      * @apiSuccess (Success 200) {Object} content.file 文件信息
      * @apiSuccess (Success 200) {Number} content.file.fileId 文件id
      * @apiSuccess (Success 200) {Number} content.file.title 标题
@@ -471,51 +467,22 @@ public class EntryController {
      *                 "archiveType":0,
      *                 "archiveContentType":0,
      *                 "items":{
-     *                     "birthday":"2018-05-16T14:44:56.328+0800",
-     *                     "amount":73824039.1873,
-     *                     "aihao":[
+     *                     "生日":"2018-05-16T14:44:56.328+0800",
+     *                     "金额":73824039.1873,
+     *                     "爱好":[
      *                         "电影",
      *                         "足球",
      *                         "汽车"
      *                     ],
-     *                     "name":"里斯1",
-     *                     "age":41
+     *                     "姓名":"里斯1",
+     *                     "年龄":41
      *                 },
      *                 "file":{
-     *                     "fileId":1,
+     *                     "fileId":"文件id",
      *                     "title":"这是一个文件标题",
      *                     "fileType":"word",
      *                     "highLight":"这是高亮文本内容"
-     *                 },
-     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
-     *             }
-     *         ],
-     *         "column":[
-     *             {
-     *                 "metadataId":1,
-     *                 "metadataName":"name",
-     *                 "displayName":"姓名"
-     *             },
-     *             {
-     *                 "metadataId":2,
-     *                 "metadataName":"birthday",
-     *                 "displayName":"生日"
-     *             },
-     *             {
-     *                 "metadataId":3,
-     *                 "metadataName":"amount",
-     *                 "displayName":"资产"
-     *             },
-     *             {
-     *                 "metadataId":4,
-     *                 "metadataName":"aihao",
-     *                 "displayName":"爱好"
-     *             },
-     *             {
-     *                 "metadataId":5,
-     *                 "metadataName":"age",
-     *                 "displayName":"年龄"
+     *                 }
      *             }
      *         ],
      *         "aggregations":{
@@ -527,30 +494,135 @@ public class EntryController {
      *                 }
      *             ]
      *         },
-     *         "totalElements":14
+     *         "totalElements": 14,
+     *         "totalPages": 1
      *     }
      * }
      */
     @RequestMapping(value = "/searchFulltext", method = RequestMethod.POST)
     public Object searchFulltext(
-            @JsonParam List<Integer> archiveContentType
-            , @JsonParam Set<SearchFulltextOption> searchParams
+            @JsonParam Set<Integer> archiveContentType
+            , @JsonParam Set<String> searchParam
             , @JsonParam String includeWords
             , @JsonParam String rejectWords
-            , @RequestParam("page") int page
-            , @RequestParam("size") int size) {
+            , @RequestParam(value = "page", defaultValue = "0") int page
+            , @RequestParam(value = "size", defaultValue = "20") int size) {
 
-        if (!searchParams.contains(SearchFulltextOption.entry)
-                && !searchParams.contains(SearchFulltextOption.file)){
+        if (!searchParam.contains(SearchFulltextOption.entry.name())
+                && !searchParam.contains(SearchFulltextOption.file.name())){
             throw new InvalidArgumentException("请选择条目或者全文其中一项");
         }
 
-        return entryService.searchFulltext(
+        AggregatedPage<OriginalText> list = entryService.searchFulltext(
                 archiveContentType
-                , searchParams
+                , searchParam
                 , includeWords
                 , rejectWords
                 , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+
+        Map<String, Object> result = new HashMap<>();
+
+        if (list == null || list.getSize() == 0){
+            result.put("totalElements", 0);
+            result.put("totalPages", 0);
+        }
+
+        Set<Integer> catalogueIds = new HashSet<>();
+        Set<String> entryIds = new HashSet<>();
+        list.stream().forEach(a -> {
+            catalogueIds.add(a.getCatalogueId());
+            entryIds.add(a.getEntryId());
+        });
+
+        List<Catalogue> catalogues = new ArrayList<>();
+        Map<Integer, Archives> archivesMap = new HashMap<>();
+        Map<Integer, ArchivesGroup> archivesGroupMap = new HashMap<>();
+        Map<Integer, Fonds> fondsMap = new HashMap<>();
+
+        getCatalogueInfo(catalogueIds, catalogues, archivesMap, archivesGroupMap, fondsMap);
+
+        Map<String, Entry> entries = new HashMap<>();
+        entryService.findAllById(entryIds, null).forEach(a -> {
+            entries.put(a.getId(), a);
+        });
+
+        Map<Integer, Map<String, DescriptionItem>> descItems = descriptionItemService.findAllByCatalogueIdIn(catalogueIds)
+                .stream().collect(
+                        Collectors.groupingBy(
+                                DescriptionItem::getCatalogueId
+                                , Collectors.toMap(
+                                        DescriptionItem::getMetadataName, a1 -> a1, (a1, a2) -> a2)));
+
+
+        result.put("totalElements", list.getTotalElements());
+        result.put("totalPages", list.getTotalPages());
+        result.put("content", list.stream().map(a -> {
+            Map<String, Object> r = new HashMap<>();
+
+            Entry entry = entries.get(a.getEntryId());
+            Archives archives = archivesMap.get(entry.getArchiveId());
+            ArchivesGroup archivesGroup = archivesGroupMap.get(archives.getArchivesGroupId());
+            Fonds fonds = fondsMap.get(archivesGroup.getFondsId());
+
+            r.put("id", a.getEntryId());
+            r.put("catalogueId", a.getCatalogueId());
+            r.put("catalogueType", entry.getCatalogueType());
+            r.put("archiveId", entry.getArchiveId());
+            r.put("archiveName", archives.getName());
+            r.put("fondsName", fonds.getName());
+            r.put("archiveType", archives.getType());
+            r.put("archiveContentType", archives.getContentTypeId());
+
+            Map<String, Object> file = new HashMap<>();
+            r.put("file", file);
+
+            file.put("fileId", a.getId());
+            file.put("title", a.getTitle());
+            file.put("fileType", a.getType());
+            file.put("highLight", a.getContentIndex());
+
+            Map<String, Object> items = formatEntryItems(entry, descItems.get(entry.getCatalogueId()));
+            r.put("items", items);
+
+            return r;
+        }).collect(Collectors.toList()));
+
+        return result;
+    }
+
+    private Map<String, Object> formatEntryItems(Entry entry, Map<String, DescriptionItem> itemMap){
+        Map<String, Object> result = new HashMap<>();
+        entry.getItems().forEach((a, b) -> {
+            DescriptionItem item = itemMap.get(a);
+            result.put(item.getDisplayName(), b);
+        });
+        return result;
+    }
+
+    private void getCatalogueInfo(Set<Integer> catalogueIds
+            , List<Catalogue> catalogues
+            , Map<Integer, Archives> archivesMap
+            , Map<Integer, ArchivesGroup> archivesGroupMap
+            , Map<Integer, Fonds> fondsMap){
+        catalogues.addAll(catalogueService.findAllById(catalogueIds));
+
+        List<Integer> archiveIds = catalogues.stream().map(Catalogue::getArchivesId).collect(Collectors.toList());
+
+        List<Archives> archives = archivesService.findAllById(archiveIds);
+
+        archivesMap.putAll(archives.stream().collect(Collectors.toMap(Archives::getId, a -> a)));
+
+        List<Integer> archiveGroupIds = archives.stream().map(Archives::getArchivesGroupId).collect(Collectors.toList());
+
+        List<ArchivesGroup> archivesGroups = archivesGroupService.findAllById(archiveGroupIds);
+
+        archivesGroupMap.putAll(archivesGroups.stream().collect(Collectors.toMap(ArchivesGroup::getId, a-> a)));
+
+        List<Integer> fondsIds = archivesGroups.stream().map(ArchivesGroup::getFondsId).collect(Collectors.toList());
+
+        List<Fonds> fonds = fondsService.findAllById(fondsIds);
+
+        fondsMap.putAll(fonds.stream().collect(Collectors.toMap(Fonds::getId, a -> a)));
     }
 
     /**
@@ -597,25 +669,12 @@ public class EntryController {
     ) {
         Map<Integer, Long> aggs = entryService.aggsCatalogueCount(catalogueIds, archiveContentType, keyWord);
 
-        List<Catalogue> catalogues =catalogueService.findAllById(aggs.keySet());
+        List<Catalogue> catalogues = new ArrayList<>();
+        Map<Integer, Archives> archivesMap = new HashMap<>();
+        Map<Integer, ArchivesGroup> archivesGroupMap = new HashMap<>();
+        Map<Integer, Fonds> fondsMap = new HashMap<>();
 
-        List<Integer> archiveIds = catalogues.stream().map(Catalogue::getArchivesId).collect(Collectors.toList());
-
-        List<Archives> archives = archivesService.findAllById(archiveIds);
-
-        Map<Integer, Archives> archivesMap = archives.stream().collect(Collectors.toMap(Archives::getId, a -> a));
-
-        List<Integer> archiveGroupIds = archives.stream().map(Archives::getArchivesGroupId).collect(Collectors.toList());
-
-        List<ArchivesGroup> archivesGroups = archivesGroupService.findAllById(archiveGroupIds);
-
-        Map<Integer, ArchivesGroup> archivesGroupMap = archivesGroups.stream().collect(Collectors.toMap(ArchivesGroup::getId, a-> a));
-
-        List<Integer> fondsIds = archivesGroups.stream().map(ArchivesGroup::getFondsId).collect(Collectors.toList());
-
-        List<Fonds> fonds = fondsService.findAllById(fondsIds);
-
-        Map<Integer, Fonds> fondsMap = fonds.stream().collect(Collectors.toMap(Fonds::getId, a -> a));
+        getCatalogueInfo(aggs.keySet(), catalogues, archivesMap, archivesGroupMap, fondsMap);
 
         Map<Integer, List<Catalogue>> catalogueGroup = catalogues.stream().collect(Collectors.groupingBy(Catalogue::getArchivesId));
 

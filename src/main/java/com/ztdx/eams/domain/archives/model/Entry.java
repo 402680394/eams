@@ -19,7 +19,6 @@ import java.util.Map;
 @org.springframework.data.mongodb.core.mapping.Document(collection = "archive_record")
 public class Entry {
     @Id
-    @Field(type = FieldType.keyword)
     private String id;
 
     /**
@@ -94,7 +93,7 @@ public class Entry {
     /**
      * 版本号
      */
-    @Version
+    //@Version
     private Long version;
 
     /**

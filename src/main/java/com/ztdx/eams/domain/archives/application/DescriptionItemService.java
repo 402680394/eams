@@ -10,6 +10,7 @@ import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -32,6 +33,14 @@ public class DescriptionItemService {
                                 DescriptionItem::getMetadataName
                                 , map
                                 , (d1, d2) -> d2));
+    }
+
+    public List<DescriptionItem> findAllById(Collection<Integer> ids){
+        return descriptionItemRepository.findAllById(ids);
+    }
+
+    public List<DescriptionItem> findAllByCatalogueIdIn(Collection<Integer> ids){
+        return descriptionItemRepository.findByCatalogueIdIn(ids);
     }
 
     //新增条目数据验证
