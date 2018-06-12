@@ -272,9 +272,6 @@ public class OriginalTextService {
             } catch (IOException e) {
                 throw new BusinessException("文件下载失败");
             } finally {
-                if (file.exists()) {
-                    file.delete();
-                }
                 if (fis != null) {
                     try {
                         fis.close();
@@ -295,6 +292,9 @@ public class OriginalTextService {
                     } catch (IOException e) {
                         throw new BusinessException("文件传输流未关闭");
                     }
+                }
+                if (file.exists()) {
+                    file.delete();
                 }
             }
         } else {
@@ -424,16 +424,16 @@ public class OriginalTextService {
             originalTextElasticsearchRepository.save(originalText);
             originalTextMongoRepository.save(originalText);
         } finally {
-            //删除本地文件
-            if (pdfFile.exists()) {
-                pdfFile.delete();
-            }
             if (fisMD5 != null) {
                 try {
                     fisMD5.close();
                 } catch (IOException e) {
                     throw new BusinessException("文件传输流未关闭");
                 }
+            }
+            //删除本地文件
+            if (pdfFile.exists()) {
+                pdfFile.delete();
             }
         }
     }
