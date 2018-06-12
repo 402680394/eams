@@ -4,6 +4,9 @@ import com.artofsolving.jodconverter.DocumentConverter;
 import com.artofsolving.jodconverter.openoffice.connection.OpenOfficeConnection;
 import com.artofsolving.jodconverter.openoffice.connection.SocketOpenOfficeConnection;
 import com.artofsolving.jodconverter.openoffice.converter.OpenOfficeDocumentConverter;
+import com.ztdx.eams.basic.exception.BusinessException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.net.ConnectException;
@@ -11,19 +14,20 @@ import java.net.ConnectException;
 /**
  * Created by li on 2018/6/7.
  */
+@Component
 public class PDFConverterUtils {
 
-    public void createPdf() {
-        String docpath = "C:\\Users\\li\\Desktop\\P9.5.2-TRN-档案中心-20170531-V1.0.doc";
-        String pdfpath = "C:\\Users\\li\\Desktop\\P9.5.2-TRN-档案中心-20170531-V1.0.pdf";
-        File inputFile = new File(docpath);
-        File outputFile = new File(pdfpath);
+    //端口号
+    @Value("${openoffice.port}")
+    private int OPENOFFICE_PORT;
 
-        OpenOfficeConnection connection = new SocketOpenOfficeConnection(8100);
+    public void converterPDF(File inputFile, File outputFile) {
+
+        OpenOfficeConnection connection = new SocketOpenOfficeConnection(OPENOFFICE_PORT);
         try {
             connection.connect();
         } catch (ConnectException e) {
-            e.printStackTrace();
+            throw new BusinessException("未连接到openoffice服务");
         }
 
         DocumentConverter converter = new OpenOfficeDocumentConverter(connection);

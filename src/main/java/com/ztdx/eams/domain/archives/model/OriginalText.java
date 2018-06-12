@@ -49,16 +49,20 @@ public class OriginalText {
     //备注
     @Field(type = FieldType.text)
     private String remark;
-    @Field(type = FieldType.text)
-    //全文索引
-    private String contentIndex;
-    //全文索引状态(0-未生成  1-已生成)
-    private int contentIndexStatus;
     //元数据信息
     private HashMap<String, Object> fileAttributesMap;
     //原始文件MD5值
     @Field(type = FieldType.keyword)
     private String md5;
+    @Field(type = FieldType.text)
+    //全文索引
+    private String contentIndex;
+    //全文索引状态(0-未生成  1-已生成 2-生成失败 3-文件类型不可用)
+    private int contentIndexStatus;
+    //pdf转换文件MD5值
+    private String pdfMd5;
+    //pdf转换状态(0-未转换 1-已转换 2-转换失败 3-文件类型不可用)
+    private int pdfConverStatus;
     //创建时间
     @Field(type = FieldType.Date)
     private Date gmtCreate;

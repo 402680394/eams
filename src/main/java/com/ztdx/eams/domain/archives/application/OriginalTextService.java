@@ -4,11 +4,10 @@ import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.utils.FileReaderUtils;
 import com.ztdx.eams.basic.utils.FtpUtil;
+import com.ztdx.eams.basic.utils.PDFConverterUtils;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.OriginalText;
 import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
-import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
-import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.OriginalTextMongoRepository;
@@ -39,23 +38,20 @@ public class OriginalTextService {
 
     private final OriginalTextElasticsearchRepository originalTextElasticsearchRepository;
 
-    private final CatalogueRepository catalogueRepository;
-
-    private final ArchivesRepository archivesRepository;
-
     private final ArchivesGroupRepository archivesGroupRepository;
 
     private final FtpUtil ftpUtil;
 
+    private final PDFConverterUtils pdfConverterUtils;
+
     @Autowired
-    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil) {
+    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil, PDFConverterUtils pdfConverterUtils) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.originalTextMongoRepository = originalTextMongoRepository;
         this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
-        this.catalogueRepository = catalogueRepository;
-        this.archivesRepository = archivesRepository;
         this.archivesGroupRepository = archivesGroupRepository;
         this.ftpUtil = ftpUtil;
+        this.pdfConverterUtils = pdfConverterUtils;
     }
 
     /**
@@ -175,6 +171,10 @@ public class OriginalTextService {
             e.printStackTrace();
             throw new BusinessException("文件上传失败");
         } finally {
+            //删除本地临时文件
+            if (tmpFile.exists()) {
+                tmpFile.delete();
+            }
             if (fisMD5 != null) {
                 try {
                     fisMD5.close();
@@ -196,8 +196,6 @@ public class OriginalTextService {
                     throw new BusinessException("文件传输流未关闭");
                 }
             }
-            //删除本地临时文件
-            tmpFile.delete();
         }
     }
 
@@ -229,19 +227,30 @@ public class OriginalTextService {
     }
 
     /**
-     * 原文文件下载
+     * 文件下载
      */
-    public void fileDownload(int catalogueId, String id, HttpServletResponse response) {
+    public void fileDownload(int type, int catalogueId, String id, HttpServletResponse response) {
         Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(catalogueId);
         if (null == fondsId) {
             throw new InvalidArgumentException("全宗档案库不存在");
         }
         Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
         if (find.isPresent()) {
-            File file = new File(find.get().getName());
-            //设置路径
-            String[] path = new String[]{String.valueOf(fondsId), find.get().getMd5().substring(0, 2), find.get().getMd5().substring(2, 4)};
-            ftpUtil.downloadFile(path, find.get().getMd5(), file);
+            String fileName = find.get().getName();
+            File file = new File(fileName);
+            if (type == 1) {
+                //下载原文件
+                String[] path = new String[]{String.valueOf(fondsId), find.get().getMd5().substring(0, 2), find.get().getMd5().substring(2, 4)};
+                ftpUtil.downloadFile(path, find.get().getMd5(), file);
+            } else {
+                //下载PDF格式文件
+                if (find.get().getPdfConverStatus() != 1) {
+                    throw new BusinessException("没有PDF格式提供下载");
+                }
+                String[] path = new String[]{String.valueOf(fondsId), find.get().getPdfMd5().substring(0, 2), find.get().getPdfMd5().substring(2, 4)};
+                ftpUtil.downloadFile(path, find.get().getPdfMd5(), file);
+                fileName = file.getName().substring(0, file.getName().lastIndexOf(".")) + ".pdf";
+            }
 
             byte[] buff = new byte[1024];
             FileInputStream fis = null;
@@ -250,19 +259,22 @@ public class OriginalTextService {
             try {
                 response.setContentType("application/octet-stream");
                 response.setHeader("content-type", "application/octet-stream");
-                response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(find.get().getName(), "UTF-8"));
+                response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
                 os = response.getOutputStream();
                 fis = new FileInputStream(file);
                 bis = new BufferedInputStream(fis);
                 int i = bis.read(buff);
                 while (i != -1) {
-                    os.write(buff, 0, buff.length);
+                    os.write(buff, 0, i);
                     os.flush();
                     i = bis.read(buff);
                 }
             } catch (IOException e) {
                 throw new BusinessException("文件下载失败");
             } finally {
+                if (file.exists()) {
+                    file.delete();
+                }
                 if (fis != null) {
                     try {
                         fis.close();
@@ -284,7 +296,6 @@ public class OriginalTextService {
                         throw new BusinessException("文件传输流未关闭");
                     }
                 }
-                file.delete();
             }
         } else {
             throw new BusinessException("文件下载失败");
@@ -324,46 +335,107 @@ public class OriginalTextService {
     }
 
     /**
-     * 生成全文索引
+     * 归档处理
      */
-    public void createContentIndex(String id, int catalogueId) {
+    public void placeOnFile(String id, int catalogueId) {
         Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(catalogueId);
         if (null == fondsId) {
-            throw new InvalidArgumentException("全宗档案库不存在");
+            return;
         }
         Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
         if (find.isPresent()) {
-            String name = find.get().getName();
-            if (name.endsWith(".txt") || name.endsWith(".doc") || name.endsWith(".docx")) {
-                //临时文件
-                File file = new File(name);
+            OriginalText originalText = find.get();
+            String name = originalText.getName();
+            File file = new File(name);
+            //设置路径
+            String[] path = new String[]{String.valueOf(fondsId), find.get().getMd5().substring(0, 2), find.get().getMd5().substring(2, 4)};
+            //下载到本地
+            ftpUtil.downloadFile(path, find.get().getMd5(), file);
+            //生成全文索引
+            createContentIndex(originalText, file);
+            //转为pdf格式文件并上传ftp
+            converter2PdfAndUpload(fondsId, originalText, file);
+            //删除本地文件
+            if (file.exists()) {
+                file.delete();
+            }
+        }
+    }
+
+    /**
+     * 生成全文索引
+     */
+    private void createContentIndex(OriginalText originalText, File file) {
+        try {
+            //读取内容
+            if (originalText.getName().endsWith(".txt")) {
+                originalText.setContentIndex(FileReaderUtils.txtRead(file));
+                //设置全文索引状态为已生成
+                originalText.setContentIndexStatus(1);
+            } else if (originalText.getName().endsWith(".doc")) {
+                originalText.setContentIndex(FileReaderUtils.docRead(file));
+                originalText.setContentIndexStatus(1);
+            } else if (originalText.getName().endsWith(".docx")) {
+                originalText.setContentIndex(FileReaderUtils.docxRead(file));
+                originalText.setContentIndexStatus(1);
+            } else {
+                //此类型无法生成全文索引
+                originalText.setContentIndexStatus(3);
+            }
+            originalTextElasticsearchRepository.save(originalText);
+            originalTextMongoRepository.save(originalText);
+        } catch (Exception e) {
+            //设置全文索引状态为生成失败
+            originalText.setContentIndex("");
+            originalText.setContentIndexStatus(2);
+            originalTextElasticsearchRepository.save(originalText);
+            originalTextMongoRepository.save(originalText);
+        }
+    }
+
+    /**
+     * 转换为PDF格式并上传到ftp
+     */
+    private void converter2PdfAndUpload(int fondsId, OriginalText originalText, File file) {
+        File pdfFile = new File(file.getName().substring(0, file.getName().lastIndexOf(".")) + ".pdf");
+        FileInputStream fisMD5 = null;
+        try {
+            if (originalText.getName().endsWith(".txt") || originalText.getName().endsWith(".doc") || originalText.getName().endsWith(".docx")) {
+                //转换
+                pdfConverterUtils.converterPDF(file, pdfFile);
+                //计算MD5
+                fisMD5 = new FileInputStream(pdfFile);
+                String MD5 = DigestUtils.md5Hex(fisMD5);
+                //设置路径
+                String[] path = new String[]{String.valueOf(fondsId), MD5.substring(0, 2), MD5.substring(2, 4)};
+                //上传文件到FTP
+                ftpUtil.uploadFile(path, MD5, pdfFile);
+
+                originalText.setPdfMd5(MD5);
+                originalText.setPdfConverStatus(1);
+            } else {
+                originalText.setPdfConverStatus(3);
+            }
+            originalTextElasticsearchRepository.save(originalText);
+            originalTextMongoRepository.save(originalText);
+        } catch (Exception e) {
+            //设置转换状态失败
+            originalText.setPdfConverStatus(2);
+            originalTextElasticsearchRepository.save(originalText);
+            originalTextMongoRepository.save(originalText);
+        } finally {
+            //删除本地文件
+            if (pdfFile.exists()) {
+                pdfFile.delete();
+            }
+            if (fisMD5 != null) {
                 try {
-                    //设置路径
-                    String[] path = new String[]{String.valueOf(fondsId), find.get().getMd5().substring(0, 2), find.get().getMd5().substring(2, 4)};
-                    //下载到临时文件
-                    ftpUtil.downloadFile(path, find.get().getMd5(), file);
-                    //读取内容
-                    if (name.endsWith(".txt")) {
-                        find.get().setContentIndex(FileReaderUtils.txtRead(file));
-                    }
-                    if (name.endsWith(".doc")) {
-                        find.get().setContentIndex(FileReaderUtils.docRead(file));
-                    }
-                    if (name.endsWith(".docx")) {
-                        find.get().setContentIndex(FileReaderUtils.docxRead(file));
-                    }
-                    find.get().setContentIndexStatus(1);
-                    originalTextElasticsearchRepository.save(find.get());
-                    originalTextMongoRepository.save(find.get());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    //删除临时文件
-                    if (file.exists()) {
-                        file.delete();
-                    }
+                    fisMD5.close();
+                } catch (IOException e) {
+                    throw new BusinessException("文件传输流未关闭");
                 }
             }
         }
     }
 }
+
