@@ -180,7 +180,7 @@ public class OriginalTextController {
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
-    @RequestMapping(value = "/download", method = RequestMethod.GET)
+    @RequestMapping(value = "/downloadPDF", method = RequestMethod.GET)
     public void downloadPDF(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id, HttpServletResponse response) {
         originalTextService.fileDownload(2, catalogueId, id, response);
     }
@@ -263,5 +263,10 @@ public class OriginalTextController {
     @RequestMapping(value = "/sort", method = RequestMethod.PUT)
     public void sort(@RequestParam("upId") String upId, @RequestParam("downId") String downId, @RequestParam("catalogueId") int catalogueId) {
         originalTextService.sort(upId, downId, catalogueId);
+    }
+
+    @RequestMapping(value = "/test", method = RequestMethod.POST)
+    public void test(@RequestParam("id") String id, @RequestParam("catalogueId") int catalogueId) {
+        originalTextService.placeOnFile(id, catalogueId);
     }
 }
