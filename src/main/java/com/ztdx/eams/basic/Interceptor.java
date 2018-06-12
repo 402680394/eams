@@ -16,7 +16,7 @@ import java.nio.file.AccessDeniedException;
 public class Interceptor implements HandlerInterceptor {
 
     @Override
-    public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o)   {
+    public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) {
         /*if (!httpServletRequest.getMethod().equals("OPTIONS")){
             //请求验证拦截
             if(!"/user/login".equals(httpServletRequest.getRequestURI())){
@@ -45,19 +45,15 @@ public class Interceptor implements HandlerInterceptor {
     private void appendToResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Exception exception) throws IOException {
 
         int errorCode = 500;
-        String message =exception.getMessage();
+        String message = exception.getMessage();
         if (exception instanceof ApplicationException) {
             errorCode = ((ApplicationException) exception).getCode();
-        } else {
-            if (exception instanceof AccessDeniedException) {
-                errorCode = 403;
-            }
-            message+="(" +exception.getClass().toString()+")";
+        } else if(exception instanceof AccessDeniedException) {
+            errorCode = 403;
         }
 
-        if(message !=null){
-            message =message.replaceAll("\"","'");
-        }
+        message += "(" + exception.getClass().toString() + ")";
+        message = message.replaceAll("\"", "'");
         String response = "{\"error\":{\"timestamp\":" + System.currentTimeMillis() + ",\"code\":" + errorCode + ",\"message\":\"" + message + "\",\"path\":\"" + httpServletRequest.getServletPath() + "\"}}";
 
         String origin = httpServletRequest.getHeader("Origin");
@@ -66,7 +62,7 @@ public class Interceptor implements HandlerInterceptor {
         httpServletResponse.setHeader("Access-Control-Allow-Credentials", "true");
         httpServletResponse.setHeader("Content-type", "application/json;charset=UTF-8");
 
-        httpServletResponse.setStatus(errorCode);
+        httpServletResponse.setStatus(200);
         OutputStream os = httpServletResponse.getOutputStream();
         os.write(response.getBytes());
         os.flush();
