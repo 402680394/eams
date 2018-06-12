@@ -13,13 +13,9 @@ import java.util.Date;
 import static org.apache.commons.lang.StringUtils.isNumeric;
 
 public class DateEntryItemValue extends AbstractEntryItemValue<Date> {
+
     public DateEntryItemValue(DescriptionItem descriptionItem, Object value) {
         super(descriptionItem, value);
-    }
-
-    @Override
-    protected Date getDefault() {
-        return null;
     }
 
     @Override
@@ -30,6 +26,11 @@ public class DateEntryItemValue extends AbstractEntryItemValue<Date> {
         }
         SimpleDateFormat dateFormat = new SimpleDateFormat(format);
         return dateFormat.format(value);
+    }
+
+    @Override
+    protected Date getDefault() {
+        return null;
     }
 
     @Override

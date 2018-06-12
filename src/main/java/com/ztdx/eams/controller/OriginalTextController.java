@@ -167,7 +167,22 @@ public class OriginalTextController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
     @RequestMapping(value = "/download", method = RequestMethod.GET)
     public void download(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id, HttpServletResponse response) {
-        originalTextService.fileDownload(catalogueId, id, response);
+        originalTextService.fileDownload(1, catalogueId, id, response);
+    }
+
+    /**
+     * @api {get} /originalText/downloadPDF 下载PDF格式文件
+     * @apiName downloadPDF
+     * @apiGroup originalText
+     * @apiParam {Number} catalogueId 目录ID(url参数)
+     * @apiParam {String} id 原文ID(url参数)
+     * @apiError (Error 400) message 1.全宗档案库不存在;2.文件下载失败;3.ftp服务未正常关闭;4.文件传输流未关闭.
+     * @apiUse ErrorExample
+     */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
+    @RequestMapping(value = "/downloadPDF", method = RequestMethod.GET)
+    public void downloadPDF(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id, HttpServletResponse response) {
+        originalTextService.fileDownload(2, catalogueId, id, response);
     }
 
     /**
@@ -248,5 +263,10 @@ public class OriginalTextController {
     @RequestMapping(value = "/sort", method = RequestMethod.PUT)
     public void sort(@RequestParam("upId") String upId, @RequestParam("downId") String downId, @RequestParam("catalogueId") int catalogueId) {
         originalTextService.sort(upId, downId, catalogueId);
+    }
+
+    @RequestMapping(value = "/test", method = RequestMethod.POST)
+    public void test(@RequestParam("id") String id, @RequestParam("catalogueId") int catalogueId) {
+        originalTextService.placeOnFile(id, catalogueId);
     }
 }

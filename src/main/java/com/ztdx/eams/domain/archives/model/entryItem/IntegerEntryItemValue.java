@@ -14,11 +14,6 @@ public class IntegerEntryItemValue extends AbstractEntryItemValue<Integer> {
     }
 
     @Override
-    public Integer get() {
-        return value;
-    }
-
-    @Override
     protected Integer getDefault() {
         return null;
     }

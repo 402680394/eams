@@ -407,7 +407,11 @@ public class EntryController {
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #entry.catalogueId)")
     @RequestMapping(value = "/search", method = RequestMethod.POST)
-    public Page<Entry> searchAdv(@RequestBody Entry entry, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size) {
+    public Page<Entry> searchAdv(
+            @RequestBody Entry entry
+            , @RequestParam("q") String queryString
+            , @RequestParam("page") int page
+            , @RequestParam("size") int size) {
         //, @RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size
         return entryService.search(entry.getCatalogueId(), queryString, entry.getItems(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
     }
@@ -442,11 +446,11 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} content.file.fileId 文件id
      * @apiSuccess (Success 200) {Number} content.file.title 标题
      * @apiSuccess (Success 200) {String="word","excel","pdf","ppt"} content.file.fileType 类型
-     * @apiSuccess (Success 200) {String} content.file.hightlight 高亮文本
+     * @apiSuccess (Success 200) {String} content.file.highLight 高亮文本
      * @apiSuccess (Success 200) {Array} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
      * @apiSuccess (Success 200) {Number} column.metadataId 元数据id
      * @apiSuccess (Success 200) {String} column.metadataName
-     * @apiSuccess (Success 200) {Array} column.displayName 爱好
+     * @apiSuccess (Success 200) {Array} column.displayName 显示名称
      * @apiSuccess (Success 200) {Object} aggregation 统计数据
      * @apiSuccess (Success 200) {Array} aggregation.archiveContentType 档案类型统计
      * @apiSuccess (Success 200) {Number} aggregation.archiveContentType.id 档案类型id
@@ -481,7 +485,7 @@ public class EntryController {
      *                     "fileId":1,
      *                     "title":"这是一个文件标题",
      *                     "fileType":"word",
-     *                     "hightlight":"这是高亮文本内容"
+     *                     "highLight":"这是高亮文本内容"
      *                 },
      *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
      *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
@@ -491,27 +495,27 @@ public class EntryController {
      *             {
      *                 "metadataId":1,
      *                 "metadataName":"name",
-     *                 "dispalyName":"姓名"
+     *                 "displayName":"姓名"
      *             },
      *             {
      *                 "metadataId":2,
      *                 "metadataName":"birthday",
-     *                 "dispalyName":"生日"
+     *                 "displayName":"生日"
      *             },
      *             {
      *                 "metadataId":3,
      *                 "metadataName":"amount",
-     *                 "dispalyName":"资产"
+     *                 "displayName":"资产"
      *             },
      *             {
      *                 "metadataId":4,
      *                 "metadataName":"aihao",
-     *                 "dispalyName":"爱好"
+     *                 "displayName":"爱好"
      *             },
      *             {
      *                 "metadataId":5,
      *                 "metadataName":"age",
-     *                 "dispalyName":"年龄"
+     *                 "displayName":"年龄"
      *             }
      *         ],
      *         "aggregations":{
@@ -528,8 +532,25 @@ public class EntryController {
      * }
      */
     @RequestMapping(value = "/searchFulltext", method = RequestMethod.POST)
-    public void searchFulltext() {
+    public Object searchFulltext(
+            @JsonParam List<Integer> archiveContentType
+            , @JsonParam Set<SearchFulltextOption> searchParams
+            , @JsonParam String includeWords
+            , @JsonParam String rejectWords
+            , @RequestParam("page") int page
+            , @RequestParam("size") int size) {
 
+        if (!searchParams.contains(SearchFulltextOption.entry)
+                && !searchParams.contains(SearchFulltextOption.file)){
+            throw new InvalidArgumentException("请选择条目或者全文其中一项");
+        }
+
+        return entryService.searchFulltext(
+                archiveContentType
+                , searchParams
+                , includeWords
+                , rejectWords
+                , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
     }
 
     /**
