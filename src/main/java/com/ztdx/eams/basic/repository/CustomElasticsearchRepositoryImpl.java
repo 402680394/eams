@@ -1,8 +1,6 @@
 package com.ztdx.eams.basic.repository;
 
 import com.ztdx.eams.basic.repository.annotation.IndexNamePostfix;
-import javafx.util.Pair;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -24,7 +22,6 @@ import org.springframework.data.elasticsearch.repository.support.AbstractElastic
 import org.springframework.data.elasticsearch.repository.support.ElasticsearchEntityInformation;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -38,13 +35,13 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable>
         implements CustomElasticsearchRepository<T, ID> {
     private ResultsMapper resultsMapper;
 
-    public CustomElasticsearchRepositoryImpl(ElasticsearchOperations elasticsearchOperations) {
+    public CustomElasticsearchRepositoryImpl(CustomElasticsearchOperations elasticsearchOperations) {
         super(elasticsearchOperations);
         ElasticsearchConverter elasticsearchConverter = (new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
         this.resultsMapper = (new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
     }
 
-    public CustomElasticsearchRepositoryImpl(ElasticsearchEntityInformation<T, ID> metadata, ElasticsearchOperations elasticsearchOperations) {
+    public CustomElasticsearchRepositoryImpl(ElasticsearchEntityInformation<T, ID> metadata, CustomElasticsearchOperations elasticsearchOperations) {
         super(metadata, elasticsearchOperations);
         ElasticsearchConverter elasticsearchConverter = (new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
         this.resultsMapper = (new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
@@ -291,6 +288,11 @@ public class CustomElasticsearchRepositoryImpl<T, ID extends Serializable>
         this.elasticsearchOperations.refresh(indexName);
     }
 
+    public void deleteByIdWithRouting(ID id, String indexName, String routing) {
+        Assert.notNull(id, "Cannot delete entity with id 'null'.");
+        ((CustomElasticsearchOperations)this.elasticsearchOperations).delete(indexName, this.getIndexType(), this.stringIdRepresentation(id), routing);
+        this.elasticsearchOperations.refresh(indexName);
+    }
     
     public void delete(T entity) {
         Assert.notNull(entity, "Cannot delete 'null' entity.");

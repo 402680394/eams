@@ -103,11 +103,14 @@ public class OriginalTextService {
         for (Map map : list) {
             String id = (String) map.get("id");
             int catalogueId = (int) map.get("catalogueId");
+            OriginalText originalText = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId).orElse(null);
+            if (originalText != null) {
+                //删除MongoDB信息
+                originalTextMongoRepository.deleteById(id, "archive_record_originalText_" + catalogueId);
 
-            //删除MongoDB信息
-            originalTextMongoRepository.deleteById(id, "archive_record_originalText_" + catalogueId);
-            //删除Elasticsearch信息
-            originalTextElasticsearchRepository.deleteById(id, "archive_record_" + catalogueId);
+                //删除Elasticsearch信息
+                originalTextElasticsearchRepository.deleteByIdWithRouting(id, "archive_record_" + catalogueId, originalText.getEntryId());
+            }
         }
     }
 

@@ -4,13 +4,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ztdx.eams.basic.Interceptor;
 import com.ztdx.eams.basic.params.JsonParamResolver;
-import com.ztdx.eams.basic.repository.CustomElasticsearchResultMapper;
-import org.elasticsearch.client.Client;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -102,16 +98,5 @@ public class WebConfig extends WebMvcConfigurationSupport {
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(mappingJackson2HttpMessageConverter());
         super.addDefaultHttpMessageConverters(converters);
-    }
-
-    @Bean
-    public ElasticsearchTemplate elasticsearchTemplate(Client client,
-                                                       ElasticsearchConverter converter) {
-        try {
-            return new ElasticsearchTemplate(client, converter, new CustomElasticsearchResultMapper(converter.getMappingContext()));
-        }
-        catch (Exception ex) {
-            throw new IllegalStateException(ex);
-        }
     }
 }
