@@ -1,4 +1,4 @@
-package com.ztdx.eams.domain.store.model;
+package com.ztdx.eams.domain.archives.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -9,35 +9,36 @@ import javax.persistence.Converter;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum MonitoringPointType {
+public enum OpenStatus {
 
     /**
-     * 温度记录仪
+     *无
      */
-    TemperatureRecorder(1,"温度记录仪"),
+    Nothing(1,"无"),
 
     /**
-     * 湿度记录仪
+     *开放
      */
-    HumidityRecorder(2,"湿度记录仪"),
+    Opening(2,"开放"),
 
     /**
-     * 温湿度记录仪
+     *受控
      */
-    TemperatureAndHumidityRecorder(3,"温湿度记录仪");
+    Controlled(3,"受控");
+
 
     private Integer code;
     private String descpriont;
-    private static final Map<Integer, MonitoringPointType> enumMap = new HashMap<>();
+    private static final Map<Integer, OpenStatus> enumMap = new HashMap<>();
 
 
-    MonitoringPointType(Integer code, String descpriont) {
+    OpenStatus(Integer code, String descpriont) {
         this.code = code;
         this.descpriont=descpriont;
     }
 
     static {
-        for (MonitoringPointType item : values()) {
+        for (OpenStatus item : values()) {
             enumMap.put(item.getCode(), item);
         }
     }
@@ -61,24 +62,24 @@ public enum MonitoringPointType {
      * 创建枚举的工厂方法
      */
     @JsonCreator
-    public static MonitoringPointType create(int code) {
+    public static OpenStatus create(int code) {
         if (!enumMap.containsKey(code))
-            throw new BusinessException("不存在类型为" + code + "的监测点类型");
+            throw new BusinessException("不存在类型为" + code + "的鉴定状态");
 
         return enumMap.get(code);
     }
 
     @Converter(autoApply = true)
-    public static class EnumConverter implements AttributeConverter<MonitoringPointType, Integer> {
+    public static class EnumConverter implements AttributeConverter<OpenStatus, Integer> {
 
         @Override
-        public Integer convertToDatabaseColumn(MonitoringPointType attribute) {
+        public Integer convertToDatabaseColumn(OpenStatus attribute) {
             return attribute.getCode();
         }
 
         @Override
-        public MonitoringPointType convertToEntityAttribute(Integer dbData) {
-            return MonitoringPointType.create(dbData);
+        public OpenStatus convertToEntityAttribute(Integer dbData) {
+            return OpenStatus.create(dbData);
         }
     }
 

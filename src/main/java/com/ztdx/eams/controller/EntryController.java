@@ -704,4 +704,46 @@ public class EntryController {
     public Object test(@PathVariable("id") String id){
         return entryService.test(id);
     }
+
+    /**
+     * @api {post} /entry/batchIdentification 批量鉴定
+     * @apiName batchIdentification
+     * @apiGroup entry
+     * @apiParam {Array} entryIds 条目id集合.
+     * @apiParam {Number} catalogueId 目录ID.
+     * @apiParam {Number} openingAndControlledIdentification 开放受控鉴定（1 无   2 开放   3 受控）.
+     * @apiParam {Number} expiredIdentification 到期鉴定(0 未到期  1 已到期).
+     * @apiParam {Number} endangeredIdentification 濒危鉴定(0 正常  1 濒危).
+     * @apiParam {Number} loseIdentification 遗失鉴定(0 未遗失  1 已遗失).
+     * @apiError (Error 400) message .
+     * @apiUse ErrorExample
+     */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
+    @RequestMapping(value = "/batchIdentification",method = RequestMethod.PUT)
+    public void batchIdentification(@JsonParam List<String> entryIds,@JsonParam int catalogueId,@JsonParam Integer isOpen,@JsonParam Boolean isExpired,@JsonParam Boolean isEndangered,@JsonParam Boolean isLose ){
+        entryService.batchIdentification(entryIds,catalogueId,isOpen,isExpired,isEndangered,isLose);
+    }
+
+    /**
+     * @api {post} /entry/setNewVolume 组新卷
+     * @apiName setNewVolume
+     * @apiGroup entry
+     * @apiParam {Array} entryIds 卷内条目id数组
+     * @apiParam {String} catalogueId 卷内目录id
+     * 以下是Entry中的
+     * @apiParam {Object} items 条目详细内容，是一个动态的key-value数组。
+     * 以下举例条目有姓名(name)年龄(age)注册日期(regDate)爱好(interest)
+     * @apiParam {String} items.name 姓名
+     * @apiParam {Number} items.age 年龄
+     * @apiParam {Date} items.regDate 注册日期
+     * @apiParam {String[]} items.interest 爱好
+     * @apiParamExample {json} Request-Example:
+     * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "/setNewVolume",method = RequestMethod.POST)
+    public void setNewVolume(@JsonParam List<String> folderFileEntryIds,@JsonParam int folderFileCatalogueId,@JsonParam Entry entry){
+        entryService.setNewVolume(folderFileEntryIds,folderFileCatalogueId,entry);
+    }
+
 }

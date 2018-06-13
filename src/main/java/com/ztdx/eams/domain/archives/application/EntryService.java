@@ -11,7 +11,6 @@ import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -23,9 +22,7 @@ import org.elasticsearch.join.query.JoinQueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlighterContext;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -42,9 +39,11 @@ import org.springframework.data.mongodb.core.query.Update;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Stream;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -460,4 +459,65 @@ public class EntryService {
             return entryElasticsearchRepository.findAllById(entryIds, getIndexName(catalogueId));
         }
     }
+
+    /**
+     * 更改批量鉴定
+     */
+    public void batchIdentification(List<String> entryIds,Integer catalogueId,Integer isOpen,boolean isExpired,boolean isEndangered,boolean isLose){
+
+        //通过条目id和目录id获得所有的条目集合
+        Iterable<Entry> entryList = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
+
+        //遍历条目集合给每个条目设置鉴定状态
+        for (Entry entry:entryList) {
+            entry.setIsOpen(OpenStatus.create(isOpen));
+            entry.setExpired(isExpired);
+            entry.setEndangered(isEndangered);
+            entry.setLose(isLose);
+        }
+
+        //存进mongoDb
+        entryMongoRepository.saveAll(entryList);
+
+    }
+
+    /**
+     * 组新卷
+     * @param folderFileEntryIds 卷内条目id集合
+     * @param folderFileCatalogueId 卷内目录ID
+     * @param entry 案卷条目
+     */
+    public void setNewVolume(List<String> folderFileEntryIds,int folderFileCatalogueId,Entry entry){
+
+        //通过条目id和目录id获得所有的条目集合
+        Iterable<Entry> entryList = entryMongoRepository.findAllById(folderFileEntryIds, "archive_record_" + folderFileCatalogueId);
+
+        //通过卷内目录id获得目录
+        Catalogue folderFileCatalogue = catalogueRepository.findById(folderFileCatalogueId).orElse(null);
+        //通过档案库id和目录类型为案卷获得案卷目录
+        List<Catalogue> folderCatalogueList = catalogueRepository.findByArchivesIdAndCatalogueType(folderFileCatalogue.getArchivesId(),CatalogueType.Folder);
+        //把案卷目录id设置到Entry上
+        if (folderCatalogueList.size()>0){
+            entry.setCatalogueId(folderCatalogueList.get(0).getId());
+        }
+
+        //新增案卷
+        Entry newEntry = save(entry);
+
+        //修改卷内parentID
+        for (Entry entryForList:entryList) {
+            entryForList.setParentId(newEntry.getId());
+            //entryForList.setParentCatalogueId(newEntry.getCatalogueId());
+        }
+
+        entryMongoRepository.saveAll(entryList);
+    }
+
+    /*public void separateVolume(String entryId,int catalogueId){
+        //通过案卷id和卷内条目id获得所有卷内条目集合
+        Optional<Entry> entryList = entryMongoRepository.findById(entryId,"archive_record_" + catalogueId);
+        //置空所有卷内条目中的parentId
+        //Stream.of(entryList).forEach(entry -> entry.);
+    }*/
+
 }

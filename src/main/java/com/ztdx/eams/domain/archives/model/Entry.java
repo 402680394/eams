@@ -4,14 +4,12 @@ import com.ztdx.eams.basic.repository.annotation.IndexNamePostfix;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.persistence.Convert;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 @Data
@@ -100,4 +98,24 @@ public class Entry {
      * 索引的版本号，要使用mongo原生api更新
      */
     private Long indexVersion;
+
+    /**
+     * 开放|受控鉴定
+     */
+    private OpenStatus isOpen;
+
+    /**
+     * 到期鉴定(0 未到期(false)  1 已到期(true))
+     */
+    private boolean isExpired;
+
+    /**
+     * 濒危鉴定(0 正常(false)  1 濒危(true))
+     */
+    private boolean isEndangered;
+
+    /**
+     * 遗失鉴定(0 未遗失(false)  1 已遗失(true))
+     */
+    private boolean isLose;
 }
