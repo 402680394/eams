@@ -507,7 +507,7 @@ public class EntryService {
         //修改卷内parentID
         for (Entry entryForList:entryList) {
             entryForList.setParentId(newEntry.getId());
-            //entryForList.setParentCatalogueId(newEntry.getCatalogueId());
+            entryForList.setParentCatalogueId(newEntry.getCatalogueId());
         }
 
         entryMongoRepository.saveAll(entryList);
