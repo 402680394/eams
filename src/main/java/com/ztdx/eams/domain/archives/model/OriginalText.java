@@ -28,6 +28,7 @@ public class OriginalText {
     @Parent(type = "record")
     private String entryId;
     //排序号
+    @Field(type = FieldType.Integer)
     private int orderNumber;
     //标题
     @Field(type = FieldType.text)

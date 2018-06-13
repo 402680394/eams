@@ -35,11 +35,11 @@ public class DescriptionItemService {
                                 , (d1, d2) -> d2));
     }
 
-    public List<DescriptionItem> findAllById(Collection<Integer> ids){
+    public List<DescriptionItem> findAllById(Collection<Integer> ids) {
         return descriptionItemRepository.findAllById(ids);
     }
 
-    public List<DescriptionItem> findAllByCatalogueIdIn(Collection<Integer> ids){
+    public List<DescriptionItem> findAllByCatalogueIdIn(Collection<Integer> ids) {
         return descriptionItemRepository.findByCatalogueIdIn(ids);
     }
 
@@ -66,22 +66,28 @@ public class DescriptionItemService {
                     //当前登录人姓名
                     case LoginUserName: {
                         dataMap.put(metadataName, userCredential.getName());
+                        break;
                     }
                     //当前系统年度
                     case SystemYear: {
                         dataMap.put(metadataName, DateUtils.getCurrentYear());
+                        break;
                     }
                     case SystemDate_yyyy_MM_dd: {
                         dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyy-MM-dd"));
+                        break;
                     }
                     case SystemDate_yyyyMMdd: {
                         dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyyMMdd"));
+                        break;
                     }
                     case SystemDateTime: {
                         dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyy-MM-dd HH:mm:ss"));
+                        break;
                     }
                     case SystemTime: {
                         dataMap.put(metadataName, DateUtils.getCurrentDateTime("HH:mm:ss"));
+                        break;
                     }
                 }
                 //数据不为空时
@@ -140,22 +146,28 @@ public class DescriptionItemService {
                         //当前登录人姓名
                         case LoginUserName: {
                             dataMap.put(metadataName, userCredential.getName());
+                            break;
                         }
                         //当前系统年度
                         case SystemYear: {
                             dataMap.put(metadataName, DateUtils.getCurrentYear());
+                            break;
                         }
                         case SystemDate_yyyy_MM_dd: {
                             dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyy-MM-dd"));
+                            break;
                         }
                         case SystemDate_yyyyMMdd: {
                             dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyyMMdd"));
+                            break;
                         }
                         case SystemDateTime: {
                             dataMap.put(metadataName, DateUtils.getCurrentDateTime("yyyy-MM-dd HH:mm:ss"));
+                            break;
                         }
                         case SystemTime: {
                             dataMap.put(metadataName, DateUtils.getCurrentDateTime("HH:mm:ss"));
+                            break;
                         }
                     }
                     //数据不为空时

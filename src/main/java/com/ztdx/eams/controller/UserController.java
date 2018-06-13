@@ -71,10 +71,11 @@ public class UserController {
     public Map<String, Object> login(@JsonParam String username, @JsonParam String password, HttpSession session) {
 
         User user = userService.login(username, password);
-        UserCredential userCredential = new UserCredential(user.getId(),user.getName());
+        UserCredential userCredential = new UserCredential(user.getId(), user.getName());
         session.setAttribute(UserCredential.KEY, userCredential);
         HashMap resultMap = new HashMap();
         resultMap.put("id", user.getId());
+        resultMap.put("name", user.getName());
 
         //使用spring security做认证
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(username, password);
@@ -167,14 +168,14 @@ public class UserController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam("organizationId") int organizationId, @RequestParam(name = "key", required = false, defaultValue = "") String key, @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
         Organization organization = organizationService.get(organizationId);
-        if (organization == null){
+        if (organization == null) {
             throw new InvalidArgumentException("组织机构不存在");
         }
 
         if (!permissionService.hasAnyAuthority(
                 "ROLE_ADMIN"
                 , "global_organization_read"
-                , "fonds_role_user_set_" + organization.getFondsId())){
+                , "fonds_role_user_set_" + organization.getFondsId())) {
             throw new ForbiddenException("没有此组织机构的权限");
         }
 
