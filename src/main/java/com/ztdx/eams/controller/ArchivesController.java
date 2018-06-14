@@ -33,9 +33,10 @@ public class ArchivesController {
     }
 
     /**
-     * @api {get} /archives/treeList 获取全宗、档案库分组、登记库、目录树形列表
+     * @api {get} /archives/treeList?archiveType={archiveType} 获取全宗、档案库分组、登记库、目录树形列表
      * @apiName treeList
      * @apiGroup archives
+     * @apiParam {Number} [archiveType] 档案库类型 1 登记库(默认值) 2 归档库
      * @apiSuccess (Success 200) {String} childrenType 节点类型(1.Fonds-全宗;2.ArchivesGroup-档案分组;3.Archives-档案库;4.Catalogue-目录).
      * @apiSuccess (Success 200) {Object[]} children 子节点信息
      * @apiSuccess (Success 200) {Number} Fonds:id 全宗ID.
@@ -66,7 +67,9 @@ public class ArchivesController {
      * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
-    public Map<String, Object> treeList(@SessionAttribute(required = false) UserCredential LOGIN_USER) {
+    public Map<String, Object> treeList(
+            @SessionAttribute(required = false) UserCredential LOGIN_USER
+            , @RequestParam(value = "archiveType", defaultValue = "1") int archiveType) {
         int userId;
         if (LOGIN_USER != null){
             userId = LOGIN_USER.getUserId();
@@ -78,8 +81,9 @@ public class ArchivesController {
         Set<Integer> catalogueIds = roleService.findUserManageArchiveCatalogue(userId);
 
         return archivesQuery.getCatalogueTreeMap(
-                a -> hasPermission(fondsIds, a)
-                ,a -> hasPermission(catalogueIds, a));
+                archiveType
+                , a -> hasPermission(fondsIds, a)
+                , a -> hasPermission(catalogueIds, a));
     }
 
     private boolean hasPermission(Set<Integer> ids, int id){

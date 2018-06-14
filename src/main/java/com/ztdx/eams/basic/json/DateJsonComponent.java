@@ -36,7 +36,12 @@ public class DateJsonComponent {
 
             //如果是时间戳
             if (isNumeric(raw)) {
-                return Date.from(Instant.ofEpochSecond(Long.parseLong(raw)));
+                Long timeStamp = Long.parseLong(raw);
+                if (raw.length() > 12){
+                    return Date.from(Instant.ofEpochMilli(timeStamp));
+                }else {
+                    return Date.from(Instant.ofEpochSecond(timeStamp));
+                }
             }
 
             //如果是时间字符串
