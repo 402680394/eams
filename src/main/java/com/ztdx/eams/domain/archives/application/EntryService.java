@@ -508,19 +508,22 @@ public class EntryService {
      * @param folderFileCatalogueId 卷内目录ID
      * @param entry 案卷条目
      */
-    public void setNewVolume(List<String> folderFileEntryIds,int folderFileCatalogueId,Entry entry){
+    public void setNewVolume(List<String> folderFileEntryIds, int folderFileCatalogueId, Entry entry){
 
         //通过条目id和目录id获得所有的条目集合
-        Iterable<Entry> entryList = entryMongoRepository.findAllById(folderFileEntryIds, "archive_record_" + folderFileCatalogueId);
+        Iterable<Entry> entryList = entryMongoRepository.findAllById(folderFileEntryIds, this.getIndexName(folderFileCatalogueId));
 
         //通过卷内目录id获得目录
         Catalogue folderFileCatalogue = catalogueRepository.findById(folderFileCatalogueId).orElse(null);
         //通过档案库id和目录类型为案卷获得案卷目录
-        List<Catalogue> folderCatalogueList = catalogueRepository.findByArchivesIdAndCatalogueType(folderFileCatalogue.getArchivesId(),CatalogueType.Folder);
-        //把案卷目录id设置到Entry上
-        if (folderCatalogueList.size()>0){
-            entry.setCatalogueId(folderCatalogueList.get(0).getId());
+        Optional<Catalogue> folderCatalogueList = catalogueRepository.findByArchivesIdAndCatalogueType(folderFileCatalogue.getArchivesId(),CatalogueType.Folder);
+
+        if (!folderCatalogueList.isPresent()){
+            throw new InvalidArgumentException("卷内目录不存在");
         }
+
+        //把案卷目录id设置到Entry上
+        folderCatalogueList.ifPresent(catalogue -> entry.setCatalogueId(catalogue.getId()));
 
         //新增案卷
         Entry newEntry = save(entry);
@@ -541,7 +544,7 @@ public class EntryService {
     public void separateVolume(List<String> folderFileEntryIds,int folderFileCatalogueId){
 
         //获得卷内条目集合
-        Iterable<Entry> folderFileEntryList = entryMongoRepository.findAllById(folderFileEntryIds,"archive_record_" + folderFileCatalogueId);
+        Iterable<Entry> folderFileEntryList = entryMongoRepository.findAllById(folderFileEntryIds,this.getIndexName(folderFileCatalogueId));
 
         //置空卷内条目中的上级id
         for (Entry entry:folderFileEntryList) {
