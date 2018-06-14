@@ -856,7 +856,6 @@ public class EntryController {
      * @apiParam {Number} items.age 年龄
      * @apiParam {Date} items.regDate 注册日期
      * @apiParam {String[]} items.interest 爱好
-     * @apiParamExample {json} Request-Example:
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
      */
