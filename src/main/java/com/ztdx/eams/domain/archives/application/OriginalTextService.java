@@ -12,12 +12,16 @@ import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearch
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.OriginalTextMongoRepository;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,6 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
+
+import static jdk.nashorn.internal.objects.Global.Infinity;
 
 /**
  * Created by li on 2018/5/23.
@@ -44,14 +50,17 @@ public class OriginalTextService {
 
     private final PDFConverterUtils pdfConverterUtils;
 
+    private final ElasticsearchOperations elasticsearchOperations;
+
     @Autowired
-    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil, PDFConverterUtils pdfConverterUtils) {
+    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil, PDFConverterUtils pdfConverterUtils, ElasticsearchOperations elasticsearchOperations) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.originalTextMongoRepository = originalTextMongoRepository;
         this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
         this.archivesGroupRepository = archivesGroupRepository;
         this.ftpUtil = ftpUtil;
         this.pdfConverterUtils = pdfConverterUtils;
+        this.elasticsearchOperations = elasticsearchOperations;
     }
 
     /**
@@ -73,18 +82,29 @@ public class OriginalTextService {
         fileUpload(fondsId, originalText, file);
 
         //设置排序号
-        BoolQueryBuilder query = QueryBuilders.boolQuery();
-        query.must(QueryBuilders.matchQuery("entryId", originalText.getEntryId()));
-        Iterable<OriginalText> iterable = originalTextElasticsearchRepository.search(query, new String[]{"archive_record_" + originalText.getCatalogueId()});
-        int orderNumber = 0;
-        Iterator<OriginalText> iterator = iterable.iterator();
-        while (iterator.hasNext()) {
-            OriginalText o = iterator.next();
-            if (o.getOrderNumber() > orderNumber) {
-                orderNumber = o.getOrderNumber();
-            }
+//        BoolQueryBuilder query = QueryBuilders.boolQuery();
+//        query.must(QueryBuilders.matchQuery("entryId", originalText.getEntryId()));
+//        Iterable<OriginalText> iterable = originalTextElasticsearchRepository.search(query, new String[]{"archive_record_" + originalText.getCatalogueId()});
+//        int orderNumber = 0;
+//        Iterator<OriginalText> iterator = iterable.iterator();
+//        while (iterator.hasNext()) {
+//            OriginalText o = iterator.next();
+//            if (o.getOrderNumber() > orderNumber) {
+//                orderNumber = o.getOrderNumber();
+//            }
+//        }
+//        originalText.setOrderNumber(orderNumber + 1);
+
+        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch("archive_record_" + originalText.getCatalogueId());
+        srBuilder.setTypes("originalText");
+        srBuilder.addAggregation(AggregationBuilders.max("maxOrderNumber").field("orderNumber"));
+        srBuilder.setQuery(QueryBuilders.matchQuery("entryId", originalText.getEntryId()));
+        double maxOrderNumber = ((Max) srBuilder.get().getAggregations().getAsMap().get("maxOrderNumber")).getValue();
+        if (maxOrderNumber == (-Infinity)) {
+            originalText.setOrderNumber(1);
+        } else {
+            originalText.setOrderNumber((int) maxOrderNumber + 1);
         }
-        originalText.setOrderNumber(orderNumber + 1);
         originalText.setId(String.valueOf(UUID.randomUUID()));
         originalText.setCreateTime(new Date());
         originalText.setGmtCreate(new Date());
@@ -174,10 +194,6 @@ public class OriginalTextService {
             e.printStackTrace();
             throw new BusinessException("文件上传失败");
         } finally {
-            //删除本地临时文件
-            if (tmpFile.exists()) {
-                tmpFile.delete();
-            }
             if (fisMD5 != null) {
                 try {
                     fisMD5.close();
@@ -198,6 +214,10 @@ public class OriginalTextService {
                 } catch (IOException e) {
                     throw new BusinessException("文件传输流未关闭");
                 }
+            }
+            //删除本地临时文件
+            if (tmpFile.exists()) {
+                tmpFile.delete();
             }
         }
     }

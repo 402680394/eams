@@ -55,8 +55,8 @@ public class OriginalText {
     //原始文件MD5值
     @Field(type = FieldType.keyword)
     private String md5;
-    @Field(type = FieldType.text)
     //全文索引
+    @Field(type = FieldType.text)
     private String contentIndex;
     //全文索引状态(0-未生成  1-已生成 2-生成失败 3-文件类型不可用)
     private int contentIndexStatus;

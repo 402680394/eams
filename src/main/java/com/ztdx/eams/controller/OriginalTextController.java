@@ -53,7 +53,6 @@ public class OriginalTextController {
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(HttpServletRequest request, MultipartFile file) {
         OriginalText originalText = new OriginalText();
-        System.out.println(request.getParameter("catalogueId"));
         originalText.setCatalogueId(Integer.parseInt(request.getParameter("catalogueId")));
         originalText.setEntryId(request.getParameter("entryId"));
         originalText.setTitle(request.getParameter("title"));
@@ -265,8 +264,20 @@ public class OriginalTextController {
         originalTextService.sort(upId, downId, catalogueId);
     }
 
-    @RequestMapping(value = "/test", method = RequestMethod.POST)
-    public void test(@RequestParam("id") String id, @RequestParam("catalogueId") int catalogueId) {
-        originalTextService.placeOnFile(id, catalogueId);
-    }
+//    @RequestMapping(value = "/test", method = RequestMethod.POST)
+//    public void test(@RequestParam("id") String id, @RequestParam("catalogueId") int catalogueId) {
+//        originalTextService.placeOnFile(id, catalogueId);
+//    }
+//
+//    @RequestMapping(value = "test3", method = RequestMethod.POST)
+//    public Aggregations test2(HttpServletRequest request, MultipartFile file) {
+//        OriginalText originalText = new OriginalText();
+//        originalText.setCatalogueId(Integer.parseInt(request.getParameter("catalogueId")));
+//        originalText.setEntryId(request.getParameter("entryId"));
+//        originalText.setTitle(request.getParameter("title"));
+//        originalText.setType(Integer.parseInt(request.getParameter("type")));
+//        originalText.setVersion(request.getParameter("version"));
+//        originalText.setRemark(request.getParameter("remark"));
+//        return originalTextService.test3(originalText, file);
+//    }
 }
