@@ -82,7 +82,9 @@ public class CustomElasticsearchResultMapper extends DefaultResultMapper {
                 field.setAccessible(true);
                 StringBuilder sb = values.stream().collect(StringBuilder::new, StringBuilder::append,
                         StringBuilder::append);
-                field.set(t, sb.toString());
+                if (sb.length() > 0) {
+                    field.set(t, sb.toString());
+                }
             }
         } catch (NoSuchFieldException | IllegalAccessException ignored) {
 
