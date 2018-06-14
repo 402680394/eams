@@ -12,7 +12,6 @@ import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearch
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -28,8 +27,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
-import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
-import org.springframework.data.elasticsearch.core.query.IndexBoost;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Service;
@@ -37,10 +34,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.data.mongodb.core.query.Update;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -268,6 +264,8 @@ public class EntryService {
             }else{
                 query.mustNot(existsQuery("parentId"));
             }
+        }else{
+            //query.must(existsQuery("parentId"));
         }
 
         if (owner != null){

@@ -6,6 +6,7 @@ import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.archives.application.*;
 import com.ztdx.eams.domain.archives.model.*;
+import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import org.springframework.data.domain.Page;
@@ -214,26 +215,29 @@ public class EntryController {
      * @apiSuccess (Success 200) {String} content.items.name 姓名
      * @apiSuccess (Success 200) {int} content.items.age 年龄
      * @apiSuccess (Success 200) {Object} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
-     * @apiSuccess (Success 200) {Object} [birthday] 生日字段的属性
-     * @apiSuccess (Success 200) {int} metadataId 字段id
-     * @apiSuccess (Success 200) {String} metadataName 字段名称
-     * @apiSuccess (Success 200) {String} displayName 字段显示名称
-     * @apiSuccess (Success 200) {Object} [amount] 资产字段的属性
-     * @apiSuccess (Success 200) {int} metadataId 字段id
-     * @apiSuccess (Success 200) {String} metadataName 字段名称
-     * @apiSuccess (Success 200) {String} displayName 字段显示名称
-     * @apiSuccess (Success 200) {Object} [aihao] 爱好字段的属性
-     * @apiSuccess (Success 200) {int} metadataId 字段id
-     * @apiSuccess (Success 200) {String} metadataName 字段名称
-     * @apiSuccess (Success 200) {String} displayName 字段显示名称
-     * @apiSuccess (Success 200) {Object} [name] 姓名字段的属性
-     * @apiSuccess (Success 200) {int} metadataId 字段id
-     * @apiSuccess (Success 200) {String} metadataName 字段名称
-     * @apiSuccess (Success 200) {String} displayName 字段显示名称
-     * @apiSuccess (Success 200) {Object} [age] 年龄字段的属性
-     * @apiSuccess (Success 200) {int} metadataId 字段id
-     * @apiSuccess (Success 200) {String} metadataName 字段名称
-     * @apiSuccess (Success 200) {String} displayName 字段显示名称
+     * @apiSuccess (Success 200) {Object} column.[birthday] 生日字段的属性
+     * @apiSuccess (Success 200) {Number} column.birthday.metadataId 字段id
+     * @apiSuccess (Success 200) {String} column.birthday.metadataName 字段名称
+     * @apiSuccess (Success 200) {String} column.birthday.displayName 字段显示名称
+     * @apiSuccess (Success 200) {Object} column.[amount] 资产字段的属性
+     * @apiSuccess (Success 200) {Number} column.amount.metadataId 字段id
+     * @apiSuccess (Success 200) {String} column.amount.metadataName 字段名称
+     * @apiSuccess (Success 200) {String} column.amount.displayName 字段显示名称
+     * @apiSuccess (Success 200) {Object} column.[aihao] 爱好字段的属性
+     * @apiSuccess (Success 200) {Number} column.aihao.metadataId 字段id
+     * @apiSuccess (Success 200) {String} column.aihao.metadataName 字段名称
+     * @apiSuccess (Success 200) {String} column.aihao.displayName 字段显示名称
+     * @apiSuccess (Success 200) {Object} column.[name] 姓名字段的属性
+     * @apiSuccess (Success 200) {Number} column.name.metadataId 字段id
+     * @apiSuccess (Success 200) {String} column.name.metadataName 字段名称
+     * @apiSuccess (Success 200) {String} column.name.displayName 字段显示名称
+     * @apiSuccess (Success 200) {Object} column.[age] 年龄字段的属性
+     * @apiSuccess (Success 200) {Number} column.age.metadataId 字段id
+     * @apiSuccess (Success 200) {String} column.age.metadataName 字段名称
+     * @apiSuccess (Success 200) {String} column.age.displayName 字段显示名称
+     * @apiSuccess (Success 200) {Number} totalElements 总行数
+     * @apiSuccess (Success 200) {Number} totalPages 总页数
+     * @apiSuccess (Success 200) {Number} innerCatalogueId 卷内目录id
      *
      * @apiSuccessExample {json} Success-Response:
      * {
@@ -289,7 +293,8 @@ public class EntryController {
      *             }
      *         },
      *         "totalElements": 14,
-     *         "totalPages": 1
+     *         "totalPages": 1,
+     *         "innerCatalogueId":2
      *     }
      * }
      */
@@ -415,6 +420,9 @@ public class EntryController {
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
         Catalogue folderFile =  catalogueService.getFolderFileCatalogueByFolderCatalogueId(catalogueId);
+        if (folderFile == null){
+            throw new InvalidArgumentException("卷内目录未找到");
+        }
         Page<Entry> content =  entryService.search(folderFile.getId(), queryString, new Hashtable<>(), parentId, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
 
         return getSearchMap(catalogueId, content);
@@ -429,11 +437,16 @@ public class EntryController {
             return result;
         });
 
+        Catalogue folderFileCatalogue = catalogueService.getFolderFileCatalogueByFolderCatalogueId(catalogueId);
+
         Map<String, Object> result = new HashMap<>();
         result.put("content", content.getContent());
         result.put("column", list);
         result.put("totalElements", content.getTotalElements());
         result.put("totalPages", content.getTotalPages());
+        if (folderFileCatalogue != null) {
+            result.put("innerCatalogueId", folderFileCatalogue.getId());
+        }
         return result;
     }
 
@@ -679,18 +692,35 @@ public class EntryController {
             Map<String, Object> r = new HashMap<>();
 
             Entry entry = entries.get(a.getEntryId());
-            Archives archives = archivesMap.get(entry.getArchiveId());
-            ArchivesGroup archivesGroup = archivesGroupMap.get(archives.getArchivesGroupId());
-            Fonds fonds = fondsMap.get(archivesGroup.getFondsId());
+            Archives archives = null;
+            Fonds fonds = null;
 
             r.put("id", a.getEntryId());
             r.put("catalogueId", a.getCatalogueId());
-            r.put("catalogueType", entry.getCatalogueType());
-            r.put("archiveId", entry.getArchiveId());
-            r.put("archiveName", archives.getName());
-            r.put("fondsName", fonds.getName());
-            r.put("archiveType", archives.getType());
-            r.put("archiveContentType", archives.getContentTypeId());
+
+            if (entry != null) {
+                r.put("catalogueType", entry.getCatalogueType());
+                r.put("archiveId", entry.getArchiveId());
+
+                Map<String, Object> items = formatEntryItems(entry, descItems.get(entry.getCatalogueId()));
+                r.put("items", items);
+
+                archives = archivesMap.get(entry.getArchiveId());
+            }
+
+            if (archives != null) {
+                r.put("archiveName", archives.getName());
+                r.put("archiveType", archives.getType());
+                r.put("archiveContentType", archives.getContentTypeId());
+                ArchivesGroup archivesGroup = archivesGroupMap.get(archives.getArchivesGroupId());
+                if (archivesGroup != null) {
+                    fonds = fondsMap.get(archivesGroup.getFondsId());
+                }
+            }
+
+            if (fonds != null) {
+                r.put("fondsName", fonds.getName());
+            }
 
             Map<String, Object> file = new HashMap<>();
             r.put("file", file);
@@ -699,9 +729,6 @@ public class EntryController {
             file.put("title", a.getTitle());
             file.put("fileType", a.getType());
             file.put("highLight", a.getContentIndex());
-
-            Map<String, Object> items = formatEntryItems(entry, descItems.get(entry.getCatalogueId()));
-            r.put("items", items);
 
             return r;
         }).collect(Collectors.toList()));
@@ -713,7 +740,8 @@ public class EntryController {
         Map<String, Object> result = new HashMap<>();
         entry.getItems().forEach((a, b) -> {
             DescriptionItem item = itemMap.get(a);
-            result.put(item.getDisplayName(), b);
+            String format = EntryItemConverter.format(b, item);
+            result.put(item.getDisplayName(), format);
         });
         return result;
     }

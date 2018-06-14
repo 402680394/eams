@@ -28,11 +28,11 @@ public class CatalogueService {
     public Catalogue getFolderFileCatalogueByFolderCatalogueId(int id){
         Catalogue folder = catalogueRepository.findById(id).orElse(null);
         if (folder == null){
-            throw new InvalidArgumentException("目录未找到");
+            return null;
         }
         Catalogue folderFile = catalogueRepository.findByArchivesIdAndCatalogueType(folder.getArchivesId(), CatalogueType.FolderFile).orElse(null);
         if (folderFile == null){
-            throw new InvalidArgumentException("卷内目录未找到");
+            return null;
         }
         return folderFile;
     }
