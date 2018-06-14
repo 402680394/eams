@@ -746,4 +746,18 @@ public class EntryController {
         entryService.setNewVolume(folderFileEntryIds,folderFileCatalogueId,entry);
     }
 
+    /**
+     * @api {put} /entry/separateVolume 拆卷
+     * @apiName separateVolume
+     * @apiGroup entry
+     * @apiParam {Array} entryIds 卷内条目id数组
+     * @apiParam {String} catalogueId 卷内目录id
+     * @apiError (Error 400) message
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "/separateVolume",method = RequestMethod.PUT)
+    public void separateVolume(@JsonParam List<String> folderFileEntryIds,@JsonParam int folderFileCatalogueId){
+        entryService.separateVolume(folderFileEntryIds,folderFileCatalogueId);
+    }
+
 }

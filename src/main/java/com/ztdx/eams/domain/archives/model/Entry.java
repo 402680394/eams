@@ -102,20 +102,24 @@ public class Entry {
     /**
      * 开放|受控鉴定
      */
+    @Field(type = FieldType.Integer)
     private OpenStatus isOpen;
 
     /**
      * 到期鉴定(0 未到期(false)  1 已到期(true))
      */
+    @Field(type = FieldType.Boolean)
     private boolean isExpired;
 
     /**
      * 濒危鉴定(0 正常(false)  1 濒危(true))
      */
+    @Field(type = FieldType.Boolean)
     private boolean isEndangered;
 
     /**
      * 遗失鉴定(0 未遗失(false)  1 已遗失(true))
      */
+    @Field(type = FieldType.Boolean)
     private boolean isLose;
 }

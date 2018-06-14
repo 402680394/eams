@@ -39,11 +39,9 @@ import org.springframework.data.mongodb.core.query.Update;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Stream;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -507,17 +505,27 @@ public class EntryService {
         //修改卷内parentID
         for (Entry entryForList:entryList) {
             entryForList.setParentId(newEntry.getId());
-            entryForList.setParentCatalogueId(newEntry.getCatalogueId());
         }
 
         entryMongoRepository.saveAll(entryList);
     }
 
-    /*public void separateVolume(String entryId,int catalogueId){
-        //通过案卷id和卷内条目id获得所有卷内条目集合
-        Optional<Entry> entryList = entryMongoRepository.findById(entryId,"archive_record_" + catalogueId);
-        //置空所有卷内条目中的parentId
-        //Stream.of(entryList).forEach(entry -> entry.);
-    }*/
+    /**
+     * 拆卷
+     * @param folderFileEntryIds 卷内条目id集合
+     * @param folderFileCatalogueId 卷内目录ID
+     */
+    public void separateVolume(List<String> folderFileEntryIds,int folderFileCatalogueId){
+
+        //获得卷内条目集合
+        Iterable<Entry> folderFileEntryList = entryMongoRepository.findAllById(folderFileEntryIds,"archive_record_" + folderFileCatalogueId);
+
+        //置空卷内条目中的上级id
+        for (Entry entry:folderFileEntryList) {
+            entry.setParentId("");
+        }
+
+        entryMongoRepository.saveAll(folderFileEntryList);
+    }
 
 }
