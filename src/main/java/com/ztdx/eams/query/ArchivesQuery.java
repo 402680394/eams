@@ -751,6 +751,7 @@ public class ArchivesQuery {
                 archivesDescriptionItem.FIELD_WIDTH.as("fieldWidth"),
                 archivesDescriptionItem.FIELD_PRECISION.as("fieldPrecision"),
                 archivesDescriptionItem.FIELD_FORMAT.as("fieldFormat"),
+                archivesDescriptionItem.IS_INCREMENT.as("isIncrement"),
                 archivesDescriptionItem.IS_READ.as("isRead"),
                 archivesDescriptionItem.IS_NULL.as("isNull"),
                 archivesDescriptionItem.IS_DICTIONARY.as("isDictionary"),

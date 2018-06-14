@@ -35,6 +35,7 @@ public class DescriptionItemController {
      * @apiSuccess (Success 200) {Number} propertyType 属性类型标识.
      * @apiSuccess (Success 200) {String} defaultValue 默认值.
      * @apiSuccess (Success 200) {Number} dataType 数据类型(1 数值 2 字符串 3 日期 4 浮点).
+     * @apiSuccess (Success 200) {Number} isIncrement 是否自增(0 否 1 是).
      * @apiSuccess (Success 200) {Number} isRead 是否只读(0 否 1 是).
      * @apiSuccess (Success 200) {Number} isNull 是否可空(0 否 1 是).
      * @apiSuccess (Success 200) {Number} isDictionary 是否使用字典(0 否 1 是).
