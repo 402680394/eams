@@ -302,6 +302,125 @@ public class EntryController {
         //TODO @lijie 登记库只能查看自己的
         Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
 
+        return getSearchMap(catalogueId, content);
+    }
+
+    /**
+     * @api {get} /entry/searchInner?cid={cid}&pid={pid}&q={q}&page={page}&size={size} 按关键字搜索案卷卷内目录
+     * @apiName search_simple
+     * @apiGroup entry
+     * @apiParam {Number} cid 目录id(QueryString)
+     * @apiParam {String} [pid] 父条目id(QueryString)，有值查此父条目id的卷内条目，否则查询未整理的卷内（无父条目id）
+     * @apiParam {String} [q] 关键字(QueryString)
+     * @apiParam {Number} [page] 页码(QueryString)
+     * @apiParam {Number} [size] 页行数(QueryString)
+     * @apiSuccess (Success 200) {Array} content 列表内容
+     * @apiSuccess (Success 200) {Number} content.id 条目id
+     * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
+     * @apiSuccess (Success 200) {Number=1,2,3} content.catalogueType 目录类型 1:一文一件 2:传统立卷案卷 3:传统立卷卷内 4:项目
+     * @apiSuccess (Success 200) {Number} content.archiveId 档案库id
+     * @apiSuccess (Success 200) {Number=1,2} content.archiveType 档案库类型 1:登记库 2:归档库
+     * @apiSuccess (Success 200) {Number} content.archiveContentType 档案库内容类型
+     * @apiSuccess (Success 200) {Array} content.items 条目字段信息(以下内容每个档案库目录都不同，字段定义在data.column中)
+     * @apiSuccess (Success 200) {date} content.items.birthday 生日
+     * @apiSuccess (Success 200) {double} content.items.amount 资产
+     * @apiSuccess (Success 200) {Array} content.items.aihao 爱好
+     * @apiSuccess (Success 200) {String} content.items.name 姓名
+     * @apiSuccess (Success 200) {int} content.items.age 年龄
+     * @apiSuccess (Success 200) {Object} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
+     * @apiSuccess (Success 200) {Object} [birthday] 生日字段的属性
+     * @apiSuccess (Success 200) {int} metadataId 字段id
+     * @apiSuccess (Success 200) {String} metadataName 字段名称
+     * @apiSuccess (Success 200) {String} displayName 字段显示名称
+     * @apiSuccess (Success 200) {Object} [amount] 资产字段的属性
+     * @apiSuccess (Success 200) {int} metadataId 字段id
+     * @apiSuccess (Success 200) {String} metadataName 字段名称
+     * @apiSuccess (Success 200) {String} displayName 字段显示名称
+     * @apiSuccess (Success 200) {Object} [aihao] 爱好字段的属性
+     * @apiSuccess (Success 200) {int} metadataId 字段id
+     * @apiSuccess (Success 200) {String} metadataName 字段名称
+     * @apiSuccess (Success 200) {String} displayName 字段显示名称
+     * @apiSuccess (Success 200) {Object} [name] 姓名字段的属性
+     * @apiSuccess (Success 200) {int} metadataId 字段id
+     * @apiSuccess (Success 200) {String} metadataName 字段名称
+     * @apiSuccess (Success 200) {String} displayName 字段显示名称
+     * @apiSuccess (Success 200) {Object} [age] 年龄字段的属性
+     * @apiSuccess (Success 200) {int} metadataId 字段id
+     * @apiSuccess (Success 200) {String} metadataName 字段名称
+     * @apiSuccess (Success 200) {String} displayName 字段显示名称
+     *
+     * @apiSuccessExample {json} Success-Response:
+     * {
+     *     "data":{
+     *         "content":[
+     *             {
+     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     *                 "catalogueId":1,
+     *                 "catalogueType":1,
+     *                 "archiveId":0,
+     *                 "archiveType":0,
+     *                 "archiveContentType":0,
+     *                 "items":{
+     *                     "birthday":"2018-05-16T14:44:56.328+0800",
+     *                     "amount":73824039.1873,
+     *                     "aihao":[
+     *                         "电影",
+     *                         "足球",
+     *                         "汽车"
+     *                     ],
+     *                     "name":"里斯1",
+     *                     "age":41
+     *                 },
+     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
+     *             }
+     *         ],
+     *         "column":{
+     *             "name": {
+     *                 "metadataId":1,
+     *                 "metadataName":"name",
+     *                 "displayName":"姓名"
+     *             },
+     *             "birthday": {
+     *                 "metadataId":2,
+     *                 "metadataName":"birthday",
+     *                 "displayName":"生日"
+     *             },
+     *             "amount": {
+     *                 "metadataId":3,
+     *                 "metadataName":"amount",
+     *                 "displayName":"资产"
+     *             },
+     *             "aihao": {
+     *                 "metadataId":4,
+     *                 "metadataName":"aihao",
+     *                 "displayName":"爱好"
+     *             },
+     *             "age": {
+     *                 "metadataId":5,
+     *                 "metadataName":"age",
+     *                 "displayName":"年龄"
+     *             }
+     *         },
+     *         "totalElements": 14,
+     *         "totalPages": 1
+     *     }
+     * }
+     */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
+    @RequestMapping(value = "/searchInner", method = RequestMethod.GET)
+    public Map<String, Object> searchInner(@RequestParam("cid") int catalogueId
+            , @RequestParam(value = "pid", required = false, defaultValue = "") String parentId
+            , @RequestParam(value = "q", required = false, defaultValue = "") String queryString
+            , @RequestParam(value = "page", required = false, defaultValue = "0") int page
+            , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
+        Catalogue folderFile =  catalogueService.getFolderFileCatalogueByFolderCatalogueId(catalogueId);
+        Page<Entry> content =  entryService.search(folderFile.getId(), queryString, new Hashtable<>(), parentId, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+
+        return getSearchMap(catalogueId, content);
+    }
+
+    private Map<String, Object> getSearchMap(int catalogueId, Page<Entry> content) {
         Map<String, Object> list = descriptionItemService.list(catalogueId, a -> {
             Map<String, Object> result = new HashMap<>();
             result.put("metadataId", a.getMetadataId());

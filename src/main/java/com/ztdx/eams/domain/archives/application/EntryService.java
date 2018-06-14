@@ -248,10 +248,32 @@ public class EntryService {
     }
 
     public Page<Entry> search(int catalogueId, String queryString, Map<String, Object> itemQuery, Pageable pageable) {
+        return search(catalogueId, queryString, itemQuery, null, null, pageable);
+    }
+
+    public Page<Entry> search(int catalogueId
+            , String queryString
+            , Map<String, Object> itemQuery
+            , String parentId
+            , Integer owner
+            , Pageable pageable) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
         if (queryString != null && queryString.length() > 0) {
             query.must(queryStringQuery(queryString));
         }
+
+        if (parentId != null){
+            if (!StringUtils.isEmpty(parentId)) {
+                query.filter(termQuery("parentId", parentId));
+            }else{
+                query.mustNot(existsQuery("parentId"));
+            }
+        }
+
+        if (owner != null){
+            query.filter(termQuery("owner", owner));
+        }
+
         query.filter().addAll(parseQuery(catalogueId, itemQuery));
         query.filter(termQuery("gmtDeleted", 0));
 
@@ -260,6 +282,7 @@ public class EntryService {
         Page<Entry> result = entryElasticsearchRepository.search(
                 query, pageable, new String[]{getIndexName(catalogueId)}
         );
+
         result.stream().forEach(a -> {
             convertEntryItems(a, EntryItemConverter::format);
             Map<String, Object> items = a.getItems();
@@ -452,7 +475,7 @@ public class EntryService {
 
     public Iterable<Entry> findAllById(Set<String> entryIds, Integer catalogueId) {
         if (catalogueId == null) {
-            return entryElasticsearchRepository.search(QueryBuilders.termsQuery("id.keyword", entryIds), new String[]{getIndexName(null)});
+            return entryElasticsearchRepository.search(QueryBuilders.termsQuery("id", entryIds), new String[]{getIndexName(null)});
         }else {
             return entryElasticsearchRepository.findAllById(entryIds, getIndexName(catalogueId));
         }

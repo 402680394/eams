@@ -7,11 +7,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
-import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Table(name = "archives_catalogue")
 @Qualifier("catalogueRepository")
 public interface CatalogueRepository extends JpaRepository<Catalogue, Integer> {
-    List<Catalogue> findByArchivesIdAndCatalogueType(int archivesId,CatalogueType catalogueType);
+    Optional<Catalogue> findByArchivesIdAndCatalogueType(int archiveId, CatalogueType catalogueType);
 }

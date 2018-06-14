@@ -176,7 +176,7 @@ class MappingBuilder {
     }
 
     private static void applyDefaultIdFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
-        xContentBuilder.startObject(field.getName()).field("type", "text").field("index", "not_analyzed");
+        xContentBuilder.startObject(field.getName()).field("type", "keyword");
         xContentBuilder.endObject();
     }
 

@@ -20,6 +20,9 @@ public class DateEntryItemValue extends AbstractEntryItemValue<Date> {
 
     @Override
     public String toString() {
+        if (value == null){
+            return "";
+        }
         String format = descriptionItem.getFieldFormat();
         if (StringUtils.isEmpty(format)){
             format = "yyyy-MM-dd HH:mm:ss";

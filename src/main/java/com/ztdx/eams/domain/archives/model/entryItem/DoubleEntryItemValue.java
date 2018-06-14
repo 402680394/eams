@@ -14,6 +14,9 @@ public class DoubleEntryItemValue extends AbstractEntryItemValue<Double> {
 
     @Override
     public String toString() {
+        if (value == null){
+            return "";
+        }
         String format = descriptionItem.getFieldFormat();
         if (StringUtils.isEmpty(format)){
             format = "%f";
