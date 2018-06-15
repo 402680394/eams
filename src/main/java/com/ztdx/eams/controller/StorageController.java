@@ -53,8 +53,11 @@ public class StorageController {
      * }
      */
     @RequestMapping(value = "/storageList", method = RequestMethod.GET)
-    public Map<String,Object> storageList(@RequestParam("fondsId") Integer fondsId, @RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
-        return storeQuery.getStorageList(fondsId,keyWord);
+    public Map<String,Object> storageList(@RequestParam(name = "fondsId",required = false) Integer fondsId, @RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
+        if (fondsId!=null){
+            return storeQuery.getStorageListByFondsIdAndKeyWord(fondsId,keyWord);
+        }
+        return storeQuery.getStorageList();
     }
 
     /**

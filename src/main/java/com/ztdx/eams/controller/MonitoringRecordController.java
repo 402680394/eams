@@ -53,8 +53,11 @@ public class MonitoringRecordController {
      * }
      */
     @RequestMapping(value = "/monitoringRecordList", method = RequestMethod.GET)
-    public Map<String, Object> monitoringRecordList(@RequestParam("storageId") Integer storageId, @RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
-        return storeQuery.getMonitoringRecordList(storageId,keyWord);
+    public Map<String, Object> monitoringRecordList(@RequestParam(name = "storageId",required = false) Integer storageId, @RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
+        if (storageId!=null){
+            return storeQuery.getMonitoringPointListByStorageIdAndKeyWord(storageId,keyWord);
+        }
+        return storeQuery.getMonitoringRecordList();
     }
 
     /**

@@ -30,13 +30,13 @@ public class MonitoringRecord {
     @Min(value = -100)
     @Max(value = 100)
     @Column(name = "temperature_value")
-    private Integer temperatureValue;
+    private Double temperatureValue;
 
     //湿度值
     @Min(value = -100)
     @Max(value = 100)
     @Column(name = "humidity_value")
-    private Integer humidityValue;
+    private Double humidityValue;
 
     //采取措施
     @Size(max = 100)

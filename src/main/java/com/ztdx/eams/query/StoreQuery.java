@@ -33,10 +33,28 @@ public class StoreQuery {
         this.dslContext = dslContext;
     }
 
+
+    /**
+     * 获取全部库房列表
+     */
+    public Map<String,Object> getStorageList(){
+        Map<String,Object> resultMap = new HashMap<>();
+        List<Map<String,Object>> list = dslContext.select(storage.ID.as("id"),
+                storage.NAME.as("name"),
+                storage.NUMBER.as("number"),
+                storage.DESCRIPTION.as("description"),
+                sysFonds.FONDS_NAME.as("fonds_name"))
+                .from(storage,sysFonds)
+                .where(storage.FONDS_ID.equal(sysFonds.ID))
+                .fetch().intoMaps();
+        resultMap.put("items",list);
+        return resultMap;
+    }
+
     /**
      * 通过全宗id与关键字内容查询库房列表
      */
-    public Map<String,Object> getStorageList(Integer fondsId,String keyWord){
+    public Map<String,Object> getStorageListByFondsIdAndKeyWord(Integer fondsId,String keyWord){
 
         List<Condition> conditions =new ArrayList<>();
         conditions.add(storage.FONDS_ID.equal(UInteger.valueOf(fondsId)));
@@ -60,7 +78,6 @@ public class StoreQuery {
 
         return resultMap;
     }
-
 
     /**
      * 通过库房id与关键字内容查询监测点列表
@@ -93,10 +110,30 @@ public class StoreQuery {
     }
 
     /**
+     * 获取全部监测记录列表
+     */
+    public Map<String,Object> getMonitoringRecordList(){
+
+        Map<String,Object> resultMap = new HashMap<>();
+        List<Map<String,Object>> list = dslContext.select(monitoringRecord.ID.as("id"),
+                monitoringPoint.NUMBER.as("number"),
+                monitoringRecord.MONITORING_TIME.as("monitoring_time"),
+                monitoringRecord.TEMPERATURE_VALUE.as("temperature_value"),
+                monitoringRecord.HUMIDITY_VALUE.as("humidity_value"),
+                monitoringRecord.TAKE_STEPS.as("take_steps"),
+                monitoringRecord.STORAGE_ID.as("storage_id"))
+                .from(monitoringRecord,monitoringPoint)
+                .where(monitoringRecord.MONITORING_POINT_ID.equal(monitoringPoint.ID))
+                .fetch().intoMaps();
+        resultMap.put("items",list);
+
+        return resultMap;
+    }
+
+    /**
      * 通过库房id与关键字内容查询监测记录列表
      */
-    public Map<String,Object> getMonitoringRecordList(Integer storageId, String keyWord){
-
+    public Map<String,Object> getMonitoringPointListByStorageIdAndKeyWord(Integer storageId, String keyWord){
 
         List<Condition> conditions =new ArrayList<>();
         conditions.add(monitoringRecord.STORAGE_ID.equal(UInteger.valueOf(storageId)));
