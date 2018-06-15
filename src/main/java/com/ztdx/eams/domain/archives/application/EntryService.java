@@ -11,6 +11,7 @@ import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
+import com.ztdx.eams.domain.archives.repository.mongo.OriginalTextMongoRepository;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -22,7 +23,9 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -35,7 +38,6 @@ import org.springframework.data.mongodb.core.query.Update;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -67,9 +69,11 @@ public class EntryService {
     //这个暂时留着做测试用，测试条目和原文的级联关系
     private OriginalTextElasticsearchRepository originalTextElasticsearchRepository;
 
+    private OriginalTextMongoRepository originalTextMongoRepository;
+
     private MongoOperations mongoOperations;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, MongoOperations mongoOperations) {
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, MongoOperations mongoOperations) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
@@ -78,6 +82,7 @@ public class EntryService {
         this.archivesGroupRepository = archivesGroupRepository;
         this.elasticsearchOperations = elasticsearchOperations;
         this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
+        this.originalTextMongoRepository = originalTextMongoRepository;
         this.mongoOperations = mongoOperations;
     }
 
@@ -358,10 +363,14 @@ public class EntryService {
 
     public Object test(String uuid) {
         try {
+            elasticsearchOperations.deleteIndex(this.getIndexName(Integer.parseInt(uuid)));
             originalTextElasticsearchRepository.createIndex(this.getIndexName(Integer.parseInt(uuid)));
 
             initIndex(Integer.parseInt(uuid));
             putMapping(Integer.parseInt(uuid));
+
+            rebuildCatalogueEntry(Integer.parseInt(uuid));
+            rebuildCatalogueOriginalText(Integer.parseInt(uuid));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -552,4 +561,37 @@ public class EntryService {
         entryMongoRepository.saveAll(folderFileEntryList);
     }
 
+    public void rebuild(){
+        catalogueRepository.findAll().forEach(a -> {
+            rebuildCatalogueEntry(a.getId());
+            rebuildCatalogueOriginalText(a.getId());
+        });
+    }
+
+    public void rebuildCatalogueEntry(int catalogueId){
+        long total = entryMongoRepository.count(getIndexName(catalogueId));
+        long pageCount = total / 100 + 1;
+        for (long i=0;i < pageCount; i++){
+            Page<Entry> list = entryMongoRepository.findAll(PageRequest.of((int)i,100, Sort.by(Sort.Direction.ASC, "gmtCreate")), getIndexName(catalogueId));
+            if (list.getContent().size() == 0){
+                return;
+            }
+            entryElasticsearchRepository.saveAll(list);
+        }
+    }
+
+    public void rebuildCatalogueOriginalText(int catalogueId){
+        long total = originalTextMongoRepository.count("archive_record_originalText_" + catalogueId);
+        long pageCount = total / 100 + 1;
+        for (long i=0;i < pageCount; i++){
+            Page<OriginalText> list = originalTextMongoRepository.findAll(
+                    PageRequest.of(
+                            (int)i,100, Sort.by(Sort.Direction.ASC, "gmtCreate"))
+                    , "archive_record_originalText_" + catalogueId);
+            if (list.getContent().size() == 0){
+                return;
+            }
+            originalTextElasticsearchRepository.saveAll(list);
+        }
+    }
 }

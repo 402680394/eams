@@ -26,6 +26,7 @@ public class OriginalText {
     private int catalogueId;
     //所属条目
     @Parent(type = "record")
+    @Field(type = FieldType.keyword)
     private String entryId;
     //排序号
     @Field(type = FieldType.Integer)

@@ -98,7 +98,7 @@ public class OriginalTextService {
         SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch("archive_record_" + originalText.getCatalogueId());
         srBuilder.setTypes("originalText");
         srBuilder.addAggregation(AggregationBuilders.max("maxOrderNumber").field("orderNumber"));
-        srBuilder.setQuery(QueryBuilders.matchQuery("entryId", originalText.getEntryId()));
+        srBuilder.setQuery(QueryBuilders.termQuery("entryId", originalText.getEntryId()));
         double maxOrderNumber = ((Max) srBuilder.get().getAggregations().getAsMap().get("maxOrderNumber")).getValue();
         if (maxOrderNumber == (-Infinity)) {
             originalText.setOrderNumber(1);
@@ -332,7 +332,7 @@ public class OriginalTextService {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
         query.must(QueryBuilders.wildcardQuery("title",
                 "*" + title + "*"));
-        query.must(QueryBuilders.matchQuery("entryId", entryId));
+        query.must(QueryBuilders.termQuery("entryId", entryId));
         return originalTextElasticsearchRepository.search(query, PageRequest.of(page, size, Sort.by(Sort.Order.asc("orderNumber"))), new String[]{"archive_record_" + catalogueId});
     }
 
