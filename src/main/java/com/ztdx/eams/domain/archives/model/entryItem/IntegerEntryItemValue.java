@@ -10,6 +10,9 @@ public class IntegerEntryItemValue extends AbstractEntryItemValue<Integer> {
 
     @Override
     public String toString() {
+        if (value == null){
+            return "";
+        }
         return value.toString();
     }
 

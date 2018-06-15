@@ -20,6 +20,9 @@ public class DateEntryItemValue extends AbstractEntryItemValue<Date> {
 
     @Override
     public String toString() {
+        if (value == null){
+            return "";
+        }
         String format = descriptionItem.getFieldFormat();
         if (StringUtils.isEmpty(format)){
             format = "yyyy-MM-dd HH:mm:ss";
@@ -38,7 +41,12 @@ public class DateEntryItemValue extends AbstractEntryItemValue<Date> {
 
         //如果是时间戳
         if (StringUtils.isNumeric(value)) {
-            return Date.from(Instant.ofEpochSecond(Long.parseLong(value)));
+            Long timeStamp = Long.parseLong(value);
+            if (value.length() > 12){
+                return Date.from(Instant.ofEpochMilli(timeStamp));
+            }else {
+                return Date.from(Instant.ofEpochSecond(timeStamp));
+            }
         }
 
         try {

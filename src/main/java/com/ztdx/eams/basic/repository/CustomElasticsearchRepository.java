@@ -39,6 +39,8 @@ public interface CustomElasticsearchRepository<T, ID extends Serializable> exten
 
     void deleteById(ID id, String indexName);
 
+    void deleteByIdWithRouting(ID id, String indexName, String routing);
+
     void deleteAll(String indexName);
 
     boolean createIndex(String indexName) throws IOException;

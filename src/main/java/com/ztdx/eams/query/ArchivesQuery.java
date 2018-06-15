@@ -477,7 +477,8 @@ public class ArchivesQuery {
      * 获取全宗、档案库分组、登记库、目录树.
      */
     public Map<String, Object> getCatalogueTreeMap(
-            Function<Integer, Boolean> hasFondsPermission
+            int archiveType
+            , Function<Integer, Boolean> hasFondsPermission
             , Function<Integer, Boolean> hasCataloguePermission
     ) {
         Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -487,7 +488,7 @@ public class ArchivesQuery {
         resultMap = getSubFondsTreeMap(
                 getAllFondsList()
                 , getAllArchivesGroupList()
-                , getAllArchivesList((byte) 1)
+                , getAllArchivesList((byte) archiveType)
                 , getAllCatalogueList()
                 , resultMap
                 , hasFondsPermission
@@ -750,6 +751,7 @@ public class ArchivesQuery {
                 archivesDescriptionItem.FIELD_WIDTH.as("fieldWidth"),
                 archivesDescriptionItem.FIELD_PRECISION.as("fieldPrecision"),
                 archivesDescriptionItem.FIELD_FORMAT.as("fieldFormat"),
+                archivesDescriptionItem.IS_INCREMENT.as("isIncrement"),
                 archivesDescriptionItem.IS_READ.as("isRead"),
                 archivesDescriptionItem.IS_NULL.as("isNull"),
                 archivesDescriptionItem.IS_DICTIONARY.as("isDictionary"),

@@ -17,12 +17,14 @@ import java.util.Map;
 @org.springframework.data.mongodb.core.mapping.Document(collection = "archive_record")
 public class Entry {
     @Id
+    @Field(type = FieldType.Auto)
     private String id;
 
     /**
      * 目录id
      */
     @IndexNamePostfix
+    @Field(type = FieldType.Integer)
     private int catalogueId;
 
     /**
@@ -34,41 +36,49 @@ public class Entry {
     /**
      * 档案库id
      */
+    @Field(type = FieldType.Integer)
     private int archiveId;
 
     /**
      * 档案库类型
      */
+    @Field(type = FieldType.Integer)
     private int archiveType;
 
     /**
      * 档案库内容类型
      */
+    @Field(type = FieldType.Integer)
     private int archiveContentType;
 
     /**
      * 全宗id
      */
+    @Field(type = FieldType.Integer)
     private int fondsId;
 
     /**
      * 创建者
      */
+    @Field(type = FieldType.Integer)
     private int owner;
 
     /**
      * 上级档案目录id
      */
+    @Field(type = FieldType.Integer)
     private Integer parentCatalogueId;
 
     /**
      * 上级条目id
      */
+    @Field(type = FieldType.keyword)
     private String parentId;
 
     /**
      * 著录项明细
      */
+    @Field(type = FieldType.Object)
     private Map<String, Object> items;
 
     /**
@@ -86,17 +96,20 @@ public class Entry {
     /**
      * 是否删除
      */
+    @Field(type = FieldType.Integer)
     private int gmtDeleted;
 
     /**
      * 版本号
      */
     //@Version
+    @Field(type = FieldType.keyword)
     private Long version;
 
     /**
      * 索引的版本号，要使用mongo原生api更新
      */
+    @Field(type = FieldType.Long)
     private Long indexVersion;
 
     /**
