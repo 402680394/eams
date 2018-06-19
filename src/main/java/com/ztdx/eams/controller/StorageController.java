@@ -53,9 +53,9 @@ public class StorageController {
      * }
      */
     @RequestMapping(value = "/storageList", method = RequestMethod.GET)
-    public Map<String,Object> storageList(@RequestParam(name = "fondsId",required = false) Integer fondsId, @RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
-        if (fondsId!=null){
-            return storeQuery.getStorageListByFondsIdAndKeyWord(fondsId,keyWord);
+    public Map<String,Object> storageList(@RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
+        if (keyWord!=null && !keyWord.trim().equals("")){
+            return storeQuery.getStorageListByFondsIdAndKeyWord(keyWord);
         }
         return storeQuery.getStorageList();
     }

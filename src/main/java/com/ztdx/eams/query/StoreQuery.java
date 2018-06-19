@@ -54,15 +54,14 @@ public class StoreQuery {
     /**
      * 通过全宗id与关键字内容查询库房列表
      */
-    public Map<String,Object> getStorageListByFondsIdAndKeyWord(Integer fondsId,String keyWord){
+    public Map<String,Object> getStorageListByFondsIdAndKeyWord(String keyWord){
 
         List<Condition> conditions =new ArrayList<>();
-        conditions.add(storage.FONDS_ID.equal(UInteger.valueOf(fondsId)));
         conditions.add(storage.FONDS_ID.equal(sysFonds.ID));
         if(keyWord !=null && !keyWord.equals("")){
-            conditions.add(storage.NAME.like("%" + keyWord +"%")
-                    .or(storage.NUMBER.like("%" + keyWord +"%"))
-                    .or(storage.DESCRIPTION.like("%" + keyWord +"%")));
+            conditions.add(storage.NAME.like("%" + keyWord.trim() +"%")
+                    .or(storage.NUMBER.like("%" + keyWord.trim() +"%"))
+                    .or(storage.DESCRIPTION.like("%" + keyWord.trim() +"%")));
         }
 
         Map<String,Object> resultMap = new HashMap<>();
@@ -87,10 +86,10 @@ public class StoreQuery {
         List<Condition> conditions =new ArrayList<>();
         conditions.add(monitoringPoint.STORAGE_ID.equal(UInteger.valueOf(storageId)));
         conditions.add(monitoringPoint.STORAGE_ID.equal(storage.ID));
-        if(keyWord !=null && !keyWord.equals("")){
-            conditions.add(storage.NAME.like("%" + keyWord +"%")
-                    .or(monitoringPoint.NUMBER.like("%" + keyWord +"%"))
-                    .or(monitoringPoint.TYPE.like("%" + keyWord +"%")));
+        if(keyWord !=null && !keyWord.trim().equals("")){
+            conditions.add(storage.NAME.like("%" + keyWord.trim() +"%")
+                    .or(monitoringPoint.NUMBER.like("%" + keyWord.trim() +"%"))
+                    .or(monitoringPoint.TYPE.like("%" + keyWord.trim() +"%")));
         }
 
         Map<String,Object> resultMap = new HashMap<>();
@@ -138,10 +137,10 @@ public class StoreQuery {
         List<Condition> conditions =new ArrayList<>();
         conditions.add(monitoringRecord.STORAGE_ID.equal(UInteger.valueOf(storageId)));
         conditions.add(monitoringRecord.MONITORING_POINT_ID.equal(monitoringPoint.ID));
-        if(keyWord !=null && !keyWord.equals("")){
-            conditions.add(monitoringRecord.TEMPERATURE_VALUE.like("%" + keyWord +"%")
-                    .or(monitoringRecord.HUMIDITY_VALUE.like("%" + keyWord +"%"))
-                    .or(monitoringRecord.TAKE_STEPS.like("%" + keyWord +"%")));
+        if(keyWord !=null && !keyWord.trim().equals("")){
+            conditions.add(monitoringRecord.TEMPERATURE_VALUE.like("%" + keyWord.trim() +"%")
+                    .or(monitoringRecord.HUMIDITY_VALUE.like("%" + keyWord.trim() +"%"))
+                    .or(monitoringRecord.TAKE_STEPS.like("%" + keyWord.trim() +"%")));
         }
 
         Map<String,Object> resultMap = new HashMap<>();
