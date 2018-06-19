@@ -36,7 +36,6 @@ public class StorageController {
      * @api {get} /store/storageList 库房表单列表
      * @apiName storageList
      * @apiGroup store
-     * @apiParam {Number} fondsId 全宗ID(url参数)
      * @apiParam {String} keyWord 检索框输入的内容(未输入传""值)(url参数)
      * @apiSuccess (Success 200) {Number} id 库房ID.
      * @apiSuccess (Success 200) {String} name 库房名称.

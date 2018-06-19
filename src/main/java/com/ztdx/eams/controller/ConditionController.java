@@ -1,6 +1,8 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.domain.archives.application.ConditionService;
 import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -9,6 +11,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/condition")
 public class ConditionController {
+
+    private ConditionService conditionService;
+
+    /**
+     * 构造函数
+     */
+    @Autowired
+    public ConditionController(ConditionService conditionService){
+        this.conditionService = conditionService;
+    }
 
     /**
      * @api {get} /condition/entry/columns?cid={cid} 档案库可以搜索的列
