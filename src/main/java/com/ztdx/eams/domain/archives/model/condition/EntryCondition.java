@@ -1,14 +1,17 @@
 package com.ztdx.eams.domain.archives.model.condition;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 
 import javax.persistence.Convert;
 import java.util.List;
 
 @Data
 public class EntryCondition {
+
+    @Id
+    private String id;
 
     @JsonProperty(value = "cid")
     private int catalogueId;
