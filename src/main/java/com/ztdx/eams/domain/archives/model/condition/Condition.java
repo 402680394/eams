@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.*;
+import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import lombok.Data;
 import org.springframework.boot.jackson.JsonComponent;
 import org.springframework.boot.jackson.JsonObjectDeserializer;
@@ -37,16 +38,15 @@ public class Condition<T> {
         protected void serializeObject(Condition value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
 
             if (value.getLogical() != null) {
-                jgen.writeFieldName("logical");
-                jgen.writeString(value.getLogical().getCode());
+                jgen.writeStringField("logical", value.getLogical().getCode());
             }
 
-            jgen.writeFieldName("column");
-            jgen.writeString(value.getColumn());
+            if (value.getColumn() != null) {
+                jgen.writeStringField("column", value.getColumn());
+            }
 
             if (value.getOperator() != null) {
-                jgen.writeFieldName("operator");
-                jgen.writeString(value.getOperator().getCode());
+                jgen.writeStringField("operator", value.getOperator().getCode());
             }
 
             jgen.writeFieldName("value");
@@ -71,13 +71,11 @@ public class Condition<T> {
             condition.setNested(false);
             if (tree.hasNonNull("logical")) {
                 condition.setLogical(Operator.logical.create(tree.get("logical").asText()));
+            }else {
+                condition.setLogical(Operator.logical.and);
             }
-            if (tree.hasNonNull("column")) {
-                condition.setColumn(tree.get("column").asText());
-            }
-            if (tree.hasNonNull("operator")) {
-                condition.setOperator(Operator.create(tree.get("operator").asText()));
-            }
+
+            boolean nested = false;
             if (tree.hasNonNull("value")) {
                 JsonNode node = tree.get("value");
                 if (node.isArray()){
@@ -87,10 +85,33 @@ public class Condition<T> {
                     }
                     condition.setValue(list);
                     condition.setNested(true);
+                    nested = true;
                 }else{
-                    condition.setValue(node.asText());
+                    if (node.isNumber()){
+                        condition.setValue(node.numberValue());
+                    }else if (node.isBoolean()){
+                        condition.setValue(node.booleanValue());
+                    }else {
+                        condition.setValue(node.asText());
+                    }
                 }
+            }else{
+                throw new InvalidArgumentException("条件缺少值");
             }
+
+            if (tree.hasNonNull("column")) {
+                condition.setColumn(tree.get("column").asText());
+            }else if (!nested){
+                throw new InvalidArgumentException("条件缺少列名");
+            }
+
+            if (tree.hasNonNull("operator")) {
+                condition.setOperator(Operator.create(tree.get("operator").asText()));
+            }else if (!nested){
+                throw new InvalidArgumentException("条件缺少操作");
+            }
+
+
             return condition;
         }
     }
