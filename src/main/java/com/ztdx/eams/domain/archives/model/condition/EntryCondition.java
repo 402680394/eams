@@ -9,7 +9,7 @@ import javax.persistence.Convert;
 import java.util.List;
 
 @Data
-@Document
+@Document(collection = "archive_entry_condition")
 public class EntryCondition {
 
     @Id
