@@ -127,20 +127,18 @@ public class ConditionController {
      * @apiSuccess {Object} conditions.value 值，可以嵌套一个conditions
      * @apiSuccessExample {json} Success-Response
      * {
-     *     "id": 1,
-     *     "cid": 1,
-     *     "name": "测试",
-     *     "conditions": [
+     *     "system":[
      *         {
-     *             "column":"age",
-     *             "operator": "greaterThan",
-     *             "value": 10
-     *         },
+     *             "id": 1,
+     *             "cid": 1,
+     *             "name": "系统条件"
+     *         }
+     *     ],
+     *     "custom":[
      *         {
-     *             "logical": "and",
-     *             "column":"age",
-     *             "operator": "lessThanOrEqual",
-     *             "value": 30
+     *             "id": 2,
+     *             "cid": 1,
+     *             "name": "自定义条件"
      *         }
      *     ]
      * }
