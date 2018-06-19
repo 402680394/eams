@@ -1,11 +1,13 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.store.application.MonitoringRecordService;
 import com.ztdx.eams.domain.store.model.MonitoringRecord;
 import com.ztdx.eams.query.StoreQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -98,14 +100,14 @@ public class MonitoringRecordController {
     }
 
     /**
-     * @api {delete} /monitoringRecord/{id} 删除词典
-     * @apiName delete
+     * @api {delete} /monitoringRecord/deleteMonitoringRecordIds  删除监测记录
+     * @apiName deleteMonitoringRecordIds
      * @apiGroup monitoringRecord
-     * @apiParam {Number} id 监测记录ID（url占位符）
+     * @apiParam {Array} monitoringRecordIds 监测记录ID数组
      */
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public void delete(@PathVariable("id") Integer id) {
-        monitoringRecordService.delete(id);
+    @RequestMapping(value = "/deleteMonitoringRecordIds", method = RequestMethod.DELETE)
+    public void delete(@JsonParam List<Integer> monitoringRecordIds) {
+        monitoringRecordService.delete(monitoringRecordIds);
     }
 
 

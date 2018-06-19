@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Service
 public class StorageService {
@@ -53,13 +56,9 @@ public class StorageService {
      * 删除库房
      */
     @Transactional
-    public void delete(int id){
-
-        //如果库房id存在则通过id删除库房信息
-        if (storageRepository.existsById(id)){
-            storageRepository.deleteById(id);
-        }
-
+    public void delete(List<Integer> storageIds){
+        List<Storage> storageList = storageRepository.findAllById(storageIds);
+        storageRepository.deleteInBatch(storageList);
     }
 
 

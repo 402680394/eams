@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class MonitoringPointService {
 
@@ -49,10 +51,9 @@ public class MonitoringPointService {
      * 删除监测点
      */
     @Transactional
-    public void delete(Integer id) {
-        if (monitoringPointRepository.existsById(id)){
-            monitoringPointRepository.deleteById(id);
-        }
+    public void delete(List<Integer> monitoringPointIds) {
+        List<MonitoringPoint> monitoringPointList = monitoringPointRepository.findAllById(monitoringPointIds);
+        monitoringPointRepository.deleteInBatch(monitoringPointList);
     }
 
 }

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 
 @Service
 public class MonitoringRecordService {
@@ -41,10 +43,9 @@ public class MonitoringRecordService {
      * 删除监测记录
      */
     @Transactional
-    public void delete (Integer id){
-        if (monitoringRecordRepository.existsById(id)){
-            monitoringRecordRepository.deleteById(id);
-        }
+    public void delete (List<Integer> monitoringRecordIds){
+        List<MonitoringRecord> monitoringRecordList = monitoringRecordRepository.findAllById(monitoringRecordIds);
+        monitoringRecordRepository.deleteInBatch(monitoringRecordList);
     }
 
 }

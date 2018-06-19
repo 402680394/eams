@@ -1,5 +1,6 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.store.application.MonitoringPointService;
 import com.ztdx.eams.domain.store.application.StorageService;
 import com.ztdx.eams.domain.store.model.MonitoringPoint;
@@ -8,6 +9,7 @@ import com.ztdx.eams.query.StoreQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -93,14 +95,14 @@ public class StorageController {
     }
 
     /**
-     * @api {delete} /store/{id} 删除库房
-     * @apiName delete
+     * @api {delete} /store/deleteStorage 删除库房
+     * @apiName deleteStorage
      * @apiGroup store
-     * @apiParam {Number} id 库房ID（url占位符）
+     * @apiParam {Array} storageIds 库房ID数组
      */
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public void delete(@PathVariable("id") int id) {
-        storageService.delete(id);
+    @RequestMapping(value = "/deleteStorage", method = RequestMethod.DELETE)
+    public void deleteStorage(@JsonParam List<Integer> storageIds) {
+        storageService.delete(storageIds);
     }
 
 
@@ -142,14 +144,14 @@ public class StorageController {
     }
 
     /**
-     * @api {delete} /store/deleteMonitoringPoint{id} 删除监测点
+     * @api {delete} /store/deleteMonitoringPoint 删除监测点
      * @apiName deleteMonitoringPoint
      * @apiGroup store
-     * @apiParam {Number} id 库房ID（url占位符）
+     * @apiParam {Array} monitoringPointIds 监测点ID数组
      */
-    @RequestMapping(value = "/deleteMonitoringPoint{id}", method = RequestMethod.DELETE)
-    public void delete(@PathVariable("id") Integer id) {
-        monitoringPointService.delete(id);
+    @RequestMapping(value = "/deleteMonitoringPoint", method = RequestMethod.DELETE)
+    public void deleteMonitoringPoint(@JsonParam List<Integer> monitoringPointIds) {
+        monitoringPointService.delete(monitoringPointIds);
     }
 
 
