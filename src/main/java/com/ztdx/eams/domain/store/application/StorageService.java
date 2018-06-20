@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -43,11 +44,13 @@ public class StorageService {
     @Transactional
     public void update(Storage storage){
 
-        if (storageRepository.existsByNumber(storage.getNumber())){
+        Storage oldStorage = storageRepository.findById(storage.getId()).orElse(null);
+        if (oldStorage.getNumber().equals(storage.getNumber())){
+            if (storageRepository.existsById(storage.getId())) {
+                storageRepository.updateById(storage);
+            }
+        }else if (storageRepository.existsByNumber(storage.getNumber())){
             throw new InvalidArgumentException("库房编号已经存在");
-        }
-        if (storageRepository.existsById(storage.getId())) {
-            storageRepository.updateById(storage);
         }
 
     }

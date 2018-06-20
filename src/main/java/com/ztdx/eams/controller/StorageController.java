@@ -50,7 +50,7 @@ public class StorageController {
      *      "name": "mm",
      *      "number": "BJ_01",
      *      "description": "聪聪最漂亮",
-     *      "fonds_name": "张聪聪"
+     *      "fonds_id": "2"
      * }
      */
     @RequestMapping(value = "/storageList", method = RequestMethod.GET)
@@ -125,7 +125,7 @@ public class StorageController {
     }
 
     /**
-     * @api {post} /store/updateMonitoringPoint 修改监测点
+     * @api {put} /store/updateMonitoringPoint 修改监测点
      * @apiName updateMonitoringPoint
      * @apiGroup store
      * @apiParam {Number} id 监测点id.

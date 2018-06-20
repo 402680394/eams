@@ -41,10 +41,12 @@ public class MonitoringPointService {
      */
     @Transactional
     public void update(MonitoringPoint monitoringPoint) {
-        if (monitoringPointRepository.existsByNumber(monitoringPoint.getNumber())){
+        MonitoringPoint oldMonitoringPoint = monitoringPointRepository.findById(monitoringPoint.getId()).orElse(null);
+        if (oldMonitoringPoint.getNumber().equals(monitoringPoint.getNumber())){
+            monitoringPointRepository.updateById(monitoringPoint);
+        }else if (monitoringPointRepository.existsByNumber(monitoringPoint.getNumber())){
             throw new InvalidArgumentException("监测点编号已存在");
         }
-        monitoringPointRepository.updateById(monitoringPoint);
     }
 
     /**

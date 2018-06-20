@@ -43,35 +43,28 @@ public class StoreQuery {
                 storage.NAME.as("name"),
                 storage.NUMBER.as("number"),
                 storage.DESCRIPTION.as("description"),
-                sysFonds.FONDS_NAME.as("fonds_name"))
-                .from(storage,sysFonds)
-                .where(storage.FONDS_ID.equal(sysFonds.ID))
+                storage.FONDS_ID.as("fonds_id"))
+                .from(storage)
                 .fetch().intoMaps();
         resultMap.put("items",list);
         return resultMap;
     }
 
     /**
-     * 通过全宗id与关键字内容查询库房列表
+     * 通过关键字内容查询库房列表
      */
     public Map<String,Object> getStorageListByFondsIdAndKeyWord(String keyWord){
-
-        List<Condition> conditions =new ArrayList<>();
-        conditions.add(storage.FONDS_ID.equal(sysFonds.ID));
-        if(keyWord !=null && !keyWord.equals("")){
-            conditions.add(storage.NAME.like("%" + keyWord.trim() +"%")
-                    .or(storage.NUMBER.like("%" + keyWord.trim() +"%"))
-                    .or(storage.DESCRIPTION.like("%" + keyWord.trim() +"%")));
-        }
 
         Map<String,Object> resultMap = new HashMap<>();
         List<Map<String,Object>> list = dslContext.select(storage.ID.as("id"),
                 storage.NAME.as("name"),
                 storage.NUMBER.as("number"),
                 storage.DESCRIPTION.as("description"),
-                sysFonds.FONDS_NAME.as("fonds_name"))
-                .from(storage,sysFonds)
-                .where(conditions)
+                storage.FONDS_ID.as("fonds_id"))
+                .from(storage)
+                .where(storage.NAME.like("%" + keyWord.trim() +"%")
+                        .or(storage.NUMBER.like("%" + keyWord.trim() +"%"))
+                        .or(storage.DESCRIPTION.like("%" + keyWord.trim() +"%")))
                 .fetch().intoMaps();
         resultMap.put("items",list);
 
