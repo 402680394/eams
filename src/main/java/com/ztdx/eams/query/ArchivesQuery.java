@@ -765,4 +765,20 @@ public class ArchivesQuery {
         resultMap.put("items", list);
         return resultMap;
     }
+
+    /**
+     * 档案库可以搜索的列
+     */
+    public Map<String,Object> getEntryColumns(Integer catalogueId){
+        Map<String,Object> resultMap = new HashMap<>();
+        List<Map<String,Object>> list = dslContext.select(archivesDescriptionItem.METADATA_ID.as("metadata_id"),
+                archivesDescriptionItem.METADATA_NAME.as("metadata_name"),
+                archivesDescriptionItem.DISPLAY_NAME.as("display_name"),
+                archivesDescriptionItem.DATA_TYPE.as("data_type"))
+                .from(archivesDescriptionItem)
+                .where(archivesDescriptionItem.CATALOGUE_ID.equal(UInteger.valueOf(catalogueId)))
+                .fetch().intoMaps();
+        resultMap.put("items",list);
+        return  resultMap;
+    }
 }

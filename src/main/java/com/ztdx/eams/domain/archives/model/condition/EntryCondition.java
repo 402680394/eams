@@ -5,7 +5,6 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.Convert;
 import java.util.List;
 
 @Data
@@ -25,7 +24,6 @@ public class EntryCondition {
     /**
      * 条件的类型，用于区分系统和自定义。不需要前端传
      */
-    @Convert(converter = EntryConditionType.class)
     private EntryConditionType entryConditionType;
 
     /**

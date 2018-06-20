@@ -1,25 +1,32 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.archives.application.ConditionService;
 import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
+import com.ztdx.eams.query.ArchivesQuery;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping(value = "/condition")
 public class ConditionController {
 
-    private ConditionService conditionService;
+    private final ConditionService conditionService;
+
+    private final ArchivesQuery archivesQuery;
 
     /**
      * 构造函数
      */
     @Autowired
-    public ConditionController(ConditionService conditionService){
+    public ConditionController(ConditionService conditionService,ArchivesQuery archivesQuery){
         this.conditionService = conditionService;
+        this.archivesQuery = archivesQuery;
     }
 
     /**
@@ -48,8 +55,12 @@ public class ConditionController {
      *     }
      * ]
      */
-    public void entryColumns(){
+    @RequestMapping(value = "/entry/columns",method = RequestMethod.GET)
+    public Map<String,Object> entryColumns(@JsonParam Integer catalogueId){
+        //double(4) integer(1) date(3) 不能使用包含不包含操作符
+        Map<String,Object> resultMap = archivesQuery.getEntryColumns(catalogueId);
 
+        return resultMap;
     }
 
     /**
@@ -86,8 +97,9 @@ public class ConditionController {
      * @apiError NameExists 名称已存在
      */
     @RequestMapping(value = "/entry", method = RequestMethod.POST)
-    public Object saveEntryCondition(@RequestBody EntryCondition condition){
-        return condition;
+    public Object saveEntryCondition(@RequestBody EntryCondition condition, @SessionAttribute UserCredential LOGIN_USER){
+        condition.setOwner(LOGIN_USER.getUserId());
+        return conditionService.save(condition);
     }
 
     /**
@@ -103,6 +115,7 @@ public class ConditionController {
      * @apiParam {Object} conditions.value 值，可以嵌套一个conditions
      * @apiParamExample {json} Request-Example:
      * {
+     *     "id":  1,
      *     "name": "测试",
      *     "conditions": [
      *         {
@@ -121,15 +134,16 @@ public class ConditionController {
      *
      * @apiError NameExists 名称已存在
      */
-    public void updateEntryCondition(){
-
+    @RequestMapping(value = "/entry",method = RequestMethod.PUT)
+    public void updateEntryCondition(@RequestBody EntryCondition condition){
+        conditionService.update(condition);
     }
 
     /**
      * @api {get} /condition/entry?cid={cid} 查询档案库的查询条件
      * @apiName listEntryCondition
      * @apiGroup condition
-     * @apiParam {Number} id 条件id
+     * @apiParam {Number} cid  档案库目录id
      * @apiSuccess {Object[]} system 系统条件列表
      * @apiSuccess {Number} system.id 条件id
      * @apiSuccess {String} system.name 条件名称
@@ -153,7 +167,8 @@ public class ConditionController {
      * }
      *
      */
-    public void listEntryCondition(){
+    @RequestMapping(value = "/entry",method = RequestMethod.GET)
+    public void listEntryCondition(@JsonParam Integer catalogueId){
 
     }
 
@@ -161,7 +176,7 @@ public class ConditionController {
      * @api {get} /condition/entry/{id} 获取档案库的查询条件
      * @apiName getEntryCondition
      * @apiGroup condition
-     * @apiParam {Number} cid 档案库目录id
+     * @apiParam {Number} id 条件id
      * @apiSuccess {Object[]} content 条件列表
      * @apiSuccess {String} content.name 条件名称
      * @apiSuccess {Object[]} content.conditions 查询条件
@@ -191,7 +206,8 @@ public class ConditionController {
      * ]
      *
      */
-    public void getEntryCondition(){
-
+    @RequestMapping(value = "/entry",method = RequestMethod.GET)
+    public EntryCondition getEntryCondition(@JsonParam Integer conditionId){
+        return conditionService.getEntryCondition(conditionId);
     }
 }

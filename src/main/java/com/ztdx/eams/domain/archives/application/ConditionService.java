@@ -1,12 +1,16 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.ztdx.eams.basic.exception.BusinessException;
+import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
 import com.ztdx.eams.domain.archives.repository.mongo.ConditionMongoRepository;
-import com.ztdx.eams.domain.store.model.MonitoringRecord;
-import com.ztdx.eams.domain.store.repository.MonitoringRecordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 
 @Service
@@ -25,39 +29,43 @@ public class ConditionService {
     /**
      * 增加档案库查询条件
      */
-    @Transactional
-    public void save(EntryCondition condition) {
-        conditionMongoRepository.save(condition);
+    public Object save(EntryCondition condition) {
+        if (conditionMongoRepository.existsByName(condition.getName())){
+            throw new BusinessException("名称已存在");
+        }
+        return conditionMongoRepository.save(condition);
     }
-
 
     /**
      * 修改档案库查询条件
      */
-    @Transactional
     public void update(EntryCondition condition) {
-        /*if (entry.getCatalogueId() == 0){
-            throw new InvalidArgumentException("目录id不存在");
-        }
 
-        if (StringUtils.isEmpty(entry.getId())){
-            throw new InvalidArgumentException("id字段不存在");
-        }
+        EntryCondition entryCondition = conditionMongoRepository.findById(condition.getId()).orElse(null);
+        if (entryCondition.getName().equals(entryCondition.getName()) || !conditionMongoRepository.existsByName(condition.getName())){
 
-        Optional<Entry> find = entryMongoRepository.findById(entry.getId(), getIndexName(entry.getCatalogueId()));
-        if (!find.isPresent()) {
-            return save(entry);
-        }
-        Entry update = find.get();
-        update.setItems(entry.getItems());
-        update.setGmtModified(new Date());
-        update.setVersion(entry.getVersion());
-        this.convertEntryItems(entry, EntryItemConverter::from);
-        update = entryMongoRepository.save(update);
+            Optional<EntryCondition> find = conditionMongoRepository.findById(condition.getId());
+            if (!find.isPresent()) {
+                save(condition);
+            }
 
-        index(update);
-        return update;*/
+            EntryCondition update = find.get();
+            update.setId(condition.getId());
+            update.setName(condition.getName());
+            update.setConditions(condition.getConditions());
+            conditionMongoRepository.save(update);
+
+        }else {
+           throw new BusinessException("名称已存在");
+       }
+
     }
 
+    /**
+     * 获取档案库的查询条件
+     */
+    public EntryCondition getEntryCondition(Integer conditionId){
+        return conditionMongoRepository.findById(conditionId.toString()).orElse(null);
+    }
 
 }
