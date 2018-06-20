@@ -206,8 +206,8 @@ public class ConditionController {
      * ]
      *
      */
-    @RequestMapping(value = "/entry",method = RequestMethod.GET)
-    public EntryCondition getEntryCondition(@JsonParam Integer conditionId){
+    @RequestMapping(value = "/entry/{cid}",method = RequestMethod.GET)
+    public EntryCondition getEntryCondition(@PathVariable("cid") int conditionId){
         return conditionService.getEntryCondition(conditionId);
     }
 }
