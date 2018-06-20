@@ -1,31 +1,19 @@
 package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.BusinessException;
-import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
-import com.ztdx.eams.domain.archives.repository.mongo.ConditionMongoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
 import com.ztdx.eams.domain.archives.model.condition.*;
 import com.ztdx.eams.domain.archives.model.entryItem.*;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
+import com.ztdx.eams.domain.archives.repository.mongo.ConditionMongoRepository;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
