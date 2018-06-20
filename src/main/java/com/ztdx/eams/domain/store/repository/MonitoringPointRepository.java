@@ -24,7 +24,7 @@ public interface MonitoringPointRepository extends JpaRepository<MonitoringPoint
 
     //通过ID修改信息
     @Modifying
-    @Query("update MonitoringPoint m set m.number=:#{#monitoringPoint.number},m.storageId=:#{#monitoringPoint.storageId},m.type=:#{#monitoringPoint.type},m.status=:#{#monitoringPoint.status},m.remark=:#{#monitoringPoint.remark},m.fondsId=:#{#monitoringPoint.fondsId} where m.id=:#{#monitoringPoint.id}")
+    @Query("update MonitoringPoint m set m.number=:#{#monitoringPoint.number},m.storageId=:#{#monitoringPoint.storageId},m.type=:#{#monitoringPoint.type},m.status=:#{#monitoringPoint.status},m.remark=:#{#monitoringPoint.remark} where m.id=:#{#monitoringPoint.id}")
     void updateById(@Param(value = "monitoringPoint") MonitoringPoint monitoringPoint);
 
 

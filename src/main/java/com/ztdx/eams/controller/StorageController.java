@@ -115,7 +115,6 @@ public class StorageController {
      * @apiParam {Number} type 监测点类型（1 温度记录仪 2 湿度记录仪 3 温湿度记录仪）.
      * @apiParam {Number} status 监测点状态(0表示否，1表示是).
      * @apiParam {String{100}} remark 备注.
-     * @apiParam {Number} fondsId 所属全宗id.
      * @apiError (Error 400) message 监测点编号已存在.
      * @apiUse ErrorExample
      */
@@ -134,7 +133,6 @@ public class StorageController {
      * @apiParam {Number} type 监测点类型（1 温度记录仪 2 湿度记录仪 3 温湿度记录仪）.
      * @apiParam {Number} status 监测点状态(0表示否，1表示是).
      * @apiParam {String{100}} remark 备注.
-     * @apiParam {Number} fondsId 所属全宗id.
      * @apiError (Error 400) message 监测点编号已存在.
      * @apiUse ErrorExample
      */

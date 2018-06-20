@@ -2,7 +2,9 @@ package com.ztdx.eams.domain.store.application;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.store.model.MonitoringPoint;
+import com.ztdx.eams.domain.store.model.Storage;
 import com.ztdx.eams.domain.store.repository.MonitoringPointRepository;
+import com.ztdx.eams.domain.store.repository.StorageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,12 +16,15 @@ public class MonitoringPointService {
 
     private final MonitoringPointRepository monitoringPointRepository;
 
+    private final StorageRepository storageRepository;
+
     /**
      * 构造函数
      */
     @Autowired
-    public MonitoringPointService(MonitoringPointRepository monitoringPointRepository) {
+    public MonitoringPointService(MonitoringPointRepository monitoringPointRepository,StorageRepository storageRepository) {
         this.monitoringPointRepository = monitoringPointRepository;
+        this.storageRepository = storageRepository;
     }
 
     /**
@@ -33,6 +38,8 @@ public class MonitoringPointService {
         if (monitoringPoint.getStatus() == null) {
             monitoringPoint.setStatus(1);
         }
+        Storage storage = storageRepository.findById(monitoringPoint.getStorageId()).orElse(null);
+        monitoringPoint.setFondsId(storage.getFondsId());
         monitoringPointRepository.save(monitoringPoint);
     }
 
