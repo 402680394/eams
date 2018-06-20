@@ -226,6 +226,13 @@ public class EntryService {
         FieldType fieldType = convertDescriptionItemDateType(descriptionItem.getDataType());
         if (FieldType.Auto != fieldType) {
             xContentBuilder.field("type", fieldType.name().toLowerCase());
+            if (FieldType.text == fieldType) {
+                xContentBuilder.startObject("fields");
+                xContentBuilder.startObject("keyword");
+                xContentBuilder.field("type", "keyword");
+                xContentBuilder.field("ignore_above", 256);
+                xContentBuilder.endObject().endObject();
+            }
         }
 
         if (descriptionItem.getIsIndex() == 1){
@@ -248,13 +255,13 @@ public class EntryService {
         return clazz.getSimpleName();
     }
 
-    public Page<Entry> search(int catalogueId, String queryString, Map<String, Object> itemQuery, Pageable pageable) {
+    public Page<Entry> search(int catalogueId, String queryString, QueryBuilder itemQuery, Pageable pageable) {
         return search(catalogueId, queryString, itemQuery, null, null, pageable);
     }
 
     public Page<Entry> search(int catalogueId
             , String queryString
-            , Map<String, Object> itemQuery
+            , QueryBuilder itemQuery
             , String parentId
             , Integer owner
             , Pageable pageable) {
@@ -267,7 +274,7 @@ public class EntryService {
             if (!StringUtils.isEmpty(parentId)) {
                 query.filter(termQuery("parentId", parentId));
             }else{
-                query.mustNot(existsQuery("parentId"));
+                query.filter(boolQuery().mustNot(existsQuery("parentId")));
             }
         }else{
             //query.must(existsQuery("parentId"));
@@ -277,7 +284,10 @@ public class EntryService {
             query.filter(termQuery("owner", owner));
         }
 
-        query.filter().addAll(parseQuery(catalogueId, itemQuery));
+        if (itemQuery != null) {
+            query.filter(itemQuery);
+        }
+
         query.filter(termQuery("gmtDeleted", 0));
 
         initIndex(catalogueId);

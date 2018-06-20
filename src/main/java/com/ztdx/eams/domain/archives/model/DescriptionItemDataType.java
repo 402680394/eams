@@ -22,7 +22,7 @@ public enum DescriptionItemDataType {
     /**
      * 字符串
      */
-    String(2, "字符串"),
+    String(5, "字符串"),
 
     /**
      * 日期
@@ -37,7 +37,7 @@ public enum DescriptionItemDataType {
     /**
      * 文本
      */
-    Text(5, "文本"),
+    Text(2, "文本"),
 
     /**
      * 数组

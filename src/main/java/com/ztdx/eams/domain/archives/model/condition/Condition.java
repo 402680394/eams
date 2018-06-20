@@ -71,8 +71,6 @@ public class Condition<T> {
             condition.setNested(false);
             if (tree.hasNonNull("logical")) {
                 condition.setLogical(Operator.logical.create(tree.get("logical").asText()));
-            }else {
-                condition.setLogical(Operator.logical.and);
             }
 
             boolean nested = false;

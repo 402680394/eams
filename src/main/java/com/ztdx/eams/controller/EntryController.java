@@ -6,9 +6,11 @@ import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.archives.application.*;
 import com.ztdx.eams.domain.archives.model.*;
+import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -35,13 +37,16 @@ public class EntryController {
 
     private FondsService fondsService;
 
-    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService) {
+    private ConditionService conditionService;
+
+    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService) {
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
         this.catalogueService = catalogueService;
         this.archivesService = archivesService;
         this.archivesGroupService = archivesGroupService;
         this.fondsService = fondsService;
+        this.conditionService = conditionService;
     }
 
     /**
@@ -304,8 +309,7 @@ public class EntryController {
             , @RequestParam(value = "q", required = false, defaultValue = "") String queryString
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
-        //TODO @lijie 登记库只能查看自己的
-        Page<Entry> content =  entryService.search(catalogueId, queryString, new Hashtable<>(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+        Page<Entry> content =  entryService.search(catalogueId, queryString, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
 
         return getSearchMap(catalogueId, content);
     }
@@ -423,7 +427,7 @@ public class EntryController {
         if (folderFile == null){
             throw new InvalidArgumentException("卷内目录未找到");
         }
-        Page<Entry> content =  entryService.search(folderFile.getId(), queryString, new Hashtable<>(), parentId, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+        Page<Entry> content =  entryService.search(folderFile.getId(), queryString, null, parentId, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
 
         return getSearchMap(catalogueId, content);
     }
@@ -457,13 +461,45 @@ public class EntryController {
      * @apiParam {String} q 关键字(QueryString)
      * @apiParam {Number} page 页码(QueryString)
      * @apiParam {Number} size 页行数(QueryString)
-     * @apiParam {String} catalogueId 档案目录id
-     * @apiParam {Object} items 条目详细内容，是一个动态的key-value数组。
-     * 以下举例条目有姓名(name)年龄(age)注册日期(regDate)爱好(interest)
-     * @apiParam {String} items.name 姓名
-     * @apiParam {Array} items.age 年龄 传递整数进行精确查找，传递数组[from,to]进行区间查找
-     * @apiParam {Array} items.regDate 注册日期 传递数组[from,to]进行区间查找
-     * @apiParam {Array} items.interest 爱好 传递数组进行多词匹配。
+     * @apiParam {String} cid 档案目录id
+     * @apiParam {Object[]} conditions 条件数组
+     * @apiParam {String="and","or"} conditions.logical 逻辑操作符。第一个条件可以为空。
+     * @apiParam {String} conditions.column 查询的列。（通过接口可以查询可以查询的列：{get} /condition/entry/columns?cid={cid}）
+     * @apiParam {String="equal","notEqual","greaterThan","greaterThanOrEqual","lessThan","lessThanOrEqual","contain","notContain"} conditions.operator 逻辑操作符。第一个条件可以为空。
+     * @apiParam {String} value 查询的值，可嵌套一组新的条件。
+     * @apiParamExample {json} Request-Example
+     * {
+     * 	"cid": 5,
+     * 	"conditions": [
+     * 		{
+     * 			"column": "age",
+     * 			"operator": "greaterThanOrEqual",
+     * 			"value": 1
+     * 		},
+     * 		{
+     * 			"logical": "and",
+     * 			"column": "age",
+     * 			"operator": "lessThanOrEqual",
+     * 			"value": 100
+     * 		},
+     * 		{
+     * 			"logical": "and",
+     * 			"value": [
+     * 				{
+     * 					"column": "name",
+     * 					"operator": "equal",
+     * 					"value": "接收到卡"
+     * 				},
+     * 				{
+     * 					"logical": "or",
+     * 					"column": "name",
+     * 					"operator": "equal",
+     * 					"value": "5561"
+     * 				}
+     * 			]
+     * 		}
+     * 	]
+     * }
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.id 条目id
      * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
@@ -538,15 +574,16 @@ public class EntryController {
      *     }
      * }
      */
-    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #entry.catalogueId)")
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #entryCondition.catalogueId)")
     @RequestMapping(value = "/search", method = RequestMethod.POST)
-    public Page<Entry> searchAdv(
-            @RequestBody Entry entry
+    public Map<String, Object> searchAdv(
+            @RequestBody EntryCondition entryCondition
             , @RequestParam("q") String queryString
             , @RequestParam("page") int page
             , @RequestParam("size") int size) {
-        //, @RequestParam("cid") int catalogueId, @RequestParam("q") String queryString, @RequestParam("page") int page, @RequestParam("size") int size
-        return entryService.search(entry.getCatalogueId(), queryString, entry.getItems(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+        QueryBuilder query = conditionService.convert2ElasticsearchQuery(entryCondition.getCatalogueId(), entryCondition.getConditions());
+        Page<Entry> content = entryService.search(entryCondition.getCatalogueId(), queryString, query, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+        return getSearchMap(entryCondition.getCatalogueId(), content);
     }
 
     /**
