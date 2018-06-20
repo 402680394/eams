@@ -42,9 +42,9 @@ public class MonitoringPointService {
     @Transactional
     public void update(MonitoringPoint monitoringPoint) {
         MonitoringPoint oldMonitoringPoint = monitoringPointRepository.findById(monitoringPoint.getId()).orElse(null);
-        if (oldMonitoringPoint.getNumber().equals(monitoringPoint.getNumber())){
+        if (oldMonitoringPoint.getNumber().equals(monitoringPoint.getNumber()) || !monitoringPointRepository.existsByNumber(monitoringPoint.getNumber())){
             monitoringPointRepository.updateById(monitoringPoint);
-        }else if (monitoringPointRepository.existsByNumber(monitoringPoint.getNumber())){
+        }else{
             throw new InvalidArgumentException("监测点编号已存在");
         }
     }

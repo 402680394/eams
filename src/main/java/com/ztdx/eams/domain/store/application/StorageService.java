@@ -45,11 +45,11 @@ public class StorageService {
     public void update(Storage storage){
 
         Storage oldStorage = storageRepository.findById(storage.getId()).orElse(null);
-        if (oldStorage.getNumber().equals(storage.getNumber())){
+        if (oldStorage.getNumber().equals(storage.getNumber()) || !storageRepository.existsByNumber(storage.getNumber())){
             if (storageRepository.existsById(storage.getId())) {
                 storageRepository.updateById(storage);
             }
-        }else if (storageRepository.existsByNumber(storage.getNumber())){
+        }else{
             throw new InvalidArgumentException("库房编号已经存在");
         }
 
