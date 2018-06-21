@@ -1,13 +1,15 @@
 package com.ztdx.eams.controller;
 
 import com.ztdx.eams.basic.UserCredential;
-import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.archives.application.ConditionService;
+import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
 import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -54,10 +56,44 @@ public class ConditionController {
      * ]
      */
     @RequestMapping(value = "/entry/columns",method = RequestMethod.GET)
-    public Map<String,Object> entryColumns(@JsonParam Integer catalogueId){
+    public Map<String,Object> entryColumns(@RequestParam Integer cid){
         //double(4) integer(1) date(3) 不能使用包含不包含操作符
-        Map<String,Object> resultMap = archivesQuery.getEntryColumns(catalogueId);
+        Map<String,Object> resultMap = archivesQuery.getEntryColumns(cid);
 
+        //获取列集合
+        List<Map<String,Object>> items = (List<Map<String, Object>>) resultMap.get("items");
+
+        //遍历所有的列
+        for (Map<String,Object> item:items) {
+
+            //获取列类型
+            Object dataType = item.get("data_type");
+
+            //添加通用运算
+            List allowSymbol = new ArrayList();
+            allowSymbol.add("equal");
+            allowSymbol.add("notEqual");
+            allowSymbol.add("greaterThan");
+            allowSymbol.add("greaterThanOrEqual");
+            allowSymbol.add("lessThan");
+            allowSymbol.add("lessThanOrEqual");
+
+            //添加选择运算
+            switch (DescriptionItemDataType.create(Integer.parseUnsignedInt(dataType.toString()))){
+                case String:
+                case Text:
+                case Array:
+                    allowSymbol.add("contain");
+                    allowSymbol.add("notContain");
+                    break;
+            }
+
+            //将每一列匹配的运算添加到列
+            item.put("allowSymbol", allowSymbol);
+        }
+
+        //封装
+        resultMap.put("items", items);
         return resultMap;
     }
 
@@ -95,16 +131,16 @@ public class ConditionController {
      * @apiError NameExists 名称已存在
      */
     @RequestMapping(value = "/entry", method = RequestMethod.POST)
-    public Object saveEntryCondition(@RequestBody EntryCondition condition, @SessionAttribute UserCredential LOGIN_USER){
+    public void saveEntryCondition(@RequestBody EntryCondition condition, @SessionAttribute UserCredential LOGIN_USER){
         condition.setOwner(LOGIN_USER.getUserId());
-        return conditionService.save(condition);
+        conditionService.save(condition);
     }
 
     /**
      * @api {put} /condition/entry/{id} 修改档案库查询条件
      * @apiName updateEntryCondition
      * @apiGroup condition
-     * @apiParam {Number} id 条件id
+     * @apiParam {String} id 条件id
      * @apiParam {String} name 条件名称
      * @apiParam {Object[]} conditions 查询条件
      * @apiParam {String="and","or"} [conditions.logical] 逻辑运算符，默认为and
@@ -132,18 +168,18 @@ public class ConditionController {
      *
      * @apiError NameExists 名称已存在
      */
-    @RequestMapping(value = "/entry",method = RequestMethod.PUT)
-    public void updateEntryCondition(@RequestBody EntryCondition condition){
-        conditionService.update(condition);
+    @RequestMapping(value = "/entry/{id}",method = RequestMethod.PUT)
+    public void updateEntryCondition(@PathVariable("id") String id,@RequestBody EntryCondition condition){
+        conditionService.update(id,condition);
     }
 
     /**
      * @api {get} /condition/entry?cid={cid} 查询档案库的查询条件
      * @apiName listEntryCondition
      * @apiGroup condition
-     * @apiParam {Number} cid  档案库目录id
+     * @apiParam {Number} cid  档案库目录cid
      * @apiSuccess {Object[]} system 系统条件列表
-     * @apiSuccess {Number} system.id 条件id
+     * @apiSuccess {String} system.id 条件id
      * @apiSuccess {String} system.name 条件名称
      * @apiSuccess {Object[]} custom 自定义条件列表，只能看到自己添加的条件
      * @apiSuccess {Number} custom.id 条件id
@@ -166,15 +202,16 @@ public class ConditionController {
      *
      */
     @RequestMapping(value = "/entry",method = RequestMethod.GET)
-    public void listEntryCondition(@JsonParam Integer catalogueId){
-
+    public Map<String,Object> listEntryCondition(@RequestParam Integer cid, @SessionAttribute UserCredential LOGIN_USER){
+        int owner = LOGIN_USER.getUserId();
+        return conditionService.listEntryCondition(cid,owner);
     }
 
     /**
      * @api {get} /condition/entry/{id} 获取档案库的查询条件
      * @apiName getEntryCondition
      * @apiGroup condition
-     * @apiParam {Number} id 条件id
+     * @apiParam {String} id 条件id
      * @apiSuccess {Object[]} content 条件列表
      * @apiSuccess {String} content.name 条件名称
      * @apiSuccess {Object[]} content.conditions 查询条件
@@ -204,8 +241,8 @@ public class ConditionController {
      * ]
      *
      */
-    @RequestMapping(value = "/entry/{cid}",method = RequestMethod.GET)
-    public EntryCondition getEntryCondition(@PathVariable("cid") int conditionId){
-        return conditionService.getEntryCondition(conditionId);
+    @RequestMapping(value = "/entry/{id}",method = RequestMethod.GET)
+    public EntryCondition getEntryCondition(@PathVariable("id") String id){
+        return conditionService.getEntryCondition(id);
     }
 }

@@ -1,6 +1,8 @@
 package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.BusinessException;
+import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
+import com.ztdx.eams.domain.archives.model.condition.EntryConditionType;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
 import com.ztdx.eams.domain.archives.model.condition.*;
@@ -35,28 +37,28 @@ public class ConditionService {
     /**
      * 增加档案库查询条件
      */
-    public Object save(EntryCondition condition) {
+    public void save(EntryCondition condition) {
         if (conditionMongoRepository.existsByName(condition.getName())){
             throw new BusinessException("名称已存在");
         }
-        return conditionMongoRepository.save(condition);
+        conditionMongoRepository.save(condition);
     }
 
     /**
      * 修改档案库查询条件
      */
-    public void update(EntryCondition condition) {
+    public void update(String id,EntryCondition condition) {
 
-        EntryCondition entryCondition = conditionMongoRepository.findById(condition.getId()).orElse(null);
-        if (entryCondition.getName().equals(entryCondition.getName()) || !conditionMongoRepository.existsByName(condition.getName())){
+        EntryCondition entryCondition = conditionMongoRepository.findById(id,"archive_entry_condition").orElse(null);
+        if (entryCondition.getName().equals(condition.getName()) || !conditionMongoRepository.existsByName(condition.getName())){
 
-            Optional<EntryCondition> find = conditionMongoRepository.findById(condition.getId());
+            Optional<EntryCondition> find = conditionMongoRepository.findById(id);
             if (!find.isPresent()) {
                 save(condition);
             }
 
             EntryCondition update = find.get();
-            update.setId(condition.getId());
+            update.setId(id);
             update.setName(condition.getName());
             update.setConditions(condition.getConditions());
             conditionMongoRepository.save(update);
@@ -68,10 +70,46 @@ public class ConditionService {
     }
 
     /**
+     * 查询档案库的查询条件
+     */
+    public Map<String,Object> listEntryCondition(Integer cid,int owner){
+
+        Map<String,Object> resultMap = new HashMap<>();
+
+        List<Map<String,Object>> systemList = new ArrayList<>();
+        List<Map<String,Object>> customList = new ArrayList<>();
+
+        //通过档案目录id获取所有的查询条件
+        List<EntryCondition> entryConditionList = conditionMongoRepository.findAllByCatalogueIdAndOwner(cid,owner);
+        for (EntryCondition condition : entryConditionList){
+
+            Map<String,Object> map = new HashMap<>();
+            map.put("id",condition.getId());
+            map.put("name",condition.getName());
+
+            EntryConditionType conditionType = condition.getEntryConditionType();
+            switch (conditionType){
+                case system:
+                    systemList.add(map);
+                    break;
+                case custom:
+                    customList.add(map);
+            }
+
+        }
+
+        resultMap.put("system",systemList);
+        resultMap.put("custom",customList);
+
+        return resultMap;
+    }
+
+
+    /**
      * 获取档案库的查询条件
      */
-    public EntryCondition getEntryCondition(Integer conditionId){
-        return conditionMongoRepository.findById(conditionId.toString()).orElse(null);
+    public EntryCondition getEntryCondition(String conditionId){
+        return conditionMongoRepository.findById(conditionId,"archive_entry_condition").orElse(null);
     }
 
     public QueryBuilder convert2ElasticsearchQuery(int catalogueId, List<Condition> conditions){
