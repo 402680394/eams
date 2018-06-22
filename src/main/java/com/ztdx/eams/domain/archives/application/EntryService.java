@@ -398,7 +398,12 @@ public class EntryService {
         SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(indices.toArray(new String[0]));
         srBuilder.setTypes("record");
 
-        srBuilder.addAggregation(AggregationBuilders.terms("catalogueId").field("catalogueId"));
+        srBuilder.addAggregation(
+                AggregationBuilders
+                        .terms("catalogueId")
+                        .field("catalogueId")
+                        .size(50)
+                        .order(Terms.Order.count(false)));
         BoolQueryBuilder query;
         if (archiveContentType != null && archiveContentType.size() > 0) {
             query = QueryBuilders.boolQuery().filter(
@@ -411,7 +416,7 @@ public class EntryService {
             query.must(QueryBuilders.queryStringQuery(keyWord));
         }
 
-        srBuilder.setQuery(query);
+        srBuilder.setQuery(query).setSize(0);
         Map<Integer, Long> result = new HashMap<>();
         ((Terms)srBuilder.get().getAggregations().asList().get(0)).getBuckets().forEach(a -> {
             result.put(a.getKeyAsNumber().intValue(),a.getDocCount());
