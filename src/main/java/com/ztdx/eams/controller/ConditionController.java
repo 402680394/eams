@@ -169,7 +169,8 @@ public class ConditionController {
      * @apiError NameExists 名称已存在
      */
     @RequestMapping(value = "/entry/{id}",method = RequestMethod.PUT)
-    public void updateEntryCondition(@PathVariable("id") String id,@RequestBody EntryCondition condition){
+    public void updateEntryCondition(@PathVariable("id") String id,@RequestBody EntryCondition condition,@SessionAttribute UserCredential LOGIN_USER){
+        condition.setOwner(LOGIN_USER.getUserId());
         conditionService.update(id,condition);
     }
 

@@ -11,5 +11,7 @@ import java.util.List;
 public interface ConditionMongoRepository extends CustomMongoRepository<EntryCondition, String> {
     boolean existsByName(String name);
 
-    List<EntryCondition> findAllByCatalogueIdAndOwner(int catalogueId,int owner);
+    boolean existsByNameAndOwner(String name,int owner);
+
+    List<EntryCondition> findAllByCatalogueId(int catalogueId);
 }

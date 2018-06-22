@@ -38,10 +38,21 @@ public class ConditionService {
      * 增加档案库查询条件
      */
     public void save(EntryCondition condition) {
-        if (conditionMongoRepository.existsByName(condition.getName())){
-            throw new BusinessException("名称已存在");
+
+        EntryConditionType entryConditionType = condition.getEntryConditionType();
+        switch (entryConditionType){
+            case system:
+                if (conditionMongoRepository.existsByName(condition.getName())){
+                    throw new BusinessException("名称已存在");
+                }
+                break;
+            case custom:
+                if (conditionMongoRepository.existsByNameAndOwner(condition.getName(),condition.getOwner())){
+                    throw new BusinessException("名称已存在");
+                }
         }
         conditionMongoRepository.save(condition);
+
     }
 
     /**
@@ -50,7 +61,7 @@ public class ConditionService {
     public void update(String id,EntryCondition condition) {
 
         EntryCondition entryCondition = conditionMongoRepository.findById(id,"archive_entry_condition").orElse(null);
-        if (entryCondition.getName().equals(condition.getName()) || !conditionMongoRepository.existsByName(condition.getName())){
+        if (entryCondition.getName().equals(condition.getName()) || !conditionMongoRepository.existsByName(condition.getName()) || !conditionMongoRepository.existsByNameAndOwner(condition.getName(),condition.getOwner())){
 
             Optional<EntryCondition> find = conditionMongoRepository.findById(id);
             if (!find.isPresent()) {
@@ -80,22 +91,18 @@ public class ConditionService {
         List<Map<String,Object>> customList = new ArrayList<>();
 
         //通过档案目录id获取所有的查询条件
-        List<EntryCondition> entryConditionList = conditionMongoRepository.findAllByCatalogueIdAndOwner(cid,owner);
-        for (EntryCondition condition : entryConditionList){
+        List<EntryCondition> entryConditionList = conditionMongoRepository.findAllByCatalogueId(cid);
+        for (EntryCondition entryCondition : entryConditionList) {
 
             Map<String,Object> map = new HashMap<>();
-            map.put("id",condition.getId());
-            map.put("name",condition.getName());
+            map.put("id",entryCondition.getId());
+            map.put("name",entryCondition.getName());
 
-            EntryConditionType conditionType = condition.getEntryConditionType();
-            switch (conditionType){
-                case system:
-                    systemList.add(map);
-                    break;
-                case custom:
-                    customList.add(map);
+            if (entryCondition.getEntryConditionType().equals(EntryConditionType.custom) && entryCondition.getOwner()==owner){
+                customList.add(map);
+            }else if (entryCondition.getEntryConditionType().equals(EntryConditionType.system)){
+                systemList.add(map);
             }
-
         }
 
         resultMap.put("system",systemList);
