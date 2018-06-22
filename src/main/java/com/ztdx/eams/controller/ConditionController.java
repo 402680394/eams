@@ -4,6 +4,7 @@ import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.domain.archives.application.ConditionService;
 import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
 import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
+import com.ztdx.eams.domain.archives.model.condition.EntrySearchGroup;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -245,5 +246,34 @@ public class ConditionController {
     @RequestMapping(value = "/entry/{id}",method = RequestMethod.GET)
     public EntryCondition getEntryCondition(@PathVariable("id") String id){
         return conditionService.getEntryCondition(id);
+    }
+
+    /**
+     * @api {put} /condition/group/{cid} 设置分组查询条件
+     * @apiName updateEntrySearchGroup
+     * @apiGroup condition
+     * @apiParam {Number} cid 档案目录id
+     * @apiParam {Object[]} group 分组条件
+     * @apiParam {String} group.column 要搜索的列
+     * @apiParam {String="ascend","descend"} [group.entrySearchGroupItemSort] 升降序 （默认为升序 ascend为升序，descend为降序）
+     * @apiParamExample {json} Request-Example:
+     * {
+     *     "cid":  1,
+     *     "group": [
+     *         {
+     *             "column":"age"
+     *             "entrySearchGroupItemSort":"ascend"
+     *         },
+     *         {
+     *             "column":"name"
+     *             "entrySearchGroupItemSort":"descend"
+     *         }
+     *     ]
+     * }
+     *
+     */
+    @RequestMapping(value = "/group/{cid}",method = RequestMethod.PUT)
+    public void updateEntrySearchGroup(@PathVariable("cid") Integer cid, @RequestBody EntrySearchGroup group){
+        conditionService.setEntrySearchGroup(cid,group);
     }
 }

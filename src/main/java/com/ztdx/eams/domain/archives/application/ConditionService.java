@@ -9,6 +9,7 @@ import com.ztdx.eams.domain.archives.model.condition.*;
 import com.ztdx.eams.domain.archives.model.entryItem.*;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.ConditionMongoRepository;
+import com.ztdx.eams.domain.archives.repository.mongo.GroupMongoRepository;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -25,13 +26,16 @@ public class ConditionService {
 
     private DescriptionItemRepository descriptionItemRepository;
 
+    private GroupMongoRepository groupMongoRepository;
+
     /**
      * 构造函数
      */
     @Autowired
-    public ConditionService(ConditionMongoRepository conditionMongoRepository, DescriptionItemRepository descriptionItemRepository) {
+    public ConditionService(ConditionMongoRepository conditionMongoRepository, DescriptionItemRepository descriptionItemRepository,GroupMongoRepository groupMongoRepository) {
         this.conditionMongoRepository = conditionMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
+        this.groupMongoRepository = groupMongoRepository;
     }
 
     /**
@@ -270,4 +274,22 @@ public class ConditionService {
             s.setValue(list);
         }
     }
+
+    /**
+     * 设置分组查询条件
+     */
+    public void setEntrySearchGroup(Integer cid,EntrySearchGroup group){
+        //通过cid获取分组条件
+        Optional<EntrySearchGroup> entrySearchGroup = groupMongoRepository.findById(cid.toString(),"archive_entry_search_group");
+        if (!entrySearchGroup.isPresent()){
+            group.setId(cid.toString());
+            groupMongoRepository.save(group);
+        }else{
+            EntrySearchGroup searchGroup = entrySearchGroup.get();
+            searchGroup.setEntrySearchGroupItems(group.getEntrySearchGroupItems());
+            groupMongoRepository.save(searchGroup);
+        }
+
+    }
+
 }
