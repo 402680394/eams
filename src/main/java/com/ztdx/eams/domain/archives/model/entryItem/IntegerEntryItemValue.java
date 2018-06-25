@@ -1,10 +1,11 @@
 package com.ztdx.eams.domain.archives.model.entryItem;
 
+import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
 
 public class IntegerEntryItemValue extends AbstractEntryItemValue<Integer> {
 
-    public IntegerEntryItemValue(DescriptionItem descriptionItem, Object value) {
+    IntegerEntryItemValue(DescriptionItem descriptionItem, Object value) {
         super(descriptionItem, value);
     }
 
@@ -23,6 +24,11 @@ public class IntegerEntryItemValue extends AbstractEntryItemValue<Integer> {
 
     @Override
     protected Integer parse(String value) {
-        return Integer.parseInt(value);
+        try {
+            return Integer.parseInt(value);
+        }catch (NumberFormatException e){
+            String message = String.format("字段(%s)的值(%s)无法转换为整数类型", descriptionItem.getDisplayName(), value);
+            throw new EntryValueConverException(message);
+        }
     }
 }

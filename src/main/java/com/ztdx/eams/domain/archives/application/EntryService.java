@@ -66,7 +66,6 @@ public class EntryService {
 
     private ElasticsearchOperations elasticsearchOperations;
 
-    //这个暂时留着做测试用，测试条目和原文的级联关系
     private OriginalTextElasticsearchRepository originalTextElasticsearchRepository;
 
     private OriginalTextMongoRepository originalTextMongoRepository;
@@ -112,25 +111,6 @@ public class EntryService {
         entry.setGmtModified(new Date());
         this.convertEntryItems(entry, EntryItemConverter::from);
         entry = entryMongoRepository.save(entry);
-
-        /*try {
-            originalTextElasticsearchRepository.createIndex(this.getIndexName(entry.getCatalogueId()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        OriginalText originalText = new OriginalText();
-        originalText.setId(UUID.randomUUID().toString());
-        originalText.setCatalogueId(entry.getCatalogueId());
-        originalText.setEntryId(entry.getId());
-        originalText.setTitle("测试");
-        originalText.setType(1);
-        originalText.setContentIndex("测试，这是一个全文检索的内容。10日下午，上海合作组织成员国领导人共同会见记者，习近平主席发表重要讲话，介绍峰会成果。本次峰会发表了《上海合作组织成员国元首理事会青岛宣言》、《上海合作组织成员国元首关于贸易便利化的联合声明》，批准了《上海合作组织成员国长期睦邻友好合作条约》未来5年实施纲要。各方还就相关问题达成了“六个一致”。\n" +
-                "　　习近平主席在上海合作组织青岛峰会上发表的一系列重要讲话中，有哪些新阐述？其中又透露了什么信号？峰会的一系列成果将对当前的世界形势带来哪些影响？");
-        originalText.setCreateTime(Date.from(Instant.now()));
-        originalText.setGmtCreate(Date.from(Instant.now()));
-        originalText.setGmtModified(Date.from(Instant.now()));
-        originalTextElasticsearchRepository.save(originalText);*/
 
         index(entry);
         return entry;
@@ -302,54 +282,6 @@ public class EntryService {
             items.put("id", a.getId());
         });
         return result;
-    }
-
-    private List<QueryBuilder> parseQuery(int catalogueId, Map<String, Object> itemQuery) {
-        List<QueryBuilder> query = new ArrayList<>();
-
-        Map<String, DescriptionItem> descriptionItemMap = this.getDescriptionItems(catalogueId);
-        itemQuery.forEach((key, value) -> {
-            DescriptionItem item = descriptionItemMap.get(key);
-            if (item != null) {
-                DescriptionItemDataType dataType = item.getDataType();
-                switch (dataType) {
-                    case String: {
-                        query.add(QueryBuilders.wildcardQuery(key, value + "*"));
-                        break;
-                    }
-                    case Integer:
-                    case Double:
-                    case Date: {
-                        if (value instanceof ArrayList) {
-                            ArrayList list = (ArrayList)value;
-                            if (list.size() < 2){
-                                throw new InvalidArgumentException(key+"字段的查询格式错误，[开始区间,结束区间]");
-                            }
-                            Object start = EntryItemConverter.from(list.get(0), item);
-                            Object end = EntryItemConverter.from(list.get(1), item);
-                            if (start != null){
-                                query.add(QueryBuilders.rangeQuery(key).from(start));
-                            }
-                            if (end != null){
-                                query.add(QueryBuilders.rangeQuery(key).to(end));
-                            }
-                        } else {
-                            Object convert = EntryItemConverter.from(value, item);
-                            assert convert != null;
-                            query.add(QueryBuilders.termQuery(key, convert));
-                        }
-                    }
-                    case Array: {
-                        Object convert = EntryItemConverter.from(value, item);
-                        assert convert != null;
-                        query.add(QueryBuilders.termsQuery(key, (ArrayList) convert));
-                    }
-                    default:
-
-                }
-            }
-        });
-        return query;
     }
 
     private void convertEntryItems(Entry entry, BiFunction<Object, DescriptionItem, Object> operator) {

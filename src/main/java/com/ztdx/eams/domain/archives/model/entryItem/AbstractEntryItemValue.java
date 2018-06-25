@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.archives.model.entryItem;
 
+import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.lang.Nullable;
@@ -9,9 +10,10 @@ import java.lang.reflect.ParameterizedType;
 public abstract class AbstractEntryItemValue<T> implements IEntryItemValue<T> {
     protected DescriptionItem descriptionItem;
     protected T value;
-    protected Class<T> entityClass;
+    private Class<T> entityClass;
 
-    public AbstractEntryItemValue(DescriptionItem descriptionItem, Object value) {
+    @SuppressWarnings("unchecked")
+    AbstractEntryItemValue(DescriptionItem descriptionItem, Object value) {
         this.descriptionItem = descriptionItem;
 
         if (value == null) {
@@ -22,6 +24,7 @@ public abstract class AbstractEntryItemValue<T> implements IEntryItemValue<T> {
             this.value = parse(value.toString());
         }
 
+        validate();
     }
 
     @Override
@@ -32,6 +35,19 @@ public abstract class AbstractEntryItemValue<T> implements IEntryItemValue<T> {
     protected abstract T getDefault();
 
     protected abstract T parse(@Nullable String value);
+
+    protected void validateNull(){
+        if (value == null){
+            String message = String.format("字段(%s)不允许为空", descriptionItem.getDisplayName());
+            throw new EntryValueConverException(message);
+        }
+    }
+
+    private void validate(){
+        if (descriptionItem.getIsNull() == 1){
+            validateNull();
+        }
+    }
 
     private Class<T> getEntityClass() {
         if (!this.isEntityClassSet()) {

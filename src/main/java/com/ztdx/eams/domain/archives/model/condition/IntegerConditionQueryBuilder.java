@@ -2,9 +2,9 @@ package com.ztdx.eams.domain.archives.model.condition;
 
 import org.elasticsearch.index.query.QueryBuilder;
 
-public class IntegerConditionQueryBuilder extends AbstractConditionEsQueryBuilder<Integer> {
+public class IntegerConditionQueryBuilder extends AbstractConditionEsQueryBuilder {
 
-    public IntegerConditionQueryBuilder(String name, Integer value) {
+    public IntegerConditionQueryBuilder(String name, Object value) {
         super(name, value);
     }
 

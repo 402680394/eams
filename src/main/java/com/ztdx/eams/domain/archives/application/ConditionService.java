@@ -177,28 +177,22 @@ public class ConditionService {
         AbstractConditionEsQueryBuilder conditionEsQueryBuilder;
         switch (dataType){
             case String:
-                String stringValue = new StringEntryItemValue(item, value).get();
-                conditionEsQueryBuilder = new StringConditionQueryBuilder(key, stringValue);
+                conditionEsQueryBuilder = new StringConditionQueryBuilder(key, value);
                 break;
             case Array:
-                ArrayList arrayValue = new ArrayEntryItemValue(item, value).get();
-                conditionEsQueryBuilder = new ArrayConditionQueryBuilder(key, arrayValue);
+                conditionEsQueryBuilder = new ArrayConditionQueryBuilder(key, value);
                 break;
             case Text:
-                String textValue = new StringEntryItemValue(item, value).get();
-                conditionEsQueryBuilder = new TextConditionQueryBuilder(key, textValue);
+                conditionEsQueryBuilder = new TextConditionQueryBuilder(key, value);
                 break;
             case Integer:
-                Integer integerValue = new IntegerEntryItemValue(item, value).get();
-                conditionEsQueryBuilder = new IntegerConditionQueryBuilder(key, integerValue);
+                conditionEsQueryBuilder = new IntegerConditionQueryBuilder(key, value);
                 break;
             case Double:
-                Double doubleValue = new DoubleEntryItemValue(item, value).get();
-                conditionEsQueryBuilder = new DoubleConditionQueryBuilder(key, doubleValue);
+                conditionEsQueryBuilder = new DoubleConditionQueryBuilder(key, value);
                 break;
             case Date:
-                Date dateValue = new DateEntryItemValue(item, value).get();
-                conditionEsQueryBuilder = new DateConditionQueryBuilder(key, dateValue);
+                conditionEsQueryBuilder = new DateConditionQueryBuilder(key, value);
                 break;
             default:
                 throw new BusinessException("解析查询条件时，不支持的类型");
