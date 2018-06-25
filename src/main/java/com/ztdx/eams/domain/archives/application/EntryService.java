@@ -11,6 +11,8 @@ import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
+import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorRepository;
+import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorValue;
 import com.ztdx.eams.domain.archives.repository.mongo.OriginalTextMongoRepository;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -72,7 +74,9 @@ public class EntryService {
 
     private MongoOperations mongoOperations;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, MongoOperations mongoOperations) {
+    private IdGeneratorRepository idGeneratorRepository;
+
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, MongoOperations mongoOperations, IdGeneratorRepository idGeneratorRepository) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
@@ -83,6 +87,7 @@ public class EntryService {
         this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
         this.originalTextMongoRepository = originalTextMongoRepository;
         this.mongoOperations = mongoOperations;
+        this.idGeneratorRepository = idGeneratorRepository;
     }
 
     public Entry save(Entry entry) {
@@ -287,15 +292,21 @@ public class EntryService {
     private void convertEntryItems(Entry entry, BiFunction<Object, DescriptionItem, Object> operator) {
         Map<String, DescriptionItem> descriptionItemMap = this.getDescriptionItems(entry.getCatalogueId());
         Map<String, Object> convert = new HashMap<>();
-        entry.getItems().forEach((key, vaule) -> {
-            DescriptionItem item = descriptionItemMap.get(key);
-            if (item != null) {
-                Object val = operator.apply(vaule, item);
-                if (val != null) {
-                    convert.put(key, val);
-                }
+
+        descriptionItemMap.forEach((key, item) -> {
+            Object val;
+            if (item.getIsIncrement() == 1 && item.getIncrement() > 1){
+                String idKey = String.format(IdGeneratorValue.ENTRY_ITEM_INCREMENT_FORMAT, entry.getCatalogueId(), item.getMetadataName());
+                val = idGeneratorRepository.get(idKey, item.getIncrement());
+            }else {
+                Object value = entry.getItems().getOrDefault(item.getMetadataName(), null);
+                val = operator.apply(value, item);
+            }
+            if (val != null) {
+                convert.put(key, val);
             }
         });
+
         entry.setItems(convert);
     }
 
