@@ -6,6 +6,7 @@ import com.ztdx.eams.domain.archives.application.ArchivesService;
 import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.query.ArchivesQuery;
+import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,11 +34,11 @@ public class ArchivesController {
     }
 
     /**
-     * @api {get} /archives/treeList?archiveType={archiveType} 获取全宗、档案库分组、登记库、目录树形列表
+     * @api {get} /archives/treeList?archiveType={archiveType} 获取全宗、档案库分组、档案库、目录树
      * @apiName treeList
      * @apiGroup archives
-     * @apiParam {Number} [archiveType] 档案库类型 1 登记库(默认值) 2 归档库
-     * @apiSuccess (Success 200) {String} childrenType 节点类型(1.Fonds-全宗;2.ArchivesGroup-档案分组;3.Archives-档案库;4.Catalogue-目录).
+     * @apiParam {Number} archiveType 档案库类型 1 登记库(默认值) 2 归档库
+     * @apiSuccess (Success 200) {String} childrenType 节点类型(Fonds-全宗;ArchivesGroup-档案分组;Archives-档案库;Catalogue-目录).
      * @apiSuccess (Success 200) {Object[]} children 子节点信息
      * @apiSuccess (Success 200) {Number} Fonds:id 全宗ID.
      * @apiSuccess (Success 200) {String} Fonds:code 全宗号.
@@ -71,27 +72,72 @@ public class ArchivesController {
             @SessionAttribute(required = false) UserCredential LOGIN_USER
             , @RequestParam(value = "archiveType", defaultValue = "1") int archiveType) {
         int userId;
-        if (LOGIN_USER != null){
+        if (LOGIN_USER != null) {
             userId = LOGIN_USER.getUserId();
-        }else{
+        } else {
             throw new ForbiddenException("拒绝访问");
         }
         //可以管理的全宗
         Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
         Set<Integer> catalogueIds = roleService.findUserManageArchiveCatalogue(userId);
 
-        return archivesQuery.getCatalogueTreeMap(
+        return archivesQuery.getFondsToCatalogueTreeMap(
                 archiveType
                 , a -> hasPermission(fondsIds, a)
                 , a -> hasPermission(catalogueIds, a));
     }
 
-    private boolean hasPermission(Set<Integer> ids, int id){
-        if (permissionService.hasAnyAuthority("ROLE_ADMIN")){
+    private boolean hasPermission(Set<Integer> ids, int id) {
+        if (permissionService.hasAnyAuthority("ROLE_ADMIN")) {
             return true;
-        }else{
+        } else {
             return ids.contains(id);
         }
 
     }
+
+    /**
+     * @api {get} /archives/treeListBelowFonds?id={id} 通过登记库ID获取同属全宗下归档库分组、归档库树
+     * @apiName treeList
+     * @apiGroup archives
+     * @apiParam {Number} id 登记库ID
+     * @apiParam {Number} archiveType 档案库类型 1 登记库 2 归档库(默认值)
+     * @apiSuccess (Success 200) {String} childrenType 节点类型(ArchivesGroup-档案分组;Archives-档案库;Catalogue-目录).
+     * @apiSuccess (Success 200) {Object[]} children 子节点信息
+     * @apiSuccess (Success 200) {Number} ArchivesGroup:id 档案库分组ID.
+     * @apiSuccess (Success 200) {String} ArchivesGroup:name 档案库分组名称.
+     * @apiSuccess (Success 200) {Number} ArchivesGroup:parentId 上级档案库分组ID.
+     * @apiSuccess (Success 200) {Number} ArchivesGroup:fondsId 所属全宗ID
+     * @apiSuccess (Success 200) {Number} Archives:id 档案库ID
+     * @apiSuccess (Success 200) {Number} Archives:structure 档案库结构(1 一文一件；2 案卷；3 项目)
+     * @apiSuccess (Success 200) {Number} Archives:name 档案库名称
+     * @apiSuccess (Success 200) {Number} Archives:archivesGroupId 所属档案库分组ID
+     * @apiSuccess (Success 200) {Number} Archives:type 档案库类型(1 登记库； 2 归档库)
+     * @apiSuccessExample {json} Success-Response:
+     * {"data": {"items": [{"childrenType": "ArchivesGroup","id": 档案库分组ID,"name": "档案库分组名称","fondsId": 所属全宗ID,"parentId": 上级档案库分组ID,"children": [
+     * {"childrenType": "ArchivesGroup","id": 档案库分组ID,"name": "档案库分组名称","fondsId": 所属全宗ID,"parentId": 上级档案库分组ID},
+     * {"childrenType": "Archives","id": 档案库ID,"structure": 档案库结构,"name": "档案库名称","archivesGroupId": 所属档案库分组ID,"type": 档案库类型}]}]}}
+     */
+    @RequestMapping(value = "/treeListBelowFonds", method = RequestMethod.GET)
+    public Map<String, Object> treeListBelowFonds(
+            @SessionAttribute(required = false) UserCredential LOGIN_USER
+            , @RequestParam(value = "archiveType", defaultValue = "2") int archiveType
+            , @RequestParam("id") int id) {
+        int userId;
+        if (LOGIN_USER != null) {
+            userId = LOGIN_USER.getUserId();
+        } else {
+            throw new ForbiddenException("拒绝访问");
+        }
+        //可以管理的目录
+        Set<Integer> catalogueIds = roleService.findUserManageArchiveCatalogue(userId);
+
+        int fondsId = archivesQuery.getFondsIdByArchiveId(UInteger.valueOf(id));
+
+        return archivesQuery.getArchivesGroupToArchivesTreeMap(
+                fondsId
+                , archiveType
+                , a -> hasPermission(catalogueIds, a));
+    }
+
 }

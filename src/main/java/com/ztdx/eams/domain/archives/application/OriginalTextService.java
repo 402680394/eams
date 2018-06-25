@@ -82,19 +82,6 @@ public class OriginalTextService {
         fileUpload(fondsId, originalText, file);
 
         //设置排序号
-//        BoolQueryBuilder query = QueryBuilders.boolQuery();
-//        query.must(QueryBuilders.matchQuery("entryId", originalText.getEntryId()));
-//        Iterable<OriginalText> iterable = originalTextElasticsearchRepository.search(query, new String[]{"archive_record_" + originalText.getCatalogueId()});
-//        int orderNumber = 0;
-//        Iterator<OriginalText> iterator = iterable.iterator();
-//        while (iterator.hasNext()) {
-//            OriginalText o = iterator.next();
-//            if (o.getOrderNumber() > orderNumber) {
-//                orderNumber = o.getOrderNumber();
-//            }
-//        }
-//        originalText.setOrderNumber(orderNumber + 1);
-
         SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch("archive_record_" + originalText.getCatalogueId());
         srBuilder.setTypes("originalText");
         srBuilder.addAggregation(AggregationBuilders.max("maxOrderNumber").field("orderNumber"));
@@ -225,7 +212,7 @@ public class OriginalTextService {
     /**
      * 获取原文文件元数据
      */
-    public Map<String, Object> fileAttributes(int catalogueId, String entryId, String id) {
+    public Map<String, Object> fileAttributes(int catalogueId, String id) {
         Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
         if (find.isPresent()) {
             return find.get().getFileAttributesMap();
@@ -378,6 +365,9 @@ public class OriginalTextService {
             createContentIndex(originalText, file);
             //转为pdf格式文件并上传ftp
             converter2PdfAndUpload(fondsId, originalText, file);
+
+            originalTextMongoRepository.save(originalText);
+            originalTextElasticsearchRepository.save(originalText);
             //删除本地文件
             if (file.exists()) {
                 file.delete();
@@ -405,14 +395,10 @@ public class OriginalTextService {
                 //此类型无法生成全文索引
                 originalText.setContentIndexStatus(3);
             }
-            originalTextElasticsearchRepository.save(originalText);
-            originalTextMongoRepository.save(originalText);
         } catch (Exception e) {
             //设置全文索引状态为生成失败
-            originalText.setContentIndex("");
+            originalText.setContentIndex(null);
             originalText.setContentIndexStatus(2);
-            originalTextElasticsearchRepository.save(originalText);
-            originalTextMongoRepository.save(originalText);
         }
     }
 
@@ -439,13 +425,9 @@ public class OriginalTextService {
             } else {
                 originalText.setPdfConverStatus(3);
             }
-            originalTextElasticsearchRepository.save(originalText);
-            originalTextMongoRepository.save(originalText);
         } catch (Exception e) {
             //设置转换状态失败
             originalText.setPdfConverStatus(2);
-            originalTextElasticsearchRepository.save(originalText);
-            originalTextMongoRepository.save(originalText);
         } finally {
             if (fisMD5 != null) {
                 try {

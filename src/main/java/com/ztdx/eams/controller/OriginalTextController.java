@@ -4,6 +4,7 @@ import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.OriginalTextService;
 import com.ztdx.eams.domain.archives.model.OriginalText;
 import com.ztdx.eams.domain.system.application.PermissionService;
+import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,10 +29,13 @@ public class OriginalTextController {
 
     private final PermissionService permissionService;
 
+    private final Scheduler scheduler;
+
     @Autowired
-    public OriginalTextController(OriginalTextService originalTextService, PermissionService permissionService) {
+    public OriginalTextController(OriginalTextService originalTextService, PermissionService permissionService, Scheduler scheduler) {
         this.originalTextService = originalTextService;
         this.permissionService = permissionService;
+        this.scheduler = scheduler;
     }
 
     /**
@@ -120,7 +124,6 @@ public class OriginalTextController {
      * @apiName fileAttributes
      * @apiGroup originalText
      * @apiParam {Number} catalogueId 目录ID(url参数)
-     * @apiParam {String} entryId 条目ID(url参数)
      * @apiParam {String} id 原文ID(url参数)
      * @apiSuccess (Success 200) {Object} data 原文文件属性,动态key-value对象.
      * @apiSuccess (Success 200) {String} data.标题 原文文件属性示例.
@@ -130,8 +133,8 @@ public class OriginalTextController {
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
     @RequestMapping(value = "/fileAttributes", method = RequestMethod.PUT)
-    public Map<String, Object> fileAttributes(@RequestParam("catalogueId") int catalogueId, @RequestParam("entryId") String entryId, @RequestParam("id") String id) {
-        return originalTextService.fileAttributes(catalogueId, entryId, id);
+    public Map<String, Object> fileAttributes(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id) {
+        return originalTextService.fileAttributes(catalogueId, id);
     }
 
     /**
@@ -139,7 +142,6 @@ public class OriginalTextController {
      * @apiName get
      * @apiGroup originalText
      * @apiParam {Number} catalogueId 目录ID(url参数)
-     * @apiParam {String} entryId 条目ID(url参数)
      * @apiParam {String} id 原文ID(url参数)
      * @apiSuccess (Success 200) {String} id ID.
      * @apiSuccess (Success 200) {String} title 标题.
@@ -150,7 +152,7 @@ public class OriginalTextController {
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public Map<String, Object> get(@RequestParam("catalogueId") int catalogueId, @RequestParam("entryId") String entryId, @RequestParam("id") String id) {
+    public Map<String, Object> get(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id) {
         return originalTextService.get(catalogueId, id);
     }
 
@@ -264,9 +266,44 @@ public class OriginalTextController {
         originalTextService.sort(upId, downId, catalogueId);
     }
 
-    //    @RequestMapping(value = "/test", method = RequestMethod.POST)
-//    public void test(@RequestParam("id") String id, @RequestParam("catalogueId") int catalogueId) {
-//        originalTextService.placeOnFile(id, catalogueId);
-//    }
+//    @RequestMapping(value = "/test", method = RequestMethod.GET)
+//    public void test() {
+//        int catalogueId = 5;
+//        List ids = new ArrayList<String>();
 //
+//        ids.add("f7fe5920-6ffe-431a-a50a-fdec75485c04");
+//        ids.add("ef852d53-0ce0-435e-a648-f1178b695d89");
+//        ids.add("199bfde1-4812-4747-963c-1f0b630c16fc");
+//        ids.add("1f0e2a02-a543-483e-89a5-d8b6e91c2e4b");
+//        ids.add("6c1167ac-504c-4ffa-b39e-587195bd4fc3");
+//        ids.add("4ac86cfd-f9b3-48d6-ae30-252cefc914f6");
+//        ids.add("b2e64ef0-a0fd-412c-83d8-69ca3cda45a9");
+//        ids.add("2b5fd9de-0219-4541-b637-07dbc854676a");
+//        try {
+//
+//            JobDetail job = JobBuilder.newJob(PlaceOnFileJob.class)
+//                    .withIdentity("PlaceOnFileJob", "PlaceOnFileJobGroup")
+//                    .requestRecovery()
+//                    .build();
+//
+//            job.getJobDataMap().put("catalogueId", catalogueId);
+//            job.getJobDataMap().put("ids", ids);
+//
+//            Trigger trigger = TriggerBuilder.newTrigger()
+//                    .withIdentity("PlaceOnFileTrigger", "PlaceOnFileJobGroup")
+//                    .startNow()
+//                    .build();
+//
+//            scheduler.scheduleJob(job, trigger);
+//
+//            if (!scheduler.isStarted()) {
+//                scheduler.start();
+//            }
+//
+//        } catch (SchedulerException e) {
+//            e.printStackTrace();
+//            throw new BusinessException("原文归档调度任务启动失败");
+//        }
+//    }
+
 }
