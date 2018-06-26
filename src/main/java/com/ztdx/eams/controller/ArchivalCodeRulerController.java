@@ -24,7 +24,7 @@ public class ArchivalCodeRulerController {
     }
 
     /**
-     * @api {put} /archivalCode/generating 生成档号
+     * @api {put} /archivalCode/generating/fileAndFolder 生成一文一件及案卷档号
      * @apiName generating
      * @apiGroup archivalCode
      * @apiParam {String[] } entryIds 条目id集合.
@@ -36,10 +36,27 @@ public class ArchivalCodeRulerController {
      *    "档案A 档号生成失败，错误原因：XXX不能为空。"
      *  ]
      */
-    @RequestMapping(value = "/generating", method = RequestMethod.PUT)
-    public List<String> generating(@JsonParam List<String> entryIds, @JsonParam int catalogueId) {
+    @RequestMapping(value = "/generating/fileAndFolder", method = RequestMethod.PUT)
+    public List<String> fileAndFolder(@JsonParam List<String> entryIds, @JsonParam int catalogueId) {
         return archivalcodeRulerService.generating(entryIds, catalogueId);
+    }
 
+    /**
+     * @api {put} /archivalCode/generating/folderFile 生成卷内档号
+     * @apiName generating
+     * @apiGroup archivalCode
+     * @apiParam {String} folderId 案卷id.
+     * @apiParam {Number} Catalogue:id 目录ID.
+     * @apiSuccess (Success 200) {String[]} content 列表内容.
+     * @apiErrorExample {json} Error-Response:
+     *  [
+     *    "档案A 档号生成失败，错误原因：档号已经存在。",
+     *    "档案A 档号生成失败，错误原因：XXX不能为空。"
+     *  ]
+     */
+    @RequestMapping(value = "/generating/folderFile",method = RequestMethod.PUT)
+    public List<String> folderFile(@JsonParam String folderId, @JsonParam int catalogueId) {
+        return null;
     }
 
 
