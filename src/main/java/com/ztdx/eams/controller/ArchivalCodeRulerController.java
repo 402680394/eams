@@ -25,7 +25,7 @@ public class ArchivalCodeRulerController {
 
     /**
      * @api {put} /archivalCode/generating/fileAndFolder 生成一文一件及案卷档号
-     * @apiName generating
+     * @apiName generating/fileAndFolder
      * @apiGroup archivalCode
      * @apiParam {String[] } entryIds 条目id集合.
      * @apiParam {Number} Catalogue:id 目录ID.
@@ -43,7 +43,7 @@ public class ArchivalCodeRulerController {
 
     /**
      * @api {put} /archivalCode/generating/folderFile 生成卷内档号
-     * @apiName generating
+     * @apiName generating/folderFile
      * @apiGroup archivalCode
      * @apiParam {String} folderId 案卷id.
      * @apiParam {Number} Catalogue:id 目录ID.
