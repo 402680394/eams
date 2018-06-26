@@ -895,17 +895,49 @@ public class EntryController {
      * @apiGroup entry
      * @apiParam {Array} entryIds 条目id集合.
      * @apiParam {Number} catalogueId 目录ID.
-     * @apiParam {Number} openingAndControlledIdentification 开放受控鉴定（1 无   2 开放   3 受控）.
-     * @apiParam {Number} expiredIdentification 到期鉴定(0 未到期  1 已到期).
-     * @apiParam {Number} endangeredIdentification 濒危鉴定(0 正常  1 濒危).
-     * @apiParam {Number} loseIdentification 遗失鉴定(0 未遗失  1 已遗失).
-     * @apiError (Error 400) message .
-     * @apiUse ErrorExample
+     * @apiParam {Number} isOpen 开放受控鉴定（1 无   2 开放   3 受控）.
+     * @apiParam {Number} isExpired 到期鉴定(0 未到期  1 已到期).
+     * @apiParam {Number} isEndangered 濒危鉴定(0 正常  1 濒危).
+     * @apiParam {Number} isLose 遗失鉴定(0 未遗失  1 已遗失).
+     * @apiParamExample {json} Request-Example:
+     * {
+     *   "entryIds":["ea5ebe11-a6c3-4db6-91e4-df783be235c3","26a5aa18-2606-46fc-bbd9-5f4d78e57956"],
+     *   "catalogueId":10,
+     *   "isOpen":2,
+     *   "isExpired":0,
+     *   "isEndangered":1,
+     *   "isLose":0
+     * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
     @RequestMapping(value = "/batchIdentification",method = RequestMethod.PUT)
     public void batchIdentification(@JsonParam List<String> entryIds,@JsonParam int catalogueId,@JsonParam Integer isOpen,@JsonParam Boolean isExpired,@JsonParam Boolean isEndangered,@JsonParam Boolean isLose ){
         entryService.batchIdentification(entryIds,catalogueId,isOpen,isExpired,isEndangered,isLose);
+    }
+
+    /**
+     * @api {get} /entry/getIdentification/{id} 查看单个鉴定信息
+     * @apiName getIdentification
+     * @apiGroup entry
+     * @apiParam {Number} id 条目id(url占位符).
+     * @apiSuccess (Success 200) {Number=1，2，3} isOpen 开放受控鉴定（1 无   2 开放   3 受控）.
+     * @apiSuccess (Success 200) {boolean=true,false} isExpired 到期鉴定(false:未到期  true:已到期).
+     * @apiSuccess (Success 200) {boolean=true,false} isEndangered 濒危鉴定(false:正常  true:濒危).
+     * @apiSuccess (Success 200) {boolean=true,false} isLose 遗失鉴定(false:未遗失  true:已遗失).
+     * @apiSuccessExample {json} Response-Example:
+     * {
+     *   "data": {
+     *     "isOpen": 2,
+     *     "isLose": false,
+     *     "isEndangered": true,
+     *     "isExpired": false
+     *   }
+     * }
+     */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
+    @RequestMapping(value = "/getIdentification/{id}",method = RequestMethod.GET)
+    public Map<String,Object> getIdentification(@PathVariable String id,@RequestParam("catalogueId") Integer catalogueId){
+        return entryService.getIdentification(id,catalogueId);
     }
 
     /**

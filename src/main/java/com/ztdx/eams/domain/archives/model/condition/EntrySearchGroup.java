@@ -14,6 +14,6 @@ public class EntrySearchGroup {
     @Id
     private String id;
 
-    private List<EntrySearchGroupItem> entrySearchGroupItems;
+    private List<EntrySearchGroupItem> entrySearchGroupItem;
 
 }

@@ -286,10 +286,17 @@ public class ConditionService {
             groupMongoRepository.save(group);
         }else{
             EntrySearchGroup searchGroup = entrySearchGroup.get();
-            searchGroup.setEntrySearchGroupItems(group.getEntrySearchGroupItems());
+            searchGroup.setEntrySearchGroupItem(group.getEntrySearchGroupItem());
             groupMongoRepository.save(searchGroup);
         }
 
+    }
+
+    /**
+     * 获取分组查询条件
+     */
+    public EntrySearchGroup getListEntrySearchGroup(Integer cid){
+        return groupMongoRepository.findById(cid.toString(),"archive_entry_search_group").orElse(null);
     }
 
 }

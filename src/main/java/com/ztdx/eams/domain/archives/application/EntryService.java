@@ -520,6 +520,29 @@ public class EntryService {
     }
 
     /**
+     * 查看单个鉴定信息
+     */
+    public Map<String,Object> getIdentification(String entryId,Integer cid){
+
+        Map<String,Object> result = new HashMap<>();
+        //通过id获得条目信息
+        Optional<Entry> find = entryMongoRepository.findById(entryId,"archive_record_"+cid);
+        if (find.isPresent()){
+
+            Entry entry = find.get();
+            result.put("isOpen",entry.getIsOpen());
+            result.put("isExpired",entry.isExpired());
+            result.put("isEndangered",entry.isEndangered());
+            result.put("isLose",entry.isLose());
+
+            return result;
+        }
+
+        return null;
+
+    }
+
+    /**
      * 组新卷
      * @param folderFileEntryIds 卷内条目id集合
      * @param folderFileCatalogueId 卷内目录ID

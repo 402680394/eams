@@ -276,4 +276,37 @@ public class ConditionController {
     public void updateEntrySearchGroup(@PathVariable("cid") Integer cid, @RequestBody EntrySearchGroup group){
         conditionService.setEntrySearchGroup(cid,group);
     }
+
+    /**
+     * @api {get} /condition/group/{cid} 获取分组查询条件
+     * @apiName getEntrySearchGroup
+     * @apiGroup group
+     * @apiParam {Number} cid 档案库目录id
+     * @apiSuccess {Object[]} group 分组条件列表
+     * @apiSuccess {String} group.id 条件id
+     * @apiSuccess {Object[]} group.groupItems 查询条件
+     * @apiSuccess {String} group.groupItems.column 查询条件的所有著录项
+     * @apiSuccess {String="ascend","descend"} [group.groupItems.entrySearchGroupItemSort] 分组条件著录项的排序，默认为升序ascend
+     * @apiSuccessExample {json} Success-Response
+     * [
+     *     {
+     *         "cid": 1,
+     *         "conditions": [
+     *             {
+     *                 "column":"age",
+     *                 "entrySearchGroupItemSort":"ascend"
+     *             },
+     *             {
+     *                 "column":"age",
+     *                 "entrySearchGroupItemSort":"descend"
+     *             }
+     *         ]
+     *     }
+     * ]
+     *
+     */
+    @RequestMapping(value = "/group/getEntrySearchGroup/{cid}",method = RequestMethod.GET)
+    public EntrySearchGroup getEntrySearchGroup(@PathVariable("cid") Integer cid){
+        return conditionService.getListEntrySearchGroup(cid);
+    }
 }
