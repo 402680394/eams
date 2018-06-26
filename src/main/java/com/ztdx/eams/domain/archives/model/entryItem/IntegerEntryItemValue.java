@@ -5,8 +5,8 @@ import com.ztdx.eams.domain.archives.model.DescriptionItem;
 
 public class IntegerEntryItemValue extends AbstractEntryItemValue<Integer> {
 
-    IntegerEntryItemValue(DescriptionItem descriptionItem, Object value) {
-        super(descriptionItem, value);
+    IntegerEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        super(descriptionItem, value, isValidate);
     }
 
     @Override

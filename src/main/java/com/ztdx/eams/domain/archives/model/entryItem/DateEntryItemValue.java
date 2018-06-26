@@ -15,8 +15,8 @@ import static org.apache.commons.lang.StringUtils.isNumeric;
 
 public class DateEntryItemValue extends AbstractEntryItemValue<Date> {
 
-    DateEntryItemValue(DescriptionItem descriptionItem, Object value) {
-        super(descriptionItem, value);
+    DateEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        super(descriptionItem, value, isValidate);
     }
 
     @Override

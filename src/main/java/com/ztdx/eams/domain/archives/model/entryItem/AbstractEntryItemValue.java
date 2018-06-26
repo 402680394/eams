@@ -13,7 +13,7 @@ public abstract class AbstractEntryItemValue<T> implements IEntryItemValue<T> {
     private Class<T> entityClass;
 
     @SuppressWarnings("unchecked")
-    AbstractEntryItemValue(DescriptionItem descriptionItem, Object value) {
+    AbstractEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
         this.descriptionItem = descriptionItem;
 
         if (value == null) {
@@ -24,7 +24,9 @@ public abstract class AbstractEntryItemValue<T> implements IEntryItemValue<T> {
             this.value = parse(value.toString());
         }
 
-        validate();
+        if (isValidate) {
+            validate();
+        }
     }
 
     @Override
