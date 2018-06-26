@@ -22,8 +22,8 @@ public class Catalogue {
     private int id;
 
     //目录类型(1 一文一件 2 案卷 3 项目）
-    @Min(value = 1)
-    @Max(value = 3)
+    @Min(value = 0)
+    @Max(value = 4)
     @Column(name = "catalogue_type")
     @Convert(converter = CatalogueType.EnumConverter.class)
     private CatalogueType catalogueType;
