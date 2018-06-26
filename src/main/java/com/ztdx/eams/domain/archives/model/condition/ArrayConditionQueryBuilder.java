@@ -5,8 +5,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.ArrayList;
 
-public class ArrayConditionQueryBuilder extends AbstractConditionEsQueryBuilder<ArrayList> {
-    public ArrayConditionQueryBuilder(String name, ArrayList value) {
+public class ArrayConditionQueryBuilder extends AbstractConditionEsQueryBuilder {
+    public ArrayConditionQueryBuilder(String name, Object value) {
         super(name, value);
     }
 

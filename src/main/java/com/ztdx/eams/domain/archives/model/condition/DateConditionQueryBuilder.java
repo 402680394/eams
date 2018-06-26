@@ -4,8 +4,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.Date;
 
-public class DateConditionQueryBuilder extends AbstractConditionEsQueryBuilder<Date>{
-    public DateConditionQueryBuilder(String name, Date value) {
+public class DateConditionQueryBuilder extends AbstractConditionEsQueryBuilder{
+    public DateConditionQueryBuilder(String name, Object value) {
         super(name, value);
     }
 

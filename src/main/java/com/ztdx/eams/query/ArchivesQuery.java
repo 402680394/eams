@@ -3,6 +3,7 @@ package com.ztdx.eams.query;
 import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.DSLContext;
+import org.jooq.Result;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -474,9 +475,99 @@ public class ArchivesQuery {
     }
 
     /**
-     * 获取全宗、档案库分组、登记库、目录树.
+     * 通过收集库ID获取获取档案库分组、档案库树
      */
-    public Map<String, Object> getCatalogueTreeMap(
+    public Map<String, Object> getArchivesGroupToArchivesTreeMap(
+            int fondsId
+            , int archiveType
+            , Function<Integer, Boolean> hasCataloguePermission
+    ) {
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        //伪造全宗根节点，便于递归查询
+        resultMap.put("id", UInteger.valueOf(1));
+        resultMap.put("fondsId", UInteger.valueOf(fondsId));
+        //查询
+        resultMap = getSubArchivesGroupTreeMap2(
+                getAllArchivesGroupList()
+                , getAllArchivesList((byte) archiveType)
+                , getAllCatalogueList()
+                , resultMap
+                , hasCataloguePermission
+        );
+        //拼装返回数据信息
+        if (null != resultMap && null != resultMap.get("children")) {
+            resultMap.put("items", resultMap.get("children"));
+        } else {
+            resultMap = new HashMap<>();
+            resultMap.put("items", new ArrayList<Map<String, Object>>());
+            return resultMap;
+        }
+        //去除根节点数据
+        resultMap.remove("id");
+        resultMap.remove("fondsId");
+        resultMap.remove("children");
+        return resultMap;
+    }
+
+    /**
+     * 通过上级节点递归获取档案库分组、档案库树.
+     */
+    private Map<String, Object> getSubArchivesGroupTreeMap2(
+            List<Map<String, Object>> dataArchivesGroupList
+            , List<Map<String, Object>> dataArchivesList
+            , List<Map<String, Object>> dataCatalogueList
+            , Map<String, Object> treeMap
+            , Function<Integer, Boolean> hasCataloguePermission
+    ) {
+
+        //创建一个空的下级档案库节点列表
+        List<Map<String, Object>> childrenList = new ArrayList<>();
+        //遍历档案库数据，获取下级档案库节点
+        for (Map<String, Object> map : dataArchivesList) {
+            if (treeMap.get("id").equals(map.get("archivesGroupId"))) {
+                //递归获取下级节点
+                Map<String, Object> childrenMap = map;
+                childrenMap.put("childrenType", "Archives");
+                childrenMap = getSubCatalogueTreeMap(
+                        dataCatalogueList
+                        , childrenMap
+                        , hasCataloguePermission
+                );
+                Object childrenMapChildren = childrenMap.getOrDefault("children", null);
+                if (!(childrenMapChildren instanceof List)
+                        || ((List) childrenMapChildren).size() == 0) {
+                    continue;
+                }
+                childrenList.add(childrenMap);
+            }
+        }
+
+        //遍历档案库分组数据，并递归获取下级节点
+        for (Map<String, Object> map : dataArchivesGroupList) {
+            if (treeMap.get("fondsId").equals(map.get("fondsId")) && treeMap.get("id").equals(map.get("parentId"))) {
+                Map<String, Object> childrenMap = map;
+                childrenMap.put("childrenType", "ArchivesGroup");
+                childrenMap = getSubArchivesGroupTreeMap2(
+                        dataArchivesGroupList
+                        , dataArchivesList
+                        , dataCatalogueList
+                        , childrenMap
+                        , hasCataloguePermission
+                );
+                childrenList.add(childrenMap);
+            }
+        }
+        //将递归获取的下属档案库分组树加入上级节点
+        if (!childrenList.isEmpty()) {
+            treeMap.put("children", childrenList);
+        }
+        return treeMap;
+    }
+
+    /**
+     * 获取全宗、档案库分组、档案库、目录树.
+     */
+    public Map<String, Object> getFondsToCatalogueTreeMap(
             int archiveType
             , Function<Integer, Boolean> hasFondsPermission
             , Function<Integer, Boolean> hasCataloguePermission
@@ -509,7 +600,7 @@ public class ArchivesQuery {
     }
 
     /**
-     * 通过全宗上级节点递归获取全宗、档案库分组、登记库、目录树.
+     * 通过全宗上级节点递归获取全宗、档案库分组、档案库、目录树.
      */
     private Map<String, Object> getSubFondsTreeMap(
             List<Map<String, Object>> dataFondsList
@@ -586,7 +677,7 @@ public class ArchivesQuery {
     }
 
     /**
-     * 通过上级节点递归获取档案库分组、登记库、目录树.
+     * 通过上级节点递归获取档案库分组、档案库、目录树.
      */
     private Map<String, Object> getSubArchivesGroupTreeMap(
             List<Map<String, Object>> dataArchivesGroupList
@@ -596,9 +687,9 @@ public class ArchivesQuery {
             , Function<Integer, Boolean> hasCataloguePermission
     ) {
 
-        //创建一个空的下级登记库节点列表
+        //创建一个空的下级档案库节点列表
         List<Map<String, Object>> childrenList = new ArrayList<>();
-        //遍历登记库数据，获取下级登记库节点
+        //遍历档案库数据，获取下级档案库节点
         for (Map<String, Object> map : dataArchivesList) {
             if (treeMap.get("id").equals(map.get("archivesGroupId"))) {
                 //递归获取下级节点
@@ -769,16 +860,26 @@ public class ArchivesQuery {
     /**
      * 档案库可以搜索的列
      */
-    public Map<String,Object> getEntryColumns(Integer cid){
-        Map<String,Object> resultMap = new HashMap<>();
-        List<Map<String,Object>> list = dslContext.select(archivesDescriptionItem.METADATA_ID.as("metadata_id"),
+    public Map<String, Object> getEntryColumns(Integer cid) {
+        Map<String, Object> resultMap = new HashMap<>();
+        List<Map<String, Object>> list = dslContext.select(archivesDescriptionItem.METADATA_ID.as("metadata_id"),
                 archivesDescriptionItem.METADATA_NAME.as("metadata_name"),
                 archivesDescriptionItem.DISPLAY_NAME.as("display_name"),
                 archivesDescriptionItem.DATA_TYPE.as("data_type"))
                 .from(archivesDescriptionItem)
                 .where(archivesDescriptionItem.CATALOGUE_ID.equal(UInteger.valueOf(cid)))
                 .fetch().intoMaps();
-        resultMap.put("items",list);
-        return  resultMap;
+        resultMap.put("items", list);
+        return resultMap;
+    }
+
+    public int getFondsIdByArchiveId(UInteger archiveId) {
+        Result result = dslContext.select(archivesGroup.FONDS_ID).from(archivesGroup, archives)
+                .where(archives.ID.equal(archiveId), archives.ARCHIVES_GROUP_ID.equal(archivesGroup.ID)).fetch();
+        if (result.size() == 0) {
+            return 0;
+        } else {
+            return ((UInteger) result.getValue(0, 0)).intValue();
+        }
     }
 }

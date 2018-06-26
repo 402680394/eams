@@ -3,10 +3,10 @@ package com.ztdx.eams.domain.archives.model.condition;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-public abstract class AbstractConditionEsQueryBuilder<T> {
+public abstract class AbstractConditionEsQueryBuilder {
     protected String name;
-    protected T value;
-    public AbstractConditionEsQueryBuilder(String name, T value) {
+    protected Object value;
+    public AbstractConditionEsQueryBuilder(String name, Object value) {
         this.name = name;
         this.value = value;
     }

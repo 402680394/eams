@@ -8,7 +8,7 @@ import java.text.SimpleDateFormat;
 
 public class DoubleEntryItemValue extends AbstractEntryItemValue<Double> {
 
-    public DoubleEntryItemValue(DescriptionItem descriptionItem, Object value) {
+    DoubleEntryItemValue(DescriptionItem descriptionItem, Object value) {
         super(descriptionItem, value);
     }
 
@@ -27,7 +27,7 @@ public class DoubleEntryItemValue extends AbstractEntryItemValue<Double> {
 
     @Override
     protected Double getDefault() {
-        return 0D;
+        return null;
     }
 
     @Override
@@ -35,7 +35,8 @@ public class DoubleEntryItemValue extends AbstractEntryItemValue<Double> {
         try {
             return Double.parseDouble(value);
         }catch (NumberFormatException e){
-            throw new EntryValueConverException("值("+value+")无法转换为Double类型");
+            String message = String.format("字段(%s)的值(%s)无法转换为小数类型", descriptionItem.getDisplayName(), value);
+            throw new EntryValueConverException(message);
         }
     }
 }
