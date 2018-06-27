@@ -8,6 +8,7 @@ import com.ztdx.eams.domain.archives.repository.ArchivalCodeRulerRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -170,7 +171,7 @@ public class GeneratingBusiness {
 
         StringBuilder archivalCodeVal = new StringBuilder(); //定义档号
         String splicingContent=""; //拼接内容
-        List<Entry> folderFileEntryAll = new ArrayList<>(); //创建卷内条目集合
+        List<List<Entry>> folderFileEntryAll = new ArrayList<>(); //创建卷内条目集合
         String archivalCodeName ="archivalCode";
         String serialNumberName="serialNumber";
         String archivalCodeNameOfFolderFile ="archivalCode";
@@ -194,7 +195,6 @@ public class GeneratingBusiness {
             //通过流遍历获取案卷id集合
             List<String> folderIdList =StreamSupport.stream(entryList.spliterator(),false).map(Entry::getId).collect(Collectors.toList());
 
-            //TODO 通过案卷条目id和目录id获取所有卷内条目集合
             //1.通过案卷集合得到案卷目录id集合
             List<Integer> catalogueIdList = StreamSupport.stream(entryList.spliterator(),false).map(Entry::getCatalogueId).collect(Collectors.toList());
             //2.通过案卷目录id集合得到案卷目录集合
@@ -206,7 +206,7 @@ public class GeneratingBusiness {
             List<Integer> folderFileCatalogueIds = folderFileCatalogueList.stream().map(Catalogue::getId).collect(Collectors.toList());
             //5.通过卷内的目录id集合得到卷内所有条目集合
             for (Integer folderFileCatalogueId : folderFileCatalogueIds ) {
-                //folderFileEntryAll.add(entryMongoRepository.)
+                folderFileEntryAll.add(entryMongoRepository.findAll("archive_record_"+folderFileCatalogueId));
             }
 
         }
@@ -242,10 +242,13 @@ public class GeneratingBusiness {
 
                 //生成卷内档号
                 if (folderFileEntryAll!=null) {//如果所有卷内集合不为空
-                    //通过案卷id得到卷内集合
-                    List<Entry> folderFileEntryList = StreamSupport.stream(folderFileEntryAll.spliterator(), false).filter(item -> item.getParentId().equals(entry.getId())).collect(Collectors.toList());
-                    //生成档号
-                    generatingFolderFileArchivalCode(folderFileEntryList,entriesForSave,errors,splicingContent);
+                    List<Entry> folderFileEntryList = new ArrayList<>();
+                    for (List<Entry> entries : folderFileEntryAll) {
+                        //通过案卷id得到卷内集合
+                        //folderFileEntryList.add(StreamSupport.stream(entries.spliterator(), false).filter(item -> item.getParentId().equals(entry.getId());
+                        //生成档号
+                        generatingFolderFileArchivalCode(folderFileEntryList,entriesForSave,errors,splicingContent);
+                    }
                 }
 
                 archivalCodeVal.append(splicingContent);

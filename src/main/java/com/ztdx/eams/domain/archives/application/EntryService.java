@@ -522,6 +522,10 @@ public class EntryService {
         }
 
         entryMongoRepository.saveAll(entryList);
+
+        for (Entry entry1 : entryList) {
+            index(entry1);
+        }
     }
 
     /**

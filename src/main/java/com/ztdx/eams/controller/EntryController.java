@@ -950,15 +950,14 @@ public class EntryController {
      * @api {post} /entry/setNewVolume 组新卷
      * @apiName setNewVolume
      * @apiGroup entry
-     * @apiParam {Array} entryIds 卷内条目id数组
-     * @apiParam {String} catalogueId 卷内目录id
-     * 以下是Entry中的
-     * @apiParam {Object} items 条目详细内容，是一个动态的key-value数组。
-     * 以下举例条目有姓名(name)年龄(age)注册日期(regDate)爱好(interest)
-     * @apiParam {String} items.name 姓名
-     * @apiParam {Number} items.age 年龄
-     * @apiParam {Date} items.regDate 注册日期
-     * @apiParam {String[]} items.interest 爱好
+     * @apiParam {Array} folderFileEntryIds 卷内条目id数组
+     * @apiParam {String} folderFileCatalogueId 卷内目录id
+     * @apiParam {Object} entry 案卷条目
+     * @apiParam {Object} entry.items 条目详细内容，是一个动态的key-value数组。
+     * @apiParam {String} entry.items.name 姓名
+     * @apiParam {Number} entry.items.age 年龄
+     * @apiParam {Date} entry.items.regDate 注册日期
+     * @apiParam {String[]} entry.items.interest 爱好
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
      */
@@ -971,8 +970,8 @@ public class EntryController {
      * @api {put} /entry/separateVolume 拆卷
      * @apiName separateVolume
      * @apiGroup entry
-     * @apiParam {Array} entryIds 卷内条目id数组
-     * @apiParam {String} catalogueId 卷内目录id
+     * @apiParam {Array} folderFileEntryIds 卷内条目id数组
+     * @apiParam {String} folderFileCatalogueId 卷内目录id
      * @apiError (Error 400) message
      * @apiUse ErrorExample
      */
