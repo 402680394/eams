@@ -890,7 +890,7 @@ public class EntryController {
     }
 
     /**
-     * @api {post} /entry/batchIdentification 批量鉴定
+     * @api {put} /entry/batchIdentification 批量鉴定
      * @apiName batchIdentification
      * @apiGroup entry
      * @apiParam {Array} entryIds 条目id集合.

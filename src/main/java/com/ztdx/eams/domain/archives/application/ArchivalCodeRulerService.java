@@ -29,13 +29,23 @@ public class ArchivalCodeRulerService {
     }
 
     /**
-     * 生成档号
+     * 生成一文一件及案卷档号
      * @param entryIds 条目id集合
      * @param catalogueId 目录id
      * @return 返回错误明细
      */
-    public List<String> generating(List<String> entryIds, int catalogueId){
-        return  generatingBusiness.generating(entryIds,catalogueId);
+    public List<String> generatingFileAndFolder(List<String> entryIds, int catalogueId){
+        return  generatingBusiness.generatingFileAndFolder(entryIds,catalogueId);
+    }
+
+    /**
+     * 生成卷内档号
+     * @param folderId 案卷id
+     * @param catalogueId 目录id
+     * @return
+     */
+    public List<String> generatingFolderFile(String folderId,int catalogueId) {
+        return generatingBusiness.generatingFolderFile(folderId,catalogueId);
     }
 
     /**

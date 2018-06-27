@@ -2,7 +2,9 @@ package com.ztdx.eams.controller;
 
 import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.archives.application.ArchivalCodeRulerService;
+import com.ztdx.eams.domain.archives.model.Entry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,7 +40,7 @@ public class ArchivalCodeRulerController {
      */
     @RequestMapping(value = "/generating/fileAndFolder", method = RequestMethod.PUT)
     public List<String> fileAndFolder(@JsonParam List<String> entryIds, @JsonParam int catalogueId) {
-        return archivalcodeRulerService.generating(entryIds, catalogueId);
+        return archivalcodeRulerService.generatingFileAndFolder(entryIds, catalogueId);
     }
 
     /**
@@ -56,7 +58,7 @@ public class ArchivalCodeRulerController {
      */
     @RequestMapping(value = "/generating/folderFile",method = RequestMethod.PUT)
     public List<String> folderFile(@JsonParam String folderId, @JsonParam int catalogueId) {
-        return null;
+        return archivalcodeRulerService.generatingFolderFile(folderId,catalogueId);
     }
 
 
