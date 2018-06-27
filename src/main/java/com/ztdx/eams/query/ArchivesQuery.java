@@ -1,5 +1,6 @@
 package com.ztdx.eams.query;
 
+import com.ztdx.eams.domain.archives.model.CatalogueType;
 import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.DSLContext;
@@ -538,6 +539,7 @@ public class ArchivesQuery {
                         || ((List) childrenMapChildren).size() == 0) {
                     continue;
                 }
+                childrenMap.remove("children");
                 childrenList.add(childrenMap);
             }
         }
@@ -873,6 +875,9 @@ public class ArchivesQuery {
         return resultMap;
     }
 
+    /**
+     * 档案库所属全宗
+     */
     public int getFondsIdByArchiveId(UInteger archiveId) {
         Result result = dslContext.select(archivesGroup.FONDS_ID).from(archivesGroup, archives)
                 .where(archives.ID.equal(archiveId), archives.ARCHIVES_GROUP_ID.equal(archivesGroup.ID)).fetch();
@@ -881,5 +886,39 @@ public class ArchivesQuery {
         } else {
             return ((UInteger) result.getValue(0, 0)).intValue();
         }
+    }
+
+    /**
+     * 获取档案库的目录
+     */
+    public Map<String, Object> getCatalogueByArchivesId(UInteger archivesId) {
+        List<Map<String, Object>> resultList = dslContext.select(archivesCatalogue.ID.as("id"), archivesCatalogue.CATALOGUE_TYPE.as("type"))
+                .from(archivesCatalogue).where(archivesCatalogue.ARCHIVES_ID.equal(archivesId)).fetch().intoMaps();
+        HashMap resultMap = new HashMap<String, Object>();
+        for (Map map : resultList) {
+            CatalogueType catalogueType = CatalogueType.create((byte) map.get("type"));
+            switch (catalogueType) {
+                case File: {
+                    resultMap.put("file", map.get("id"));
+                    break;
+                }
+                case Folder: {
+                    resultMap.put("folder", map.get("id"));
+                    break;
+                }
+                case FolderFile: {
+                    resultMap.put("folderFile", map.get("id"));
+                    break;
+                }
+                case Subject: {
+                    resultMap.put("subject", map.get("id"));
+                    break;
+                }
+                default: {
+
+                }
+            }
+        }
+        return resultMap;
     }
 }

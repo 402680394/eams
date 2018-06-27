@@ -12,8 +12,8 @@ import java.util.Arrays;
 public class ArrayEntryItemValue extends AbstractEntryItemValue<ArrayList> {
     private ObjectMapper jsonMapper;
 
-    ArrayEntryItemValue(DescriptionItem descriptionItem, Object value) {
-        super(descriptionItem, value);
+    ArrayEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        super(descriptionItem, value, isValidate);
         jsonMapper = new ObjectMapper();
     }
 

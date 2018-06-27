@@ -11,8 +11,8 @@ import java.util.Date;
 
 public class StringEntryItemValue extends AbstractEntryItemValue<String> {
 
-    StringEntryItemValue(DescriptionItem descriptionItem, Object value) {
-        super(descriptionItem, value);
+    StringEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        super(descriptionItem, value, isValidate);
     }
 
     @Override

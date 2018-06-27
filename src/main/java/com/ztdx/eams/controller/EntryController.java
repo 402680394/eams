@@ -316,7 +316,7 @@ public class EntryController {
 
     /**
      * @api {get} /entry/searchInner?cid={cid}&pid={pid}&q={q}&page={page}&size={size} 按关键字搜索案卷卷内目录
-     * @apiName search_simple
+     * @apiName searchInner
      * @apiGroup entry
      * @apiParam {Number} cid 目录id(QueryString)
      * @apiParam {String} [pid] 父条目id(QueryString)，有值查此父条目id的卷内条目，否则查询未整理的卷内（无父条目id）
@@ -427,7 +427,13 @@ public class EntryController {
         if (folderFile == null){
             throw new InvalidArgumentException("卷内目录未找到");
         }
-        Page<Entry> content =  entryService.search(folderFile.getId(), queryString, null, parentId, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+        Page<Entry> content =  entryService.search(
+                folderFile.getId()
+                , queryString
+                , null
+                , parentId
+                , null
+                , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
 
         return getSearchMap(catalogueId, content);
     }
@@ -975,4 +981,42 @@ public class EntryController {
         entryService.separateVolume(folderFileEntryIds,folderFileCatalogueId);
     }
 
+    /**
+     * @api {post} /entry/archiving 归档
+     * @apiName archiving
+     * @apiGroup entry
+     * @apiParam {Boolean} delSrc 是否删除源记录
+     * @apiParam {Number[]} originalType 原文类型，引用获取文件类型列表接口 /fileType/list
+     * @apiParam {Object[]} mapping 映射
+     * @apiParam {Number} mapping.srcId 源目录id
+     * @apiParam {Number} mapping.trgId 目标目录id
+     * @apiParam {String[]} mapping.srcFields 源字段列表
+     * @apiParam {String[]} mapping.trgFields 目标字段列表，必须与源字段一一映射。
+     * @apiParamExample {json} Request-Example
+     * {
+     *     "delSrc": true,
+     *     "originalType": 1,
+     *     "mapping":[
+     *         {
+     *             "srcId": 1,
+     *             "trgId": 2,
+     *             "srcFields":[
+     *                 "name",
+     *                 "age"
+     *             ],
+     *             "trgFields":[
+     *                 "name",
+     *                 "age"
+     *             ]
+     *         }
+     *     ]
+     * }
+     * @apiSuccessExample {json} Response-Example
+     * {
+     *
+     * }
+     */
+    public void archiving(){
+
+    }
 }

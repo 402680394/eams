@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class JsonParamResolver implements HandlerMethodArgumentResolver {
@@ -34,7 +36,14 @@ public class JsonParamResolver implements HandlerMethodArgumentResolver {
     @Override
     public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer, NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
         JsonNode jsonNode = getJsonNode(nativeWebRequest);
-        JsonNode paramNode = jsonNode.get(methodParameter.getParameterName());
+        JsonParam jsonParam = methodParameter.getParameterAnnotation(JsonParam.class);
+
+        JsonNode paramNode;
+        if (!StringUtils.isEmpty(jsonParam.path())){
+            paramNode = getSubJsonNode(jsonNode, jsonParam.path());
+        }else {
+            paramNode = jsonNode.get(methodParameter.getParameterName());
+        }
 
         if (paramNode == null) {
             // 基础类型验证
@@ -44,6 +53,33 @@ public class JsonParamResolver implements HandlerMethodArgumentResolver {
             return null;
         }
         return jsonMapper.treeToValue(paramNode, methodParameter.getParameterType());
+    }
+
+    private JsonNode getSubJsonNode(JsonNode jsonNode, String path) {
+        String[] list = path.split("\\.");
+        for (String nodeStr : list) {
+            if (jsonNode == null){
+                return null;
+            }
+            Pattern pattern = Pattern.compile("(\\w+)\\[(\\d+)]");
+
+            Matcher matcher = pattern.matcher(nodeStr);
+            if (matcher.find()){
+                String fieldName = matcher.group(1);
+                if (!jsonNode.hasNonNull(fieldName)){
+                    return null;
+                }
+                jsonNode = jsonNode.get(fieldName);
+
+                String indexStr = matcher.group(2);
+                int index = Integer.parseInt(indexStr);
+
+                jsonNode = jsonNode.get(index);
+            }else {
+                jsonNode = jsonNode.get(nodeStr);
+            }
+        }
+        return jsonNode;
     }
 
     private JsonNode getJsonNode(NativeWebRequest nativeWebRequest) throws Exception {

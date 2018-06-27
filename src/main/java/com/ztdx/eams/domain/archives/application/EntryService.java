@@ -114,7 +114,7 @@ public class EntryService {
         entry.setId(UUID.randomUUID().toString());
         entry.setGmtCreate(new Date());
         entry.setGmtModified(new Date());
-        this.convertEntryItems(entry, EntryItemConverter::from);
+        this.convertEntryItems(entry, EntryItemConverter::from, true);
         entry = entryMongoRepository.save(entry);
 
         index(entry);
@@ -138,7 +138,7 @@ public class EntryService {
         update.setItems(entry.getItems());
         update.setGmtModified(new Date());
         update.setVersion(entry.getVersion());
-        this.convertEntryItems(entry, EntryItemConverter::from);
+        this.convertEntryItems(entry, EntryItemConverter::from, false);
         update = entryMongoRepository.save(update);
 
         index(update);
@@ -282,20 +282,20 @@ public class EntryService {
         );
 
         result.stream().forEach(a -> {
-            convertEntryItems(a, EntryItemConverter::format);
+            convertEntryItems(a, EntryItemConverter::format, false);
             Map<String, Object> items = a.getItems();
             items.put("id", a.getId());
         });
         return result;
     }
 
-    private void convertEntryItems(Entry entry, BiFunction<Object, DescriptionItem, Object> operator) {
+    private void convertEntryItems(Entry entry, BiFunction<Object, DescriptionItem, Object> operator, boolean isGenerator) {
         Map<String, DescriptionItem> descriptionItemMap = this.getDescriptionItems(entry.getCatalogueId());
         Map<String, Object> convert = new HashMap<>();
 
         descriptionItemMap.forEach((key, item) -> {
             Object val;
-            if (item.getIsIncrement() == 1 && item.getIncrement() > 1){
+            if (isGenerator && item.getIsIncrement() == 1 && item.getIncrement() > 1){
                 String idKey = String.format(IdGeneratorValue.ENTRY_ITEM_INCREMENT_FORMAT, entry.getCatalogueId(), item.getMetadataName());
                 val = idGeneratorRepository.get(idKey, item.getIncrement());
             }else {

@@ -8,8 +8,8 @@ import java.text.SimpleDateFormat;
 
 public class DoubleEntryItemValue extends AbstractEntryItemValue<Double> {
 
-    DoubleEntryItemValue(DescriptionItem descriptionItem, Object value) {
-        super(descriptionItem, value);
+    DoubleEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        super(descriptionItem, value, isValidate);
     }
 
     @Override

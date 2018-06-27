@@ -9,4 +9,5 @@ import java.lang.annotation.*;
 public @interface JsonParam {
 
     String defaultValue() default "";
+    String path() default "";
 }
