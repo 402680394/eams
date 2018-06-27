@@ -544,6 +544,9 @@ public class EntryService {
         }
 
         entryMongoRepository.saveAll(folderFileEntryList);
+        for(Entry entry : folderFileEntryList){
+            index(entry);
+        }
     }
 
     public void rebuild(){
