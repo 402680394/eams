@@ -46,7 +46,7 @@ public abstract class AbstractEntryItemValue<T> implements IEntryItemValue<T> {
     }
 
     private void validate(){
-        if (descriptionItem.getIsNull() == 1){
+        if (descriptionItem.getIsNull() == 0){
             validateNull();
         }
     }
