@@ -540,10 +540,11 @@ public class EntryService {
 
         //置空卷内条目中的上级id
         for (Entry entry:folderFileEntryList) {
-            entry.setParentId("");
+            entry.setParentId(null);
         }
 
         entryMongoRepository.saveAll(folderFileEntryList);
+
         for(Entry entry : folderFileEntryList){
             index(entry);
         }

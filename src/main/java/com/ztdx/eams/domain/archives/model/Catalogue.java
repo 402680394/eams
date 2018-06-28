@@ -41,6 +41,10 @@ public class Catalogue {
     @Column(name = "metadata_standards_id")
     private Integer metadataStandardsId;
 
+    //序号长度
+    @Column(name = "serial_length")
+    private Integer serialLength;
+
     //创建时间
     @Column(name = "gmt_create")
     private Date gmtCreate;

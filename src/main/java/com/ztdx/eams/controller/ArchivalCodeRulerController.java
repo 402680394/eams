@@ -30,7 +30,7 @@ public class ArchivalCodeRulerController {
      * @apiName generating/fileAndFolder
      * @apiGroup archivalCode
      * @apiParam {String[] } entryIds 条目id集合.
-     * @apiParam {Number} Catalogue:id 目录ID.
+     * @apiParam {Number} catalogueId目录ID.
      * @apiSuccess (Success 200) {String[]} content 列表内容.
      * @apiErrorExample {json} Error-Response:
      *  [
@@ -48,7 +48,7 @@ public class ArchivalCodeRulerController {
      * @apiName generating/folderFile
      * @apiGroup archivalCode
      * @apiParam {String} folderId 案卷id.
-     * @apiParam {Number} Catalogue:id 目录ID.
+     * @apiParam {Number} catalogueId目录ID.
      * @apiSuccess (Success 200) {String[]} content 列表内容.
      * @apiErrorExample {json} Error-Response:
      *  [

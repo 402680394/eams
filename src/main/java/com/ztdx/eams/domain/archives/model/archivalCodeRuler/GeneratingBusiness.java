@@ -7,14 +7,14 @@ import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.repository.ArchivalCodeRulerRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
-import org.springframework.context.annotation.Bean;
-import org.springframework.data.mongodb.core.query.Query;
+import com.ztdx.eams.domain.system.repository.FondsRepository;
+import com.mongodb.DBCollection;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -25,11 +25,13 @@ public class GeneratingBusiness {
     private final ArchivalCodeRulerRepository archivalcodeRulerRepository;
     private final EntryMongoRepository entryMongoRepository;
     private final CatalogueRepository catalogueRepository;
+    private final FondsRepository fondsRepository;
 
-    public GeneratingBusiness(ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository) {
+    public GeneratingBusiness(ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository,FondsRepository fondsRepository) {
         this.archivalcodeRulerRepository = archivalcodeRulerRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.catalogueRepository = catalogueRepository;
+        this.fondsRepository = fondsRepository;
     }
 
     /**
@@ -48,9 +50,10 @@ public class GeneratingBusiness {
         List<Entry> folderFileEntriesForSave = new ArrayList<>();
 
         //得到目录类型
-        CatalogueType catalogueType = catalogueRepository.getOne(catalogueId).getCatalogueType();
+        Catalogue catalogue = catalogueRepository.findById(catalogueId).orElse(null);
+        CatalogueType catalogueType = catalogue.getCatalogueType();
 
-        if(catalogueType == CatalogueType.FolderFile){
+        if(CatalogueType.FolderFile.equals(catalogueType)){
             throw new BusinessException("错误的接口");
         }
 
@@ -89,7 +92,8 @@ public class GeneratingBusiness {
         List<Entry> folderFileList = new ArrayList<>();
 
         //得到目录类型
-        CatalogueType catalogueType = catalogueRepository.getOne(catalogueId).getCatalogueType();
+        Catalogue catalogue = catalogueRepository.findById(catalogueId).orElse(null);
+        CatalogueType catalogueType = catalogue.getCatalogueType();
 
         if(catalogueType != CatalogueType.FolderFile){
             throw new BusinessException("错误的接口");
@@ -100,14 +104,21 @@ public class GeneratingBusiness {
 
         //筛选出来上级id是传进来的案卷id的条目集合进行生成档号
         for (Entry entry : entryList) {
-            if (entry.getParentId()==folderId){
+            if (folderId.equals(entry.getParentId())){
                 folderFileList.add(entry);
             }
         }
 
-        //得到案卷档号
-        String folderArchivalCode = entryMongoRepository.findById(folderId).get().getItems().get("archivalCode").toString();
-
+        //TODO 得到案卷档号
+        //Entry folderEntry = entryMongoRepository.findById(folderId).orElse(null);
+        //String folderArchivalCode = folderEntry.getItems().get("archivalCode")+"";
+        //String folderArchivalCode = entryMongoRepository.findById(folderId).get().getItems().get("archivalCode").toString();
+        String folderArchivalCode ="";
+        Optional<Entry> folderEntry = entryMongoRepository.findById(folderId);
+        if (folderEntry.isPresent()){
+            Entry entry = folderEntry.get();
+            folderArchivalCode = entry.getItems().get("archivalCode").toString();
+        }
         //生成档号
         generatingFolderFileArchivalCode(folderFileList,entriesForSave,errors,folderArchivalCode);
 
@@ -136,6 +147,7 @@ public class GeneratingBusiness {
         String archivalCode = "";
         //定义卷内顺序号
         Integer serialNumber = 0;
+        String newSerialNumber = "";
 
         //循环卷内
         for (Entry entry : folderFileList) {
@@ -145,13 +157,13 @@ public class GeneratingBusiness {
 
             serialNumber++;
             //得到顺序号
-            serialNumber = Integer.parseInt(generatingAllTypeSerialNumber(serialNumber));
+            newSerialNumber = generatingAllTypeSerialNumber(serialNumber,entry.getCatalogueId());
             //生成档号
-            archivalCode = folderArchivalCode + serialNumber;
+            archivalCode = folderArchivalCode + newSerialNumber;
 
             //存入MongoDB
             items.put(archivalCodeNameOfFolderFile, archivalCode);
-            items.put(serialNumberNameOfFolderFile,serialNumber);
+            items.put(serialNumberNameOfFolderFile,newSerialNumber);
             entry.setItems(items);
             entriesForSave.add(entry);
         }
@@ -230,7 +242,7 @@ public class GeneratingBusiness {
                     //如果条目中没有序号
                     if(items.get(serialNumberName)== null && items.get(serialNumberName).equals("")){
                         //生成序号
-                        String serialNumberVal = generatingSerialNumber(items);
+                        String serialNumberVal = generatingSerialNumber(items,entry.getCatalogueId());
                         //生成档号（多加了序号）
                         splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry)+serialNumberVal;
                     }else {
@@ -243,11 +255,11 @@ public class GeneratingBusiness {
                 //生成卷内档号
                 if (folderFileEntryAll!=null) {//如果所有卷内集合不为空
                     List<Entry> folderFileEntryList = new ArrayList<>();
-                    for (List<Entry> entries : folderFileEntryAll) {
-                        //通过案卷id得到卷内集合
-                        //folderFileEntryList.add(StreamSupport.stream(entries.spliterator(), false).filter(item -> item.getParentId().equals(entry.getId());
+                    //通过案卷id得到卷内集合
+                    folderFileEntryList.addAll(StreamSupport.stream(folderFileEntryList.spliterator(), false).filter(item -> item.getParentId().equals(entry.getId())).collect(Collectors.toList()));
+                    if (folderFileEntryList.size()>0) {
                         //生成档号
-                        generatingFolderFileArchivalCode(folderFileEntryList,entriesForSave,errors,splicingContent);
+                        generatingFolderFileArchivalCode(folderFileEntryList, entriesForSave, errors, splicingContent);
                     }
                 }
 
@@ -264,12 +276,13 @@ public class GeneratingBusiness {
      * @param items 条目
      * @return 返回序号
      */
-    private String generatingSerialNumber(Map<String, Object> items){
+    private String generatingSerialNumber(Map<String, Object> items,Integer catalogueId){
 
         //序号
         Integer serialNumber = -1;
 
         //TODO 调用仓储层得到最大序号
+        //String tableName = catalogueRepository.findById(catalogueId).get().getTableName();
         String maxSerialNumber = "";
 
         //如果要生成第一个序号  (也就是最大序号为空)
@@ -281,10 +294,10 @@ public class GeneratingBusiness {
             serialNumber++;
         }
 
-        serialNumber = Integer.parseInt(generatingAllTypeSerialNumber(serialNumber));
+        String newSerialNumber = generatingAllTypeSerialNumber(serialNumber,catalogueId);
 
         //放入条目
-        items.put("serialNumber",serialNumber);
+        items.put("serialNumber",newSerialNumber);
 
         //返回序号
         return serialNumber.toString();
@@ -326,7 +339,7 @@ public class GeneratingBusiness {
                 }
                 break;
             case FondsCode:
-                str = entry.getFondsId()+"";
+                str = fondsRepository.findById(entry.getFondsId()).getCode();
                 if (str.equals("")) {
                     errors.add("全宗号不能为空");
                 }
@@ -352,10 +365,10 @@ public class GeneratingBusiness {
      * @param serialNumber 序号
      * @return 补零后的序号
      */
-    private String generatingAllTypeSerialNumber(Integer serialNumber){
+    private String generatingAllTypeSerialNumber(Integer serialNumber,Integer catalogueId){
 
         //TODO 调用仓储层得到序号长度
-        Integer i = 4;
+        Integer i = catalogueRepository.findById(catalogueId).get().getSerialLength();
         //补零  (%表示结果为字面值 0 代表前面补充0 4 代表长度为4 d 代表参数为正数型)
         String newSerialNumber = String.format("%0"+i+"d", serialNumber);
 

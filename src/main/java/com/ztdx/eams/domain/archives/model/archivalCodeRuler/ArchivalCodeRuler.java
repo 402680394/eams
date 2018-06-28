@@ -1,6 +1,7 @@
 package com.ztdx.eams.domain.archives.model.archivalCodeRuler;
 
 import lombok.Data;
+import org.springframework.context.annotation.Lazy;
 
 import javax.persistence.*;
 import javax.validation.constraints.Max;
