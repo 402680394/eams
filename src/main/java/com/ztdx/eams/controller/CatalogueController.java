@@ -25,7 +25,7 @@ public class CatalogueController {
     }
 
     /**
-     * @api {get} /catalogue/byArchives?archivesId={archivesId} 通过档案库ID获取目录ID，根据档案库类型返回不同结果
+     * @api {get} /catalogue/byArchives?archivesId={archivesId} 通过档案库ID获取目录ID及类型，根据档案库类型返回不同结果
      * @apiName byArchives
      * @apiGroup catalogue
      * @apiParam {Number} archivesId 档案库ID
