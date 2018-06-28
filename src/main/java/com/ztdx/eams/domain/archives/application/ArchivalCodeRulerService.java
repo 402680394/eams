@@ -5,6 +5,7 @@ import com.ztdx.eams.domain.archives.model.archivalCodeRuler.GeneratingBusiness;
 import com.ztdx.eams.domain.archives.repository.ArchivalCodeRulerRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
+import com.ztdx.eams.domain.system.repository.FondsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,14 +19,18 @@ public class ArchivalCodeRulerService {
 
     private final GeneratingBusiness generatingBusiness;
     private final EntryMongoRepository entryMongoRepository;
+    private final CatalogueRepository catalogueRepository;
+    private final FondsRepository fondsRepository;
 
     /**
      * 构造函数
      */
     @Autowired
-    public ArchivalCodeRulerService( ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository) {
-        this.generatingBusiness = new GeneratingBusiness(archivalcodeRulerRepository,entryMongoRepository,catalogueRepository);
+    public ArchivalCodeRulerService( ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository,FondsRepository fondsRepository) {
+        this.generatingBusiness = new GeneratingBusiness(archivalcodeRulerRepository,entryMongoRepository,catalogueRepository,fondsRepository);
         this.entryMongoRepository = entryMongoRepository;
+        this.catalogueRepository = catalogueRepository;
+        this.fondsRepository = fondsRepository;
     }
 
     /**
