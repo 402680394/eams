@@ -170,10 +170,10 @@ public class EntryService {
     }
 
     @Async
-    public void indexAll(List<Entry> entries, int catalogueId){
+    public void indexAll(Iterable<Entry> entries, int catalogueId){
         initIndex(catalogueId);
         entryElasticsearchRepository.saveAll(entries);
-        Set<String> ids = entries.stream().map(Entry::getId).collect(Collectors.toSet());
+        Set<String> ids = StreamSupport.stream(entries.spliterator(), true).map(Entry::getId).collect(Collectors.toSet());
         //采用索引更新时间方案
         mongoOperations.updateFirst(
                 query(where("_id").in(ids))
@@ -551,9 +551,7 @@ public class EntryService {
 
         entryMongoRepository.saveAll(entryList);
 
-        for (Entry entry1 : entryList) {
-            index(entry1);
-        }
+        indexAll(entryList, folderFileCatalogueId);
     }
 
     /**
@@ -573,9 +571,7 @@ public class EntryService {
 
         entryMongoRepository.saveAll(folderFileEntryList);
 
-        for(Entry entry : folderFileEntryList){
-            index(entry);
-        }
+        indexAll(folderFileEntryList, folderFileCatalogueId);
     }
 
     public void rebuild(){
