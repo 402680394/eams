@@ -36,4 +36,8 @@ public class CatalogueService {
         }
         return folderFile;
     }
+
+    public boolean exists(int id){
+        return catalogueRepository.existsById(id);
+    }
 }

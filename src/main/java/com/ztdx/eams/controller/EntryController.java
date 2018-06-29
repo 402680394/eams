@@ -10,6 +10,7 @@ import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
+import javafx.util.Pair;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,7 +20,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping(value = "/entry")
@@ -39,7 +43,9 @@ public class EntryController {
 
     private ConditionService conditionService;
 
-    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService) {
+    private OriginalTextService originalTextService;
+
+    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService) {
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
         this.catalogueService = catalogueService;
@@ -47,6 +53,7 @@ public class EntryController {
         this.archivesGroupService = archivesGroupService;
         this.fondsService = fondsService;
         this.conditionService = conditionService;
+        this.originalTextService = originalTextService;
     }
 
     /**
@@ -132,7 +139,6 @@ public class EntryController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody Entry entry, @SessionAttribute UserCredential LOGIN_USER) {
-        //descriptionItemService.addVerification(entry, LOGIN_USER);
         entry.setOwner(LOGIN_USER.getUserId());
         entryService.save(entry);
     }
@@ -166,9 +172,8 @@ public class EntryController {
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    public void update(@PathVariable("id") String uuid, @RequestBody Entry entry, @SessionAttribute UserCredential LOGIN_USER) {
+    public void update(@PathVariable("id") String uuid, @RequestBody Entry entry) {
         entry.setId(uuid);
-        //descriptionItemService.updateVerification(entry, LOGIN_USER);
         entryService.update(entry);
     }
 
@@ -700,6 +705,8 @@ public class EntryController {
         if (list == null || list.getSize() == 0){
             result.put("totalElements", 0);
             result.put("totalPages", 0);
+            result.put("content", null);
+            return null;
         }
 
         Set<Integer> catalogueIds = new HashSet<>();
@@ -717,9 +724,7 @@ public class EntryController {
         getCatalogueInfo(catalogueIds, catalogues, archivesMap, archivesGroupMap, fondsMap);
 
         Map<String, Entry> entries = new HashMap<>();
-        entryService.findAllById(entryIds, null).forEach(a -> {
-            entries.put(a.getId(), a);
-        });
+        entryService.findAllById(entryIds, null).forEach(a -> entries.put(a.getId(), a));
 
         Map<Integer, Map<String, DescriptionItem>> descItems = descriptionItemService.findAllByCatalogueIdIn(catalogueIds)
                 .stream().collect(
@@ -915,7 +920,7 @@ public class EntryController {
      *   "isLose":0
      * }
      */
-    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #catalogueId)")
     @RequestMapping(value = "/batchIdentification",method = RequestMethod.PUT)
     public void batchIdentification(@JsonParam List<String> entryIds,@JsonParam int catalogueId,@JsonParam Integer isOpen,@JsonParam Boolean isExpired,@JsonParam Boolean isEndangered,@JsonParam Boolean isLose ){
         entryService.batchIdentification(entryIds,catalogueId,isOpen,isExpired,isEndangered,isLose);
@@ -986,15 +991,18 @@ public class EntryController {
      * @apiGroup entry
      * @apiParam {Boolean} delSrc 是否删除源记录
      * @apiParam {Number[]} originalType 原文类型，引用获取文件类型列表接口 /fileType/list
+     * @apiParam {Boolean} archivingAll 是否归档所有条目
      * @apiParam {Object[]} mapping 映射
      * @apiParam {Number} mapping.srcId 源目录id
      * @apiParam {Number} mapping.trgId 目标目录id
      * @apiParam {String[]} mapping.srcFields 源字段列表
      * @apiParam {String[]} mapping.trgFields 目标字段列表，必须与源字段一一映射。
+     * @apiParam {String[]} mapping.srcData 归档的数据，如果为空则归档全部数据
      * @apiParamExample {json} Request-Example
      * {
      *     "delSrc": true,
-     *     "originalType": 1,
+     *     "originalType": [1,2],
+     *     "archivingAll": true,
      *     "mapping":[
      *         {
      *             "srcId": 1,
@@ -1006,16 +1014,353 @@ public class EntryController {
      *             "trgFields":[
      *                 "name",
      *                 "age"
+     *             ],
+     *             "srcData":[
+     *                 "xxxx-xxxx-xxxx"
      *             ]
      *         }
      *     ]
      * }
+     * @apiSuccess {Object} success 成功记录数
+     * @apiSuccess {Number} success.total 总成功数
+     * @apiSuccess {Number} success.main 条目数
+     * @apiSuccess {Number} success.children 卷内条目数
+     * @apiSuccess {Number} success.file 原文数
+     * @apiSuccess {Object} failure 失败记录数
+     * @apiSuccess {Number} failure.total 总成功数
+     * @apiSuccess {Number} failure.main 条目数
+     * @apiSuccess {Number} failure.children 卷内条目数
+     * @apiSuccess {Number} failure.file 原文数
+     * @apiSuccess {Object[]} items 详细信息
+     * @apiSuccess {String} items.id 条目id
+     * @apiSuccess {String} items.title 标题
+     * @apiSuccess {String} items.errorMsg 错误消息
+     * @apiSuccess {Number=1,2} items.type 类型 1:条目 2:原文
+     * @apiSuccess {Number=1,2} items.status 状态 1:成功 2:失败
+     * @apiSuccess {Object[]} items.children 下级信息，结构同items
      * @apiSuccessExample {json} Response-Example
      * {
-     *
+     *     "success": {
+     *         "total": 110,
+     *         "main": 2,
+     *         "children": 8,
+     *         "file": 100
+     *     },
+     *     "failure": {
+     *          "total": 5,
+     *          "main": 1,
+     *          "children": 2,
+     *          "file": 2
+     *      },
+     *     "items": [
+     *         {
+     *             "id": "cef91008-e167-4fb6-ae99-d9961ad9f328",
+     *             "parentId": null,
+     *             "title": "测试归档4",
+     *             "errorMsg": "成功",
+     *             "type": 1,
+     *             "status": 1,
+     *             "children": [
+     *                 {
+     *                     "id": "d1fbabee-8ce2-4a1e-a6c0-23083c6f754e",
+     *                     "parentId": "cef91008-e167-4fb6-ae99-d9961ad9f328",
+     *                     "title": "测试卷内归档",
+     *                     "errorMsg": "成功",
+     *                     "type": 1,
+     *                     "status": 1,
+     *                     "children": [
+     *                         {
+     *                             "id": "bb375230-45f8-46d9-a9aa-12320e929f8e",
+     *                             "parentId": "d1fbabee-8ce2-4a1e-a6c0-23083c6f754e",
+     *                             "title": "测试原文归档",
+     *                             "errorMsg": "成功",
+     *                             "type": 2,
+     *                             "status": 1,
+     *                             "children": []
+     *                         }
+     *                     ]
+     *                 }
+     *             ]
+     *         }
+     *     ]
      * }
+     * @apiError message 1.源目录id不存在 2.归档目录id不存在 3.字段映射错误
      */
-    public void archiving(){
+    @RequestMapping(value = "/archiving", method = RequestMethod.POST)
+    public Object archiving(@JsonParam(path = "delSrc") Boolean delSrc
+            , @JsonParam(path = "originalType") List<Integer> originalType
+            , @JsonParam(path = "archivingAll") boolean archivingAll
+            , @JsonParam(path = "mapping[0].srcId") int mainSrcId
+            , @JsonParam(path = "mapping[0].trgId") int mainTrgId
+            , @JsonParam(path = "mapping[0].srcFields") List<String> mainSrcFields
+            , @JsonParam(path = "mapping[0].trgFields") List<String> mainTrgFields
+            , @JsonParam(path = "mapping[0].srcData") List<String> mainSrcData
+            , @JsonParam(path = "mapping[1].srcId") Integer slaveSrcId
+            , @JsonParam(path = "mapping[1].trgId") Integer slaveTrgId
+            , @JsonParam(path = "mapping[1].srcFields") List<String> slaveSrcFields
+            , @JsonParam(path = "mapping[1].trgFields") List<String> slaveTrgFields
+            , @SessionAttribute UserCredential LOGIN_USER
+    ){
+        List<ArchivingResult> error = new ArrayList<>();
+        Map<String, String> mainIdMap = archiving(
+                mainSrcId
+                , mainTrgId
+                , archivingAll
+                , null
+                , mainSrcFields
+                , mainTrgFields
+                , mainSrcData
+                , null
+                , LOGIN_USER.getUserId()
+                , error);
 
+        //归档条目的原文
+        assert mainIdMap != null;
+        Map<String, String> mainFileIdMap = null;
+        if (mainIdMap.size() > 0) {
+            mainFileIdMap = archivingOriginal(mainSrcId, mainTrgId, archivingAll, mainIdMap.keySet(), mainIdMap, originalType, error);
+        }
+
+        Map<String, String> slaveIdMap = null;
+        Map<String, String> slaveFileIdMap = null;
+        if (slaveSrcId != null && slaveTrgId != null && slaveSrcFields != null && slaveTrgFields != null) {
+            slaveIdMap = archiving(
+                    slaveSrcId
+                    , slaveTrgId
+                    , archivingAll
+                    , mainTrgId
+                    , slaveSrcFields
+                    , slaveTrgFields
+                    , null
+                    , mainIdMap
+                    , LOGIN_USER.getUserId()
+                    , error);
+
+            //归档条目的原文
+            assert slaveIdMap != null;
+            if (slaveIdMap.size() > 0) {
+                slaveFileIdMap = archivingOriginal(slaveSrcId, slaveTrgId, archivingAll, slaveIdMap.keySet(), slaveIdMap, originalType, error);
+            }
+        }
+
+        if (delSrc){
+            entryService.delete(mainSrcId, mainIdMap.keySet());
+            if (slaveIdMap != null) {
+                entryService.delete(mainSrcId, slaveIdMap.keySet());
+            }
+            delOriginal(mainFileIdMap, mainSrcId);
+            delOriginal(slaveFileIdMap, slaveSrcId);
+        }
+
+        return formatArchivingResult(error);
+    }
+
+    private Map<String, Object> formatArchivingResult(List<ArchivingResult> list){
+        AtomicInteger successMain = new AtomicInteger(0);
+        AtomicInteger successChildren = new AtomicInteger(0);
+        AtomicInteger successFile = new AtomicInteger(0);
+        AtomicInteger failureMain = new AtomicInteger(0);
+        AtomicInteger failureChildren = new AtomicInteger(0);
+        AtomicInteger failureFile = new AtomicInteger(0);
+        Map<String, ArchivingResult> items = new HashMap<>();
+        list.forEach(a -> {
+            if (a.getStatus() == ArchivingResult.Status.success){
+                countArchivingResult(a, successMain, successChildren, successFile);
+            }else {
+                countArchivingResult(a, failureMain, failureChildren, failureFile);
+            }
+
+            String parentId = a.getParentId();
+
+            ArchivingResult current = items.getOrDefault(a.getId(), null);
+            if (current != null){
+                a.setChildren(current.getChildren());
+            }
+            items.put(a.getId(), a);
+
+            if (parentId != null){
+                ArchivingResult parent = items.getOrDefault(parentId, null);
+                if (parent != null) {
+                    parent.getChildren().add(a);
+                }else{
+                    ArchivingResult tmp = new ArchivingResult();
+                    tmp.getChildren().add(a);
+                    items.put(parentId, tmp);
+                }
+            }
+        });
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", items.values().stream().filter(a -> a.getParentId() == null).collect(Collectors.toList()));
+        result.put("success", getCntMap(successMain, successChildren, successFile));
+        result.put("failure", getCntMap(failureMain, failureChildren, failureFile));
+        return result;
+    }
+
+    private Map<String, Integer> getCntMap(AtomicInteger main, AtomicInteger children, AtomicInteger file) {
+        Map<String, Integer> success = new HashMap<>();
+        success.put("total", main.get() + children.get() + file.get());
+        success.put("main", main.get());
+        success.put("children", children.get());
+        success.put("file", file.get());
+
+        return success;
+    }
+
+    private void countArchivingResult(ArchivingResult a, AtomicInteger mainCnt, AtomicInteger childrenCnt, AtomicInteger fileCnt){
+        if (a.getParentId() == null){
+            mainCnt.set(mainCnt.get() + 1);
+        }else if (a.getType() == ArchivingResult.Type.entry){
+            childrenCnt.set(childrenCnt.get() + 1);
+        }
+
+        if (a.getType() == ArchivingResult.Type.file){
+            fileCnt.set(fileCnt.get() + 1);
+        }
+    }
+
+    private void delOriginal(Map<String, String> ids, Integer srcId){
+        if (ids != null && srcId != null) {
+            List<Map<String, Object>> batch = ids.keySet().stream().map(a -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put(a, srcId);
+                return map;
+            }).collect(Collectors.toList());
+            originalTextService.deleteBatch(batch);
+        }
+    }
+
+    private Map<String, String> archivingOriginal(
+            int srcId
+            , int trgId
+            , boolean archivingAll
+            , Collection<String> srcData
+            , Map<String, String> srcDataMap
+            , Collection<Integer> originalType
+            , List<ArchivingResult> error) {
+        if (!catalogueService.exists(srcId)){
+            throw new InvalidArgumentException("源目录id不存在");
+        }
+
+        if (!catalogueService.exists(trgId)){
+            throw new InvalidArgumentException("归档目录id不存在");
+        }
+
+        int page = 0;
+        int size = 100;
+        Page<OriginalText> mainOriginalTexts;
+
+        Map<String, String> result = new HashMap<>();
+        do {
+            mainOriginalTexts = originalTextService.scroll(archivingAll, srcId, srcData, originalType, page++, size);
+            if (mainOriginalTexts.getNumberOfElements() == 0){
+                return result;
+            }
+            List<String> mainSrcOriginalTextsData = mainOriginalTexts.stream().map(OriginalText::getId).collect(Collectors.toList());
+            Map<String, String> mainOriginalTextsData = entryService.generatorId(mainSrcOriginalTextsData);
+
+            List<ArchivingResult> mainOriginalTextsError = originalTextService.archivingOriginal(
+                    trgId, mainOriginalTextsData, srcDataMap, mainOriginalTexts);
+            if (mainOriginalTextsError != null) {
+                error.addAll(mainOriginalTextsError);
+            }
+
+            result.putAll(mainOriginalTextsData);
+        } while (mainOriginalTexts.hasNext());
+        return result;
+    }
+
+    private Map<String, String> archiving(
+            int srcId
+            , int trgId
+            , boolean archivingAll
+            , Integer parentTrgId
+            , List<String> srcFields
+            , List<String> trgFields
+            , List<String> srcData
+            , Map<String, String> parentDataMap
+            , int owner
+            , List<ArchivingResult> error) {
+
+        if (srcFields.size() != trgFields.size()){
+            throw new InvalidArgumentException("字段映射错误");
+        }
+
+        if (!catalogueService.exists(srcId)){
+            throw new InvalidArgumentException("源目录id不存在");
+        }
+
+        if (!catalogueService.exists(trgId)){
+            throw new InvalidArgumentException("归档目录id不存在");
+        }
+
+        Map<String, DescriptionItem> srcDescriptionItems = descriptionItemService.list(srcId, a -> a);
+        Map<String, DescriptionItem> trgDescriptionItems = descriptionItemService.list(trgId, a -> a);
+        validateArchivingFields(srcDescriptionItems, srcFields);
+        validateArchivingFields(trgDescriptionItems, trgFields);
+
+        AtomicReference<DescriptionItem> titleField = new AtomicReference<>();
+        srcDescriptionItems.values().stream()
+                .filter(a -> a.getPropertyType() == PropertyType.Title)
+                .findFirst()
+                .ifPresent(titleField::set);
+
+        int page = 0;
+        int size = 100;
+        Page<Entry> entries;
+
+        Map<String, String> result = new HashMap<>();
+        do {
+            //归档条目
+            if (archivingAll || parentDataMap == null) {
+                entries = entryService.scrollEntry(archivingAll, srcId, srcData, page++, size);
+            }else{
+                entries = entryService.scrollSubEntry(srcId, parentDataMap.keySet(), page++, size);
+            }
+            if (entries.getNumberOfElements() == 0){
+                return result;
+            }
+            List<String> srcIds = entries.stream().map(Entry::getId).collect(Collectors.toList());
+            Map<String, String> srcDataMap = entryService.generatorId(srcIds);
+
+            List<ArchivingResult> mainError = entryService.archivingEntry(
+                    trgId
+                    , parentTrgId
+                    , srcFields
+                    , trgFields
+                    , srcDataMap
+                    , parentDataMap
+                    , entries
+                    , owner
+                    , (a) -> {
+                        if (titleField.get() == null){
+                            return a.getId();
+                        }else{
+                            Object titleValue = a.getItems().getOrDefault(titleField.get().getMetadataName(), a.getId());
+                            return titleValue.toString();
+                        }
+                    }
+            );
+            if (mainError != null) {
+                error.addAll(mainError);
+            }
+
+            /*//归档条目的原文
+            archivingOriginal(srcId, trgId, srcData, srcDataMap, error);*/
+
+            result.putAll(srcDataMap);
+        } while (entries.hasNext());
+
+        return result;
+    }
+
+    public void validateArchivingFields(Map<String, DescriptionItem> descriptionItems, List<String> fields) {
+        Set<String> qryFields = descriptionItems.keySet();
+        if (!qryFields.containsAll(fields)){
+            throw new InvalidArgumentException("字段设置错误");
+        }
+    }
+
+    private List<Pair<String, String>> makeError(Iterable<String> data, String errorMsg){
+        return StreamSupport.stream(data.spliterator(), true).map(a -> new Pair<>(a, errorMsg)).collect(Collectors.toList());
     }
 }

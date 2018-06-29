@@ -76,6 +76,18 @@ public class Entry {
     private String parentId;
 
     /**
+     * 归档来源档案目录id
+     */
+    @Field(type = FieldType.Integer)
+    private Integer srcCatalogueId;
+
+    /**
+     * 归档来源条目id
+     */
+    @Field(type = FieldType.keyword)
+    private String srcEntryId;
+
+    /**
      * 著录项明细
      */
     @Field(type = FieldType.Object)
@@ -107,10 +119,16 @@ public class Entry {
     private Long version;
 
     /**
-     * 索引的版本号，要使用mongo原生api更新
+     * 索引的版本号，要使用mongo原生api更新。注：暂时没有启用版本特性，所以无法使用此字段重建索引。第二方案是使用索引更新时间判断是否需要更新索引。
      */
     @Field(type = FieldType.Long)
     private Long indexVersion;
+
+    /**
+     * 索引更新的时间，如果字段不存在或者晚于修改时间则需要更新索引
+     */
+    @Field(type = FieldType.Date)
+    private Date indexDate;
 
     /**
      * 开放|受控鉴定

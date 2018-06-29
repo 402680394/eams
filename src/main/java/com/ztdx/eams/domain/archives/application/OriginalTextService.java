@@ -5,12 +5,14 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.utils.FileReaderUtils;
 import com.ztdx.eams.basic.utils.FtpUtil;
 import com.ztdx.eams.basic.utils.PDFConverterUtils;
+import com.ztdx.eams.domain.archives.model.ArchivingResult;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.OriginalText;
 import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.OriginalTextMongoRepository;
+import javafx.util.Pair;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -22,15 +24,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.function.Function;
 
 import static jdk.nashorn.internal.objects.Global.Infinity;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * Created by li on 2018/5/23.
@@ -52,8 +60,10 @@ public class OriginalTextService {
 
     private final ElasticsearchOperations elasticsearchOperations;
 
+    private final MongoOperations mongoOperations;
+
     @Autowired
-    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil, PDFConverterUtils pdfConverterUtils, ElasticsearchOperations elasticsearchOperations) {
+    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil, PDFConverterUtils pdfConverterUtils, ElasticsearchOperations elasticsearchOperations, MongoOperations mongoOperations) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.originalTextMongoRepository = originalTextMongoRepository;
         this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
@@ -61,6 +71,7 @@ public class OriginalTextService {
         this.ftpUtil = ftpUtil;
         this.pdfConverterUtils = pdfConverterUtils;
         this.elasticsearchOperations = elasticsearchOperations;
+        this.mongoOperations = mongoOperations;
     }
 
     /**
@@ -443,6 +454,97 @@ public class OriginalTextService {
                 pdfFile.delete();
             }
         }
+    }
+
+    public Page<OriginalText> scroll(boolean archivingAll, int catalogueId, Collection<String> entryIds, Collection<Integer> originalType, int page, int size){
+        Query query;
+        if (archivingAll){
+            query = Query.query(where("type").in(originalType))
+                    .with(PageRequest.of(page, size));
+        }else {
+            query = Query.query(where("entryId").in(entryIds)
+                    .and("type").in(originalType))
+                    .with(PageRequest.of(page, size));
+        }
+        String indexName = "archive_record_originalText_" + catalogueId;
+        long total = mongoOperations.count(query, indexName);
+        List<OriginalText> list = originalTextMongoRepository.findAll(query, indexName);
+        return PageableExecutionUtils.getPage(list, PageRequest.of(page, size), () -> total);
+    }
+
+    public List<ArchivingResult> archivingOriginal(
+            int trgId
+            , Map<String, String> srcData
+            , Map<String, String> parentData
+            , Iterable<OriginalText> originalTexts) {
+        Assert.notEmpty(srcData, "归档原文不允许为空");
+        Assert.notEmpty(parentData, "归档条目不允许为空");
+        List<OriginalText> targets = new ArrayList<>();
+        List<ArchivingResult> error = new ArrayList<>();
+        originalTexts.forEach(a -> {
+            String entryId = parentData.getOrDefault(a.getEntryId(), null);
+            String id = srcData.getOrDefault(a.getId(), null);
+
+            String msg = "成功";
+            ArchivingResult.Status status = ArchivingResult.Status.success;
+            try {
+                OriginalText add = this.copy(
+                        a
+                        , id
+                        , trgId
+                        , entryId);
+                targets.add(add);
+            }catch (Exception e){
+                msg = e.getMessage();
+                status = ArchivingResult.Status.failure;
+            }
+
+            error.add(
+                    new ArchivingResult(
+                            a.getId()
+                            , a.getEntryId()
+                            , a.getTitle()
+                            , msg
+                            , ArchivingResult.Type.file
+                            , status)
+            );
+        });
+
+        originalTextMongoRepository.saveAll(targets);
+        //TODO lijie 增加索引时间，用于重做索引
+        originalTextElasticsearchRepository.saveAll(targets);
+        //indexAll(targets, trgId);
+
+        return error;
+    }
+
+    private OriginalText copy(
+            OriginalText originalText
+            , String id
+            , int trgId
+            , String entryId){
+        OriginalText result = new OriginalText();
+        result.setId(id);
+        result.setCatalogueId(trgId);
+        result.setEntryId(entryId);
+        result.setOrderNumber(originalText.getOrderNumber());
+        result.setTitle(originalText.getTitle());
+        result.setType(originalText.getType());
+        result.setName(originalText.getName());
+        result.setSize(originalText.getSize());
+        result.setCreateTime(originalText.getCreateTime());
+        result.setVersion(originalText.getVersion());
+        result.setRemark(originalText.getRemark());
+        result.setFileAttributesMap(originalText.getFileAttributesMap());
+        result.setMd5(originalText.getMd5());
+        result.setContentIndex(originalText.getContentIndex());
+        result.setContentIndexStatus(originalText.getContentIndexStatus());
+        result.setPdfMd5(originalText.getPdfMd5());
+        result.setPdfConverStatus(originalText.getPdfConverStatus());
+        result.setGmtCreate(new Date());
+        result.setGmtModified(new Date());
+
+        return result;
     }
 }
 
