@@ -702,7 +702,7 @@ public class EntryController {
 
         Map<String, Object> result = new HashMap<>();
 
-        if (list == null || list.getSize() == 0){
+        if (list == null || list.getTotalElements() == 0){
             result.put("totalElements", 0);
             result.put("totalPages", 0);
             result.put("content", null);

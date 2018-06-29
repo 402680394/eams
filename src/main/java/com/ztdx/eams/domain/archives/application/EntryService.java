@@ -420,18 +420,19 @@ public class EntryService {
             , String rejectWords
             , Pageable pageable) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
+        BoolQueryBuilder fileQuery = QueryBuilders.boolQuery();
         BoolQueryBuilder parentQuery = QueryBuilders.boolQuery();
 
         if (!StringUtils.isEmpty(includeWords)) {
             if (searchParams.contains(SearchFulltextOption.file.name())) {
-                query.must(queryStringQuery(includeWords));
+                fileQuery.must(queryStringQuery(includeWords));
             }
             parentQuery.must(queryStringQuery(includeWords).field(FULL_CONTENT));
         }
 
         if (!StringUtils.isEmpty(rejectWords)) {
             if (searchParams.contains(SearchFulltextOption.file.name())) {
-                query.mustNot(queryStringQuery(rejectWords));
+                fileQuery.mustNot(queryStringQuery(rejectWords));
             }
             parentQuery.mustNot(queryStringQuery(rejectWords).field(FULL_CONTENT));
         }
@@ -447,6 +448,10 @@ public class EntryService {
                     "record",
                     parentQuery,
                     false));
+        }
+
+        if (searchParams.contains(SearchFulltextOption.file.name())) {
+            query.should(fileQuery);
         }
 
         NativeSearchQueryBuilder builder = new NativeSearchQueryBuilder();
