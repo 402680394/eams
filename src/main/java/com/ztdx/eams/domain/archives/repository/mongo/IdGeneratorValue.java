@@ -4,7 +4,7 @@ public interface IdGeneratorValue {
     /**
      * %d:目录id %s:字段名
      */
-    public final String ENTRY_ITEM_INCREMENT_FORMAT = "archive_entry_%d_%s";
+    String ENTRY_ITEM_INCREMENT_FORMAT = "archive_entry_%d_%s";
 
     Long get(String id);
     Long get(String id, int inc);

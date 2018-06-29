@@ -63,7 +63,8 @@ public class OriginalTextController {
         originalText.setType(Integer.parseInt(request.getParameter("type")));
         originalText.setVersion(request.getParameter("version"));
         originalText.setRemark(request.getParameter("remark"));
-        originalTextService.save(originalText, file);
+        originalText = originalTextService.save(originalText, file);
+        originalTextService.placeOnFile(originalText);
     }
 
     /**
@@ -116,7 +117,10 @@ public class OriginalTextController {
         originalText.setType(Integer.parseInt(request.getParameter("type")));
         originalText.setVersion(request.getParameter("version"));
         originalText.setRemark(request.getParameter("remark"));
-        originalTextService.update(originalText, file);
+        originalText = originalTextService.update(originalText, file);
+        if (null != originalText) {
+            originalTextService.placeOnFile(originalText);
+        }
     }
 
     /**
@@ -203,6 +207,8 @@ public class OriginalTextController {
      * @apiSuccess (Success 200) {String} size 文件大小.
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccess (Success 200) {Number} createTime 创建时间.
+     * @apiSuccess (Success 200) {Number} contentIndexStatus 全文索引状态(0-未生成  1-已生成 2-生成失败 3-文件类型不可用).
+     * @apiSuccess (Success 200) {Number} pdfConverStatus pdf转换状态(0-未转换 1-已转换 2-转换失败 3-文件类型不可用).
      * @apiSuccess (Success 200) {Number} total 总条数.
      * @apiSuccessExample {json} Success-Response:
      * {
@@ -243,6 +249,8 @@ public class OriginalTextController {
             map.put("size", originalText.getSize());
             map.put("remark", originalText.getRemark());
             map.put("createTime", originalText.getCreateTime());
+            map.put("contentIndexStatus", originalText.getContentIndexStatus());
+            map.put("pdfConverStatus", originalText.getPdfConverStatus());
             list.add(map);
         }
         result.put("items", list);
@@ -271,17 +279,13 @@ public class OriginalTextController {
 //        int catalogueId = 5;
 //        List ids = new ArrayList<String>();
 //
-//        ids.add("f7fe5920-6ffe-431a-a50a-fdec75485c04");
-//        ids.add("ef852d53-0ce0-435e-a648-f1178b695d89");
-//        ids.add("199bfde1-4812-4747-963c-1f0b630c16fc");
-//        ids.add("1f0e2a02-a543-483e-89a5-d8b6e91c2e4b");
-//        ids.add("6c1167ac-504c-4ffa-b39e-587195bd4fc3");
-//        ids.add("4ac86cfd-f9b3-48d6-ae30-252cefc914f6");
-//        ids.add("b2e64ef0-a0fd-412c-83d8-69ca3cda45a9");
-//        ids.add("2b5fd9de-0219-4541-b637-07dbc854676a");
+//        ids.add("c3a74088-4150-416e-9f07-b7277a9d8cc6");
+//        ids.add("b83bf403-7e34-4678-87c5-06b59ea56a1a");
+//        ids.add("f5180e67-0a75-40df-b2db-4489aa06905d");
+//
 //        try {
 //
-//            JobDetail job = JobBuilder.newJob(PlaceOnFileJob.class)
+//            JobDetail job = newJob(PlaceOnFileJob.class)
 //                    .withIdentity("PlaceOnFileJob", "PlaceOnFileJobGroup")
 //                    .requestRecovery()
 //                    .build();

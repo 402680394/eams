@@ -16,7 +16,7 @@ public enum PropertyType {
 
     Reference(1,"档号"),
 
-    Nomination(2,"提名"),
+    Title(2,"题名"),
 
     SerialNumber(3,"序号"),
 

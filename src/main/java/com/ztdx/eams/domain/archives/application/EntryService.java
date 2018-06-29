@@ -1,6 +1,7 @@
 package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.BusinessException;
+import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
@@ -14,6 +15,7 @@ import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorValue;
 import com.ztdx.eams.domain.archives.repository.mongo.OriginalTextMongoRepository;
+import javafx.util.Pair;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -34,18 +36,24 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.repository.support.PageableExecutionUtils;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.BasicQuery.query;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 
 @Service
@@ -145,14 +153,34 @@ public class EntryService {
         return update;
     }
 
+    @Async
     public void index(Entry entry){
         initIndex(entry.getCatalogueId());
         entryElasticsearchRepository.save(entry);
-        mongoOperations.updateFirst(
+        //暂时没有启用版本方案
+        /*mongoOperations.updateFirst(
                 query(where("_id").is(entry.getId()))
                 , Update.update("indexVersion", entry.getVersion())
+                , this.getIndexName(entry.getCatalogueId()));*/
+        //采用索引更新时间方案
+        mongoOperations.updateFirst(
+                query(where("_id").is(entry.getId()))
+                , new Update().currentDate("indexDate")
                 , this.getIndexName(entry.getCatalogueId()));
     }
+
+    @Async
+    public void indexAll(Iterable<Entry> entries, int catalogueId){
+        initIndex(catalogueId);
+        entryElasticsearchRepository.saveAll(entries);
+        Set<String> ids = StreamSupport.stream(entries.spliterator(), true).map(Entry::getId).collect(Collectors.toSet());
+        //采用索引更新时间方案
+        mongoOperations.updateFirst(
+                query(where("_id").in(ids))
+                , new Update().currentDate("indexDate")
+                , this.getIndexName(catalogueId));
+    }
+
 
     private void initIndex(int catalogueId) {
         try {
@@ -361,14 +389,13 @@ public class EntryService {
 
         srBuilder.setQuery(query).setSize(0);
         Map<Integer, Long> result = new HashMap<>();
-        ((Terms)srBuilder.get().getAggregations().asList().get(0)).getBuckets().forEach(a -> {
-            result.put(a.getKeyAsNumber().intValue(),a.getDocCount());
-        });
+        ((Terms)srBuilder.get().getAggregations().asList().get(0)).getBuckets().forEach(
+                a -> result.put(a.getKeyAsNumber().intValue(),a.getDocCount()));
 
         return result;
     }
 
-    public void delete(int catalogueId, List<String> deletes) {
+    public void delete(int catalogueId, Iterable<String> deletes) {
         Iterable<Entry> list = entryMongoRepository.findAllById(deletes, getIndexName(catalogueId));
         list.forEach(a -> a.setGmtDeleted(1));
         entryMongoRepository.saveAll(list);
@@ -393,18 +420,19 @@ public class EntryService {
             , String rejectWords
             , Pageable pageable) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
+        BoolQueryBuilder fileQuery = QueryBuilders.boolQuery();
         BoolQueryBuilder parentQuery = QueryBuilders.boolQuery();
 
         if (!StringUtils.isEmpty(includeWords)) {
             if (searchParams.contains(SearchFulltextOption.file.name())) {
-                query.must(queryStringQuery(includeWords));
+                fileQuery.must(queryStringQuery(includeWords));
             }
             parentQuery.must(queryStringQuery(includeWords).field(FULL_CONTENT));
         }
 
         if (!StringUtils.isEmpty(rejectWords)) {
             if (searchParams.contains(SearchFulltextOption.file.name())) {
-                query.mustNot(queryStringQuery(rejectWords));
+                fileQuery.mustNot(queryStringQuery(rejectWords));
             }
             parentQuery.mustNot(queryStringQuery(rejectWords).field(FULL_CONTENT));
         }
@@ -420,6 +448,10 @@ public class EntryService {
                     "record",
                     parentQuery,
                     false));
+        }
+
+        if (searchParams.contains(SearchFulltextOption.file.name())) {
+            query.should(fileQuery);
         }
 
         NativeSearchQueryBuilder builder = new NativeSearchQueryBuilder();
@@ -504,6 +536,7 @@ public class EntryService {
         //通过卷内目录id获得目录
         Catalogue folderFileCatalogue = catalogueRepository.findById(folderFileCatalogueId).orElse(null);
         //通过档案库id和目录类型为案卷获得案卷目录
+        assert folderFileCatalogue != null;
         Optional<Catalogue> folderCatalogueList = catalogueRepository.findByArchivesIdAndCatalogueType(folderFileCatalogue.getArchivesId(),CatalogueType.Folder);
 
         if (!folderCatalogueList.isPresent()){
@@ -523,9 +556,7 @@ public class EntryService {
 
         entryMongoRepository.saveAll(entryList);
 
-        for (Entry entry1 : entryList) {
-            index(entry1);
-        }
+        indexAll(entryList, folderFileCatalogueId);
     }
 
     /**
@@ -545,9 +576,7 @@ public class EntryService {
 
         entryMongoRepository.saveAll(folderFileEntryList);
 
-        for(Entry entry : folderFileEntryList){
-            index(entry);
-        }
+        indexAll(folderFileEntryList, folderFileCatalogueId);
     }
 
     public void rebuild(){
@@ -582,5 +611,147 @@ public class EntryService {
             }
             originalTextElasticsearchRepository.saveAll(list);
         }
+    }
+
+    public Page<Entry> scrollEntry(boolean archivingAll, int catalogueId, Collection<String> srcData, int page, int size){
+        Query query;
+        if (archivingAll) {
+            query = query(where("gmtDeleted")
+                    .is(0))
+                    .with(PageRequest.of(page, size));
+        }else{
+            query = query(where("gmtDeleted")
+                    .is(0)
+                    .and("_id")
+                    .in(srcData))
+                    .with(PageRequest.of(page, size));
+        }
+        long total = mongoOperations.count(query, getIndexName(catalogueId));
+        List<Entry> list = entryMongoRepository.findAll(query, getIndexName(catalogueId));
+        return PageableExecutionUtils.getPage(list, PageRequest.of(page, size), () -> total);
+    }
+
+    public Page<Entry> scrollSubEntry(int catalogueId, Collection<String> parentIds, int page, int size){
+        Query query = query(where("gmtDeleted")
+                .is(0)
+                .and("parentId")
+                .in(parentIds));
+        long total = mongoOperations.count(query, getIndexName(catalogueId));
+        List<Entry> list = entryMongoRepository.findAll(query, getIndexName(catalogueId));
+        return PageableExecutionUtils.getPage(list, PageRequest.of(page, size), () -> total);
+    }
+
+    //TODO mongo中的索引 parentId parentCatalogueId catalogueId srcEntryId srcCatalogueId
+    public List<ArchivingResult> archivingEntry(
+            int trgId
+            , Integer parentTrgId
+            , List<String> srcFields
+            , List<String> trgFields
+            , Map<String, String> srcData
+            , Map<String, String> parentData
+            , Iterable<Entry> entries
+            , int owner
+            , Function<Entry, String> getTitle
+    ) {
+
+        Catalogue trgCatalogue = catalogueRepository.findById(trgId).orElse(null);
+        Assert.notNull(trgCatalogue, "目标目录不存在");
+
+        Archives trgArchives = archivesRepository.findById(trgCatalogue.getArchivesId()).orElse(null);
+        Assert.notNull(trgArchives, "目标档案库不存在");
+
+        ArchivesGroup trgArchivesGroup = archivesGroupRepository.findById(trgArchives.getArchivesGroupId()).orElse(null);
+        Assert.notNull(trgArchivesGroup, "目标档案库分组不存在");
+
+        List<Entry> targets = new ArrayList<>();
+        List<ArchivingResult> error = new ArrayList<>();
+        entries.forEach(a -> {
+            String parentId = null;
+            if (parentData != null) {
+                parentId = parentData.getOrDefault(a.getParentId(), null);
+            }
+            String id = srcData.getOrDefault(a.getId(), null);
+
+            String msg = "成功";
+            ArchivingResult.Status status = ArchivingResult.Status.success;
+            try {
+                Entry add = this.copy(
+                        a
+                        , id
+                        , trgId
+                        , trgCatalogue
+                        , trgArchives
+                        , trgArchivesGroup
+                        , parentTrgId
+                        , parentId
+                        , owner
+                        , srcFields
+                        , trgFields);
+                targets.add(add);
+            }catch (EntryValueConverException e){
+                msg = e.getMessage();
+                status = ArchivingResult.Status.failure;
+            }
+
+            error.add(
+                    new ArchivingResult(
+                            a.getId()
+                            , a.getParentId()
+                            , getTitle.apply(a)
+                            , msg
+                            , ArchivingResult.Type.entry
+                            , status)
+                    );
+        });
+
+        entryMongoRepository.saveAll(targets);
+        indexAll(targets, trgId);
+
+        return error;
+    }
+
+    public Map<String, String> generatorId(Collection<String> srcIds){
+        return srcIds.parallelStream().collect(Collectors.toMap(a -> a, b -> UUID.randomUUID().toString()));
+    }
+
+    private Entry copy(
+            Entry entry
+            , String id
+            , int trgId
+            , Catalogue catalogue
+            , Archives archive
+            , ArchivesGroup archivesGroup
+            , Integer parentCatalogueId
+            , String parentId
+            , int owner
+            , List<String> srcFields
+            , List<String> trgFields){
+        Entry result = new Entry();
+        result.setId(id);
+        result.setCatalogueId(trgId);
+        result.setCatalogueType(catalogue.getCatalogueType());
+        result.setArchiveId(archive.getId());
+        result.setArchiveType(archive.getType());
+        result.setArchiveContentType(archive.getContentTypeId());
+        result.setFondsId(archivesGroup.getFondsId());
+        result.setOwner(owner);
+        result.setParentCatalogueId(parentCatalogueId);
+        result.setParentId(parentId);
+        result.setSrcCatalogueId(entry.getCatalogueId());
+        result.setSrcEntryId(entry.getId());
+        result.setGmtCreate(new Date());
+        result.setGmtModified(new Date());
+        Map<String, Object> items = new HashMap<>();
+        for (int i = 0; i < srcFields.size(); i ++){
+            String srcField = srcFields.get(i);
+            String trgField = trgFields.get(i);
+            Object srcValue = entry.getItems().getOrDefault(srcField, null);
+            items.put(trgField, srcValue);
+        }
+        result.setItems(items);
+
+        this.convertEntryItems(entry, EntryItemConverter::from, true);
+
+        return result;
     }
 }

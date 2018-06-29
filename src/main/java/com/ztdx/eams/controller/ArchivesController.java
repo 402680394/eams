@@ -98,7 +98,7 @@ public class ArchivesController {
 
     /**
      * @api {get} /archives/treeListBelowFonds?id={id} 通过登记库ID获取同属全宗下归档库分组、归档库树
-     * @apiName treeList
+     * @apiName treeListBelowFonds
      * @apiGroup archives
      * @apiParam {Number} id 登记库ID
      * @apiParam {Number} archiveType 档案库类型 1 登记库 2 归档库(默认值)

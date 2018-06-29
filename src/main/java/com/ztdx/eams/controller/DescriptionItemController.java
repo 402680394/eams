@@ -51,4 +51,125 @@ public class DescriptionItemController {
     public Map<String, Object> list(@RequestParam("catalogueId") int catalogueId) {
         return archivesQuery.getDescriptionItemList(UInteger.valueOf(catalogueId));
     }
+
+    /**
+     * @api {get} /descriptionItem/listForPlaceOnFile?archivesId={archivesId} 通过档案库ID获取目录ID及著录项
+     * @apiName listForPlaceOnFile
+     * @apiGroup descriptionItem
+     * @apiParam {Number} archivesId 档案库ID(url参数)
+     * @apiSuccess (Success 200) {Number} catalogueId 目录ID.
+     * @apiSuccess (Success 200) {String} type 目录类型(可选项：一文一件，案卷，卷内，项目).
+     * @apiSuccess (Success 200) {Object[]} descriptionItem 著录项集合.
+     * @apiSuccess (Success 200) {Number} descriptionItemId 著录项ID.
+     * @apiSuccess (Success 200) {String} metadataName 元数据名称.
+     * @apiSuccess (Success 200) {String} displayName 显示名称.
+     * @apiSuccessExample {json} Success-Response:
+     * {
+     * "data": {
+     * "item": [
+     * {
+     * "catalogueId": 3,
+     * "type": "folder",
+     * "descriptionItem": [
+     * {
+     * "descriptionItemId": 10,
+     * "metadataName": "name",
+     * "displayName": "姓名"
+     * },
+     * {
+     * "descriptionItemId": 11,
+     * "metadataName": "age",
+     * "displayName": "年龄"
+     * },
+     * {
+     * "descriptionItemId": 12,
+     * "metadataName": "birthday",
+     * "displayName": "生日"
+     * },
+     * {
+     * "descriptionItemId": 13,
+     * "metadataName": "amount",
+     * "displayName": "资产"
+     * },
+     * {
+     * "descriptionItemId": 14,
+     * "metadataName": "fenlei",
+     * "displayName": "分类"
+     * },
+     * {
+     * "descriptionItemId": 15,
+     * "metadataName": "zidian",
+     * "displayName": "字典"
+     * },
+     * {
+     * "descriptionItemId": 16,
+     * "metadataName": "jigou",
+     * "displayName": "机构"
+     * },
+     * {
+     * "descriptionItemId": 78,
+     * "metadataName": "danghao",
+     * "displayName": "档号"
+     * }
+     * ]
+     * },
+     * {
+     * "catalogueId": 5,
+     * "type": "folderFile",
+     * "descriptionItem": [
+     * {
+     * "descriptionItemId": 31,
+     * "metadataName": "name",
+     * "displayName": "姓名"
+     * },
+     * {
+     * "descriptionItemId": 32,
+     * "metadataName": "age",
+     * "displayName": "年龄"
+     * },
+     * {
+     * "descriptionItemId": 33,
+     * "metadataName": "birthday",
+     * "displayName": "生日"
+     * },
+     * {
+     * "descriptionItemId": 34,
+     * "metadataName": "amount",
+     * "displayName": "资产"
+     * },
+     * {
+     * "descriptionItemId": 35,
+     * "metadataName": "fenlei",
+     * "displayName": "分类"
+     * },
+     * {
+     * "descriptionItemId": 36,
+     * "metadataName": "zidian",
+     * "displayName": "字典"
+     * },
+     * {
+     * "descriptionItemId": 37,
+     * "metadataName": "jigou",
+     * "displayName": "机构"
+     * },
+     * {
+     * "descriptionItemId": 77,
+     * "metadataName": "danghao",
+     * "displayName": "档号"
+     * },
+     * {
+     * "descriptionItemId": 79,
+     * "metadataName": "sn",
+     * "displayName": "序号"
+     * }
+     * ]
+     * }
+     * ]
+     * }
+     * }
+     */
+    @RequestMapping(value = "/listForPlaceOnFile", method = RequestMethod.GET)
+    public Map<String, Object> listForPlaceOnFile(@RequestParam("archivesId") int archivesId) {
+        return archivesQuery.getDescriptionItemListForPlaceOnFile(UInteger.valueOf(archivesId));
+    }
 }
