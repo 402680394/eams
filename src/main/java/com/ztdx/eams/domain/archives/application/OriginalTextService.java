@@ -409,7 +409,9 @@ public class OriginalTextService {
         File pdfFile = new File(file.getName().substring(0, file.getName().lastIndexOf(".")) + ".pdf");
         FileInputStream fisMD5 = null;
         try {
-            if (originalText.getName().endsWith(".txt") || originalText.getName().endsWith(".doc") || originalText.getName().endsWith(".docx")) {
+            if (originalText.getName().endsWith(".ppt") || originalText.getName().endsWith(".pptx") ||
+                    originalText.getName().endsWith(".xls") || originalText.getName().endsWith(".xlsx") ||
+                    originalText.getName().endsWith(".doc") || originalText.getName().endsWith(".docx")) {
                 //转换
                 pdfConverterUtils.converterPDF(file, pdfFile);
                 //计算MD5

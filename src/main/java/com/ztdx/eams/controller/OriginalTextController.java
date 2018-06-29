@@ -1,10 +1,12 @@
 package com.ztdx.eams.controller;
 
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.OriginalTextService;
+import com.ztdx.eams.domain.archives.application.PlaceOnFileJob;
 import com.ztdx.eams.domain.archives.model.OriginalText;
 import com.ztdx.eams.domain.system.application.PermissionService;
-import org.quartz.Scheduler;
+import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +19,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.quartz.JobBuilder.newJob;
 
 /**
  * Created by li on 2018/5/23.
@@ -266,44 +270,40 @@ public class OriginalTextController {
         originalTextService.sort(upId, downId, catalogueId);
     }
 
-//    @RequestMapping(value = "/test", method = RequestMethod.GET)
-//    public void test() {
-//        int catalogueId = 5;
-//        List ids = new ArrayList<String>();
-//
-//        ids.add("f7fe5920-6ffe-431a-a50a-fdec75485c04");
-//        ids.add("ef852d53-0ce0-435e-a648-f1178b695d89");
-//        ids.add("199bfde1-4812-4747-963c-1f0b630c16fc");
-//        ids.add("1f0e2a02-a543-483e-89a5-d8b6e91c2e4b");
-//        ids.add("6c1167ac-504c-4ffa-b39e-587195bd4fc3");
-//        ids.add("4ac86cfd-f9b3-48d6-ae30-252cefc914f6");
-//        ids.add("b2e64ef0-a0fd-412c-83d8-69ca3cda45a9");
-//        ids.add("2b5fd9de-0219-4541-b637-07dbc854676a");
-//        try {
-//
-//            JobDetail job = JobBuilder.newJob(PlaceOnFileJob.class)
-//                    .withIdentity("PlaceOnFileJob", "PlaceOnFileJobGroup")
-//                    .requestRecovery()
-//                    .build();
-//
-//            job.getJobDataMap().put("catalogueId", catalogueId);
-//            job.getJobDataMap().put("ids", ids);
-//
-//            Trigger trigger = TriggerBuilder.newTrigger()
-//                    .withIdentity("PlaceOnFileTrigger", "PlaceOnFileJobGroup")
-//                    .startNow()
-//                    .build();
-//
-//            scheduler.scheduleJob(job, trigger);
-//
-//            if (!scheduler.isStarted()) {
-//                scheduler.start();
-//            }
-//
-//        } catch (SchedulerException e) {
-//            e.printStackTrace();
-//            throw new BusinessException("原文归档调度任务启动失败");
-//        }
-//    }
+    @RequestMapping(value = "/test", method = RequestMethod.GET)
+    public void test() {
+        int catalogueId = 5;
+        List ids = new ArrayList<String>();
+
+        ids.add("c3a74088-4150-416e-9f07-b7277a9d8cc6");
+        ids.add("b83bf403-7e34-4678-87c5-06b59ea56a1a");
+        ids.add("f5180e67-0a75-40df-b2db-4489aa06905d");
+
+        try {
+
+            JobDetail job = newJob(PlaceOnFileJob.class)
+                    .withIdentity("PlaceOnFileJob", "PlaceOnFileJobGroup")
+                    .requestRecovery()
+                    .build();
+
+            job.getJobDataMap().put("catalogueId", catalogueId);
+            job.getJobDataMap().put("ids", ids);
+
+            Trigger trigger = TriggerBuilder.newTrigger()
+                    .withIdentity("PlaceOnFileTrigger", "PlaceOnFileJobGroup")
+                    .startNow()
+                    .build();
+
+            scheduler.scheduleJob(job, trigger);
+
+            if (!scheduler.isStarted()) {
+                scheduler.start();
+            }
+
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+            throw new BusinessException("原文归档调度任务启动失败");
+        }
+    }
 
 }
