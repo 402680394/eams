@@ -1,9 +1,11 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.archivalCodeRuler.GeneratingBusiness;
 import com.ztdx.eams.domain.archives.repository.ArchivalCodeRulerRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
+import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.system.repository.FondsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,16 +23,20 @@ public class ArchivalCodeRulerService {
     private final EntryMongoRepository entryMongoRepository;
     private final CatalogueRepository catalogueRepository;
     private final FondsRepository fondsRepository;
+    private final EntryService entryService;
+    private final DescriptionItemRepository descriptionItemRepository;
 
     /**
      * 构造函数
      */
     @Autowired
-    public ArchivalCodeRulerService( ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository,FondsRepository fondsRepository) {
-        this.generatingBusiness = new GeneratingBusiness(archivalcodeRulerRepository,entryMongoRepository,catalogueRepository,fondsRepository);
+    public ArchivalCodeRulerService( ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository,FondsRepository fondsRepository,EntryService entryService,DescriptionItemRepository descriptionItemRepository) {
+        this.generatingBusiness = new GeneratingBusiness(archivalcodeRulerRepository,entryMongoRepository,catalogueRepository,fondsRepository,entryService,descriptionItemRepository);
         this.entryMongoRepository = entryMongoRepository;
         this.catalogueRepository = catalogueRepository;
         this.fondsRepository = fondsRepository;
+        this.entryService = entryService;
+        this.descriptionItemRepository = descriptionItemRepository;
     }
 
     /**
@@ -40,6 +46,9 @@ public class ArchivalCodeRulerService {
      * @return 返回错误明细
      */
     public List<String> generatingFileAndFolder(List<String> entryIds, int catalogueId){
+        if (entryIds==null){
+            throw new BusinessException("未选中条目");
+        }
         return  generatingBusiness.generatingFileAndFolder(entryIds,catalogueId);
     }
 
@@ -50,6 +59,9 @@ public class ArchivalCodeRulerService {
      * @return
      */
     public List<String> generatingFolderFile(String folderId,int catalogueId) {
+        if (folderId==null){
+            throw new BusinessException("未选中条目");
+        }
         return generatingBusiness.generatingFolderFile(folderId,catalogueId);
     }
 
@@ -64,18 +76,25 @@ public class ArchivalCodeRulerService {
         Iterable<Entry> entries = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
         //创建新条目集合存入MongoDB
         List<Entry> newEntries = new ArrayList<>();
+        String name = "";
+        name = generatingBusiness.getArchivalCodeMetadataName(name,catalogueId);
+
+        if (name==null){
+            throw  new BusinessException(generatingBusiness.getCatalogueType(catalogueId)+"找不到档号列");
+        }
+
         //遍历条目集合
         for (Entry entry : entries) {
 
             //取条目中的著录项集合
             Map<String, Object> items = entry.getItems();
             //如果档号不存在，则跳过
-            if (items.get("archivalCode") == null && items.get("archivalCode").equals("")) {
+            if (items.get(name) == null || items.get(name).equals("")) {
                 continue;
             }
 
             //档号置空
-            items.put("archivalCode", "");
+            items.put(name, "");
             entry.setItems(items);
             newEntries.add(entry);
 
@@ -84,6 +103,9 @@ public class ArchivalCodeRulerService {
         //存入MongoDB
         if (newEntries.size() > 0){
             entryMongoRepository.saveAll(newEntries);
+            for (Entry entry : newEntries) {
+                entryService.index(entry);
+            }
         }
 
     }
