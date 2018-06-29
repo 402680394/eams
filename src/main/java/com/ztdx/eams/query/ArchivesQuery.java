@@ -889,36 +889,49 @@ public class ArchivesQuery {
     }
 
     /**
-     * 获取档案库的目录
+     * 通过档案库ID获取目录ID及著录项
      */
-    public Map<String, Object> getCatalogueByArchivesId(UInteger archivesId) {
-        List<Map<String, Object>> resultList = dslContext.select(archivesCatalogue.ID.as("id"), archivesCatalogue.CATALOGUE_TYPE.as("type"))
+    public Map<String, Object> getDescriptionItemListForPlaceOnFile(UInteger archivesId) {
+        List<Map<String, Object>> catalogueList = dslContext.select(archivesCatalogue.ID.as("catalogueId"), archivesCatalogue.CATALOGUE_TYPE.as("type"))
                 .from(archivesCatalogue).where(archivesCatalogue.ARCHIVES_ID.equal(archivesId)).fetch().intoMaps();
         HashMap resultMap = new HashMap<String, Object>();
-        for (Map map : resultList) {
+        ArrayList resultList = new ArrayList<Map<String, Object>>();
+        for (Map map : catalogueList) {
+
+            List<Map<String, Object>> descriptionItemList = dslContext.select(
+                    archivesDescriptionItem.ID.as("descriptionItemId"),
+                    archivesDescriptionItem.DISPLAY_NAME.as("displayName"))
+                    .from(archivesDescriptionItem)
+                    .where(archivesDescriptionItem.CATALOGUE_ID.equal((UInteger) map.get("catalogueId")))
+                    .fetch().intoMaps();
+
+            map.put("descriptionItem", descriptionItemList);
+
             CatalogueType catalogueType = CatalogueType.create((byte) map.get("type"));
             switch (catalogueType) {
                 case File: {
-                    resultMap.put("file", map.get("id"));
+                    map.put("type", "file");
                     break;
                 }
                 case Folder: {
-                    resultMap.put("folder", map.get("id"));
+                    map.put("type", "folder");
                     break;
                 }
                 case FolderFile: {
-                    resultMap.put("folderFile", map.get("id"));
+                    map.put("type", "folderFile");
                     break;
                 }
                 case Subject: {
-                    resultMap.put("subject", map.get("id"));
+                    map.put("type", "subject");
                     break;
                 }
                 default: {
 
                 }
             }
+            resultList.add(map);
         }
+        resultMap.put("item", resultList);
         return resultMap;
     }
 }

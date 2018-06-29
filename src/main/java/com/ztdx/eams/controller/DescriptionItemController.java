@@ -51,4 +51,99 @@ public class DescriptionItemController {
     public Map<String, Object> list(@RequestParam("catalogueId") int catalogueId) {
         return archivesQuery.getDescriptionItemList(UInteger.valueOf(catalogueId));
     }
+
+    /**
+     * @api {get} /descriptionItem/listForPlaceOnFile?archivesId={archivesId} 通过档案库ID获取目录ID及著录项
+     * @apiName listForPlaceOnFile
+     * @apiGroup descriptionItem
+     * @apiParam {Number} archivesId 档案库ID(url参数)
+     * @apiSuccess (Success 200) {Number} catalogueId 目录ID.
+     * @apiSuccess (Success 200) {String} type 目录类型(可选项：一文一件，案卷，卷内，项目).
+     * @apiSuccess (Success 200) {Object[]} descriptionItem 著录项集合.
+     * @apiSuccess (Success 200) {Number} descriptionItemId 著录项ID.
+     * @apiSuccess (Success 200) {String} displayName 显示名称.
+     * @apiSuccessExample {json} Success-Response:
+     * {
+     * "data": {
+     * "item": [
+     * {
+     * "catalogueId": 3,
+     * "type": "folder",
+     * "descriptionItem": [
+     * {
+     * "descriptionItemId": 10,
+     * "displayName": "姓名"
+     * },
+     * {
+     * "descriptionItemId": 11,
+     * "displayName": "年龄"
+     * },
+     * {
+     * "descriptionItemId": 12,
+     * "displayName": "生日"
+     * },
+     * {
+     * "descriptionItemId": 13,
+     * "displayName": "资产"
+     * },
+     * {
+     * "descriptionItemId": 14,
+     * "displayName": "分类"
+     * },
+     * {
+     * "descriptionItemId": 15,
+     * "displayName": "字典"
+     * },
+     * {
+     * "descriptionItemId": 16,
+     * "displayName": "机构"
+     * },
+     * {
+     * "descriptionItemId": 77,
+     * "displayName": "档号"
+     * }
+     * ]
+     * },
+     * {
+     * "catalogueId": 5,
+     * "type": "folderFile",
+     * "descriptionItem": [
+     * {
+     * "descriptionItemId": 31,
+     * "displayName": "姓名"
+     * },
+     * {
+     * "descriptionItemId": 32,
+     * "displayName": "年龄"
+     * },
+     * {
+     * "descriptionItemId": 33,
+     * "displayName": "生日"
+     * },
+     * {
+     * "descriptionItemId": 34,
+     * "displayName": "资产"
+     * },
+     * {
+     * "descriptionItemId": 35,
+     * "displayName": "分类"
+     * },
+     * {
+     * "descriptionItemId": 36,
+     * "displayName": "字典"
+     * },
+     * {
+     * "descriptionItemId": 37,
+     * "displayName": "机构"
+     * }
+     * ]
+     * }
+     * ]
+     * }
+     * }
+     */
+    @RequestMapping(value = "/listForPlaceOnFile", method = RequestMethod.GET)
+    public Map<String, Object> listForPlaceOnFile(@RequestParam("archivesId") int archivesId) {
+        return archivesQuery.getDescriptionItemListForPlaceOnFile(UInteger.valueOf(archivesId));
+    }
 }
