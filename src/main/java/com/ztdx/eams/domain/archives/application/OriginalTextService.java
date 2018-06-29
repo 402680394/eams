@@ -12,7 +12,6 @@ import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.OriginalTextMongoRepository;
-import javafx.util.Pair;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -27,6 +26,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +35,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
-import java.util.function.Function;
 
 import static jdk.nashorn.internal.objects.Global.Infinity;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -77,7 +76,7 @@ public class OriginalTextService {
     /**
      * 新增原文
      */
-    public void save(OriginalText originalText, MultipartFile file) {
+    public OriginalText save(OriginalText originalText, MultipartFile file) {
         if (file.isEmpty()) {
             throw new InvalidArgumentException("原文文件未上传");
         }
@@ -89,7 +88,7 @@ public class OriginalTextService {
         if (!find.isPresent()) {
             throw new InvalidArgumentException("条目不存在");
         }
-        //文件上传到本地服务器读取文件属性,然后上传至ftp
+        //文件上传到本地服务器,然后上传至ftp
         fileUpload(fondsId, originalText, file);
 
         //设置排序号
@@ -109,9 +108,10 @@ public class OriginalTextService {
         originalText.setGmtModified(new Date());
         //存入MongoDB
         originalTextMongoRepository.save(originalText);
-
         //存入Elasticsearch
         originalTextElasticsearchRepository.save(originalText);
+
+        return originalText;
     }
 
     /**
@@ -135,7 +135,7 @@ public class OriginalTextService {
     /**
      * 修改原文
      */
-    public void update(OriginalText originalText, MultipartFile file) {
+    public OriginalText update(OriginalText originalText, MultipartFile file) {
         Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(originalText.getCatalogueId());
         if (null == fondsId) {
             throw new InvalidArgumentException("全宗档案库不存在");
@@ -143,7 +143,7 @@ public class OriginalTextService {
         Optional<OriginalText> find = originalTextMongoRepository.findById(originalText.getId(), "archive_record_originalText_" + originalText.getCatalogueId());
         if (!find.isPresent()) {
             save(originalText, file);
-            return;
+            return null;
         }
         if (!file.isEmpty()) {
             //文件上传到本地服务器读取文件属性,然后上传至ftp
@@ -157,6 +157,7 @@ public class OriginalTextService {
 
         //修改Elasticsearch
         originalTextElasticsearchRepository.save(originalText);
+        return originalText;
     }
 
     /**
@@ -179,7 +180,6 @@ public class OriginalTextService {
             String MD5 = DigestUtils.md5Hex(fisMD5);
             //设置路径
             String[] path = new String[]{String.valueOf(fondsId), MD5.substring(0, 2), MD5.substring(2, 4)};
-            //TODO li 获取文件属性
 
             originalText.setName(file.getOriginalFilename());
             originalText.setSize(String.valueOf(tmpFile.length()));
@@ -356,33 +356,33 @@ public class OriginalTextService {
     }
 
     /**
-     * 归档处理
+     * 异步处理文件（全文索引，元数据信息，PDF转换）
      */
-    public void placeOnFile(String id, int catalogueId) {
-        Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(catalogueId);
+    @Async
+    public void placeOnFile(OriginalText originalText) {
+        Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(originalText.getCatalogueId());
         if (null == fondsId) {
             return;
         }
-        Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
-        if (find.isPresent()) {
-            OriginalText originalText = find.get();
-            String name = originalText.getName();
-            File file = new File(name);
-            //设置路径
-            String[] path = new String[]{String.valueOf(fondsId), find.get().getMd5().substring(0, 2), find.get().getMd5().substring(2, 4)};
-            //下载到本地
-            ftpUtil.downloadFile(path, find.get().getMd5(), file);
-            //生成全文索引
-            createContentIndex(originalText, file);
-            //转为pdf格式文件并上传ftp
-            converter2PdfAndUpload(fondsId, originalText, file);
+        String name = originalText.getName();
+        File file = new File(name);
+        //设置路径
+        String[] path = new String[]{String.valueOf(fondsId), originalText.getMd5().substring(0, 2), originalText.getMd5().substring(2, 4)};
+        //下载到本地
+        ftpUtil.downloadFile(path, originalText.getMd5(), file);
+        //生成全文索引
+        createContentIndex(originalText, file);
+        //转为pdf格式文件并上传ftp
+        converter2PdfAndUpload(fondsId, originalText, file);
 
+        Optional<Entry> find = entryElasticsearchRepository.findById(originalText.getEntryId(), "archive_record_" + originalText.getCatalogueId());
+        if (find.isPresent()) {
             originalTextMongoRepository.save(originalText);
             originalTextElasticsearchRepository.save(originalText);
-            //删除本地文件
-            if (file.exists()) {
-                file.delete();
-            }
+        }
+        //删除本地文件
+        if (file.exists()) {
+            file.delete();
         }
     }
 
@@ -456,12 +456,12 @@ public class OriginalTextService {
         }
     }
 
-    public Page<OriginalText> scroll(boolean archivingAll, int catalogueId, Collection<String> entryIds, Collection<Integer> originalType, int page, int size){
+    public Page<OriginalText> scroll(boolean archivingAll, int catalogueId, Collection<String> entryIds, Collection<Integer> originalType, int page, int size) {
         Query query;
-        if (archivingAll){
+        if (archivingAll) {
             query = Query.query(where("type").in(originalType))
                     .with(PageRequest.of(page, size));
-        }else {
+        } else {
             query = Query.query(where("entryId").in(entryIds)
                     .and("type").in(originalType))
                     .with(PageRequest.of(page, size));
@@ -494,7 +494,7 @@ public class OriginalTextService {
                         , trgId
                         , entryId);
                 targets.add(add);
-            }catch (Exception e){
+            } catch (Exception e) {
                 msg = e.getMessage();
                 status = ArchivingResult.Status.failure;
             }
@@ -522,7 +522,7 @@ public class OriginalTextService {
             OriginalText originalText
             , String id
             , int trgId
-            , String entryId){
+            , String entryId) {
         OriginalText result = new OriginalText();
         result.setId(id);
         result.setCatalogueId(trgId);

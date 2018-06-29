@@ -1,12 +1,10 @@
 package com.ztdx.eams.controller;
 
-import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.OriginalTextService;
-import com.ztdx.eams.domain.archives.application.PlaceOnFileJob;
 import com.ztdx.eams.domain.archives.model.OriginalText;
 import com.ztdx.eams.domain.system.application.PermissionService;
-import org.quartz.*;
+import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,8 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.quartz.JobBuilder.newJob;
 
 /**
  * Created by li on 2018/5/23.
@@ -67,7 +63,8 @@ public class OriginalTextController {
         originalText.setType(Integer.parseInt(request.getParameter("type")));
         originalText.setVersion(request.getParameter("version"));
         originalText.setRemark(request.getParameter("remark"));
-        originalTextService.save(originalText, file);
+        originalText = originalTextService.save(originalText, file);
+        originalTextService.placeOnFile(originalText);
     }
 
     /**
@@ -120,7 +117,10 @@ public class OriginalTextController {
         originalText.setType(Integer.parseInt(request.getParameter("type")));
         originalText.setVersion(request.getParameter("version"));
         originalText.setRemark(request.getParameter("remark"));
-        originalTextService.update(originalText, file);
+        originalText = originalTextService.update(originalText, file);
+        if (null != originalText) {
+            originalTextService.placeOnFile(originalText);
+        }
     }
 
     /**
@@ -207,6 +207,8 @@ public class OriginalTextController {
      * @apiSuccess (Success 200) {String} size 文件大小.
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccess (Success 200) {Number} createTime 创建时间.
+     * @apiSuccess (Success 200) {Number} contentIndexStatus 全文索引状态(0-未生成  1-已生成 2-生成失败 3-文件类型不可用).
+     * @apiSuccess (Success 200) {Number} pdfConverStatus pdf转换状态(0-未转换 1-已转换 2-转换失败 3-文件类型不可用).
      * @apiSuccess (Success 200) {Number} total 总条数.
      * @apiSuccessExample {json} Success-Response:
      * {
@@ -247,6 +249,8 @@ public class OriginalTextController {
             map.put("size", originalText.getSize());
             map.put("remark", originalText.getRemark());
             map.put("createTime", originalText.getCreateTime());
+            map.put("contentIndexStatus", originalText.getContentIndexStatus());
+            map.put("pdfConverStatus", originalText.getPdfConverStatus());
             list.add(map);
         }
         result.put("items", list);
@@ -270,40 +274,40 @@ public class OriginalTextController {
         originalTextService.sort(upId, downId, catalogueId);
     }
 
-    @RequestMapping(value = "/test", method = RequestMethod.GET)
-    public void test() {
-        int catalogueId = 5;
-        List ids = new ArrayList<String>();
-
-        ids.add("c3a74088-4150-416e-9f07-b7277a9d8cc6");
-        ids.add("b83bf403-7e34-4678-87c5-06b59ea56a1a");
-        ids.add("f5180e67-0a75-40df-b2db-4489aa06905d");
-
-        try {
-
-            JobDetail job = newJob(PlaceOnFileJob.class)
-                    .withIdentity("PlaceOnFileJob", "PlaceOnFileJobGroup")
-                    .requestRecovery()
-                    .build();
-
-            job.getJobDataMap().put("catalogueId", catalogueId);
-            job.getJobDataMap().put("ids", ids);
-
-            Trigger trigger = TriggerBuilder.newTrigger()
-                    .withIdentity("PlaceOnFileTrigger", "PlaceOnFileJobGroup")
-                    .startNow()
-                    .build();
-
-            scheduler.scheduleJob(job, trigger);
-
-            if (!scheduler.isStarted()) {
-                scheduler.start();
-            }
-
-        } catch (SchedulerException e) {
-            e.printStackTrace();
-            throw new BusinessException("原文归档调度任务启动失败");
-        }
-    }
+//    @RequestMapping(value = "/test", method = RequestMethod.GET)
+//    public void test() {
+//        int catalogueId = 5;
+//        List ids = new ArrayList<String>();
+//
+//        ids.add("c3a74088-4150-416e-9f07-b7277a9d8cc6");
+//        ids.add("b83bf403-7e34-4678-87c5-06b59ea56a1a");
+//        ids.add("f5180e67-0a75-40df-b2db-4489aa06905d");
+//
+//        try {
+//
+//            JobDetail job = newJob(PlaceOnFileJob.class)
+//                    .withIdentity("PlaceOnFileJob", "PlaceOnFileJobGroup")
+//                    .requestRecovery()
+//                    .build();
+//
+//            job.getJobDataMap().put("catalogueId", catalogueId);
+//            job.getJobDataMap().put("ids", ids);
+//
+//            Trigger trigger = TriggerBuilder.newTrigger()
+//                    .withIdentity("PlaceOnFileTrigger", "PlaceOnFileJobGroup")
+//                    .startNow()
+//                    .build();
+//
+//            scheduler.scheduleJob(job, trigger);
+//
+//            if (!scheduler.isStarted()) {
+//                scheduler.start();
+//            }
+//
+//        } catch (SchedulerException e) {
+//            e.printStackTrace();
+//            throw new BusinessException("原文归档调度任务启动失败");
+//        }
+//    }
 
 }
