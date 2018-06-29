@@ -900,6 +900,7 @@ public class ArchivesQuery {
 
             List<Map<String, Object>> descriptionItemList = dslContext.select(
                     archivesDescriptionItem.ID.as("descriptionItemId"),
+                    archivesDescriptionItem.METADATA_NAME.as("metadataName"),
                     archivesDescriptionItem.DISPLAY_NAME.as("displayName"))
                     .from(archivesDescriptionItem)
                     .where(archivesDescriptionItem.CATALOGUE_ID.equal((UInteger) map.get("catalogueId")))
