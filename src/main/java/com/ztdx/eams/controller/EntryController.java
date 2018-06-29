@@ -623,6 +623,7 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} content.file.title 标题
      * @apiSuccess (Success 200) {String="word","excel","pdf","ppt"} content.file.fileType 类型
      * @apiSuccess (Success 200) {String} content.file.highLight 高亮文本
+     * @apiSuccess (Success 200) {String} content.file.fileName 文件名
      * @apiSuccess (Success 200) {Array} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
      * @apiSuccess (Success 200) {Number} column.metadataId 元数据id
      * @apiSuccess (Success 200) {String} column.metadataName
@@ -661,7 +662,8 @@ public class EntryController {
      *                     "fileId":"文件id",
      *                     "title":"这是一个文件标题",
      *                     "fileType":"word",
-     *                     "highLight":"这是高亮文本内容"
+     *                     "highLight":"这是高亮文本内容",
+     *                     "fileName": "文件名"
      *                 }
      *             }
      *         ],
@@ -777,6 +779,7 @@ public class EntryController {
             file.put("title", a.getTitle());
             file.put("fileType", a.getType());
             file.put("highLight", a.getContentIndex());
+            file.put("fileName", a.getName());
 
             return r;
         }).collect(Collectors.toList()));
