@@ -989,8 +989,8 @@ public class EntryController {
     }
 
     /**
-     * @api {post} /entry/archiving 归档
-     * @apiName archiving
+     * @api {post} /entry/archivingEntry 归档
+     * @apiName archivingEntry
      * @apiGroup entry
      * @apiParam {Boolean} delSrc 是否删除源记录
      * @apiParam {Number[]} originalType 原文类型，引用获取文件类型列表接口 /fileType/list
@@ -1105,7 +1105,7 @@ public class EntryController {
             , @SessionAttribute UserCredential LOGIN_USER
     ){
         List<ArchivingResult> error = new ArrayList<>();
-        Map<String, String> mainIdMap = archiving(
+        Map<String, String> mainIdMap = archivingEntry(
                 mainSrcId
                 , mainTrgId
                 , archivingAll
@@ -1127,7 +1127,7 @@ public class EntryController {
         Map<String, String> slaveIdMap = null;
         Map<String, String> slaveFileIdMap = null;
         if (slaveSrcId != null && slaveTrgId != null && slaveSrcFields != null && slaveTrgFields != null) {
-            slaveIdMap = archiving(
+            slaveIdMap = archivingEntry(
                     slaveSrcId
                     , slaveTrgId
                     , archivingAll
@@ -1272,7 +1272,7 @@ public class EntryController {
         return result;
     }
 
-    private Map<String, String> archiving(
+    private Map<String, String> archivingEntry(
             int srcId
             , int trgId
             , boolean archivingAll
@@ -1347,23 +1347,16 @@ public class EntryController {
                 error.addAll(mainError);
             }
 
-            /*//归档条目的原文
-            archivingOriginal(srcId, trgId, srcData, srcDataMap, error);*/
-
             result.putAll(srcDataMap);
         } while (entries.hasNext());
 
         return result;
     }
 
-    public void validateArchivingFields(Map<String, DescriptionItem> descriptionItems, List<String> fields) {
+    private void validateArchivingFields(Map<String, DescriptionItem> descriptionItems, List<String> fields) {
         Set<String> qryFields = descriptionItems.keySet();
         if (!qryFields.containsAll(fields)){
             throw new InvalidArgumentException("字段设置错误");
         }
-    }
-
-    private List<Pair<String, String>> makeError(Iterable<String> data, String errorMsg){
-        return StreamSupport.stream(data.spliterator(), true).map(a -> new Pair<>(a, errorMsg)).collect(Collectors.toList());
     }
 }

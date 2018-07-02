@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class IdGenerator {
 
     @Id
-    private String Id;
+    private String id;
 
     private Long value;
 
