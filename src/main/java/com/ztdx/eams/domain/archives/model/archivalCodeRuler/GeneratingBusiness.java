@@ -169,14 +169,11 @@ public class GeneratingBusiness {
      */
     public void generatingFolderFileArchivalCode(List<Entry> folderFileList,List<Entry> entriesForSave,List<String> errors,String folderArchivalCode,String archivalCodeNameOfFolderFile,String serialNumberNameOfFolderFile){
 
-
         //定义档号
         String archivalCode = "";
         //定义卷内顺序号
         Integer serialNumber = 0;
         String newSerialNumber = "";
-
-
 
         //循环卷内
         for (Entry entry : folderFileList) {
@@ -223,7 +220,6 @@ public class GeneratingBusiness {
         String serialNumberName="";
         String archivalCodeNameOfFolderFile ="";
         String serialNumberNameOfFolderFile="";
-        String serialNumberVal = "";
         Integer folderFileCatalogueId = -1;
 
         archivalCodeName = getArchivalCodeMetadataName(archivalCodeName,catalogueId);
@@ -239,7 +235,7 @@ public class GeneratingBusiness {
         }
         //取出规则集合的序号
         serialNumberName = StreamSupport.stream(archivalCodeRulers.spliterator(),false).filter(archivalCodeRuler -> archivalCodeRuler.getType().equals(RulerType.SerialNumber)).toString();
-        if (!serialNumberName.isEmpty()){
+        if (serialNumberName!=null){
             serialNumberName = getSerialNumberName(serialNumberName,catalogueId);
             if (serialNumberName==null){
                 throw new BusinessException(getCatalogueType(catalogueId)+"没有序号列");
@@ -288,14 +284,12 @@ public class GeneratingBusiness {
                     //如果条目中没有序号
                     if(items.get(serialNumberName) == null || items.get(serialNumberName).equals("")){
                         //生成序号
-                        serialNumberVal = generatingSerialNumber(items,entry.getCatalogueId(),serialNumberName);
-                        //生成档号（多加了序号）
-                        splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry)+serialNumberVal;
+                        splicingContent = generatingSerialNumber(items,entry.getCatalogueId(),serialNumberName);
                     }else {
-                        splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry);
+                        splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry,serialNumberName);
                     }
                 }else {
-                    splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry);
+                    splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry,serialNumberName);
                 }
 
                 archivalCodeVal.append(splicingContent);
@@ -341,17 +335,17 @@ public class GeneratingBusiness {
         Integer serialNumber = -1;
         String maxSerialNumber = "";
 
-        //TODO 调用仓储层得到最大序号
-        //String tableName = catalogueRepository.findById(catalogueId).get().getTableName();
+        //调用仓储层得到最大序号
         Query query = new Query();
         query.with(Sort.by(Sort.Direction.DESC, "items.sn")).limit(1);
         List<Entry> list = entryMongoRepository.findAll(query,"archive_record_"+catalogueId);
 
-        maxSerialNumber = (String)list.get(0).getItems().get(nameOfFolderFile);
-
+        if (list.size()>0) {
+            maxSerialNumber = list.get(0).getItems().getOrDefault(nameOfFolderFile,"")+"";
+        }
 
         //如果要生成第一个序号  (也就是最大序号为空)
-        if (maxSerialNumber.equals("")){
+        if ("".equals(maxSerialNumber)){
             serialNumber = 1;
         }else {//如果有则执行以下的
             //得到序号
@@ -362,7 +356,7 @@ public class GeneratingBusiness {
         String newSerialNumber = generatingAllTypeSerialNumber(serialNumber,catalogueId);
 
         //放入条目
-        items.put("serialNumber",newSerialNumber);
+        items.put(nameOfFolderFile,newSerialNumber);
 
         //返回序号
         return newSerialNumber;
@@ -377,7 +371,7 @@ public class GeneratingBusiness {
      * @param entry 条目
      * @return 返回根据档号规则获取的要拼接的内容
      */
-    private String archivalCodeRuler (ArchivalCodeRuler archivalCodeRuler,Map<String, Object> items,List<String> errors,Entry entry){
+    private String archivalCodeRuler (ArchivalCodeRuler archivalCodeRuler,Map<String, Object> items,List<String> errors,Entry entry,String serialNumberName){
 
         //拼接内容
         String str = "";
@@ -416,7 +410,7 @@ public class GeneratingBusiness {
                 }
                 break;
             case SerialNumber:
-                str = (String)entryMongoRepository.findById(entry.getId(),"archive_record_"+entry.getCatalogueId()).get().getItems().get("serialNumber");
+                str = (String)entryMongoRepository.findById(entry.getId(),"archive_record_"+entry.getCatalogueId()).get().getItems().get(serialNumberName);
                 if (str.equals("")) {
                     errors.add("序号不能为空");
                 }
@@ -442,15 +436,15 @@ public class GeneratingBusiness {
 
     /**
      * 得到元数据名称
-     * @param archivalCodename  名称
+     * @param archivalCodeName  名称
      * @param catalogueId 目录id
      * @return
      */
-    public String getArchivalCodeMetadataName(String archivalCodename,int catalogueId){
-        DescriptionItem descriptionItem = descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.Reference);
+    public String getArchivalCodeMetadataName(String archivalCodeName,int catalogueId){
+        DescriptionItem descriptionItem = descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId,PropertyType.Reference);
         if (descriptionItem != null){
-            archivalCodename = descriptionItem.getMetadataName();
-            return archivalCodename;
+            archivalCodeName = descriptionItem.getMetadataName();
+            return archivalCodeName;
         }
         return null;
     }
