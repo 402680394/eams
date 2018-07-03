@@ -184,6 +184,10 @@ public class OriginalTextService {
             originalText.setName(file.getOriginalFilename());
             originalText.setSize(String.valueOf(tmpFile.length()));
             originalText.setMd5(MD5);
+            if (file.getOriginalFilename().endsWith(".pdf")) {
+                originalText.setPdfMd5(MD5);
+                originalText.setPdfConverStatus(1);
+            }
             //上传文件到FTP
             ftpUtil.uploadFile(path, MD5, tmpFile);
         } catch (BusinessException e) {
@@ -435,6 +439,8 @@ public class OriginalTextService {
 
                 originalText.setPdfMd5(MD5);
                 originalText.setPdfConverStatus(1);
+            } else if (originalText.getName().endsWith(".pdf")) {
+
             } else {
                 originalText.setPdfConverStatus(3);
             }

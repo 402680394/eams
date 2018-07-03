@@ -171,6 +171,9 @@ public class EntryService {
 
     @Async
     public void indexAll(Iterable<Entry> entries, int catalogueId){
+        if (entries == null || !entries.iterator().hasNext()){
+            return;
+        }
         initIndex(catalogueId);
         entryElasticsearchRepository.saveAll(entries);
         Set<String> ids = StreamSupport.stream(entries.spliterator(), true).map(Entry::getId).collect(Collectors.toSet());
@@ -750,7 +753,7 @@ public class EntryService {
         }
         result.setItems(items);
 
-        this.convertEntryItems(entry, EntryItemConverter::from, true);
+        this.convertEntryItems(result, EntryItemConverter::from, true);
 
         return result;
     }

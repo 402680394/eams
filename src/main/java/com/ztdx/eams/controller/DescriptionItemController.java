@@ -58,7 +58,7 @@ public class DescriptionItemController {
      * @apiGroup descriptionItem
      * @apiParam {Number} archivesId 档案库ID(url参数)
      * @apiSuccess (Success 200) {Number} catalogueId 目录ID.
-     * @apiSuccess (Success 200) {String} type 目录类型(可选项：一文一件，案卷，卷内，项目).
+     * @apiSuccess (Success 200) {String} type 目录类型(可选项：一文一件 file，案卷 folder，卷内 folderFile，项目 subject).
      * @apiSuccess (Success 200) {Object[]} descriptionItem 著录项集合.
      * @apiSuccess (Success 200) {Number} descriptionItemId 著录项ID.
      * @apiSuccess (Success 200) {String} metadataName 元数据名称.
