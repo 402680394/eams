@@ -4,14 +4,17 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ztdx.eams.basic.Interceptor;
 import com.ztdx.eams.basic.params.JsonParamResolver;
+import org.quartz.SchedulerConfigException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.quartz.SimpleThreadPoolTaskExecutor;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -100,5 +103,15 @@ public class WebConfig extends WebMvcConfigurationSupport {
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(mappingJackson2HttpMessageConverter());
         super.addDefaultHttpMessageConverters(converters);
+    }
+
+    @Bean
+    public TaskExecutor taskExecutor() throws SchedulerConfigException {
+        SimpleThreadPoolTaskExecutor taskExecutor = new SimpleThreadPoolTaskExecutor();
+        taskExecutor.setThreadCount(1);
+        taskExecutor.setThreadPriority(5);
+        taskExecutor.setThreadNamePrefix("自定义线程名");
+        taskExecutor.initialize();
+        return taskExecutor;
     }
 }

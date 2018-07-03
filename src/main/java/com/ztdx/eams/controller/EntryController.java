@@ -5,12 +5,12 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.archives.application.*;
+import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
-import javafx.util.Pair;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +23,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping(value = "/entry")
@@ -45,7 +44,9 @@ public class EntryController {
 
     private OriginalTextService originalTextService;
 
-    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService) {
+    private EntryAsyncTask entryAsyncTask;
+
+    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask) {
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
         this.catalogueService = catalogueService;
@@ -54,6 +55,7 @@ public class EntryController {
         this.fondsService = fondsService;
         this.conditionService = conditionService;
         this.originalTextService = originalTextService;
+        this.entryAsyncTask = entryAsyncTask;
     }
 
     /**
@@ -899,8 +901,8 @@ public class EntryController {
     }
 
     @RequestMapping(value = "/test/{id}", method = RequestMethod.GET)
-    public Object test(@PathVariable("id") String id){
-        return entryService.test(id);
+    public void test(@PathVariable("id") String id){
+        entryAsyncTask.test(id);
     }
 
     /**

@@ -3,6 +3,7 @@ package com.ztdx.eams.domain.archives.application;
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
+import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
@@ -14,11 +15,7 @@ import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasti
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorValue;
-import com.ztdx.eams.domain.archives.repository.mongo.OriginalTextMongoRepository;
-import javafx.util.Pair;
 import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -29,17 +26,12 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -49,7 +41,6 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.mongodb.core.query.BasicQuery.query;
@@ -78,13 +69,13 @@ public class EntryService {
 
     private OriginalTextElasticsearchRepository originalTextElasticsearchRepository;
 
-    private OriginalTextMongoRepository originalTextMongoRepository;
-
     private MongoOperations mongoOperations;
 
     private IdGeneratorRepository idGeneratorRepository;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, MongoOperations mongoOperations, IdGeneratorRepository idGeneratorRepository) {
+    private EntryAsyncTask entryAsyncTask;
+
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, MongoOperations mongoOperations, IdGeneratorRepository idGeneratorRepository, EntryAsyncTask entryAsyncTask) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
@@ -93,9 +84,9 @@ public class EntryService {
         this.archivesGroupRepository = archivesGroupRepository;
         this.elasticsearchOperations = elasticsearchOperations;
         this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
-        this.originalTextMongoRepository = originalTextMongoRepository;
         this.mongoOperations = mongoOperations;
         this.idGeneratorRepository = idGeneratorRepository;
+        this.entryAsyncTask = entryAsyncTask;
     }
 
     public Entry save(Entry entry) {
@@ -125,7 +116,7 @@ public class EntryService {
         this.convertEntryItems(entry, EntryItemConverter::from, true);
         entry = entryMongoRepository.save(entry);
 
-        index(entry);
+        entryAsyncTask.index(entry);
         return entry;
     }
 
@@ -149,41 +140,9 @@ public class EntryService {
         this.convertEntryItems(entry, EntryItemConverter::from, false);
         update = entryMongoRepository.save(update);
 
-        index(update);
+        entryAsyncTask.index(update);
         return update;
     }
-
-    @Async
-    public void index(Entry entry){
-        initIndex(entry.getCatalogueId());
-        entryElasticsearchRepository.save(entry);
-        //暂时没有启用版本方案
-        /*mongoOperations.updateFirst(
-                query(where("_id").is(entry.getId()))
-                , Update.update("indexVersion", entry.getVersion())
-                , this.getIndexName(entry.getCatalogueId()));*/
-        //采用索引更新时间方案
-        mongoOperations.updateFirst(
-                query(where("_id").is(entry.getId()))
-                , new Update().currentDate("indexDate")
-                , this.getIndexName(entry.getCatalogueId()));
-    }
-
-    @Async
-    public void indexAll(Iterable<Entry> entries, int catalogueId){
-        if (entries == null || !entries.iterator().hasNext()){
-            return;
-        }
-        initIndex(catalogueId);
-        entryElasticsearchRepository.saveAll(entries);
-        Set<String> ids = StreamSupport.stream(entries.spliterator(), true).map(Entry::getId).collect(Collectors.toSet());
-        //采用索引更新时间方案
-        mongoOperations.updateFirst(
-                query(where("_id").in(ids))
-                , new Update().currentDate("indexDate")
-                , this.getIndexName(catalogueId));
-    }
-
 
     private void initIndex(int catalogueId) {
         try {
@@ -191,84 +150,6 @@ public class EntryService {
         } catch (IOException e) {
             throw new BusinessException("索引初始化失败", e);
         }
-    }
-
-    public void putMapping(int catalogueId) throws IOException {
-        initIndex(catalogueId);
-
-        List<DescriptionItem> list = descriptionItemRepository.findByCatalogueId(catalogueId);
-        XContentBuilder contentBuilder;
-        contentBuilder = XContentFactory.jsonBuilder().startObject()
-                .startObject(getIndexType(Entry.class))
-                .startObject("properties");
-
-        contentBuilder
-                .startObject("full_content")
-                .field("type", FieldType.text.name().toLowerCase())
-                .endObject();
-
-        contentBuilder.startObject("items")
-                .startObject("properties");
-        for (DescriptionItem descriptionItem : list) {
-            addSingleFieldMapping(contentBuilder, descriptionItem);
-        }
-
-        contentBuilder.endObject().endObject().endObject().endObject().endObject();
-
-        entryElasticsearchRepository.putMapping(this.getIndexName(catalogueId), contentBuilder);
-    }
-
-    private FieldType convertDescriptionItemDateType(DescriptionItemDataType dataType){
-        switch (dataType){
-            case Date:
-                return FieldType.Date;
-            case Double:
-                return FieldType.Double;
-            case Integer:
-                return FieldType.Integer;
-            case Array:
-                return FieldType.text;
-            case String:
-                return FieldType.keyword;
-            case Text:
-                return FieldType.text;
-        }
-        return FieldType.Auto;
-    }
-
-    private void addSingleFieldMapping(XContentBuilder xContentBuilder, DescriptionItem descriptionItem) throws IOException {
-        xContentBuilder.startObject(descriptionItem.getMetadataName());
-
-        FieldType fieldType = convertDescriptionItemDateType(descriptionItem.getDataType());
-        if (FieldType.Auto != fieldType) {
-            xContentBuilder.field("type", fieldType.name().toLowerCase());
-            if (FieldType.text == fieldType) {
-                xContentBuilder.startObject("fields");
-                xContentBuilder.startObject("keyword");
-                xContentBuilder.field("type", "keyword");
-                xContentBuilder.field("ignore_above", 256);
-                xContentBuilder.endObject().endObject();
-            }
-        }
-
-        if (descriptionItem.getIsIndex() == 1){
-            xContentBuilder.field("copy_to", FULL_CONTENT);
-        }
-
-        xContentBuilder.field("index", true);
-
-        //xContentBuilder.field("search_analyzer", "");
-        //xContentBuilder.field("analyzer", "");
-
-        xContentBuilder.endObject();
-    }
-
-    private <T> String getIndexType(Class<T> clazz){
-        if (clazz.isAnnotationPresent(Document.class)) {
-            Document document = clazz.getAnnotation(Document.class);
-            return document.type().isEmpty()?clazz.getSimpleName():document.type();
-        }
-        return clazz.getSimpleName();
     }
 
     public Page<Entry> search(int catalogueId, String queryString, QueryBuilder itemQuery, Pageable pageable) {
@@ -306,8 +187,6 @@ public class EntryService {
 
         query.filter(termQuery("gmtDeleted", 0));
 
-        initIndex(catalogueId);
-
         Page<Entry> result = entryElasticsearchRepository.search(
                 query, pageable, new String[]{getIndexName(catalogueId)}
         );
@@ -343,22 +222,6 @@ public class EntryService {
 
     private Map<String, DescriptionItem> getDescriptionItems(int catalogueId) {
         return descriptionItemRepository.findByCatalogueId(catalogueId).stream().collect(Collectors.toMap(DescriptionItem::getMetadataName, (d) -> d, (d1, d2) -> d2));
-    }
-
-    public Object test(String uuid) {
-        try {
-            elasticsearchOperations.deleteIndex(this.getIndexName(Integer.parseInt(uuid)));
-            originalTextElasticsearchRepository.createIndex(this.getIndexName(Integer.parseInt(uuid)));
-
-            initIndex(Integer.parseInt(uuid));
-            putMapping(Integer.parseInt(uuid));
-
-            rebuildCatalogueEntry(Integer.parseInt(uuid));
-            rebuildCatalogueOriginalText(Integer.parseInt(uuid));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     public Map<Integer, Long> aggsCatalogueCount(List<Integer> catalogueIds, List<Integer> archiveContentType, String keyWord) {
@@ -559,7 +422,7 @@ public class EntryService {
 
         entryMongoRepository.saveAll(entryList);
 
-        indexAll(entryList, folderFileCatalogueId);
+        entryAsyncTask.indexAll(entryList, folderFileCatalogueId);
     }
 
     /**
@@ -579,42 +442,10 @@ public class EntryService {
 
         entryMongoRepository.saveAll(folderFileEntryList);
 
-        indexAll(folderFileEntryList, folderFileCatalogueId);
+        entryAsyncTask.indexAll(folderFileEntryList, folderFileCatalogueId);
     }
 
-    public void rebuild(){
-        catalogueRepository.findAll().forEach(a -> {
-            rebuildCatalogueEntry(a.getId());
-            rebuildCatalogueOriginalText(a.getId());
-        });
-    }
 
-    public void rebuildCatalogueEntry(int catalogueId){
-        long total = entryMongoRepository.count(getIndexName(catalogueId));
-        long pageCount = total / 100 + 1;
-        for (long i=0;i < pageCount; i++){
-            Page<Entry> list = entryMongoRepository.findAll(PageRequest.of((int)i,100, Sort.by(Sort.Direction.ASC, "gmtCreate")), getIndexName(catalogueId));
-            if (list.getContent().size() == 0){
-                return;
-            }
-            entryElasticsearchRepository.saveAll(list);
-        }
-    }
-
-    public void rebuildCatalogueOriginalText(int catalogueId){
-        long total = originalTextMongoRepository.count("archive_record_originalText_" + catalogueId);
-        long pageCount = total / 100 + 1;
-        for (long i=0;i < pageCount; i++){
-            Page<OriginalText> list = originalTextMongoRepository.findAll(
-                    PageRequest.of(
-                            (int)i,100, Sort.by(Sort.Direction.ASC, "gmtCreate"))
-                    , "archive_record_originalText_" + catalogueId);
-            if (list.getContent().size() == 0){
-                return;
-            }
-            originalTextElasticsearchRepository.saveAll(list);
-        }
-    }
 
     public Page<Entry> scrollEntry(boolean archivingAll, int catalogueId, Collection<String> srcData, int page, int size){
         Query query;
@@ -708,7 +539,7 @@ public class EntryService {
         });
 
         entryMongoRepository.saveAll(targets);
-        indexAll(targets, trgId);
+        entryAsyncTask.indexAll(targets, trgId);
 
         return error;
     }

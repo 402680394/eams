@@ -1,6 +1,7 @@
 package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.BusinessException;
+import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.archivalCodeRuler.GeneratingBusiness;
 import com.ztdx.eams.domain.archives.repository.ArchivalCodeRulerRepository;
@@ -21,22 +22,16 @@ public class ArchivalCodeRulerService {
 
     private final GeneratingBusiness generatingBusiness;
     private final EntryMongoRepository entryMongoRepository;
-    private final CatalogueRepository catalogueRepository;
-    private final FondsRepository fondsRepository;
-    private final EntryService entryService;
-    private final DescriptionItemRepository descriptionItemRepository;
+    private final EntryAsyncTask entryAsyncTask;
 
     /**
      * 构造函数
      */
     @Autowired
-    public ArchivalCodeRulerService( ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository,FondsRepository fondsRepository,EntryService entryService,DescriptionItemRepository descriptionItemRepository) {
-        this.generatingBusiness = new GeneratingBusiness(archivalcodeRulerRepository,entryMongoRepository,catalogueRepository,fondsRepository,entryService,descriptionItemRepository);
+    public ArchivalCodeRulerService(ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository, FondsRepository fondsRepository, DescriptionItemRepository descriptionItemRepository, EntryAsyncTask entryAsyncTask) {
+        this.entryAsyncTask = entryAsyncTask;
+        this.generatingBusiness = new GeneratingBusiness(archivalcodeRulerRepository,entryMongoRepository,catalogueRepository,fondsRepository,descriptionItemRepository,entryAsyncTask);
         this.entryMongoRepository = entryMongoRepository;
-        this.catalogueRepository = catalogueRepository;
-        this.fondsRepository = fondsRepository;
-        this.entryService = entryService;
-        this.descriptionItemRepository = descriptionItemRepository;
     }
 
     /**
@@ -103,9 +98,7 @@ public class ArchivalCodeRulerService {
         //存入MongoDB
         if (newEntries.size() > 0){
             entryMongoRepository.saveAll(newEntries);
-            for (Entry entry : newEntries) {
-                entryService.index(entry);
-            }
+            entryAsyncTask.indexAll(newEntries, catalogueId);
         }
 
     }

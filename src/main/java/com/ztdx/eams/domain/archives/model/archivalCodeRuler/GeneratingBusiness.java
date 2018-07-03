@@ -1,14 +1,13 @@
 package com.ztdx.eams.domain.archives.model.archivalCodeRuler;
 
 import com.ztdx.eams.basic.exception.BusinessException;
-import com.ztdx.eams.domain.archives.application.EntryService;
+import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.repository.ArchivalCodeRulerRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.system.repository.FondsRepository;
-import com.mongodb.DBCollection;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -28,16 +27,16 @@ public class GeneratingBusiness {
     private final EntryMongoRepository entryMongoRepository;
     private final CatalogueRepository catalogueRepository;
     private final FondsRepository fondsRepository;
-    private final EntryService entryService;
     private final DescriptionItemRepository descriptionItemRepository;
+    private final EntryAsyncTask entryAsyncTask;
 
-    public GeneratingBusiness(ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository,FondsRepository fondsRepository,EntryService entryService,DescriptionItemRepository descriptionItemRepository) {
+    public GeneratingBusiness(ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository, FondsRepository fondsRepository, DescriptionItemRepository descriptionItemRepository, EntryAsyncTask entryAsyncTask) {
         this.archivalcodeRulerRepository = archivalcodeRulerRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.catalogueRepository = catalogueRepository;
         this.fondsRepository = fondsRepository;
-        this.entryService = entryService;
         this.descriptionItemRepository = descriptionItemRepository;
+        this.entryAsyncTask = entryAsyncTask;
     }
 
     /**
@@ -68,17 +67,13 @@ public class GeneratingBusiness {
         //把条目集合存入MongoDB
         if (entriesForSave.size() > 0){
             entryMongoRepository.saveAll(entriesForSave);
-            for (Entry entry : entriesForSave) {
-                entryService.index(entry);
-            }
+            entryAsyncTask.indexAll(entriesForSave, catalogueId);
         }
 
         //把卷内条目集合存入MongoDB
         if (folderFileEntriesForSave.size() > 0){
             entryMongoRepository.saveAll(folderFileEntriesForSave);
-            for (Entry entry : folderFileEntriesForSave) {
-                entryService.index(entry);
-            }
+            entryAsyncTask.indexAll(folderFileEntriesForSave, folderFileEntriesForSave.get(0).getCatalogueId());
         }
 
         //返回错误信息集合
@@ -151,9 +146,7 @@ public class GeneratingBusiness {
         //把条目集合存入MongoDB
         if (entriesForSave.size() > 0){
             entryMongoRepository.saveAll(entriesForSave);
-            for (Entry entry : entriesForSave) {
-                entryService.index(entry);
-            }
+            entryAsyncTask.indexAll(entriesForSave, entriesForSave.get(0).getCatalogueId());
         }
 
         //返回错误信息集合
