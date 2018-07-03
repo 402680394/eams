@@ -17,12 +17,12 @@ import java.io.*;
 /**
  * Created by li on 2018/6/6.
  */
-public class FileReaderUtils {
+public class FileReader {
 
     /**
      * 读取txt文件的内容
      */
-    public static String txtRead(File file) {
+    public static String txtContentRead(File file) {
         String content = "";
         FileInputStream fis = null;
         InputStreamReader isr = null;
@@ -52,7 +52,7 @@ public class FileReaderUtils {
     /**
      * 读取doc文件内容(文本)
      */
-    public static String docRead(File file) {
+    public static String docContentRead(File file) {
         String content = "";
         FileInputStream fis = null;
         try {
@@ -72,9 +72,9 @@ public class FileReaderUtils {
     }
 
     /**
-     * 读取docx文件(文本)
+     * 读取docx文件内容(文本)
      */
-    public static String docxRead(File file) {
+    public static String docxContentRead(File file) {
         String content = "";
         FileInputStream fis = null;
         try {
@@ -95,9 +95,9 @@ public class FileReaderUtils {
     }
 
     /**
-     * 读取ppt文件(文本)
+     * 读取ppt文件内容(文本)
      */
-    public static String pptRead(File file) {
+    public static String pptContentRead(File file) {
         String content = "";
         FileInputStream fis = null;
         try {
@@ -117,9 +117,9 @@ public class FileReaderUtils {
     }
 
     /**
-     * 读取pptx文件(文本)
+     * 读取pptx文件内容(文本)
      */
-    public static String pptxRead(File file) {
+    public static String pptxContentRead(File file) {
         String content = "";
         FileInputStream fis = null;
         try {
@@ -140,9 +140,9 @@ public class FileReaderUtils {
     }
 
     /**
-     * 读取xls文件(文本)
+     * 读取xls文件内容(文本)
      */
-    public static String xlsRead(File file) {
+    public static String xlsContentRead(File file) {
         String content = "";
         FileInputStream fis = null;
         try {
@@ -162,9 +162,9 @@ public class FileReaderUtils {
     }
 
     /**
-     * 读取xlsx文件(文本)
+     * 读取xlsx文件内容(文本)
      */
-    public static String xlsxRead(File file) {
+    public static String xlsxContentRead(File file) {
         String content = "";
         FileInputStream fis = null;
         try {
@@ -173,7 +173,7 @@ public class FileReaderUtils {
             XSSFExcelExtractor extractor = new XSSFExcelExtractor(xlsx);
             content += extractor.getText();
         } catch (Exception e) {
-            throw new BusinessException("xlsx文件读取失败");
+            throw new BusinessException("xlsx/xlsm文件读取失败");
         } finally {
             try {
                 fis.close();

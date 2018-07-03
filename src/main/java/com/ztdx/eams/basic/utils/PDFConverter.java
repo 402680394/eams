@@ -15,7 +15,7 @@ import java.net.ConnectException;
  * Created by li on 2018/6/7.
  */
 @Component
-public class PDFConverterUtils {
+public class PDFConverter {
 
     //端口号
     @Value("${openoffice.port}")

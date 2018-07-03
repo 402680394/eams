@@ -2,9 +2,9 @@ package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.basic.utils.FileReaderUtils;
+import com.ztdx.eams.basic.utils.FileReader;
 import com.ztdx.eams.basic.utils.FtpUtil;
-import com.ztdx.eams.basic.utils.PDFConverterUtils;
+import com.ztdx.eams.basic.utils.PDFConverter;
 import com.ztdx.eams.domain.archives.model.ArchivingResult;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.OriginalText;
@@ -55,20 +55,20 @@ public class OriginalTextService {
 
     private final FtpUtil ftpUtil;
 
-    private final PDFConverterUtils pdfConverterUtils;
+    private final PDFConverter pdfConverter;
 
     private final ElasticsearchOperations elasticsearchOperations;
 
     private final MongoOperations mongoOperations;
 
     @Autowired
-    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil, PDFConverterUtils pdfConverterUtils, ElasticsearchOperations elasticsearchOperations, MongoOperations mongoOperations) {
+    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil, PDFConverter pdfConverter, ElasticsearchOperations elasticsearchOperations, MongoOperations mongoOperations) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.originalTextMongoRepository = originalTextMongoRepository;
         this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
         this.archivesGroupRepository = archivesGroupRepository;
         this.ftpUtil = ftpUtil;
-        this.pdfConverterUtils = pdfConverterUtils;
+        this.pdfConverter = pdfConverter;
         this.elasticsearchOperations = elasticsearchOperations;
         this.mongoOperations = mongoOperations;
     }
@@ -396,15 +396,27 @@ public class OriginalTextService {
     private void createContentIndex(OriginalText originalText, File file) {
         try {
             //读取内容
+            //设置全文索引状态为已生成
             if (originalText.getName().endsWith(".txt")) {
-                originalText.setContentIndex(FileReaderUtils.txtRead(file));
-                //设置全文索引状态为已生成
+                originalText.setContentIndex(FileReader.txtContentRead(file));
                 originalText.setContentIndexStatus(1);
             } else if (originalText.getName().endsWith(".doc")) {
-                originalText.setContentIndex(FileReaderUtils.docRead(file));
+                originalText.setContentIndex(FileReader.docContentRead(file));
                 originalText.setContentIndexStatus(1);
             } else if (originalText.getName().endsWith(".docx")) {
-                originalText.setContentIndex(FileReaderUtils.docxRead(file));
+                originalText.setContentIndex(FileReader.docxContentRead(file));
+                originalText.setContentIndexStatus(1);
+            } else if (originalText.getName().endsWith(".ppt")) {
+                originalText.setContentIndex(FileReader.pptContentRead(file));
+                originalText.setContentIndexStatus(1);
+            } else if (originalText.getName().endsWith(".pptx")) {
+                originalText.setContentIndex(FileReader.pptxContentRead(file));
+                originalText.setContentIndexStatus(1);
+            } else if (originalText.getName().endsWith(".xls")) {
+                originalText.setContentIndex(FileReader.xlsContentRead(file));
+                originalText.setContentIndexStatus(1);
+            } else if (originalText.getName().endsWith(".xlsx") || originalText.getName().endsWith(".xlsm")) {
+                originalText.setContentIndex(FileReader.xlsxContentRead(file));
                 originalText.setContentIndexStatus(1);
             } else {
                 //此类型无法生成全文索引
@@ -428,7 +440,7 @@ public class OriginalTextService {
                     originalText.getName().endsWith(".xls") || originalText.getName().endsWith(".xlsx") ||
                     originalText.getName().endsWith(".doc") || originalText.getName().endsWith(".docx")) {
                 //转换
-                pdfConverterUtils.converterPDF(file, pdfFile);
+                pdfConverter.converterPDF(file, pdfFile);
                 //计算MD5
                 fisMD5 = new FileInputStream(pdfFile);
                 String MD5 = DigestUtils.md5Hex(fisMD5);
@@ -440,7 +452,7 @@ public class OriginalTextService {
                 originalText.setPdfMd5(MD5);
                 originalText.setPdfConverStatus(1);
             } else if (originalText.getName().endsWith(".pdf")) {
-
+                originalText.setPdfConverStatus(1);
             } else {
                 originalText.setPdfConverStatus(3);
             }
