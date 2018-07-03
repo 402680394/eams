@@ -15,25 +15,28 @@ import java.io.*;
 public class FtpUtil {
     //ftp服务器ip地址
     @Value("${ftp.address}")
-    private String FTP_ADDRESS;
+    private String address;
     //端口号
     @Value("${ftp.port}")
-    private int FTP_PORT;
+    private int port;
     //用户名
     @Value("${ftp.username}")
-    private String FTP_USERNAME;
+    private String username;
     //密码
     @Value("${ftp.password}")
-    private String FTP_PASSWORD;
+    private String password;
     //基础路径
     @Value("${ftp.path}")
-    private String FTP_BASEPATH;
+    private String basePath;
+    //允许的文件类型
+    @Value("${ftp.allow-type}")
+    private String allowType;
 
     public FTPClient getFTPClient() {
         FTPClient ftpClient = new FTPClient();
         try {
-            ftpClient.connect(FTP_ADDRESS, FTP_PORT);// 连接FTP服务器
-            ftpClient.login(FTP_USERNAME, FTP_PASSWORD);// 登陆FTP服务器
+            ftpClient.connect(address, port);// 连接FTP服务器
+            ftpClient.login(username, password);// 登陆FTP服务器
             if (!FTPReply.isPositiveCompletion(ftpClient.getReplyCode())) {
                 ftpClient.disconnect();
                 throw new BusinessException("未连接到ftp服务");
@@ -49,6 +52,17 @@ public class FtpUtil {
      */
     public void uploadFile(String[] path, String fileName, File file) {
 
+        String[] fileType = allowType.split(",");
+        boolean isAllow = false;
+        for (String type : fileType) {
+            if (file.getName().substring(file.getName().lastIndexOf(".") + 1).equals(type)) {
+                isAllow = true;
+            }
+        }
+        if (!isAllow) {
+            throw new BusinessException("不允许的文件类型");
+        }
+
         FTPClient ftp = getFTPClient();
         ftp.setControlEncoding("UTF-8");
         FileInputStream fis = null;
@@ -57,8 +71,8 @@ public class FtpUtil {
             ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
 
             //设置存放路径
-            ftp.makeDirectory(FTP_BASEPATH);
-            ftp.changeWorkingDirectory(FTP_BASEPATH);
+            ftp.makeDirectory(basePath);
+            ftp.changeWorkingDirectory(basePath);
 
             for (int i = 0; i < path.length; i++) {
                 ftp.makeDirectory(path[i]);
@@ -88,7 +102,9 @@ public class FtpUtil {
         }
     }
 
-
+    /*
+     * 下载文件
+     */
     public void downloadFile(String[] path, String fileName, File file) {
 
         FTPClient ftp = getFTPClient();
@@ -98,7 +114,7 @@ public class FtpUtil {
             ftp.enterLocalPassiveMode();
             ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
 
-            ftp.changeWorkingDirectory(FTP_BASEPATH);
+            ftp.changeWorkingDirectory(basePath);
 
             for (int i = 0; i < path.length; i++) {
                 ftp.changeWorkingDirectory(path[i]);
