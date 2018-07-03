@@ -214,6 +214,7 @@ public class GeneratingBusiness {
         String archivalCodeNameOfFolderFile ="";
         String serialNumberNameOfFolderFile="";
         Integer folderFileCatalogueId = -1;
+        Integer maxSerialNumber = -1;
 
         archivalCodeName = getArchivalCodeMetadataName(archivalCodeName,catalogueId);
         if (archivalCodeName==null){
@@ -232,8 +233,18 @@ public class GeneratingBusiness {
             serialNumberName = getSerialNumberName(serialNumberName,catalogueId);
             if (serialNumberName==null){
                 throw new BusinessException(getCatalogueType(catalogueId)+"没有序号列");
+            }else{
+                //调用仓储层得到最大序号
+                Query query = new Query();
+                query.with(Sort.by(Sort.Direction.DESC, "items.sn")).limit(1);
+                List<Entry> list = entryMongoRepository.findAll(query,"archive_record_"+catalogueId);
+
+                if (list.size()>0) {
+                    maxSerialNumber = Integer.parseInt(list.get(0).getItems().getOrDefault(serialNumberName,"")+"");
+                }
             }
         }
+
 
         //查找条目，要传入条目id和目录id
         Iterable<Entry> entryList = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
@@ -277,7 +288,7 @@ public class GeneratingBusiness {
                     //如果条目中没有序号
                     if(items.get(serialNumberName) == null || items.get(serialNumberName).equals("")){
                         //生成序号
-                        splicingContent = generatingSerialNumber(items,entry.getCatalogueId(),serialNumberName);
+                        splicingContent = generatingSerialNumber(items,entry.getCatalogueId(),serialNumberName,maxSerialNumber);
                     }else {
                         splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry,serialNumberName);
                     }
@@ -286,6 +297,8 @@ public class GeneratingBusiness {
                 }
 
                 archivalCodeVal.append(splicingContent);
+                //mSerialNumber = Integer.parseInt(maxSerialNumber);
+
 
             }
 
@@ -315,6 +328,7 @@ public class GeneratingBusiness {
             entriesForSave.add(entry);
 
             archivalCodeVal.delete(0,archivalCodeVal.length());
+            maxSerialNumber++;
 
         }
     }
@@ -324,29 +338,19 @@ public class GeneratingBusiness {
      * @param items 条目
      * @return 返回序号
      */
-    private String generatingSerialNumber(Map<String, Object> items,Integer catalogueId,String nameOfFolderFile){
+    private String generatingSerialNumber(Map<String, Object> items,Integer catalogueId,String nameOfFolderFile,Integer maxSerialNumber){
 
         //序号
         Integer serialNumber = -1;
-        String maxSerialNumber = "";
-
-
-        //调用仓储层得到最大序号
-        Query query = new Query();
-        query.with(Sort.by(Sort.Direction.DESC, "items.sn")).limit(1);
-        List<Entry> list = entryMongoRepository.findAll(query,"archive_record_"+catalogueId);
-
-        if (list.size()>0) {
-            maxSerialNumber = list.get(0).getItems().getOrDefault(nameOfFolderFile,"")+"";
-        }
 
         //如果要生成第一个序号  (也就是最大序号为空)
         if ("".equals(maxSerialNumber)){
             serialNumber = 1;
         }else {//如果有则执行以下的
             //得到序号
-            serialNumber = Integer.parseInt(maxSerialNumber);
-                serialNumber++;
+            //serialNumber = Integer.parseInt(maxSerialNumber);
+            serialNumber = maxSerialNumber;
+            serialNumber++;
         }
 
         String newSerialNumber = generatingAllTypeSerialNumber(serialNumber,catalogueId);
@@ -406,7 +410,7 @@ public class GeneratingBusiness {
                 }
                 break;
             case SerialNumber:
-                str = (String)entryMongoRepository.findById(entry.getId(),"archive_record_"+entry.getCatalogueId()).get().getItems().get(serialNumberName);
+                str = entryMongoRepository.findById(entry.getId(),"archive_record_"+entry.getCatalogueId()).get().getItems().get(serialNumberName)+"";
                 if (str.equals("")) {
                     errors.add("序号不能为空");
                 }
