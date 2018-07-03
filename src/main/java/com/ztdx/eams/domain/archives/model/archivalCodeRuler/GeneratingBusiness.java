@@ -321,6 +321,8 @@ public class GeneratingBusiness {
             entry.setItems(items);
             entriesForSave.add(entry);
 
+            archivalCodeVal.delete(0,archivalCodeVal.length());
+
         }
     }
 
@@ -334,6 +336,7 @@ public class GeneratingBusiness {
         //序号
         Integer serialNumber = -1;
         String maxSerialNumber = "";
+
 
         //调用仓储层得到最大序号
         Query query = new Query();
@@ -350,7 +353,7 @@ public class GeneratingBusiness {
         }else {//如果有则执行以下的
             //得到序号
             serialNumber = Integer.parseInt(maxSerialNumber);
-            serialNumber++;
+                serialNumber++;
         }
 
         String newSerialNumber = generatingAllTypeSerialNumber(serialNumber,catalogueId);
