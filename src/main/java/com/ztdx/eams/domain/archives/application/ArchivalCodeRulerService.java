@@ -40,7 +40,7 @@ public class ArchivalCodeRulerService {
      * @param catalogueId 目录id
      * @return 返回错误明细
      */
-    public List<String> generatingFileAndFolder(List<String> entryIds, int catalogueId){
+    public List<Map<String,String>> generatingFileAndFolder(List<String> entryIds, int catalogueId){
         if (entryIds==null){
             throw new BusinessException("未选中条目");
         }
@@ -53,7 +53,7 @@ public class ArchivalCodeRulerService {
      * @param catalogueId 目录id
      * @return
      */
-    public List<String> generatingFolderFile(String folderId,int catalogueId) {
+    public List<Map<String,String>> generatingFolderFile(String folderId,int catalogueId) {
         if (folderId==null){
             throw new BusinessException("未选中条目");
         }

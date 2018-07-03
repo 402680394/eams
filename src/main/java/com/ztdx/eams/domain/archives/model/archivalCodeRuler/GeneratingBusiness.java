@@ -11,10 +11,7 @@ import com.ztdx.eams.domain.system.repository.FondsRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -45,10 +42,10 @@ public class GeneratingBusiness {
      * @param catalogueId 目录id
      * @return 返回错误明细
      */
-    public List<String> generatingFileAndFolder(List<String> entryIds, int catalogueId){
+    public List<Map<String,String>> generatingFileAndFolder(List<String> entryIds, int catalogueId){
 
         //创建错误信息集合
-        List<String> errors = new ArrayList<>();
+        List<Map<String,String>> errorsList = new ArrayList<>();
         //创建新条目集合存入MongoDB
         List<Entry> entriesForSave = new ArrayList<>();
         //创建新卷内条目集合存入MongoDB
@@ -62,7 +59,7 @@ public class GeneratingBusiness {
             throw new BusinessException("错误的接口");
         }
 
-        generatingFileAndFolder(entryIds,catalogueId,errors,entriesForSave,catalogueType,folderFileEntriesForSave);
+        generatingFileAndFolder(entryIds,catalogueId,errorsList,entriesForSave,catalogueType,folderFileEntriesForSave);
 
         //把条目集合存入MongoDB
         if (entriesForSave.size() > 0){
@@ -77,8 +74,8 @@ public class GeneratingBusiness {
         }
 
         //返回错误信息集合
-        if (errors.size() > 0) {
-            return errors;
+        if (errorsList.size() > 0) {
+            return errorsList;
         }
 
         return null;
@@ -90,9 +87,9 @@ public class GeneratingBusiness {
      * @param catalogueId 目录id
      * @return
      */
-    public List<String> generatingFolderFile(String folderId,int catalogueId) {
+    public List<Map<String,String>> generatingFolderFile(String folderId,int catalogueId) {
         //创建错误信息集合
-        List<String> errors = new ArrayList<>();
+        List<Map<String,String>> errorsList = new ArrayList<>();
         //创建新条目集合存入MongoDB
         List<Entry> entriesForSave = new ArrayList<>();
         //卷内条目集合
@@ -141,7 +138,7 @@ public class GeneratingBusiness {
         }
 
         //生成档号
-        generatingFolderFileArchivalCode(folderFileList,entriesForSave,errors,folderArchivalCode,archivalCodeNameOfFolderFile,serialNumberNameOfFolderFile);
+        generatingFolderFileArchivalCode(folderFileList,entriesForSave,errorsList,folderArchivalCode,archivalCodeNameOfFolderFile,serialNumberNameOfFolderFile);
 
         //把条目集合存入MongoDB
         if (entriesForSave.size() > 0){
@@ -150,8 +147,8 @@ public class GeneratingBusiness {
         }
 
         //返回错误信息集合
-        if (errors.size() > 0) {
-            return errors;
+        if (errorsList.size() > 0) {
+            return errorsList;
         }
 
         return null;
@@ -160,7 +157,7 @@ public class GeneratingBusiness {
     /**
      *生成卷内档号
      */
-    public void generatingFolderFileArchivalCode(List<Entry> folderFileList,List<Entry> entriesForSave,List<String> errors,String folderArchivalCode,String archivalCodeNameOfFolderFile,String serialNumberNameOfFolderFile){
+    public void generatingFolderFileArchivalCode(List<Entry> folderFileList,List<Entry> entriesForSave,List<Map<String,String>> errorsList,String folderArchivalCode,String archivalCodeNameOfFolderFile,String serialNumberNameOfFolderFile){
 
         //定义档号
         String archivalCode = "";
@@ -174,9 +171,10 @@ public class GeneratingBusiness {
             //获取卷内条目
             Map<String, Object> items = entry.getItems();
 
+            Map<String,String> errorsMap = new HashMap<>();
             //如果档号已经存在，则返回错误信息
             if (null!=items.get(archivalCode) && !"".equals(items.get(archivalCode))) {
-                errors.add("档号已存在");
+                errorsMap.put(entry.getId(),"档号已存在");
                 continue;
             }
 
@@ -191,6 +189,7 @@ public class GeneratingBusiness {
             items.put(serialNumberNameOfFolderFile,newSerialNumber);
             entry.setItems(items);
             entriesForSave.add(entry);
+            errorsList.add(errorsMap);
         }
 
     }
@@ -199,12 +198,12 @@ public class GeneratingBusiness {
      * 案卷和一文一件的档号生成
      * @param entryIds  案卷/一文一件 id集合
      * @param catalogueId 目录id
-     * @param errors 错误信息集合
+     * @param errorsList 错误信息集合
      * @param entriesForSave 案卷/一文一件条目放入新集合存到MongoDb
      * @param catalogueType 目录类型
      * @param folderFileEntriesForSave 卷卷内条目放入新集合存到MongoDb
      */
-    private void generatingFileAndFolder(List<String> entryIds, int catalogueId,List<String> errors,List<Entry> entriesForSave,CatalogueType catalogueType,List<Entry> folderFileEntriesForSave){
+    private void generatingFileAndFolder(List<String> entryIds, int catalogueId,List<Map<String,String>> errorsList,List<Entry> entriesForSave,CatalogueType catalogueType,List<Entry> folderFileEntriesForSave){
 
         StringBuilder archivalCodeVal = new StringBuilder(); //定义档号
         String splicingContent=""; //拼接内容
@@ -214,7 +213,10 @@ public class GeneratingBusiness {
         String archivalCodeNameOfFolderFile ="";
         String serialNumberNameOfFolderFile="";
         Integer folderFileCatalogueId = -1;
-        Integer maxSerialNumber = -1;
+        String maxSerialNumber = "";
+        Integer numberOfMaxSerialNumber = -1;
+        String messageOfErrors = "档号已存在";
+        Map<String,String> errorsMapOfFolderFile = new HashMap<>();
 
         archivalCodeName = getArchivalCodeMetadataName(archivalCodeName,catalogueId);
         if (archivalCodeName==null){
@@ -240,7 +242,12 @@ public class GeneratingBusiness {
                 List<Entry> list = entryMongoRepository.findAll(query,"archive_record_"+catalogueId);
 
                 if (list.size()>0) {
-                    maxSerialNumber = Integer.parseInt(list.get(0).getItems().getOrDefault(serialNumberName,"")+"");
+                    maxSerialNumber = list.get(0).getItems().getOrDefault(serialNumberName,"")+"";
+                    if (!"".equals(maxSerialNumber)){
+                        numberOfMaxSerialNumber = Integer.parseInt(maxSerialNumber);
+                    }else {
+                        numberOfMaxSerialNumber = 1;
+                    }
                 }
             }
         }
@@ -276,7 +283,10 @@ public class GeneratingBusiness {
             Map<String, Object> items = entry.getItems();
             //如果档号已经存在，则返回错误信息
             if (null!=items.get(archivalCodeName) && !"".equals(items.get(archivalCodeName))) {
-                errors.add(getCatalogueType(entry.getCatalogueId())+"档号已存在");
+                //errors.add(getCatalogueType(entry.getCatalogueId())+"档号已存在");
+                Map<String,String> errorsMap = new HashMap<>();
+                errorsMap.put(entry.getId(),messageOfErrors);
+                errorsList.add(errorsMap);
                 continue;
             }
 
@@ -288,17 +298,15 @@ public class GeneratingBusiness {
                     //如果条目中没有序号
                     if(items.get(serialNumberName) == null || items.get(serialNumberName).equals("")){
                         //生成序号
-                        splicingContent = generatingSerialNumber(items,entry.getCatalogueId(),serialNumberName,maxSerialNumber);
+                        splicingContent = generatingSerialNumber(items,entry.getCatalogueId(),serialNumberName,numberOfMaxSerialNumber);
                     }else {
-                        splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry,serialNumberName);
+                        splicingContent = archivalCodeRuler(archivalCodeRuler,items,errorsList,entry,serialNumberName);
                     }
                 }else {
-                    splicingContent = archivalCodeRuler(archivalCodeRuler,items,errors,entry,serialNumberName);
+                    splicingContent = archivalCodeRuler(archivalCodeRuler,items,errorsList,entry,serialNumberName);
                 }
 
                 archivalCodeVal.append(splicingContent);
-                //mSerialNumber = Integer.parseInt(maxSerialNumber);
-
 
             }
 
@@ -314,11 +322,12 @@ public class GeneratingBusiness {
                     archivalCodeNameOfFolderFile = getArchivalCodeMetadataName(archivalCodeNameOfFolderFile,folderFileCatalogueId);
                     serialNumberNameOfFolderFile = getSerialNumberName(serialNumberNameOfFolderFile,folderFileCatalogueId);
                     if (archivalCodeNameOfFolderFile==null){
-                        errors.add(getCatalogueType(folderFileCatalogueId)+"没有档号列");
+                        errorsMapOfFolderFile.put(getCatalogueType(folderFileCatalogueId),"没有档号列");
                     }else if (serialNumberNameOfFolderFile==null){
-                        errors.add(getCatalogueType(folderFileCatalogueId)+"没有序号列");
+                        errorsMapOfFolderFile = new HashMap<>();
+                        errorsMapOfFolderFile.put(getCatalogueType(folderFileCatalogueId),"没有序号列");
                     }else {
-                        generatingFolderFileArchivalCode(folderFileEntryList, folderFileEntriesForSave, errors, archivalCodeVal.toString(), archivalCodeNameOfFolderFile,serialNumberNameOfFolderFile);
+                        generatingFolderFileArchivalCode(folderFileEntryList, folderFileEntriesForSave, errorsList, archivalCodeVal.toString(), archivalCodeNameOfFolderFile,serialNumberNameOfFolderFile);
                     }
                 }
             }
@@ -326,9 +335,12 @@ public class GeneratingBusiness {
             items.put(archivalCodeName, archivalCodeVal.toString());
             entry.setItems(items);
             entriesForSave.add(entry);
+            if (errorsMapOfFolderFile.size()>0){
+                errorsList.add(errorsMapOfFolderFile);
+            }
 
             archivalCodeVal.delete(0,archivalCodeVal.length());
-            maxSerialNumber++;
+            numberOfMaxSerialNumber++;
 
         }
     }
@@ -342,9 +354,10 @@ public class GeneratingBusiness {
 
         //序号
         Integer serialNumber = -1;
+        Integer condition = 1;
 
         //如果要生成第一个序号  (也就是最大序号为空)
-        if ("".equals(maxSerialNumber)){
+        if (condition.equals(maxSerialNumber)){
             serialNumber = 1;
         }else {//如果有则执行以下的
             //得到序号
@@ -367,14 +380,16 @@ public class GeneratingBusiness {
      * 生成档号规则
      * @param archivalCodeRuler 档号规则
      * @param items 条目
-     * @param errors 错误信息
+     * @param errorsList 错误信息
      * @param entry 条目
      * @return 返回根据档号规则获取的要拼接的内容
      */
-    private String archivalCodeRuler (ArchivalCodeRuler archivalCodeRuler,Map<String, Object> items,List<String> errors,Entry entry,String serialNumberName){
+    private String archivalCodeRuler (ArchivalCodeRuler archivalCodeRuler,Map<String, Object> items,List<Map<String,String>> errorsList,Entry entry,String serialNumberName){
 
         //拼接内容
         String str = "";
+        String valueOfErrors = "不能为空";
+        Map<String,String> errorsMap = new HashMap<>();
 
         switch (archivalCodeRuler.getType()) {
             case EntryValue:
@@ -382,7 +397,7 @@ public class GeneratingBusiness {
                 String entryValue = items.get(metadataName).toString();
                 str = entryValue.substring(0, archivalCodeRuler.getInterceptionLength());
                 if (str.equals("")) {
-                    errors.add(metadataName + "不能为空");
+                    errorsMap.put(entry.getId(),metadataName+valueOfErrors);
                 }
                 break;
             case ReferenceCode:
@@ -394,27 +409,31 @@ public class GeneratingBusiness {
                     str = referenceCode.substring(0, archivalCodeRuler.getInterceptionLength());
                 }
                 if (str.equals("")) {
-                    errors.add(entryValue1 + "不能为空");
+                    errorsMap.put(entry.getId(),entryValue1+valueOfErrors);
                 }
                 break;
             case FondsCode:
                 str = fondsRepository.findById(entry.getFondsId()).getCode();
                 if (str.equals("")) {
-                    errors.add("全宗号不能为空");
+                    errorsMap.put(entry.getId(),"全宗号"+valueOfErrors);
                 }
                 break;
             case FixValue:
                 str = archivalCodeRuler.getValue();
                 if (str.equals("")) {
-                    errors.add("固定值不能为空");
+                    errorsMap.put(entry.getId(),"固定值"+valueOfErrors);
                 }
                 break;
             case SerialNumber:
                 str = entryMongoRepository.findById(entry.getId(),"archive_record_"+entry.getCatalogueId()).get().getItems().get(serialNumberName)+"";
                 if (str.equals("")) {
-                    errors.add("序号不能为空");
+                    errorsMap.put(entry.getId(),"序号"+valueOfErrors);
                 }
                 break;
+        }
+
+        if (errorsMap.size()>0){
+            errorsList.add(errorsMap);
         }
         return str;
     }

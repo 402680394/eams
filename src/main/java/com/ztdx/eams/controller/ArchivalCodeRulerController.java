@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  *档号生成与清除
@@ -39,7 +40,7 @@ public class ArchivalCodeRulerController {
      *  ]
      */
     @RequestMapping(value = "/generating/fileAndFolder", method = RequestMethod.PUT)
-    public List<String> fileAndFolder(@JsonParam List<String> entryIds, @JsonParam int catalogueId) {
+    public List<Map<String,String>>  fileAndFolder(@JsonParam List<String> entryIds, @JsonParam int catalogueId) {
         return archivalcodeRulerService.generatingFileAndFolder(entryIds, catalogueId);
     }
 
@@ -57,7 +58,7 @@ public class ArchivalCodeRulerController {
      *  ]
      */
     @RequestMapping(value = "/generating/folderFile",method = RequestMethod.PUT)
-    public List<String> folderFile(@JsonParam String folderId, @JsonParam int catalogueId) {
+    public List<Map<String,String>> folderFile(@JsonParam String folderId, @JsonParam int catalogueId) {
         return archivalcodeRulerService.generatingFolderFile(folderId,catalogueId);
     }
 
