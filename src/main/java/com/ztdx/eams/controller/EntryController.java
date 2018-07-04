@@ -1224,7 +1224,7 @@ public class EntryController {
     }
 
     private void delOriginal(Map<String, String> ids, Integer srcId){
-        if (ids != null && srcId != null) {
+        if (ids != null && ids.size() > 0 && srcId != null) {
             List<Map<String, Object>> batch = ids.keySet().stream().map(a -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put(a, srcId);

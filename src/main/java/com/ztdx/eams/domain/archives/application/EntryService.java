@@ -262,6 +262,9 @@ public class EntryService {
     }
 
     public void delete(int catalogueId, Iterable<String> deletes) {
+        if(deletes == null || !deletes.iterator().hasNext()){
+            return;
+        }
         Iterable<Entry> list = entryMongoRepository.findAllById(deletes, getIndexName(catalogueId));
         list.forEach(a -> a.setGmtDeleted(1));
         entryMongoRepository.saveAll(list);

@@ -476,14 +476,14 @@ public class OriginalTextService {
 
     public Page<OriginalText> scroll(boolean archivingAll, int catalogueId, Collection<String> entryIds, Collection<Integer> originalType, int page, int size) {
         Query query;
-        if (archivingAll) {
+        /*if (archivingAll) {
             query = Query.query(where("type").in(originalType))
                     .with(PageRequest.of(page, size));
-        } else {
+        } else {*/
             query = Query.query(where("entryId").in(entryIds)
                     .and("type").in(originalType))
                     .with(PageRequest.of(page, size));
-        }
+        /*}*/
         String indexName = "archive_record_originalText_" + catalogueId;
         long total = mongoOperations.count(query, indexName);
         List<OriginalText> list = originalTextMongoRepository.findAll(query, indexName);
