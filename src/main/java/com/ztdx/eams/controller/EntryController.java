@@ -11,6 +11,7 @@ import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
+import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -1288,6 +1289,15 @@ public class EntryController {
 
         if (srcFields.size() != trgFields.size()){
             throw new InvalidArgumentException("字段映射错误");
+        }
+
+        for (int i = 0; i < srcFields.size() ; i++){
+            if (StringUtils.isEmpty(srcFields.get(i))
+                    || StringUtils.isEmpty(trgFields.get(i))){
+                srcFields.remove(i);
+                trgFields.remove(i);
+                i--;
+            }
         }
 
         if (!catalogueService.exists(srcId)){

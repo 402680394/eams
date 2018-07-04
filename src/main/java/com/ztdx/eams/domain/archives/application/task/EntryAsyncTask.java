@@ -80,10 +80,6 @@ public class EntryAsyncTask {
                 query(where("_id").in(ids))
                 , new Update().currentDate("indexDate")
                 , this.getIndexName(catalogueId));
-
-        for (int i = 0; i< 100; i++){
-            entryElasticsearchRepository.findAll(this.getIndexName(catalogueId));
-        }
     }
 
     @Async
@@ -101,12 +97,6 @@ public class EntryAsyncTask {
                 query(where("_id").is(entry.getId()))
                 , new Update().currentDate("indexDate")
                 , this.getIndexName(entry.getCatalogueId()));
-
-        try {
-            Thread.sleep(5000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     @Async
