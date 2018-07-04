@@ -146,6 +146,11 @@ public class OriginalTextService {
             return null;
         }
         if (!file.isEmpty()) {
+            originalText.setFileAttributesMap(null);
+            originalText.setPdfConverStatus(0);
+            originalText.setPdfMd5(null);
+            originalText.setContentIndexStatus(0);
+            originalText.setContentIndex(null);
             //文件上传到本地服务器读取文件属性,然后上传至ftp
             fileUpload(fondsId, originalText, file);
         }
@@ -378,6 +383,8 @@ public class OriginalTextService {
         createContentIndex(originalText, file);
         //转为pdf格式文件并上传ftp
         converter2PdfAndUpload(fondsId, originalText, file);
+        //获取文件元数据属性
+        getFileMetadata(originalText, file);
 
         Optional<Entry> find = entryElasticsearchRepository.findById(originalText.getEntryId(), "archive_record_" + originalText.getCatalogueId());
         if (find.isPresent()) {
@@ -426,6 +433,19 @@ public class OriginalTextService {
             //设置全文索引状态为生成失败
             originalText.setContentIndex(null);
             originalText.setContentIndexStatus(2);
+        }
+    }
+
+    /**
+     * 抽取文件元数据属性
+     */
+    private void getFileMetadata(OriginalText originalText, File file) {
+        if (originalText.getName().endsWith(".doc") || originalText.getName().endsWith(".xls") || originalText.getName().endsWith(".ppt")) {
+            originalText.setFileAttributesMap(FileReader.office2003MetadataRead(file));
+        } else if (originalText.getName().endsWith(".docx") || originalText.getName().endsWith(".xlsx") || originalText.getName().endsWith(".xlsm") || originalText.getName().endsWith(".pptx")) {
+            originalText.setFileAttributesMap(FileReader.office2007MetadataRead(file));
+        } else {
+            originalText.setFileAttributesMap(new HashMap<>());
         }
     }
 
