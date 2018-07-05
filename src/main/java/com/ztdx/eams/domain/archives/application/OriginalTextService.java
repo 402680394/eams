@@ -9,8 +9,8 @@ import com.ztdx.eams.domain.archives.model.ArchivingResult;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.OriginalText;
 import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
-import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
+import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.OriginalTextMongoRepository;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -45,7 +45,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 @Service
 public class OriginalTextService {
 
-    private final EntryElasticsearchRepository entryElasticsearchRepository;
+    private final EntryMongoRepository entryMongoRepository;
 
     private final OriginalTextMongoRepository originalTextMongoRepository;
 
@@ -62,8 +62,8 @@ public class OriginalTextService {
     private final MongoOperations mongoOperations;
 
     @Autowired
-    public OriginalTextService(EntryElasticsearchRepository entryElasticsearchRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil, PDFConverter pdfConverter, ElasticsearchOperations elasticsearchOperations, MongoOperations mongoOperations) {
-        this.entryElasticsearchRepository = entryElasticsearchRepository;
+    public OriginalTextService(EntryMongoRepository entryMongoRepository, OriginalTextMongoRepository originalTextMongoRepository, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, ArchivesGroupRepository archivesGroupRepository, FtpUtil ftpUtil, PDFConverter pdfConverter, ElasticsearchOperations elasticsearchOperations, MongoOperations mongoOperations) {
+        this.entryMongoRepository = entryMongoRepository;
         this.originalTextMongoRepository = originalTextMongoRepository;
         this.originalTextElasticsearchRepository = originalTextElasticsearchRepository;
         this.archivesGroupRepository = archivesGroupRepository;
@@ -84,7 +84,7 @@ public class OriginalTextService {
         if (null == fondsId) {
             throw new InvalidArgumentException("全宗档案库不存在");
         }
-        Optional<Entry> find = entryElasticsearchRepository.findById(originalText.getEntryId(), "archive_record_" + originalText.getCatalogueId());
+        Optional<Entry> find = entryMongoRepository.findById(originalText.getEntryId(), "archive_record_" + originalText.getCatalogueId());
         if (!find.isPresent()) {
             throw new InvalidArgumentException("条目不存在");
         }
@@ -386,7 +386,7 @@ public class OriginalTextService {
         //获取文件元数据属性
         getFileMetadata(originalText, file);
 
-        Optional<Entry> find = entryElasticsearchRepository.findById(originalText.getEntryId(), "archive_record_" + originalText.getCatalogueId());
+        Optional<Entry> find = entryMongoRepository.findById(originalText.getEntryId(), "archive_record_" + originalText.getCatalogueId());
         if (find.isPresent()) {
             originalTextMongoRepository.save(originalText);
             originalTextElasticsearchRepository.save(originalText);
