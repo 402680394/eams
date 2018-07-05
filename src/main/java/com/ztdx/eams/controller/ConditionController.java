@@ -183,21 +183,53 @@ public class ConditionController {
      * @apiSuccess {Object[]} system 系统条件列表
      * @apiSuccess {String} system.id 条件id
      * @apiSuccess {String} system.name 条件名称
+     * @apiSuccess {Number} system.catalogueId 目录id
+     * @apiSuccess {Object[]} system.conditions 条件数组
      * @apiSuccess {Object[]} custom 自定义条件列表，只能看到自己添加的条件
      * @apiSuccess {Number} custom.id 条件id
      * @apiSuccess {String} custom.name 条件名称
+     * @apiSuccess {Number} custom.catalogueId 目录id
+     * @apiSuccess {Object[]} custom.conditions 条件数组
      * @apiSuccessExample {json} Success-Response
      * {
      *     "system":[
      *         {
      *             "id": 1,
-     *             "name": "系统条件"
+     *             "name": "系统条件",
+     *             "catalogueId", 1,
+     *             "conditions":[
+     *                 {
+     *                     "column":"age",
+     *                     "operator": "greaterThan",
+     *                     "value": 10
+     *                 },
+     *                 {
+     *                     "logical": "and",
+     *                     "column":"age",
+     *                     "operator": "lessThanOrEqual",
+     *                     "value": 30
+     *                 }
+     *             ]
      *         }
      *     ],
      *     "custom":[
      *         {
      *             "id": 2,
-     *             "name": "自定义条件"
+     *             "name": "自定义条件",
+     *             "catalogueId", 1,
+     *             "conditions":[
+     *                 {
+     *                     "column":"age",
+     *                     "operator": "greaterThan",
+     *                     "value": 10
+     *                 },
+     *                 {
+     *                     "logical": "and",
+     *                     "column":"age",
+     *                     "operator": "lessThanOrEqual",
+     *                     "value": 30
+     *                 }
+     *             ]
      *         }
      *     ]
      * }

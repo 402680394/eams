@@ -91,21 +91,22 @@ public class ConditionService {
 
         Map<String,Object> resultMap = new HashMap<>();
 
-        List<Map<String,Object>> systemList = new ArrayList<>();
-        List<Map<String,Object>> customList = new ArrayList<>();
+        List<EntryCondition> systemList = new ArrayList<>();
+        List<EntryCondition> customList = new ArrayList<>();
 
         //通过档案目录id获取所有的查询条件
         List<EntryCondition> entryConditionList = conditionMongoRepository.findAllByCatalogueId(cid);
         for (EntryCondition entryCondition : entryConditionList) {
 
-            Map<String,Object> map = new HashMap<>();
+            /*Map<String,Object> map = new HashMap<>();
             map.put("id",entryCondition.getId());
             map.put("name",entryCondition.getName());
+            map.put("conditions", entryCondition.getConditions());*/
 
             if (entryCondition.getEntryConditionType().equals(EntryConditionType.custom) && entryCondition.getOwner()==owner){
-                customList.add(map);
+                customList.add(entryCondition);
             }else if (entryCondition.getEntryConditionType().equals(EntryConditionType.system)){
-                systemList.add(map);
+                systemList.add(entryCondition);
             }
         }
 
