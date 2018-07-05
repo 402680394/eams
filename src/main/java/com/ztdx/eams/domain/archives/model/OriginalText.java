@@ -52,7 +52,7 @@ public class OriginalText {
     @Field(type = FieldType.text)
     private String remark;
     //元数据信息
-    private HashMap<String, Object> fileAttributesMap;
+    private HashMap<String, String> fileAttributesMap;
     //原始文件MD5值
     @Field(type = FieldType.keyword)
     private String md5;

@@ -232,7 +232,7 @@ public class OriginalTextService {
     /**
      * 获取原文文件元数据
      */
-    public Map<String, Object> fileAttributes(int catalogueId, String id) {
+    public Map<String, String> fileAttributes(int catalogueId, String id) {
         Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
         if (find.isPresent()) {
             return find.get().getFileAttributesMap();
@@ -500,9 +500,9 @@ public class OriginalTextService {
             query = Query.query(where("type").in(originalType))
                     .with(PageRequest.of(page, size));
         } else {*/
-            query = Query.query(where("entryId").in(entryIds)
-                    .and("type").in(originalType))
-                    .with(PageRequest.of(page, size));
+        query = Query.query(where("entryId").in(entryIds)
+                .and("type").in(originalType))
+                .with(PageRequest.of(page, size));
         /*}*/
         String indexName = "archive_record_originalText_" + catalogueId;
         long total = mongoOperations.count(query, indexName);

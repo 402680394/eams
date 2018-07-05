@@ -192,7 +192,7 @@ public class FileReader {
      * 读取office2003属性内容
      */
     public static HashMap office2003MetadataRead(File file) {
-        HashMap metadataMap = new HashMap<String, Object>();
+        HashMap<String, Object> metadataMap = new HashMap();
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(file);
@@ -298,7 +298,7 @@ public class FileReader {
      * 读取office2007及以上版本属性内容
      */
     public static HashMap office2007MetadataRead(File file) {
-        HashMap metadataMap = new HashMap<String, Object>();
+        HashMap<String, String> metadataMap = new HashMap();
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(file);
@@ -328,25 +328,23 @@ public class FileReader {
             }
             POIXMLProperties.CoreProperties core = extractor.getCoreProperties();
             POIXMLProperties.ExtendedProperties extended = extractor.getExtendedProperties();
-            metadataMap.put("标题", core.getTitle());
-            metadataMap.put("主题", core.getSubject());
-            metadataMap.put("标记", core.getIdentifier());
-            metadataMap.put("类别", core.getCategory());
-            metadataMap.put("备注", core.getDescription());
-            metadataMap.put("作者", core.getCreator());
-            metadataMap.put("内容状态", core.getContentStatus());
-            metadataMap.put("内容类型", core.getContentType());
-            metadataMap.put("创建内容时间", core.getCreated());
-            metadataMap.put("最后一次保存者", core.getLastModifiedByUser());
-            metadataMap.put("最后一次打印时间", core.getLastPrinted());
-            metadataMap.put("修订号", core.getRevision());
-            metadataMap.put("程序名称", extended.getAppVersion());
-            metadataMap.put("字符数", extended.getCharacters());
-            metadataMap.put("公司", extended.getCompany());
-            metadataMap.put("行数", extended.getLines());
-            metadataMap.put("管理者", extended.getManager());
-            metadataMap.put("页码范围", extended.getPages());
-            metadataMap.put("段落数", extended.getParagraphs());
+            metadataMap.put("标题", (core.getTitle() == null ? "" : core.getTitle()));
+            metadataMap.put("主题", (core.getSubject() == null ? "" : core.getSubject()));
+            metadataMap.put("标记", (core.getIdentifier() == null ? "" : core.getIdentifier()));
+            metadataMap.put("类别", (core.getCategory() == null ? "" : core.getCategory()));
+            metadataMap.put("备注", (core.getDescription() == null ? "" : core.getDescription()));
+            metadataMap.put("作者", (core.getCreator() == null ? "" : core.getCreator()));
+            metadataMap.put("内容状态", (core.getContentStatus() == null ? "" : core.getContentStatus()));
+            metadataMap.put("内容类型", (core.getContentType() == null ? "" : core.getContentType()));
+            metadataMap.put("最后一次保存者", (core.getLastModifiedByUser() == null ? "" : core.getLastModifiedByUser()));
+            metadataMap.put("修订号", (core.getRevision() == null ? "" : core.getRevision()));
+            metadataMap.put("程序名称", (extended.getApplication() == null ? "" : extended.getApplication()));
+            metadataMap.put("字符数", (extended.getCharacters() == -1 ? "0" : String.valueOf(extended.getCharacters())));
+            metadataMap.put("公司", (extended.getCompany() == null ? "" : extended.getCompany()));
+            metadataMap.put("行数", (extended.getLines() == -1 ? "0" : String.valueOf(extended.getLines())));
+            metadataMap.put("管理者", (extended.getManager() == null ? "" : extended.getManager()));
+            metadataMap.put("页码范围", (extended.getPages() == -1 ? "0" : String.valueOf(extended.getPages())));
+            metadataMap.put("段落数", (extended.getParagraphs() == -1 ? "0" : String.valueOf(extended.getParagraphs())));
         } catch (Exception e) {
             throw new BusinessException("doc文件读取属性失败");
         } finally {

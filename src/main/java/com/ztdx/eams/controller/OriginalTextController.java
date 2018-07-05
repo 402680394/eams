@@ -137,7 +137,7 @@ public class OriginalTextController {
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
     @RequestMapping(value = "/fileAttributes", method = RequestMethod.PUT)
-    public Map<String, Object> fileAttributes(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id) {
+    public Map<String, String> fileAttributes(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id) {
         return originalTextService.fileAttributes(catalogueId, id);
     }
 
@@ -236,11 +236,11 @@ public class OriginalTextController {
                                     @RequestParam(required = false, name = "title", defaultValue = "") String title,
                                     @RequestParam(required = false, name = "page", defaultValue = "0") int page,
                                     @RequestParam(required = false, name = "size", defaultValue = "20") int size) {
-        Map result = new HashMap<String, Object>();
-        List list = new ArrayList<Map<String, Object>>();
+        Map<String, Object> result = new HashMap();
+        List<Map<String, Object>> list = new ArrayList();
         Page<OriginalText> originalTextPage = originalTextService.list(catalogueId, entryId, title, page, size);
         for (OriginalText originalText : originalTextPage.getContent()) {
-            HashMap map = new HashMap<String, Object>();
+            HashMap<String, Object> map = new HashMap();
             map.put("id", originalText.getId());
             map.put("title", originalText.getTitle());
             map.put("type", originalText.getType());
@@ -273,41 +273,5 @@ public class OriginalTextController {
     public void sort(@RequestParam("upId") String upId, @RequestParam("downId") String downId, @RequestParam("catalogueId") int catalogueId) {
         originalTextService.sort(upId, downId, catalogueId);
     }
-
-//    @RequestMapping(value = "/test", method = RequestMethod.GET)
-//    public void test() {
-//        int catalogueId = 5;
-//        List ids = new ArrayList<String>();
-//
-//        ids.add("c3a74088-4150-416e-9f07-b7277a9d8cc6");
-//        ids.add("b83bf403-7e34-4678-87c5-06b59ea56a1a");
-//        ids.add("f5180e67-0a75-40df-b2db-4489aa06905d");
-//
-//        try {
-//
-//            JobDetail job = newJob(PlaceOnFileJob.class)
-//                    .withIdentity("PlaceOnFileJob", "PlaceOnFileJobGroup")
-//                    .requestRecovery()
-//                    .build();
-//
-//            job.getJobDataMap().put("catalogueId", catalogueId);
-//            job.getJobDataMap().put("ids", ids);
-//
-//            Trigger trigger = TriggerBuilder.newTrigger()
-//                    .withIdentity("PlaceOnFileTrigger", "PlaceOnFileJobGroup")
-//                    .startNow()
-//                    .build();
-//
-//            scheduler.scheduleJob(job, trigger);
-//
-//            if (!scheduler.isStarted()) {
-//                scheduler.start();
-//            }
-//
-//        } catch (SchedulerException e) {
-//            e.printStackTrace();
-//            throw new BusinessException("原文归档调度任务启动失败");
-//        }
-//    }
 
 }
