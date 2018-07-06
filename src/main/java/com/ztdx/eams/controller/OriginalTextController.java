@@ -29,13 +29,13 @@ public class OriginalTextController {
 
     private final PermissionService permissionService;
 
-    private final Scheduler scheduler;
+    //private final Scheduler scheduler;
 
     @Autowired
-    public OriginalTextController(OriginalTextService originalTextService, PermissionService permissionService, Scheduler scheduler) {
+    public OriginalTextController(OriginalTextService originalTextService, PermissionService permissionService) {
         this.originalTextService = originalTextService;
         this.permissionService = permissionService;
-        this.scheduler = scheduler;
+        //this.scheduler = scheduler;
     }
 
     /**
