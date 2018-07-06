@@ -9,13 +9,14 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.persistence.Convert;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 
 @Data
 @Document(indexName = "archive_record", type = "record", createIndex = false)
 @org.springframework.data.mongodb.core.mapping.Document(collection = "archive_record")
-public class Entry {
+public class Entry implements Serializable {
     @Id
     @Field(type = FieldType.Auto)
     private String id;

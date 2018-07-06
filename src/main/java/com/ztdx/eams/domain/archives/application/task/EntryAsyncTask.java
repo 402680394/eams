@@ -1,6 +1,7 @@
 package com.ztdx.eams.domain.archives.application.task;
 
 import com.ztdx.eams.basic.exception.BusinessException;
+import com.ztdx.eams.basic.task.Job;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
 import com.ztdx.eams.domain.archives.model.Entry;
@@ -66,8 +67,13 @@ public class EntryAsyncTask {
         this.originalTextMongoRepository = originalTextMongoRepository;
     }
 
-    @Async
+    @Job
     public void indexAll(Iterable<Entry> entries, int catalogueId){
+        indexAllJob(entries, catalogueId);
+    }
+
+    public void indexAllJob(Iterable<Entry> entries, int catalogueId){
+        System.out.println("进入到indexAll");
         System.out.println("线程名称：" + Thread.currentThread().getName());
         if (entries == null || !entries.iterator().hasNext()){
             return;
@@ -82,7 +88,6 @@ public class EntryAsyncTask {
                 , this.getIndexName(catalogueId));
     }
 
-    @Async
     public void index(Entry entry){
         System.out.println("线程名称：" + Thread.currentThread().getName());
         initIndex(entry.getCatalogueId());
