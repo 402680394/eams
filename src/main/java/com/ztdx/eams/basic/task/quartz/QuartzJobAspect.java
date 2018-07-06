@@ -34,31 +34,12 @@ public class QuartzJobAspect {
             }
             methodSignature = (MethodSignature) signature;
 
-            String groupName = joinPoint.getTarget().getClass().getName();
-
-            JobDetail jobDetail = newJob(QuartzJob.class)
-                    .withIdentity(groupName + UUID.randomUUID().toString(), groupName)
-                    .requestRecovery()
-                    .build();
-
-            jobDetail.getJobDataMap().put("clazz", joinPoint.getTarget().getClass());
-            jobDetail.getJobDataMap().put("methodName", methodSignature.getName());
-            jobDetail.getJobDataMap().put("parameterTypes", methodSignature.getMethod().getParameterTypes());
-            jobDetail.getJobDataMap().put("arguments", joinPoint.getArgs());
-
-            Trigger trigger = TriggerBuilder.newTrigger()
-                    .withIdentity(groupName + UUID.randomUUID().toString(), groupName)
-                    .startNow()
-                    .build();
-            try {
-                scheduler.scheduleJob(jobDetail, trigger);
-
-                if (!scheduler.isStarted()) {
-                    scheduler.start();
-                }
-            } catch (SchedulerException e) {
-                e.printStackTrace();
-            }
+            QuartzJob.executeJob(scheduler
+                    , joinPoint.getTarget().getClass()
+                    , methodSignature.getName()
+                    , methodSignature.getMethod().getParameterTypes()
+                    , joinPoint.getArgs()
+                    , 1);
 
             return null;
         } catch (Throwable e) {
