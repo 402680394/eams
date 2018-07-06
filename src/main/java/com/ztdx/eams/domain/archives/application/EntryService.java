@@ -24,6 +24,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -187,16 +188,23 @@ public class EntryService {
 
         query.filter(termQuery("gmtDeleted", 0));
 
-        Page<Entry> result = entryElasticsearchRepository.search(
+        Page<Entry> searchResult = entryElasticsearchRepository.search(
                 query, pageable, new String[]{getIndexName(catalogueId)}
         );
 
-        result.stream().forEach(a -> {
+        searchResult.stream().forEach(a -> {
             convertEntryItems(a, EntryItemConverter::format, false);
             Map<String, Object> items = a.getItems();
             items.put("id", a.getId());
         });
-        return result;
+
+        List<String> ids = searchResult.getContent().stream().map(Entry::getId).collect(Collectors.toList());
+
+        List<Entry> result = (List<Entry>)entryMongoRepository.findAllById(ids, getIndexName(catalogueId));
+
+        result.sort(Comparator.comparing(a -> ids.indexOf(a.getId())));
+
+        return PageableExecutionUtils.getPage(result , pageable, searchResult::getTotalElements);
     }
 
     private void convertEntryItems(Entry entry, BiFunction<Object, DescriptionItem, Object> operator, boolean isGenerator) {
