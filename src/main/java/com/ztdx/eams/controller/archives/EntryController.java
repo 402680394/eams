@@ -781,7 +781,11 @@ public class EntryController {
             file.put("fileId", a.getId());
             file.put("title", a.getTitle());
             file.put("fileType", a.getType());
-            file.put("highLight", a.getContentIndex());
+            String highLight = a.getContentIndex();
+            if (highLight != null && highLight.length() > 300){
+                highLight = highLight.substring(0, a.getContentIndex().length() > 300 ? 300 : a.getContentIndex().length());
+            }
+            file.put("highLight", highLight);
             file.put("fileName", a.getName());
 
             return r;
