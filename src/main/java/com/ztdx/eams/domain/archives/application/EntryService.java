@@ -192,17 +192,17 @@ public class EntryService {
                 query, pageable, new String[]{getIndexName(catalogueId)}
         );
 
-        searchResult.stream().forEach(a -> {
-            convertEntryItems(a, EntryItemConverter::format, false);
-            Map<String, Object> items = a.getItems();
-            items.put("id", a.getId());
-        });
-
         List<String> ids = searchResult.getContent().stream().map(Entry::getId).collect(Collectors.toList());
 
         List<Entry> result = (List<Entry>)entryMongoRepository.findAllById(ids, getIndexName(catalogueId));
 
         result.sort(Comparator.comparing(a -> ids.indexOf(a.getId())));
+
+        result.forEach(a -> {
+            convertEntryItems(a, EntryItemConverter::format, false);
+            Map<String, Object> items = a.getItems();
+            items.put("id", a.getId());
+        });
 
         return PageableExecutionUtils.getPage(result , pageable, searchResult::getTotalElements);
     }
