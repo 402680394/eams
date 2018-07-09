@@ -1,6 +1,6 @@
 package com.ztdx.eams.basic.config;
 
-import com.ztdx.eams.controller.CustomUserDetailsService;
+import com.ztdx.eams.controller.system.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;

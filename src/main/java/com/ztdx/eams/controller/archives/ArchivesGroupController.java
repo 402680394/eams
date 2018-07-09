@@ -1,4 +1,4 @@
-package com.ztdx.eams.controller;
+package com.ztdx.eams.controller.archives;
 
 import com.ztdx.eams.domain.archives.application.ArchivesGroupService;
 import com.ztdx.eams.domain.archives.application.ArchivesService;

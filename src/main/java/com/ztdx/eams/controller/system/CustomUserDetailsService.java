@@ -1,4 +1,4 @@
-package com.ztdx.eams.controller;
+package com.ztdx.eams.controller.system;
 
 import com.ztdx.eams.query.SystemSecurityQuery;
 import org.springframework.beans.factory.annotation.Autowired;

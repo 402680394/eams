@@ -1,4 +1,4 @@
-package com.ztdx.eams.controller;
+package com.ztdx.eams.controller.system;
 
 import com.ztdx.eams.domain.system.application.ResourceService;
 import com.ztdx.eams.domain.system.model.Resource;

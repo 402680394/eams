@@ -1,4 +1,4 @@
-package com.ztdx.eams.controller;
+package com.ztdx.eams.controller.system;
 
 import com.ztdx.eams.domain.system.application.OrganizationService;
 import com.ztdx.eams.domain.system.model.Organization;
