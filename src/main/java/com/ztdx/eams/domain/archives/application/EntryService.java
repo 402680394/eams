@@ -17,6 +17,7 @@ import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorValue;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.join.query.JoinQueryBuilders;
@@ -165,7 +166,7 @@ public class EntryService {
             , Pageable pageable) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
         if (queryString != null && queryString.length() > 0) {
-            query.must(queryStringQuery(queryString));
+            query.must(queryStringQuery(queryString).defaultOperator(Operator.AND));
         }
 
         if (parentId != null){
@@ -258,8 +259,10 @@ public class EntryService {
         }
 
         if (keyWord != null && !"".equals(keyWord)){
-            query.must(QueryBuilders.queryStringQuery(keyWord));
+            query.must(QueryBuilders.queryStringQuery(keyWord).defaultOperator(Operator.AND));
         }
+
+        query.filter(QueryBuilders.termQuery("gmtDeleted", 0));
 
         srBuilder.setQuery(query).setSize(0);
         Map<Integer, Long> result = new HashMap<>();
@@ -302,16 +305,16 @@ public class EntryService {
 
         if (!StringUtils.isEmpty(includeWords)) {
             if (searchParams.contains(SearchFulltextOption.file.name())) {
-                fileQuery.must(queryStringQuery(includeWords));
+                fileQuery.must(queryStringQuery(includeWords).defaultOperator(Operator.AND));
             }
-            parentQuery.must(queryStringQuery(includeWords).field(FULL_CONTENT));
+            parentQuery.must(queryStringQuery(includeWords).field(FULL_CONTENT).defaultOperator(Operator.AND));
         }
 
         if (!StringUtils.isEmpty(rejectWords)) {
             if (searchParams.contains(SearchFulltextOption.file.name())) {
-                fileQuery.mustNot(queryStringQuery(rejectWords));
+                fileQuery.mustNot(queryStringQuery(rejectWords).defaultOperator(Operator.AND));
             }
-            parentQuery.mustNot(queryStringQuery(rejectWords).field(FULL_CONTENT));
+            parentQuery.mustNot(queryStringQuery(rejectWords).field(FULL_CONTENT).defaultOperator(Operator.AND));
         }
 
         if (archiveContentType != null && archiveContentType.size() > 0) {

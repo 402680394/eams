@@ -711,7 +711,7 @@ public class EntryController {
             result.put("totalElements", 0);
             result.put("totalPages", 0);
             result.put("content", null);
-            return null;
+            return result;
         }
 
         Set<Integer> catalogueIds = new HashSet<>();
