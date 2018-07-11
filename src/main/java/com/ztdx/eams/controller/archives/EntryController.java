@@ -666,7 +666,8 @@ public class EntryController {
      *                     "title":"这是一个文件标题",
      *                     "fileType":"word",
      *                     "highLight":"这是高亮文本内容",
-     *                     "fileName": "文件名"
+     *                     "fileName": "文件名",
+     *                     "pdfConverStatus"
      *                 }
      *             }
      *         ],
@@ -781,6 +782,7 @@ public class EntryController {
             file.put("fileId", a.getId());
             file.put("title", a.getTitle());
             file.put("fileType", a.getType());
+            file.put("pdfConvertStatus", a.getPdfConverStatus());
             String highLight = a.getContentIndex();
             if (highLight != null && highLight.length() > 300){
                 highLight = highLight.substring(0, a.getContentIndex().length() > 300 ? 300 : a.getContentIndex().length());
