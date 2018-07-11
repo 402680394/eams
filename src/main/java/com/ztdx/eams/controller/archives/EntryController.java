@@ -798,8 +798,10 @@ public class EntryController {
         Map<String, Object> result = new HashMap<>();
         entry.getItems().forEach((a, b) -> {
             DescriptionItem item = itemMap.get(a);
-            String format = EntryItemConverter.format(b, item);
-            result.put(item.getDisplayName(), format);
+            if (item != null) {
+                String format = EntryItemConverter.format(b, item);
+                result.put(item.getDisplayName(), format);
+            }
         });
         return result;
     }
