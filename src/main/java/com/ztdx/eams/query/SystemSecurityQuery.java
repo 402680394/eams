@@ -31,18 +31,10 @@ public class SystemSecurityQuery {
 
     public Set<String> getUserPermissions(String userName) {
 
-        String sql = dslContext.select(sysPermission.RESOURCE_URL)
-                .from(sysPermission)
-                .innerJoin(sysRoleUser)
-                .on(sysPermission.ROLE_ID.equal(sysPermission.ROLE_ID))
-                .innerJoin(sysUser)
-                .on(sysRoleUser.USER_ID.equal(sysUser.ID))
-                .where(sysUser.USERNAME.equal(userName)).getSQL();
-
          return dslContext.select(sysPermission.RESOURCE_URL)
                 .from(sysPermission)
                 .innerJoin(sysRoleUser)
-                    .on(sysPermission.ROLE_ID.equal(sysPermission.ROLE_ID))
+                    .on(sysPermission.ROLE_ID.equal(sysRoleUser.ROLE_ID))
                 .innerJoin(sysUser)
                     .on(sysRoleUser.USER_ID.equal(sysUser.ID))
                 .where(sysUser.USERNAME.equal(userName)).fetch().intoSet(sysPermission.RESOURCE_URL);
