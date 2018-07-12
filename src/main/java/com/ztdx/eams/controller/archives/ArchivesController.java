@@ -37,7 +37,7 @@ public class ArchivesController {
      * @api {get} /archives/treeList?archiveType={archiveType} 获取全宗、档案库分组、档案库、目录树
      * @apiName treeList
      * @apiGroup archives
-     * @apiParam {Number} archiveType 档案库类型 1 登记库(默认值) 2 归档库
+     * @apiParam {Number} archiveType 档案库类型 0 全部类型 1 登记库(默认值) 2 归档库
      * @apiSuccess (Success 200) {String} childrenType 节点类型(Fonds-全宗;ArchivesGroup-档案分组;Archives-档案库;Catalogue-目录).
      * @apiSuccess (Success 200) {Object[]} children 子节点信息
      * @apiSuccess (Success 200) {Number} Fonds:id 全宗ID.
@@ -101,7 +101,7 @@ public class ArchivesController {
      * @apiName treeListBelowFonds
      * @apiGroup archives
      * @apiParam {Number} id 登记库ID
-     * @apiParam {Number} archiveType 档案库类型 1 登记库 2 归档库(默认值)
+     * @apiParam {Number} archiveType 档案库类型 0 全部类型 1 登记库 2 归档库(默认值)
      * @apiSuccess (Success 200) {String} childrenType 节点类型(ArchivesGroup-档案分组;Archives-档案库;Catalogue-目录).
      * @apiSuccess (Success 200) {Object[]} children 子节点信息
      * @apiSuccess (Success 200) {Number} ArchivesGroup:id 档案库分组ID.
@@ -140,4 +140,52 @@ public class ArchivesController {
                 , a -> hasPermission(catalogueIds, a));
     }
 
+    /**
+     * @api {get} /archives/fondsToArchivesTree?archiveType={archiveType} 获取全宗、档案库分组、档案库树
+     * @apiName fondsToArchivesTree
+     * @apiGroup archives
+     * @apiParam {Number} archiveType 档案库类型 0 全部类型(默认值) 1 登记库 2 归档库
+     * @apiSuccess (Success 200) {String} childrenType 节点类型(Fonds-全宗;ArchivesGroup-档案分组;Archives-档案库.
+     * @apiSuccess (Success 200) {Object[]} children 子节点信息
+     * @apiSuccess (Success 200) {Number} Fonds:id 全宗ID.
+     * @apiSuccess (Success 200) {String} Fonds:code 全宗号.
+     * @apiSuccess (Success 200) {String} Fonds:name 全宗名称.
+     * @apiSuccess (Success 200) {Number} Fonds:parentId 上级全宗ID.
+     * @apiSuccess (Success 200) {Number} Fonds:orderNumber 排序号.
+     * @apiSuccess (Success 200) {Number} Fonds:type 全宗类型
+     * @apiSuccess (Success 200) {Number} ArchivesGroup:id 档案库分组ID.
+     * @apiSuccess (Success 200) {String} ArchivesGroup:name 档案库分组名称.
+     * @apiSuccess (Success 200) {Number} ArchivesGroup:parentId 上级档案库分组ID.
+     * @apiSuccess (Success 200) {Number} ArchivesGroup:fondsId 所属全宗ID
+     * @apiSuccess (Success 200) {Number} Archives:id 档案库ID
+     * @apiSuccess (Success 200) {Number} Archives:structure 档案库结构(1 一文一件；2 案卷；3 项目)
+     * @apiSuccess (Success 200) {Number} Archives:name 档案库名称
+     * @apiSuccess (Success 200) {Number} Archives:archivesGroupId 所属档案库分组ID
+     * @apiSuccess (Success 200) {Number} Archives:type 档案库类型(1 登记库； 2 归档库)
+     * @apiSuccessExample {json} Success-Response:
+     * {"data": {"items": [{"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"children": [
+     * {"childrenType": "ArchivesGroup","id": 档案库分组ID,"name": "档案库分组名称","fondsId": 所属全宗ID,"parentId": 上级档案库分组ID,"children": [
+     * {"childrenType": "ArchivesGroup","id": 档案库分组ID,"name": "档案库分组名称","fondsId": 所属全宗ID,"parentId": 上级档案库分组ID},
+     * {"childrenType": "Archives","id": 档案库ID,"structure": 档案库结构,"name": "档案库名称","archivesGroupId": 所属档案库分组ID,"type": 档案库类型}]},
+     * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型}]}]}}.
+     */
+    @RequestMapping(value = "/fondsToArchivesTree", method = RequestMethod.GET)
+    public Map<String, Object> fondsToArchivesTree(
+            @SessionAttribute(required = false) UserCredential LOGIN_USER
+            , @RequestParam(value = "archiveType", defaultValue = "0") int archiveType) {
+        int userId;
+        if (LOGIN_USER != null) {
+            userId = LOGIN_USER.getUserId();
+        } else {
+            throw new ForbiddenException("拒绝访问");
+        }
+        //可以管理的全宗、目录
+        Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
+        Set<Integer> catalogueIds = roleService.findUserManageArchiveCatalogue(userId);
+
+        return archivesQuery.getFondsToArchivesTreeMap(
+                archiveType
+                , a -> hasPermission(fondsIds, a)
+                , a -> hasPermission(catalogueIds, a));
+    }
 }

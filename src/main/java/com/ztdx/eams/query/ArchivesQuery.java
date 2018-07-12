@@ -488,13 +488,23 @@ public class ArchivesQuery {
         resultMap.put("id", UInteger.valueOf(1));
         resultMap.put("fondsId", UInteger.valueOf(fondsId));
         //查询
-        resultMap = getSubArchivesGroupTreeMap2(
-                getAllArchivesGroupList()
-                , getAllArchivesList((byte) archiveType)
-                , getAllCatalogueList()
-                , resultMap
-                , hasCataloguePermission
-        );
+        if (archiveType == 0) {
+            resultMap = getSubArchivesGroupToArchivesTreeMap(
+                    getAllArchivesGroupList()
+                    , getAllArchivesList()
+                    , getAllCatalogueList()
+                    , resultMap
+                    , hasCataloguePermission
+            );
+        } else {
+            resultMap = getSubArchivesGroupToArchivesTreeMap(
+                    getAllArchivesGroupList()
+                    , getAllArchivesListByType((byte) archiveType)
+                    , getAllCatalogueList()
+                    , resultMap
+                    , hasCataloguePermission
+            );
+        }
         //拼装返回数据信息
         if (null != resultMap && null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -513,7 +523,7 @@ public class ArchivesQuery {
     /**
      * 通过上级节点递归获取档案库分组、档案库树.
      */
-    private Map<String, Object> getSubArchivesGroupTreeMap2(
+    private Map<String, Object> getSubArchivesGroupToArchivesTreeMap(
             List<Map<String, Object>> dataArchivesGroupList
             , List<Map<String, Object>> dataArchivesList
             , List<Map<String, Object>> dataCatalogueList
@@ -549,7 +559,7 @@ public class ArchivesQuery {
             if (treeMap.get("fondsId").equals(map.get("fondsId")) && treeMap.get("id").equals(map.get("parentId"))) {
                 Map<String, Object> childrenMap = map;
                 childrenMap.put("childrenType", "ArchivesGroup");
-                childrenMap = getSubArchivesGroupTreeMap2(
+                childrenMap = getSubArchivesGroupToArchivesTreeMap(
                         dataArchivesGroupList
                         , dataArchivesList
                         , dataCatalogueList
@@ -567,9 +577,9 @@ public class ArchivesQuery {
     }
 
     /**
-     * 获取全宗、档案库分组、档案库、目录树.
+     * 获取全宗、档案库分组、档案库树.
      */
-    public Map<String, Object> getFondsToCatalogueTreeMap(
+    public Map<String, Object> getFondsToArchivesTreeMap(
             int archiveType
             , Function<Integer, Boolean> hasFondsPermission
             , Function<Integer, Boolean> hasCataloguePermission
@@ -578,15 +588,27 @@ public class ArchivesQuery {
         //伪造全宗根节点，便于递归查询
         resultMap.put("id", UInteger.valueOf(1));
         //查询
-        resultMap = getSubFondsTreeMap(
-                getAllFondsList()
-                , getAllArchivesGroupList()
-                , getAllArchivesList((byte) archiveType)
-                , getAllCatalogueList()
-                , resultMap
-                , hasFondsPermission
-                , hasCataloguePermission
-        );
+        if (archiveType == 0) {
+            resultMap = getSubFondsToArchivesTreeMap(
+                    getAllFondsList()
+                    , getAllArchivesGroupList()
+                    , getAllArchivesList()
+                    , getAllCatalogueList()
+                    , resultMap
+                    , hasFondsPermission
+                    , hasCataloguePermission
+            );
+        } else {
+            resultMap = getSubFondsToArchivesTreeMap(
+                    getAllFondsList()
+                    , getAllArchivesGroupList()
+                    , getAllArchivesListByType((byte) archiveType)
+                    , getAllCatalogueList()
+                    , resultMap
+                    , hasFondsPermission
+                    , hasCataloguePermission
+            );
+        }
         //拼装返回数据信息
         if (null != resultMap && null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -602,9 +624,9 @@ public class ArchivesQuery {
     }
 
     /**
-     * 通过全宗上级节点递归获取全宗、档案库分组、档案库、目录树.
+     * 通过全宗上级节点递归获取全宗、档案库分组、档案库树.
      */
-    private Map<String, Object> getSubFondsTreeMap(
+    private Map<String, Object> getSubFondsToArchivesTreeMap(
             List<Map<String, Object>> dataFondsList
             , List<Map<String, Object>> dataArchivesGroupList
             , List<Map<String, Object>> dataArchivesList
@@ -622,7 +644,7 @@ public class ArchivesQuery {
         archivesGroupTreeMap.put("id", UInteger.valueOf(1));
         archivesGroupTreeMap.put("fondsId", treeMap.get("id"));
         //递归查询档案库分组、登记库、目录树
-        archivesGroupTreeMap = getSubArchivesGroupTreeMap(
+        archivesGroupTreeMap = getSubArchivesGroupToArchivesTreeMap(
                 dataArchivesGroupList
                 , dataArchivesList
                 , dataCatalogueList
@@ -640,7 +662,132 @@ public class ArchivesQuery {
                 //递归获取下级节点
                 Map<String, Object> childrenMap = map;
                 childrenMap.put("childrenType", "Fonds");
-                childrenMap = getSubFondsTreeMap(
+                childrenMap = getSubFondsToArchivesTreeMap(
+                        dataFondsList
+                        , dataArchivesGroupList
+                        , dataArchivesList
+                        , dataCatalogueList
+                        , childrenMap
+                        , hasFondsPermission
+                        , hasCataloguePermission
+                );
+                if (null != childrenMap) {
+                    childrenList.add(childrenMap);
+                }
+
+            }
+        }
+        //添加查询后的下级全宗节点数据到本节点
+        if (!childrenList.isEmpty()) {
+            boolean hasChildFonds = childrenList.stream().anyMatch(
+                    a -> "Fonds".equals(a.getOrDefault("childrenType", null))
+            );
+            if (hasChildFonds) {
+                treeMap.put("children", childrenList);
+            } else {
+                int fondsId = ((UInteger) treeMap.get("id")).intValue();
+                if (!hasFondsPermission.apply(fondsId)) {
+                    return null;
+                }
+                treeMap.put("children", childrenList);
+            }
+        } else {
+            int fondsId = ((UInteger) treeMap.get("id")).intValue();
+            if (!hasFondsPermission.apply(fondsId)) {
+                return null;
+            }
+        }
+        return treeMap;
+    }
+
+
+    /**
+     * 获取全宗、档案库分组、档案库、目录树.
+     */
+    public Map<String, Object> getFondsToCatalogueTreeMap(
+            int archiveType
+            , Function<Integer, Boolean> hasFondsPermission
+            , Function<Integer, Boolean> hasCataloguePermission
+    ) {
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        //伪造全宗根节点，便于递归查询
+        resultMap.put("id", UInteger.valueOf(1));
+        //查询
+        if (archiveType == 0) {
+            resultMap = getSubFondsToCatalogueTreeMap(
+                    getAllFondsList()
+                    , getAllArchivesGroupList()
+                    , getAllArchivesList()
+                    , getAllCatalogueList()
+                    , resultMap
+                    , hasFondsPermission
+                    , hasCataloguePermission
+            );
+        } else {
+            resultMap = getSubFondsToCatalogueTreeMap(
+                    getAllFondsList()
+                    , getAllArchivesGroupList()
+                    , getAllArchivesListByType((byte) archiveType)
+                    , getAllCatalogueList()
+                    , resultMap
+                    , hasFondsPermission
+                    , hasCataloguePermission
+            );
+        }
+        //拼装返回数据信息
+        if (null != resultMap && null != resultMap.get("children")) {
+            resultMap.put("items", resultMap.get("children"));
+        } else {
+            resultMap = new HashMap<>();
+            resultMap.put("items", new ArrayList<Map<String, Object>>());
+            return resultMap;
+        }
+        //去除根节点数据
+        resultMap.remove("id");
+        resultMap.remove("children");
+        return resultMap;
+    }
+
+    /**
+     * 通过全宗上级节点递归获取全宗、档案库分组、档案库、目录树.
+     */
+    private Map<String, Object> getSubFondsToCatalogueTreeMap(
+            List<Map<String, Object>> dataFondsList
+            , List<Map<String, Object>> dataArchivesGroupList
+            , List<Map<String, Object>> dataArchivesList
+            , List<Map<String, Object>> dataCatalogueList
+            , Map<String, Object> treeMap
+            , Function<Integer, Boolean> hasFondsPermission
+            , Function<Integer, Boolean> hasCataloguePermission
+    ) {
+
+        //创建一个空的子列表
+        List<Map<String, Object>> childrenList = new ArrayList<Map<String, Object>>();
+
+        Map<String, Object> archivesGroupTreeMap = new HashMap<String, Object>();
+        //伪造档案库分组根节点，便于递归查询
+        archivesGroupTreeMap.put("id", UInteger.valueOf(1));
+        archivesGroupTreeMap.put("fondsId", treeMap.get("id"));
+        //递归查询档案库分组、登记库、目录树
+        archivesGroupTreeMap = getSubArchivesGroupToCatalogueTreeMap(
+                dataArchivesGroupList
+                , dataArchivesList
+                , dataCatalogueList
+                , archivesGroupTreeMap
+                , hasCataloguePermission
+        );
+        //添加查询后的下级档案库分组节点数据到本节点
+        if (null != archivesGroupTreeMap.get("children")) {
+            childrenList = (List) archivesGroupTreeMap.get("children");
+        }
+
+        //遍历全宗数据，获取下级全宗节点
+        for (Map<String, Object> map : dataFondsList) {
+            if (treeMap.get("id").equals(map.get("parentId"))) {
+                //递归获取下级节点
+                Map<String, Object> childrenMap = map;
+                childrenMap.put("childrenType", "Fonds");
+                childrenMap = getSubFondsToCatalogueTreeMap(
                         dataFondsList
                         , dataArchivesGroupList
                         , dataArchivesList
@@ -681,7 +828,7 @@ public class ArchivesQuery {
     /**
      * 通过上级节点递归获取档案库分组、档案库、目录树.
      */
-    private Map<String, Object> getSubArchivesGroupTreeMap(
+    private Map<String, Object> getSubArchivesGroupToCatalogueTreeMap(
             List<Map<String, Object>> dataArchivesGroupList
             , List<Map<String, Object>> dataArchivesList
             , List<Map<String, Object>> dataCatalogueList
@@ -716,7 +863,7 @@ public class ArchivesQuery {
             if (treeMap.get("fondsId").equals(map.get("fondsId")) && treeMap.get("id").equals(map.get("parentId"))) {
                 Map<String, Object> childrenMap = map;
                 childrenMap.put("childrenType", "ArchivesGroup");
-                childrenMap = getSubArchivesGroupTreeMap(
+                childrenMap = getSubArchivesGroupToCatalogueTreeMap(
                         dataArchivesGroupList
                         , dataArchivesList
                         , dataCatalogueList
@@ -776,9 +923,9 @@ public class ArchivesQuery {
     }
 
     /**
-     * 获取全部登记库.
+     * 通过类型获取档案库.
      */
-    private List<Map<String, Object>> getAllArchivesList(byte type) {
+    private List<Map<String, Object>> getAllArchivesListByType(byte type) {
         return dslContext.select(
                 archives.ID.as("id"),
                 archives.STRUCTURE.as("structure"),
@@ -787,6 +934,20 @@ public class ArchivesQuery {
                 archives.TYPE.as("type"))
                 .from(archives)
                 .where(archives.TYPE.equal(type))
+                .fetch().intoMaps();
+    }
+
+    /**
+     * 获取全部档案库.
+     */
+    private List<Map<String, Object>> getAllArchivesList() {
+        return dslContext.select(
+                archives.ID.as("id"),
+                archives.STRUCTURE.as("structure"),
+                archives.NAME.as("name"),
+                archives.ARCHIVES_GROUP_ID.as("archivesGroupId"),
+                archives.TYPE.as("type"))
+                .from(archives)
                 .fetch().intoMaps();
     }
 

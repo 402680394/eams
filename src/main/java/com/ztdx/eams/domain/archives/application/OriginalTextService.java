@@ -123,11 +123,9 @@ public class OriginalTextService {
             int catalogueId = (int) map.get("catalogueId");
             OriginalText originalText = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId).orElse(null);
             if (originalText != null) {
-                //删除MongoDB信息
-                originalTextMongoRepository.deleteById(id, "archive_record_originalText_" + catalogueId);
-
-                //删除Elasticsearch信息
-                originalTextElasticsearchRepository.deleteByIdWithRouting(id, "archive_record_" + catalogueId, originalText.getEntryId());
+                originalText.setGmtDeleted(1);
+                originalTextMongoRepository.save(originalText);
+                originalTextElasticsearchRepository.save(originalText);
             }
         }
     }
@@ -156,6 +154,7 @@ public class OriginalTextService {
         }
         originalText.setCreateTime(find.get().getCreateTime());
         originalText.setGmtCreate(find.get().getGmtCreate());
+        originalText.setGmtDeleted(find.get().getGmtDeleted());
         originalText.setGmtModified(new Date());
         //修改MongoDB
         originalTextMongoRepository.save(originalText);
@@ -340,6 +339,7 @@ public class OriginalTextService {
         query.must(QueryBuilders.wildcardQuery("title",
                 "*" + title + "*"));
         query.must(QueryBuilders.termQuery("entryId", entryId));
+        query.must(QueryBuilders.termQuery("gmtDeleted", 0));
         return originalTextElasticsearchRepository.search(query, PageRequest.of(page, size, Sort.by(Sort.Order.asc("orderNumber"))), new String[]{"archive_record_" + catalogueId});
     }
 
