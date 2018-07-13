@@ -21,9 +21,20 @@ public class Box {
     private Integer id;
 
     //盒号
-    @Size(max = 50)
+    @Size(max = 100)
     @Column(name = "code")
     private String code;
+    //库ID
+    @Column(name = "archives_id")
+    private int archivesId;
+    //盒号生成规则
+    @Size(max = 50)
+    @Column(name = "code_rule")
+    private String codeRule;
+    //流水号
+    @Size(max = 50)
+    @Column(name = "flow_number")
+    private String flowNumber;
     //文件份数
     @Min(value = 0)
     @Column(name = "files_total")

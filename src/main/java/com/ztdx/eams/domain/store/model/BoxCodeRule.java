@@ -31,6 +31,9 @@ public class BoxCodeRule {
     //截取长度
     @Column(name = "interception_length")
     private byte interceptionLength;
+    //流水号长度
+    @Column(name = "flow_number_length")
+    private byte flowNumberLength;
     //备注
     @Column(name = "remark")
     private String remark;

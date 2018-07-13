@@ -4,8 +4,6 @@ import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-
-import org.jooq.Query;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -185,8 +183,8 @@ public class StoreQuery {
     public Map<String, Object> getBoxList(int archivesId, String code, int status, int onFrame) {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list;
-        //容纳状况已满
         if (status == 1 && onFrame == 0) {
+            //容纳状况已满
             list = dslContext.select(storeBox.ID.as("id"),
                     storeBox.CODE.as("code"),
                     storeBox.FILES_TOTAL.as("filesTotal"),
@@ -199,10 +197,10 @@ public class StoreQuery {
             ).from(storeBox)
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.equal(storeBox.MAX_PAGES_TOTAL))
+                            storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL))
                     .fetch().intoMaps();
-            //容纳状况未满
         } else if (status == 2 && onFrame == 0) {
+            //容纳状况未满
             list = dslContext.select(storeBox.ID.as("id"),
                     storeBox.CODE.as("code"),
                     storeBox.FILES_TOTAL.as("filesTotal"),
@@ -215,10 +213,10 @@ public class StoreQuery {
             ).from(storeBox)
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.notEqual(storeBox.MAX_PAGES_TOTAL))
+                            storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL))
                     .fetch().intoMaps();
-            //已上架或未上架
         } else if (status == 0 && onFrame != 0) {
+            //已上架或未上架
             list = dslContext.select(storeBox.ID.as("id"),
                     storeBox.CODE.as("code"),
                     storeBox.FILES_TOTAL.as("filesTotal"),
@@ -246,7 +244,7 @@ public class StoreQuery {
             ).from(storeBox)
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.equal(storeBox.MAX_PAGES_TOTAL),
+                            storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL),
                             storeBox.ON_FRAME.equal((byte) onFrame))
                     .fetch().intoMaps();
         } else if (status == 2 && onFrame != 0) {
@@ -262,10 +260,11 @@ public class StoreQuery {
             ).from(storeBox)
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.notEqual(storeBox.MAX_PAGES_TOTAL),
+                            storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL),
                             storeBox.ON_FRAME.equal((byte) onFrame))
                     .fetch().intoMaps();
         } else {
+            //全部
             list = dslContext.select(storeBox.ID.as("id"),
                     storeBox.CODE.as("code"),
                     storeBox.FILES_TOTAL.as("filesTotal"),
@@ -290,7 +289,8 @@ public class StoreQuery {
      */
     public Map<String, Object> getBox(UInteger id) {
         return dslContext.select(storeBox.ID.as("id"),
-                storeBox.CODE.as("code"),
+                storeBox.CODE_RULE.as("codeRule"),
+                storeBox.FLOW_NUMBER.as("flowNumber"),
                 storeBox.MAX_PAGES_TOTAL.as("maxPagesTotal"),
                 storeBox.WIDTH.as("width"),
                 storeBox.REMARK.as("remark")
@@ -308,6 +308,7 @@ public class StoreQuery {
                 storeBoxCodeRule.VALUE.as("value"),
                 storeBoxCodeRule.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
                 storeBoxCodeRule.INTERCEPTION_LENGTH.as("interceptionLength"),
+                storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"),
                 storeBoxCodeRule.ORDER_NUMBER.as("orderNumber"))
                 .from(storeBoxCodeRule)
                 .where(storeBoxCodeRule.ARCHIVES_ID.equal(archivesId))
@@ -332,7 +333,8 @@ public class StoreQuery {
         resultMap.put("items", rules);
         return resultMap;
     }
-    public Map<String, Object> listShelf(String key, int storageId, Pageable pageable){
+
+    public Map<String, Object> listShelf(String key, int storageId, Pageable pageable) {
         Integer total = dslContext
                 .selectCount()
                 .from(storeShelf)
@@ -359,7 +361,7 @@ public class StoreQuery {
                                 .or(storeShelf.CODE.like("%" + key.trim() + "%"))
                                 .or(storeShelf.REMARK.like("%" + key.trim() + "%")))
                 .orderBy(storeShelf.GMT_CREATE.desc())
-                .limit((int)pageable.getOffset(), pageable.getPageSize()).fetch().intoMaps();
+                .limit((int) pageable.getOffset(), pageable.getPageSize()).fetch().intoMaps();
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("items", list);
@@ -367,4 +369,16 @@ public class StoreQuery {
         return resultMap;
     }
 
+    public Map<String, Object> maxFlowNumber(UInteger archivesId, String codeRule) {
+        return dslContext.select(storeBox.FLOW_NUMBER.as("maxFlowNumber"))
+                .from(storeBox)
+                .where(storeBox.FLOW_NUMBER.add(0)
+                                .equal(dslContext
+                                        .select(storeBox.FLOW_NUMBER.add(0).max())
+                                        .from(storeBox)
+                                        .where(storeBox.CODE_RULE.equal(codeRule), storeBox.ARCHIVES_ID.equal(archivesId))),
+                        storeBox.CODE_RULE.equal(codeRule),
+                        storeBox.ARCHIVES_ID.equal(archivesId))
+                .fetch().intoMaps().get(0);
+    }
 }

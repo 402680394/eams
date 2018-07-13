@@ -18,12 +18,12 @@ import javax.persistence.Table;
 @Qualifier("boxRepository")
 public interface BoxRepository extends JpaRepository<Box, Integer> {
 
-    //查询机构编码是否存在
-    boolean existsByCode(String code);
+    //查询盒号是否存在
+    boolean existsByCodeAndAndArchivesId(String code, int archivesId);
 
     //通过ID修改信息
     @Modifying
-    @Query("update Box b set b.code=:#{#box.code},b.width=:#{#box.width},b.maxPagesTotal=:#{#box.maxPagesTotal},b.remark=:#{#box.remark} where b.id=:#{#box.id}")
+    @Query("update Box b set b.codeRule=:#{#box.codeRule},b.flowNumber=:#{#box.flowNumber},b.width=:#{#box.width},b.maxPagesTotal=:#{#box.maxPagesTotal},b.remark=:#{#box.remark} where b.id=:#{#box.id}")
     void updateById(@Param("box") Box box);
 
     //通过ID修改上架信息
