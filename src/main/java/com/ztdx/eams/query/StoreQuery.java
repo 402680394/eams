@@ -4,8 +4,11 @@ import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+
+import org.jooq.Query;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,6 +33,8 @@ public class StoreQuery {
     private final StoreBox storeBox = Tables.STORE_BOX;
 
     private final StoreBoxCodeRule storeBoxCodeRule = Tables.STORE_BOX_CODE_RULE;
+
+    private final StoreShelf storeShelf = Tables.STORE_SHELF;
 
     @Autowired
     public StoreQuery(DSLContext dslContext) {
@@ -327,4 +332,39 @@ public class StoreQuery {
         resultMap.put("items", rules);
         return resultMap;
     }
+    public Map<String, Object> listShelf(String key, int storageId, Pageable pageable){
+        Integer total = dslContext
+                .selectCount()
+                .from(storeShelf)
+                .where(storeShelf.STORAGE_ID.eq(storageId)
+                        , storeShelf.NAME.like("%" + key.trim() + "%")
+                                .or(storeShelf.CODE.like("%" + key.trim() + "%"))
+                                .or(storeShelf.REMARK.like("%" + key.trim() + "%")))
+                .fetchOne().value1();
+
+        List<Map<String, Object>> list = dslContext
+                .select(
+                        storeShelf.ID
+                        , storeShelf.NAME
+                        , storeShelf.NAME.as("title")
+                        , storeShelf.CODE
+                        , storeShelf.STORAGE_ID.as("storageId")
+                        , storeShelf.REMARK
+                        , storeShelf.SHELF_TYPE.as("shelfType")
+                        , storeShelf.SECTION_NUM.as("sectionNum")
+                )
+                .from(storeShelf)
+                .where(storeShelf.STORAGE_ID.eq(storageId)
+                        , storeShelf.NAME.like("%" + key.trim() + "%")
+                                .or(storeShelf.CODE.like("%" + key.trim() + "%"))
+                                .or(storeShelf.REMARK.like("%" + key.trim() + "%")))
+                .orderBy(storeShelf.GMT_CREATE.desc())
+                .limit((int)pageable.getOffset(), pageable.getPageSize()).fetch().intoMaps();
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("items", list);
+        resultMap.put("total", total);
+        return resultMap;
+    }
+
 }

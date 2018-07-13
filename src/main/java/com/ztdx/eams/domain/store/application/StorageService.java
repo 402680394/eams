@@ -64,5 +64,11 @@ public class StorageService {
         storageRepository.deleteInBatch(storageList);
     }
 
+    public Storage get(int id){
+        return storageRepository.findById(id).orElse(null);
+    }
 
+    public boolean existsById(int id){
+        return storageRepository.existsById(id);
+    }
 }

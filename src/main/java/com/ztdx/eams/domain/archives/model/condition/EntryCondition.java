@@ -6,7 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
-//TODO lijie 可以增加字段的类型（著录项的元数据名称/著录项属性类型）
+//TODO @lijie 可以增加字段的类型（著录项的元数据名称/著录项属性类型）
 @Data
 @Document(collection = "archive_entry_condition")
 public class EntryCondition {

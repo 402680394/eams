@@ -549,7 +549,7 @@ public class OriginalTextService {
         });
 
         originalTextMongoRepository.saveAll(targets);
-        //TODO lijie 增加索引时间，用于重做索引
+        //TODO @lijie 增加索引时间，用于重做索引
         originalTextElasticsearchRepository.saveAll(targets);
         //indexAll(targets, trgId);
 
