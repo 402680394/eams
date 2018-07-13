@@ -66,6 +66,7 @@ public class OriginalText {
     //pdf转换状态(0-未转换 1-已转换 2-转换失败 3-文件类型不可用)
     private int pdfConverStatus;
     //是否删除
+    @Field(type = FieldType.Integer)
     private int gmtDeleted;
     //创建时间
     @Field(type = FieldType.Date)
