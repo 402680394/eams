@@ -1000,7 +1000,7 @@ public class EntryController {
     }
 
     /**
-     * @api {post} /entry/archivingEntry 归档
+     * @api {post} /entry/archiving 归档
      * @apiName archivingEntry
      * @apiGroup entry
      * @apiParam {Boolean} delSrc 是否删除源记录
@@ -1158,15 +1158,46 @@ public class EntryController {
         }
 
         if (delSrc){
-            entryService.delete(mainSrcId, mainIdMap.keySet());
-            if (slaveIdMap != null) {
-                entryService.delete(mainSrcId, slaveIdMap.keySet());
+            Map<Integer, Set<String>> delEntryIds = new HashMap<>();
+            Map<Integer, Set<String>> delOriginalIds = new HashMap<>();
+
+            delEntryIds.put(mainSrcId, new HashSet<>());
+            delOriginalIds.put(mainSrcId, new HashSet<>());
+            if (slaveSrcId != null) {
+                delEntryIds.put(slaveSrcId, new HashSet<>());
+                delOriginalIds.put(slaveSrcId, new HashSet<>());
             }
-            delOriginal(mainFileIdMap, mainSrcId);
-            delOriginal(slaveFileIdMap, slaveSrcId);
+            getDeleteIds(error, delEntryIds, delOriginalIds);
+
+            delEntryIds.forEach((a, b) -> {
+                entryService.delete(a, b);
+            });
+
+            delOriginalIds.forEach((a, b) -> {
+                delOriginal(b, a);
+            });
         }
 
         return formatArchivingResult(error);
+    }
+
+    private void getDeleteIds(
+            List<ArchivingResult> error
+            , Map<Integer, Set<String>> delEntryIds
+            , Map<Integer, Set<String>> delOriginalIds){
+        error.forEach(a -> {
+            if (a.getStatus() == ArchivingResult.Status.failure){
+                return;
+            }
+
+            if (a.getType() == ArchivingResult.Type.entry){
+                Set<String> entryIds = delEntryIds.get(a.getCatalogId());
+                entryIds.add(a.getId());
+            }else{
+                Set<String> originalIds = delOriginalIds.get(a.getCatalogId());
+                originalIds.add(a.getId());
+            }
+        });
     }
 
     private Map<String, Object> formatArchivingResult(List<ArchivingResult> list){
@@ -1232,9 +1263,9 @@ public class EntryController {
         }
     }
 
-    private void delOriginal(Map<String, String> ids, Integer srcId){
+    private void delOriginal(Set<String> ids, Integer srcId){
         if (ids != null && ids.size() > 0 && srcId != null) {
-            List<Map<String, Object>> batch = ids.keySet().stream().map(a -> {
+            List<Map<String, Object>> batch = ids.stream().map(a -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put(a, srcId);
                 return map;

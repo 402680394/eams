@@ -65,7 +65,6 @@ public class ShelfSectionController {
      * }
      * @apiError message 1.密集架列名称已存在 2.密集架列编码已存在
      */
-    @Transactional
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ShelfSection save(@RequestBody ShelfSection shelfSection){
         return shelfSectionService.save(shelfSection);

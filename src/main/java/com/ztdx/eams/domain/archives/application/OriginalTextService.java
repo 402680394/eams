@@ -501,7 +501,7 @@ public class OriginalTextService {
                     .with(PageRequest.of(page, size));
         } else {*/
         query = Query.query(where("entryId").in(entryIds)
-                .and("type").in(originalType))
+                .and("type").in(originalType).and("gmtDeleted").is(0))
                 .with(PageRequest.of(page, size));
         /*}*/
         String indexName = "archive_record_originalText_" + catalogueId;
@@ -544,7 +544,8 @@ public class OriginalTextService {
                             , a.getTitle()
                             , msg
                             , ArchivingResult.Type.file
-                            , status)
+                            , status
+                            , a.getCatalogueId())
             );
         });
 
@@ -581,6 +582,7 @@ public class OriginalTextService {
         result.setPdfConverStatus(originalText.getPdfConverStatus());
         result.setGmtCreate(new Date());
         result.setGmtModified(new Date());
+        result.setGmtDeleted(originalText.getGmtDeleted());
 
         return result;
     }

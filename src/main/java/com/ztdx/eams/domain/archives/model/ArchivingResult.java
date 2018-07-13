@@ -24,12 +24,13 @@ public class ArchivingResult {
     @Convert(converter = Status.EnumConverter.class)
     private Status status;
     private List<ArchivingResult> children;
+    private int catalogId;
 
     public ArchivingResult(){
         children = new ArrayList<>();
     }
 
-    public ArchivingResult(String id, String parentId, String title, String errorMsg, Type type, Status status) {
+    public ArchivingResult(String id, String parentId, String title, String errorMsg, Type type, Status status, int catalogId) {
         this();
         this.id = id;
         this.parentId = parentId;
@@ -37,6 +38,7 @@ public class ArchivingResult {
         this.errorMsg = errorMsg;
         this.type = type;
         this.status = status;
+        this.catalogId = catalogId;
     }
 
     public enum Status{

@@ -548,7 +548,8 @@ public class EntryService {
                             , getTitle.apply(a)
                             , msg
                             , ArchivingResult.Type.entry
-                            , status)
+                            , status
+                            , a.getCatalogueId())
                     );
         });
 
