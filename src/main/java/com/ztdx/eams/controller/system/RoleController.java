@@ -245,7 +245,7 @@ public class RoleController {
     }
 
     private Permission makePermission(long resourceId,long roleId, Integer fondsId, Integer archiveId){
-        //TODO lijie resourceService.getResource 必须使用缓存
+        //TODO @lijie resourceService.getResource 必须使用缓存
         Resource resource = resourceService.getResource(resourceId);
         if (resource == null){
             throw new InvalidArgumentException("权限("+resourceId+")不存在");
@@ -367,19 +367,19 @@ public class RoleController {
 
 
         List<Object> global = null;
-        if (permissionService.hasAnyAuthority("global_role_query", "ROLE_ADMIN")) {
+        if (permissionService.hasAnyAuthority("global_role_read", "ROLE_ADMIN")) {
             global = this.listGlobalRole();
         }
 
         List<Fonds> fonds;
         List<Role> roles;
-        if (permissionService.hasAnyAuthority("global_role_query", "ROLE_ADMIN")) {
+        if (permissionService.hasAnyAuthority("global_role_read", "ROLE_ADMIN")) {
             fonds = fondsService.findAll();
             roles = roleService.findByFondsIdIsNotNull();
         }else{
             Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
             List<Integer> filterFondsIds = fondsIds.stream().filter(
-                    a -> permissionService.hasAuthority(String.format("fonds_role_query_%d", a)))
+                    a -> permissionService.hasAuthority(String.format("fonds_role_read_%d", a)))
             .collect(Collectors.toList());
             fonds = fondsService.findAllById(filterFondsIds);
             roles = roleService.findByFondsIdIn(fondsIds);
