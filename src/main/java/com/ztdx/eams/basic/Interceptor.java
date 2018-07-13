@@ -1,7 +1,8 @@
 package com.ztdx.eams.basic;
 
 import com.ztdx.eams.basic.exception.ApplicationException;
-import com.ztdx.eams.basic.exception.UnauthorizedException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -10,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.AccessDeniedException;
+import java.util.Arrays;
 
 @Component
 public class Interceptor implements HandlerInterceptor {
@@ -42,19 +43,44 @@ public class Interceptor implements HandlerInterceptor {
         }
     }
 
+    @Value("${debug}")
+    private boolean debug;
+
     private void appendToResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Exception exception) throws IOException {
 
         int errorCode = 500;
-        String message = exception.getMessage();
+
+        String message;
         if (exception instanceof ApplicationException) {
             errorCode = ((ApplicationException) exception).getCode();
+            message = exception.getMessage();
         } else if(exception instanceof AccessDeniedException) {
             errorCode = 403;
+            message = "您没有权限，请联系管理员";
+        } else{
+            message = "系统忙，请稍后重试";
         }
 
-        message += "(" + exception.getClass().toString() + ")";
         message = message.replaceAll("\"", "'");
-        String response = "{\"error\":{\"timestamp\":" + System.currentTimeMillis() + ",\"code\":" + errorCode + ",\"message\":\"" + message + "\",\"path\":\"" + httpServletRequest.getServletPath() + "\"}}";
+
+        StringBuilder response = new StringBuilder();
+        response.append("{\"error\":{\"timestamp\":");
+        response.append(System.currentTimeMillis());
+        response.append(",\"code\":");
+        response.append(errorCode);
+        response.append(",\"message\":\"");
+        response.append(message);
+        response.append("\",\"path\":\"");
+        response.append(httpServletRequest.getServletPath());
+        if (debug){
+            response.append("\",\"class\":\"");
+            response.append(exception.getClass().toString());
+            response.append("\",\"stackTrace\":\"");
+            response.append(Arrays.toString(exception.getStackTrace()));
+            response.append("\",\"exception\":\"");
+            response.append(exception.getMessage());
+        }
+        response.append("\"}}");
 
         String origin = httpServletRequest.getHeader("Origin");
         httpServletResponse.setHeader("Access-Control-Allow-Origin", origin);
@@ -64,7 +90,7 @@ public class Interceptor implements HandlerInterceptor {
 
         httpServletResponse.setStatus(200);
         OutputStream os = httpServletResponse.getOutputStream();
-        os.write(response.getBytes());
+        os.write(response.toString().getBytes());
         os.flush();
         os.close();
     }
