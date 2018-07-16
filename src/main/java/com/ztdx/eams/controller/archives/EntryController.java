@@ -1509,6 +1509,7 @@ public class EntryController {
             if (groupCount != null){
                 pages = groupCount.count;
             }
+            //TODO @lijie 优化到循环外面
             List<String> boxIds = group.getOrDefault(a, null);
             if (boxIds != null && boxIds.size() > 0){
                 files = originalTextService.countByCatalogueIdAndEntryIdIn(catalogueId, boxIds);
