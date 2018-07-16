@@ -324,8 +324,6 @@ public class StoreQuery {
             if (type == 1 || type == 2) {
                 UInteger descriptionItemId = (UInteger) rule.get("descriptionItemId");
                 for (Map descriptionItem : descriptionItems) {
-                    System.out.println(descriptionItemId);
-                    System.out.println(descriptionItem.get("id"));
                     if (descriptionItemId.equals(descriptionItem.get("id"))) {
                         rule.put("isDictionary", descriptionItem.get("isDictionary"));
                         rule.put("dictionaryType", descriptionItem.get("dictionaryType"));
