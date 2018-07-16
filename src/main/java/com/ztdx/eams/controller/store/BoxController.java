@@ -35,7 +35,7 @@ public class BoxController {
      * @apiParam {Number} pageNum 页次(url参数，默认为1)
      * @apiParam {Number} size 每页条数(url参数，默认为20)
      * @apiParam {Number} archivesId 所属库ID(url参数)
-     * @apiParam {String{30}} code 盒号(未输入传""值)(url参数)
+     * @apiParam {String{30}} code 盒号(url参数，默认为"")
      * @apiParam {Number} status 容纳状况(0-全部，1-已满，2-未满)(url参数，默认为0)
      * @apiParam {Number} onFrame 是否在架(0-全部，1-已上架，2-未上架)(url参数,默认为0)
      * @apiSuccess (Success 200) {String} code 盒号.
@@ -53,7 +53,7 @@ public class BoxController {
     public Map<String, Object> list(@RequestParam(value = "pageNum", required = false, defaultValue = "1") int pageNum,
                                     @RequestParam(name = "size", required = false, defaultValue = "20") int size,
                                     @RequestParam("archivesId") int archivesId,
-                                    @RequestParam("code") String code,
+                                    @RequestParam(value = "code", required = false, defaultValue = "") String code,
                                     @RequestParam(name = "status", required = false, defaultValue = "0") int status,
                                     @RequestParam(name = "onFrame", required = false, defaultValue = "0") int onFrame) {
         return storeQuery.getBoxList(pageNum, size, archivesId, code, status, onFrame);
