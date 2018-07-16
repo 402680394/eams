@@ -1,8 +1,6 @@
 package com.ztdx.eams.domain.store.application;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
-import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.store.model.Box;
 import com.ztdx.eams.domain.store.model.BoxCodeRule;
 import com.ztdx.eams.domain.store.repository.BoxCodeRuleRepository;
@@ -25,16 +23,10 @@ public class BoxService {
 
     private final BoxCodeRuleRepository boxCodeRuleRepository;
 
-    private final EntryElasticsearchRepository entryElasticsearchRepository;
-
-    private final EntryMongoRepository entryMongoRepository;
-
     @Autowired
-    public BoxService(BoxRepository boxRepository, BoxCodeRuleRepository boxCodeRuleRepository, EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository) {
+    public BoxService(BoxRepository boxRepository, BoxCodeRuleRepository boxCodeRuleRepository) {
         this.boxRepository = boxRepository;
         this.boxCodeRuleRepository = boxCodeRuleRepository;
-        this.entryElasticsearchRepository = entryElasticsearchRepository;
-        this.entryMongoRepository = entryMongoRepository;
     }
 
     /*
@@ -124,11 +116,11 @@ public class BoxService {
         }
     }
 
-    public Box getByCode(int archiveId, String code){
+    public Box getByCode(int archiveId, String code) {
         return boxRepository.findByArchivesIdAndCode(archiveId, code);
     }
 
-    public void updateTotal(String code,int archivesId, int pages, int files){
+    public void updateTotal(String code, int archivesId, int pages, int files) {
         boxRepository.updateTotal(code, archivesId, pages, files);
     }
 }
