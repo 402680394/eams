@@ -9,11 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Size;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by li on 2018/4/11.
@@ -22,16 +18,17 @@ import java.util.Set;
 @Table(name = "sys_fonds")
 @Qualifier("fondsRepository")
 public interface FondsRepository extends JpaRepository<Fonds, Integer> {
-    //查询code是否存在
-    boolean existsByCode(String code);
+
+    boolean existsByCodeAndGmtDeleted(String code, boolean gmtDeleted);
 
     boolean existsByCodeAndId(String code, int id);
+
     //查询ID是否存在
     boolean existsById(int id);
 
     //查询同级全宗优先级最大值
     @Query("select max (f.orderNumber) from Fonds f where f.parentId=:parentId")
-    Integer findMaxOrderNumber(@Param(value = "parentId")int parentId);
+    Integer findMaxOrderNumber(@Param(value = "parentId") int parentId);
 
     // 通过父ID查询是否存在子全宗
     boolean existsByParentId(int id);
@@ -45,10 +42,15 @@ public interface FondsRepository extends JpaRepository<Fonds, Integer> {
     //通过ID修改
     @Modifying
     @Query("update Fonds f set f.parentId=:#{#fonds.parentId},f.code=:#{#fonds.code},f.name=:#{#fonds.name},f.remark=:#{#fonds.remark} where f.id=:#{#fonds.id}")
-    void updateById(@Param(value = "fonds")Fonds fonds);
+    void updateById(@Param(value = "fonds") Fonds fonds);
 
     //设置优先级
     @Modifying
     @Query("update Fonds f set f.orderNumber=:orderNumber where f.id=:id")
     void updateOrderNumberById(@Param(value = "id") int id, @Param(value = "orderNumber") int orderNumber);
+
+    //设置状态为删除
+    @Modifying
+    @Query("update Fonds f set f.gmtCreate=:gmtCreate where f.id=:id")
+    void updateGmtDeletedById(@Param(value = "id") int id, @Param(value = "gmtCreate") boolean gmtCreate);
 }

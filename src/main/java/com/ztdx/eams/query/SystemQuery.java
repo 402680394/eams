@@ -181,8 +181,6 @@ public class SystemQuery {
 
         int total = getUserListTotalByOrg(organizationId, key);
         if (total != 0) {
-            int index = (pageNum - 1) * 10;
-
             list = dslContext.select(
                     sysUser.ID.as("id"),
                     sysUser.REAL_NAME.as("name"),
@@ -202,7 +200,7 @@ public class SystemQuery {
                                     .or(sysUser.PHONE.like("%" + key + "%"))
                                     .or(sysUser.EMAIL.like("%" + key + "%"))
                                     .or(sysUser.JOB.like("%" + key + "%")))
-                    .limit(index, 10)
+                    .limit((pageNum - 1) * 10, 10)
                     .fetch().intoMaps();
         }
 
@@ -328,6 +326,7 @@ public class SystemQuery {
                 sysFonds.ORDER_NUMBER.as("orderNumber"),
                 sysFonds.REMARK.as("remark"))
                 .from(sysFonds)
+                .where(sysFonds.GMT_DELETED.equal((byte) 0))
                 .orderBy(sysFonds.ORDER_NUMBER)
                 .fetch().intoMaps();
         return dataList;

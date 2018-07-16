@@ -3,7 +3,6 @@ package com.ztdx.eams.domain.system.model;
 import lombok.Data;
 
 import javax.persistence.*;
-import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 import java.util.Date;
@@ -44,6 +43,9 @@ public class Fonds {
     @Size(max = 100)
     @Column(name = "remark")
     private String remark;
+    //是否删除
+    @Column(name = "gmt_deleted")
+    private boolean gmtDeleted;
 
     //创建时间
     @Column(name = "gmt_create")

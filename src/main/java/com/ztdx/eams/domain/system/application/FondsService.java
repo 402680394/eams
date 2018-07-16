@@ -3,7 +3,6 @@ package com.ztdx.eams.domain.system.application;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Organization;
-import com.ztdx.eams.domain.system.model.Role;
 import com.ztdx.eams.domain.system.repository.FondsRepository;
 import com.ztdx.eams.domain.system.repository.OrganizationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by li on 2018/4/15.
@@ -37,7 +35,7 @@ public class FondsService {
     @Transactional
     public void save(Fonds fonds, ArrayList<Integer> associationList) {
 
-        if (fondsRepository.existsByCode(fonds.getCode())) {
+        if (fondsRepository.existsByCodeAndGmtDeleted(fonds.getCode(), false)) {
             throw new InvalidArgumentException("全宗号已存在");
         }
         //设置排序
@@ -73,7 +71,7 @@ public class FondsService {
             //取消机构关联
             organizationRepository.updatefondsIdByfondsId(id);
             //删除本全宗
-            fondsRepository.deleteById(id);
+            fondsRepository.updateGmtDeletedById(id, true);
         }
     }
 
@@ -83,7 +81,7 @@ public class FondsService {
     @Transactional
     public void update(Fonds fonds, ArrayList<Integer> associationList) {
         if (!fondsRepository.existsByCodeAndId(fonds.getCode(), fonds.getId())) {
-            if (fondsRepository.existsByCode(fonds.getCode())) {
+            if (fondsRepository.existsByCodeAndGmtDeleted(fonds.getCode(), false)) {
                 throw new InvalidArgumentException("全宗号已存在");
             }
         }

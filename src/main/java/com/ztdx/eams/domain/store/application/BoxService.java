@@ -41,9 +41,6 @@ public class BoxService {
                 throw new InvalidArgumentException("盒号已存在");
             }
         }
-        if (box.getMaxPagesTotal() < b.getPagesTotal()) {
-            throw new InvalidArgumentException("已有容量超出，请先拆盒");
-        }
         //修改数据
         boxRepository.updateById(box);
     }

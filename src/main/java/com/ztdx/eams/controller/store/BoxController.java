@@ -29,13 +29,15 @@ public class BoxController {
     }
 
     /**
-     * @api {get} /box/list?archivesId={archivesId}&code={code}&status={status}&onFrame={onFrame} 档案盒表单列表
+     * @api {get} /box/list?pageNum={pageNum}&size={size}&archivesId={archivesId}&code={code}&status={status}&onFrame={onFrame} 档案盒表单列表
      * @apiName list
      * @apiGroup box
+     * @apiParam {Number} pageNum 页次(url参数，默认为1)
+     * @apiParam {Number} size 每页条数(url参数，默认为20)
      * @apiParam {Number} archivesId 所属库ID(url参数)
      * @apiParam {String{30}} code 盒号(未输入传""值)(url参数)
-     * @apiParam {Number} status 容纳状况(0-全部，1-已满，2-未满)(url参数)
-     * @apiParam {Number} onFrame 是否在架(0-全部，1-已上架，2-未上架)(url参数)
+     * @apiParam {Number} status 容纳状况(0-全部，1-已满，2-未满)(url参数，默认为0)
+     * @apiParam {Number} onFrame 是否在架(0-全部，1-已上架，2-未上架)(url参数,默认为0)
      * @apiSuccess (Success 200) {String} code 盒号.
      * @apiSuccess (Success 200) {Number} filesTotal 文件份数.
      * @apiSuccess (Success 200) {Number} pagesTotal 文件页数.
@@ -48,8 +50,13 @@ public class BoxController {
      * {"data": {"items": [{"code": 盒号,"filesTotal": 文件份数,"pagesTotal": 文件页数,"maxPagesTotal": 容纳最大页数,"width": 盒子宽度,"onStand": 是否在架,"point": "位置编码","remark": "备注"}]}}.
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list(@RequestParam("archivesId") int archivesId, @RequestParam("code") String code, @RequestParam("status") int status, @RequestParam("onFrame") int onFrame) {
-        return storeQuery.getBoxList(archivesId, code, status, onFrame);
+    public Map<String, Object> list(@RequestParam(value = "pageNum", required = false, defaultValue = "1") int pageNum,
+                                    @RequestParam(name = "size", required = false, defaultValue = "20") int size,
+                                    @RequestParam("archivesId") int archivesId,
+                                    @RequestParam("code") String code,
+                                    @RequestParam(name = "status", required = false, defaultValue = "0") int status,
+                                    @RequestParam(name = "onFrame", required = false, defaultValue = "0") int onFrame) {
+        return storeQuery.getBoxList(pageNum, size, archivesId, code, status, onFrame);
     }
 
     /**
@@ -97,7 +104,7 @@ public class BoxController {
      * @apiParam {Number} width 盒子宽度（毫米）
      * @apiParam {Number} maxPagesTotal 最大容量（页）
      * @apiParam {String{50}} remark 备注（未输入传""值）
-     * @apiError (Error 400) message 1.盒号已存在；2.已有容量超出，请先拆盒.
+     * @apiError (Error 400) message 盒号已存在.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.PUT)

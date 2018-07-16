@@ -183,7 +183,7 @@ public class StoreQuery {
     /**
      * 根据条件获取档案盒列表
      */
-    public Map<String, Object> getBoxList(int archivesId, String code, int status, int onFrame) {
+    public Map<String, Object> getBoxList(int pageNum, int size, int archivesId, String code, int status, int onFrame) {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list;
         if (status == 1 && onFrame == 0) {
@@ -201,6 +201,7 @@ public class StoreQuery {
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL))
+                    .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
         } else if (status == 2 && onFrame == 0) {
             //容纳状况未满
@@ -217,6 +218,7 @@ public class StoreQuery {
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL))
+                    .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
         } else if (status == 0 && onFrame != 0) {
             //已上架或未上架
@@ -233,6 +235,7 @@ public class StoreQuery {
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.ON_FRAME.equal((byte) onFrame))
+                    .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
         } else if (status == 1 && onFrame != 0) {
             list = dslContext.select(storeBox.ID.as("id"),
@@ -249,6 +252,7 @@ public class StoreQuery {
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL),
                             storeBox.ON_FRAME.equal((byte) onFrame))
+                    .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
         } else if (status == 2 && onFrame != 0) {
             list = dslContext.select(storeBox.ID.as("id"),
@@ -265,6 +269,7 @@ public class StoreQuery {
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL),
                             storeBox.ON_FRAME.equal((byte) onFrame))
+                    .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
         } else {
             //全部
@@ -280,6 +285,7 @@ public class StoreQuery {
             ).from(storeBox)
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"))
+                    .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
             //容纳状况已满
         }
