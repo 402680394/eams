@@ -1,5 +1,6 @@
 package com.ztdx.eams.query;
 
+import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.Condition;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -302,7 +304,7 @@ public class StoreQuery {
     /**
      * 根据档案库id获取档案盒号规则应用信息
      */
-    public Map<String, Object> ruleApply(UInteger archivesId, List<Map<String, Object>> descriptionItems) {
+    public Map<String, Object> ruleApply(UInteger archivesId, List<Map<String, Object>> descriptionItems, String entryId) {
         List<Map<String, Object>> rules = dslContext.select(storeBoxCodeRule.TYPE.as("type"),
                 storeBoxCodeRule.NAME.as("type"),
                 storeBoxCodeRule.VALUE.as("value"),
@@ -369,16 +371,37 @@ public class StoreQuery {
         return resultMap;
     }
 
-    public Map<String, Object> maxFlowNumber(UInteger archivesId, String codeRule) {
-        return dslContext.select(storeBox.FLOW_NUMBER.as("maxFlowNumber"))
+    public Map<String, Object> maxFlowNumber(int archivesId, String codeRule) {
+        int maxFlowNumber = Integer.parseInt((String) dslContext
+                .select(storeBox.FLOW_NUMBER.add(0).max().as("maxFlowNumber"))
                 .from(storeBox)
-                .where(storeBox.FLOW_NUMBER.add(0)
-                                .equal(dslContext
-                                        .select(storeBox.FLOW_NUMBER.add(0).max())
-                                        .from(storeBox)
-                                        .where(storeBox.CODE_RULE.equal(codeRule), storeBox.ARCHIVES_ID.equal(archivesId))),
-                        storeBox.CODE_RULE.equal(codeRule),
-                        storeBox.ARCHIVES_ID.equal(archivesId))
-                .fetch().intoMaps().get(0);
+                .where(storeBox.CODE_RULE.equal(codeRule), storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)))
+                .fetch().intoMaps().get(0).get("maxFlowNumber"));
+
+        maxFlowNumber = maxFlowNumber + 1;
+
+        byte flowNumberLength = (byte) dslContext.select(storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"))
+                .from(storeBoxCodeRule)
+                .where(storeBoxCodeRule.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)), storeBoxCodeRule.TYPE.equal((byte) 5))
+                .fetch().intoMaps().get(0).get("flowNumberLength");
+        //位数
+        int count = 0;
+        int number = maxFlowNumber;
+        while (number > 0) {
+            number = number / 10;
+            count++;
+        }
+        if (count > flowNumberLength) {
+            throw new InvalidArgumentException("流水号超出最大限制");
+        }
+
+        //格式化
+        NumberFormat formatter = NumberFormat.getNumberInstance();
+        formatter.setMinimumIntegerDigits(flowNumberLength);
+        formatter.setGroupingUsed(false);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("maxFlowNumber", formatter.format(maxFlowNumber));
+        return resultMap;
     }
 }

@@ -34,6 +34,7 @@ public class BoxCodeRuleController {
      * @apiName list
      * @apiGroup boxCodeRule
      * @apiParam {Number} archivesId 所属库ID(url参数)
+     * @apiParam {String} entryId 条目ID(url参数)(非必须)
      * @apiSuccess (Success 200) {Number} type 规则类型（1-著录项值 2-著录项值对应编码 3-档案库所属全宗号 4-固定值 5-流水号）.
      * @apiSuccess (Success 200) {String} name 名称.
      * @apiSuccess (Success 200) {String} value 值.
@@ -48,8 +49,8 @@ public class BoxCodeRuleController {
      * {"data": {"items": [{"code": 盒号,"filesTotal": 文件份数,"pagesTotal": 文件页数,"maxPagesTotal": 容纳最大页数,"width": 盒子宽度,"onStand": 是否在架,"point": "位置编码","remark": "备注"}]}}.
      */
     @RequestMapping(value = "/ruleApply", method = RequestMethod.GET)
-    public Map<String, Object> get(@RequestParam("archivesId") int archivesId) {
+    public Map<String, Object> get(@RequestParam("archivesId") int archivesId,@RequestParam(name = "entryId",required = false)String entryId) {
         List<Map<String, Object>> descriptionItems = (List<Map<String, Object>>) archivesQuery.getDescriptionItemList(UInteger.valueOf(archivesId)).get("items");
-        return storeQuery.ruleApply(UInteger.valueOf(archivesId), descriptionItems);
+        return storeQuery.ruleApply(UInteger.valueOf(archivesId), descriptionItems, entryId);
     }
 }
