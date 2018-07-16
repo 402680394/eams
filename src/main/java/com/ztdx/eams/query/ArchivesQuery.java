@@ -1050,6 +1050,21 @@ public class ArchivesQuery {
     }
 
     /**
+     * 档案库所属全宗号
+     */
+    public String getFondsCodeByArchiveId(UInteger archiveId) {
+        Result result = dslContext.select(sysFonds.FONDS_CODE).from(sysFonds, archivesGroup, archives)
+                .where(archives.ID.equal(archiveId)
+                        , archives.ARCHIVES_GROUP_ID.equal(archivesGroup.ID)
+                        , archivesGroup.FONDS_ID.equal(sysFonds.ID)).fetch();
+        if (result.size() == 0) {
+            return "";
+        } else {
+            return (String) result.getValue(0, 0);
+        }
+    }
+
+    /**
      * 通过档案库ID获取目录ID及著录项
      */
     public Map<String, Object> getDescriptionItemListForPlaceOnFile(UInteger archivesId) {
@@ -1095,5 +1110,36 @@ public class ArchivesQuery {
         }
         resultMap.put("item", resultList);
         return resultMap;
+    }
+
+    /**
+     * 通过档案库ID及结构获取目录ID
+     */
+    public UInteger getCatalogueIdByArchivesIdAndType(UInteger archivesId) {
+
+        byte structure = (byte) dslContext.select(archives.STRUCTURE.as("structure"))
+                .from(archives)
+                .where(archives.ID.equal(archivesId))
+                .fetch().getValue(0, 0);
+        byte catalogueType = 0;
+        switch (structure) {
+            case 1: {
+                catalogueType = 1;
+                break;
+            }
+            case 2: {
+                catalogueType = 2;
+                break;
+            }
+            case 3: {
+                catalogueType = 4;
+                break;
+            }
+        }
+
+        return (UInteger) dslContext.select(archivesCatalogue.ID.as("id"))
+                .from(archivesCatalogue)
+                .where(archivesCatalogue.ARCHIVES_ID.equal(archivesId), archivesCatalogue.CATALOGUE_TYPE.equal(catalogueType))
+                .fetch().getValue(0, 0);
     }
 }

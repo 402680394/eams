@@ -1,6 +1,7 @@
 package com.ztdx.eams.query;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
+import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.Condition;
@@ -304,9 +305,9 @@ public class StoreQuery {
     /**
      * 根据档案库id获取档案盒号规则应用信息
      */
-    public Map<String, Object> ruleApply(UInteger archivesId, List<Map<String, Object>> descriptionItems, String entryId) {
+    public Map<String, Object> ruleApply(String fondsCode, UInteger archivesId, List<Map<String, Object>> descriptionItems, Entry entry) {
         List<Map<String, Object>> rules = dslContext.select(storeBoxCodeRule.TYPE.as("type"),
-                storeBoxCodeRule.NAME.as("type"),
+                storeBoxCodeRule.NAME.as("name"),
                 storeBoxCodeRule.VALUE.as("value"),
                 storeBoxCodeRule.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
                 storeBoxCodeRule.INTERCEPTION_LENGTH.as("interceptionLength"),
@@ -314,21 +315,30 @@ public class StoreQuery {
                 storeBoxCodeRule.ORDER_NUMBER.as("orderNumber"))
                 .from(storeBoxCodeRule)
                 .where(storeBoxCodeRule.ARCHIVES_ID.equal(archivesId))
+                .orderBy(storeBoxCodeRule.ORDER_NUMBER)
                 .fetch().intoMaps();
 
         for (Map rule : rules) {
-            int type = (int) rule.get("type");
+            byte type = (byte) rule.get("type");
             //1-著录项值 2-著录项值对应编码
             if (type == 1 || type == 2) {
-                int descriptionItemId = (int) rule.get("descriptionItemId");
+                UInteger descriptionItemId = (UInteger) rule.get("descriptionItemId");
                 for (Map descriptionItem : descriptionItems) {
-                    if (descriptionItemId == (int) descriptionItem.get("id")) {
+                    System.out.println(descriptionItemId);
+                    System.out.println(descriptionItem.get("id"));
+                    if (descriptionItemId.equals(descriptionItem.get("id"))) {
                         rule.put("isDictionary", descriptionItem.get("isDictionary"));
                         rule.put("dictionaryType", descriptionItem.get("dictionaryType"));
                         rule.put("dictionaryNodeId", descriptionItem.get("dictionaryNodeId"));
                         rule.put("dictionaryRootSelect", descriptionItem.get("dictionaryRootSelect"));
+
+                        String metadataName = (String) descriptionItem.get("metadataName");
+                        rule.put("value", entry.getItems().get(metadataName));
                     }
                 }
+                //3-档案库所属全宗号
+            } else if (type == 3) {
+                rule.put("value", fondsCode);
             }
         }
         Map<String, Object> resultMap = new HashMap<>();

@@ -4,7 +4,6 @@ import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.OriginalTextService;
 import com.ztdx.eams.domain.archives.model.OriginalText;
 import com.ztdx.eams.domain.system.application.PermissionService;
-import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -136,7 +135,7 @@ public class OriginalTextController {
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
-    @RequestMapping(value = "/fileAttributes", method = RequestMethod.PUT)
+    @RequestMapping(value = "/fileAttributes", method = RequestMethod.GET)
     public Map<String, String> fileAttributes(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id) {
         return originalTextService.fileAttributes(catalogueId, id);
     }
