@@ -19,7 +19,7 @@ import javax.persistence.Table;
 public interface BoxRepository extends JpaRepository<Box, Integer> {
 
     //查询盒号是否存在
-    boolean existsByCodeAndAndArchivesId(String code, int archivesId);
+    boolean existsByCodeAndArchivesId(String code, int archivesId);
 
     //通过ID修改信息
     @Modifying
@@ -31,4 +31,9 @@ public interface BoxRepository extends JpaRepository<Box, Integer> {
     @Query("update Box b set b.onFrame=:onFrame,b.point=:point where b.id=:id")
     void updateOnFrameById(@Param("id") int id, @Param("onFrame") boolean onFrame, @Param("point") String point);
 
+    Box findByArchivesIdAndCode(int archiveId, String code);
+
+    @Modifying
+    @Query("update Box b set b.pagesTotal = :pages, b.filesTotal = :files where b.code = :code and b.archivesId = :archivesId")
+    void updateTotal(@Param("code") String code,@Param("archivesId") int archivesId, @Param("pages") int pages, @Param("files") int files);
 }

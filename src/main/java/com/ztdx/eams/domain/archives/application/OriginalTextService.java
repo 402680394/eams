@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.mongodb.QueryBuilder;
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.utils.FileReader;
@@ -29,6 +30,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -585,6 +587,17 @@ public class OriginalTextService {
         result.setGmtDeleted(originalText.getGmtDeleted());
 
         return result;
+    }
+
+    public Integer countByCatalogueIdAndEntryIdIn(int catalogueId, List<String> ids) {
+        String indexName = "archive_record_originalText_" + catalogueId;
+        return NumberUtils.convertNumberToTargetClass(mongoOperations.count(
+                Query.query(
+                        where("entryId")
+                                .in(ids)
+                                .and("gmtDeleted")
+                                .is(0)
+                ), indexName), Integer.class);
     }
 }
 

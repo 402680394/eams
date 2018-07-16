@@ -9,15 +9,22 @@ import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
+import com.ztdx.eams.domain.store.application.BoxService;
+import com.ztdx.eams.domain.store.model.Box;
+import com.ztdx.eams.domain.store.model.event.BoxChangeEvent;
 import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -47,7 +54,11 @@ public class EntryController {
 
     private EntryAsyncTask entryAsyncTask;
 
-    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask) {
+    private BoxService boxService;
+
+    private ApplicationContext applicationContext;
+
+    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask, BoxService boxService, ApplicationContext applicationContext) {
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
         this.catalogueService = catalogueService;
@@ -57,6 +68,8 @@ public class EntryController {
         this.conditionService = conditionService;
         this.originalTextService = originalTextService;
         this.entryAsyncTask = entryAsyncTask;
+        this.boxService = boxService;
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -912,6 +925,8 @@ public class EntryController {
     @RequestMapping(value = "/test/{id}", method = RequestMethod.GET)
     public void test(@PathVariable("id") String id){
         entryAsyncTask.test(id);
+        //entryService.groupCountPageCountByBox(Collections.singletonList("222"), 7);
+        //Object a = entryService.groupByBox(Collections.singletonList("222"), 7);
     }
 
     /**
@@ -1409,5 +1424,97 @@ public class EntryController {
         if (!qryFields.containsAll(fields)){
             throw new InvalidArgumentException("字段设置错误");
         }
+    }
+
+
+    /**
+     * @api {post} /entry/inbox 装盒
+     * @apiName inBox
+     * @apiGroup entry
+     * @apiParam {Number} catalogueId 目录id
+     * @apiParam {String[]} ids 条目id数组
+     * @apiParam {String} boxCode 盒号
+     * @apiParamExample {json} Reqeust-Example
+     * {
+     *     "catalogueId": 1,
+     *     "ids": ["xxxx-xxxx-xxxx"],
+     *     "boxCode": "box001"
+     * }
+     * @apiError message 1.没有盒号字段 2.盒不存在 3.目录不存在 4.条目不存在
+     *
+     */
+    @RequestMapping(value = "/inbox", method = RequestMethod.POST)
+    @Transactional
+    public void inBox(@JsonParam List<String> ids, @JsonParam String boxCode,@JsonParam int catalogueId){
+        Catalogue catalogue = catalogueService.get(catalogueId);
+        if (catalogue == null){
+            throw new InvalidArgumentException("目录不存在");
+        }
+
+        Box box = boxService.getByCode(catalogue.getArchivesId(), boxCode);
+        if (box == null){
+            throw new InvalidArgumentException("盒不存在");
+        }
+
+        entryService.inBox(catalogueId, ids, boxCode);
+
+        applicationContext.publishEvent(new BoxChangeEvent(this, catalogueId, catalogue.getArchivesId(), Collections.singletonList(boxCode)));
+    }
+
+    /**
+     * @api {post} /entry/unbox 拆盒
+     * @apiName unBox
+     * @apiGroup entry
+     * @apiParam {Number} catalogueId 目录id
+     * @apiParam {String[]} ids 条目id数组
+     * @apiParamExample {json} Reqeust-Example
+     * {
+     *     "catalogueId": 1,
+     *     "ids": ["xxxx-xxxx-xxxx"]
+     * }
+     * @apiError message 1.没有盒号字段 2.条目不存在 3.目录不存在
+     *
+     */
+    @RequestMapping(value = "/unbox", method = RequestMethod.POST)
+    public void unBox(@JsonParam List<String> ids,@JsonParam int catalogueId){
+        Catalogue catalogue = catalogueService.get(catalogueId);
+        if (catalogue == null){
+            throw new InvalidArgumentException("目录不存在");
+        }
+
+        Set<String> boxCodes = entryService.unBox(catalogueId, ids);
+
+        applicationContext.publishEvent(new BoxChangeEvent(this, catalogueId, catalogue.getArchivesId(), boxCodes));
+    }
+
+    @Async
+    @EventListener
+    @Transactional
+    public void resetBoxCount(BoxChangeEvent boxChangeEvent) throws InterruptedException {
+        Thread.sleep(3000L);
+        System.out.println("处理盒变更事件");
+        int catalogueId = boxChangeEvent.getCatalogueId();
+        int archiveId = boxChangeEvent.getArchiveId();
+        Collection<String> boxCodes = boxChangeEvent.getBoxCodes();
+        Map<String, GroupCount> list =
+                entryService.groupCountPageCountByBox(boxCodes, catalogueId)
+                        .stream().collect(Collectors.toMap(a -> a.key, a -> a));
+
+        Map<String, List<String>> group = entryService.groupByBox(boxCodes, catalogueId);
+
+        boxCodes.forEach(a -> {
+            int files = 0;
+            int pages = 0;
+            GroupCount groupCount = list.getOrDefault(a, null);
+            if (groupCount != null){
+                pages = groupCount.count;
+            }
+            //TODO @lijie 优化到循环外面
+            List<String> boxIds = group.getOrDefault(a, null);
+            if (boxIds != null && boxIds.size() > 0){
+                files = originalTextService.countByCatalogueIdAndEntryIdIn(catalogueId, boxIds);
+            }
+            boxService.updateTotal(a, archiveId, pages, files);
+        });
     }
 }
