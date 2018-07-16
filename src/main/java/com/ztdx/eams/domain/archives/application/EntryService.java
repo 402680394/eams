@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.mongodb.MapReduceCommand;
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
@@ -15,6 +16,7 @@ import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasti
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorValue;
+import com.ztdx.eams.domain.store.model.Box;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
@@ -24,27 +26,31 @@ import org.elasticsearch.join.query.JoinQueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.BasicQuery.query;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
@@ -139,7 +145,7 @@ public class EntryService {
         update.setItems(entry.getItems());
         update.setGmtModified(new Date());
         update.setVersion(entry.getVersion());
-        this.convertEntryItems(entry, EntryItemConverter::from, false);
+        this.convertEntryItems(update, EntryItemConverter::from, false);
         update = entryMongoRepository.save(update);
 
         entryAsyncTask.index(update);
@@ -279,7 +285,7 @@ public class EntryService {
         Iterable<Entry> list = entryMongoRepository.findAllById(deletes, getIndexName(catalogueId));
         list.forEach(a -> a.setGmtDeleted(1));
         entryMongoRepository.saveAll(list);
-        entryElasticsearchRepository.saveAll(list);
+        entryAsyncTask.indexAll(list, catalogueId);
     }
 
     public Entry get(int catalogueId, String id) {
@@ -350,11 +356,11 @@ public class EntryService {
         return (AggregatedPage<OriginalText>) originalTextElasticsearchRepository.search(builder.build(),new String[] {INDEX_NAME_PREFIX + "*"});
     }
 
-    public Iterable<Entry> findAllById(Set<String> entryIds, Integer catalogueId) {
+    public Iterable<Entry> findAllById(Collection<String> entryIds, Integer catalogueId) {
         if (catalogueId == null) {
             return entryElasticsearchRepository.search(QueryBuilders.termsQuery("id", entryIds), new String[]{getIndexName(null)});
         }else {
-            return entryElasticsearchRepository.findAllById(entryIds, getIndexName(catalogueId));
+            return entryMongoRepository.findAllById(entryIds, getIndexName(catalogueId));
         }
     }
 
@@ -377,6 +383,7 @@ public class EntryService {
         //存进mongoDb
         entryMongoRepository.saveAll(entryList);
 
+        entryAsyncTask.indexAll(entryList, catalogueId);
     }
 
     /**
@@ -602,5 +609,106 @@ public class EntryService {
         this.convertEntryItems(result, EntryItemConverter::from, true);
 
         return result;
+    }
+
+    public void inBox(int catalogueId, Collection<String> ids, String boxCode) {
+        DescriptionItem item =
+                descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
+        if (item == null){
+            throw new InvalidArgumentException("没有盒号字段");
+        }
+
+        Iterable<Entry> list = findAllById(ids, catalogueId);
+        if (list == null || !list.iterator().hasNext()){
+            throw new InvalidArgumentException("条目不存在");
+        }
+
+        list.forEach(entry -> entry.getItems().put(item.getMetadataName(), boxCode));
+
+        entryMongoRepository.saveAll(list);
+        entryAsyncTask.indexAll(list, catalogueId);
+    }
+
+    public Set<String> unBox(int catalogueId, Collection<String> ids){
+        DescriptionItem item =
+                descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
+        if (item == null){
+            throw new InvalidArgumentException("没有盒号字段");
+        }
+
+        Iterable<Entry> list = findAllById(ids, catalogueId);
+        if (list == null || !list.iterator().hasNext()){
+            throw new InvalidArgumentException("条目不存在");
+        }
+
+        Set<String> result = new HashSet<>();
+        list.forEach(entry -> {
+            Object boxCode = entry.getItems().getOrDefault(item.getMetadataName(), null);
+            if (boxCode == null || StringUtils.isEmpty(boxCode.toString())){
+                return;
+            }
+
+            //盒号字段置空
+            entry.getItems().put(item.getMetadataName(), null);
+
+            result.add(boxCode.toString());
+        });
+
+        entryMongoRepository.saveAll(list);
+        entryAsyncTask.indexAll(list, catalogueId);
+
+        return result;
+    }
+
+    public List<GroupCount> groupCountPageCountByBox(Collection<String> boxCodes, int catalogueId){
+
+        DescriptionItem boxNoItem =
+                descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
+        if (boxNoItem == null){
+            return null;
+        }
+
+        DescriptionItem pageTotalItem =
+                descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.PageTotal);
+        if (pageTotalItem == null){
+            return null;
+        }
+
+        String boxNoField = String.format("items.%s", boxNoItem.getMetadataName());
+        String pageTotalField = String.format("items.%s", pageTotalItem.getMetadataName());
+
+        Aggregation agg = Aggregation.newAggregation(
+                match(where(boxNoField).in(boxCodes).and("gmtDeleted").is(0))
+                , group(boxNoField).sum(pageTotalField).as("count")
+                , project("count").and("key").previousOperation()
+        );
+
+        return mongoOperations.aggregate(agg, getIndexName(catalogueId), GroupCount.class).getMappedResults();
+    }
+
+    public Map<String, List<String>> groupByBox(Collection<String> boxCodes, int catalogueId){
+        DescriptionItem boxNoItem =
+                descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
+        if (boxNoItem == null){
+            return null;
+        }
+
+        String boxNoField = String.format("items.%s", boxNoItem.getMetadataName());
+
+        return entryMongoRepository.findAll(
+                query(where(boxNoField).in(boxCodes).and("gmtDeleted").is(0))
+                , getIndexName(catalogueId)
+        ).stream()
+                .collect(
+                        Collectors.groupingBy(
+                                (Entry a) -> a.getItems().get(boxNoItem.getMetadataName()).toString()
+                                , Collector.of(
+                                        ArrayList::new
+                                        , (list, entry) -> list.add(entry.getId())
+                                        , (left, right) -> {
+                                            left.addAll(right);
+                                            return left;
+                                        })
+                        ));
     }
 }

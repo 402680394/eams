@@ -45,7 +45,7 @@ public class BoxService {
         Box b = boxRepository.findById(box.getId()).get();
         box.setCode(box.getCodeRule() + box.getFlowNumber());
         if (!b.getCode().equals(box.getCode())) {
-            if (boxRepository.existsByCodeAndAndArchivesId(box.getCode(), box.getArchivesId())) {
+            if (boxRepository.existsByCodeAndArchivesId(box.getCode(), box.getArchivesId())) {
                 throw new InvalidArgumentException("盒号已存在");
             }
         }
@@ -116,11 +116,19 @@ public class BoxService {
                 throw new InvalidArgumentException("流水号不是纯数字");
             }
 
-            if (boxRepository.existsByCodeAndAndArchivesId(box.getCode(), box.getArchivesId())) {
+            if (boxRepository.existsByCodeAndArchivesId(box.getCode(), box.getArchivesId())) {
                 throw new InvalidArgumentException("盒号已存在");
             }
             boxRepository.save(box);
 
         }
+    }
+
+    public Box getByCode(int archiveId, String code){
+        return boxRepository.findByArchivesIdAndCode(archiveId, code);
+    }
+
+    public void updateTotal(String code,int archivesId, int pages, int files){
+        boxRepository.updateTotal(code, archivesId, pages, files);
     }
 }
