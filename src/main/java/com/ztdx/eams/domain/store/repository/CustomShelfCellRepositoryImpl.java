@@ -30,7 +30,12 @@ public class CustomShelfCellRepositoryImpl implements CustomShelfCellRepository 
 
         Shelf shelf = em.find(Shelf.class, section.getShelfId());
         Storage storage = em.find(Storage.class, section.getStorageId());
-        String pointCodePrefix = String.format("%s-%s-%s", storage.getNumber(), shelf.getCode(), section.getCode());
+        String pointCodePrefix = String.format(
+                "%d-%s-%s-%s"
+                , section.getFondsId()
+                , storage.getNumber()
+                , shelf.getCode()
+                , section.getCode());
 
         int side = 2;
 
