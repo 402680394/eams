@@ -12,10 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Service
@@ -36,6 +33,8 @@ public class StoreQuery {
     private final StoreBoxCodeRule storeBoxCodeRule = Tables.STORE_BOX_CODE_RULE;
 
     private final StoreShelf storeShelf = Tables.STORE_SHELF;
+
+    private final StoreShelfCell storeShelfCell = Tables.STORE_SHELF_CELL;
 
     @Autowired
     public StoreQuery(DSLContext dslContext) {
@@ -417,5 +416,19 @@ public class StoreQuery {
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("maxFlowNumber", formatter.format(maxFlowNumber));
         return resultMap;
+    }
+
+    public Collection<String> getCellIdsByShelfSectionIdIn(Collection<Integer> shelfSectionIds){
+        return dslContext.select(storeShelfCell.POINT_CODE)
+                .from(storeShelfCell)
+                .where(storeShelfCell.SHELF_SECTION_ID.in(shelfSectionIds))
+                .fetch().intoSet(storeShelfCell.POINT_CODE);
+    }
+
+    public Collection<String> getCellIdsByShelfIdIn(Collection<Integer> shelfIds){
+        return dslContext.select(storeShelfCell.POINT_CODE)
+                .from(storeShelfCell)
+                .where(storeShelfCell.SHELF_ID.in(shelfIds))
+                .fetch().intoSet(storeShelfCell.POINT_CODE);
     }
 }

@@ -6,10 +6,14 @@ import com.ztdx.eams.domain.store.application.ShelfSectionService;
 import com.ztdx.eams.domain.store.application.ShelfService;
 import com.ztdx.eams.domain.store.model.Shelf;
 import com.ztdx.eams.domain.store.model.ShelfSection;
-import org.springframework.transaction.annotation.Transactional;
+import com.ztdx.eams.domain.store.model.event.ShelfCellDeletedEvent;
+import com.ztdx.eams.query.StoreQuery;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping(value = "/shelf/section")
@@ -19,9 +23,15 @@ public class ShelfSectionController {
 
     private ShelfService shelfService;
 
-    public ShelfSectionController(ShelfSectionService shelfSectionService, ShelfService shelfService) {
+    private ApplicationContext applicationContext;
+
+    private StoreQuery storeQuery;
+
+    public ShelfSectionController(ShelfSectionService shelfSectionService, ShelfService shelfService, ApplicationContext applicationContext, StoreQuery storeQuery) {
         this.shelfSectionService = shelfSectionService;
         this.shelfService = shelfService;
+        this.applicationContext = applicationContext;
+        this.storeQuery = storeQuery;
     }
 
     /**
@@ -218,5 +228,9 @@ public class ShelfSectionController {
     @RequestMapping(value = "", method = RequestMethod.DELETE)
     public void delete(@JsonParam List<Integer> ids){
         shelfSectionService.delete(ids);
+
+        Collection<String> cellPointCodes = storeQuery.getCellIdsByShelfSectionIdIn(ids);
+
+        applicationContext.publishEvent(new ShelfCellDeletedEvent(this, cellPointCodes));
     }
 }

@@ -6,10 +6,12 @@ import com.ztdx.eams.domain.store.application.ShelfService;
 import com.ztdx.eams.domain.store.application.StorageService;
 import com.ztdx.eams.domain.store.model.Shelf;
 import com.ztdx.eams.domain.store.model.Storage;
+import com.ztdx.eams.domain.store.model.event.ShelfCellDeletedEvent;
 import com.ztdx.eams.query.StoreQuery;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -23,10 +25,13 @@ public class ShelfController {
 
     private StoreQuery storeQuery;
 
-    public ShelfController(ShelfService shelfService, StorageService storageService, StoreQuery storeQuery) {
+    private ApplicationContext applicationContext;
+
+    public ShelfController(ShelfService shelfService, StorageService storageService, StoreQuery storeQuery, ApplicationContext applicationContext) {
         this.shelfService = shelfService;
         this.storageService = storageService;
         this.storeQuery = storeQuery;
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -146,6 +151,10 @@ public class ShelfController {
     @RequestMapping(value = "", method = RequestMethod.DELETE)
     public void delete(@JsonParam List<Integer> ids){
         shelfService.delete(ids);
+
+        Collection<String> cellPointCodes = storeQuery.getCellIdsByShelfIdIn(ids);
+
+        applicationContext.publishEvent(new ShelfCellDeletedEvent(this, cellPointCodes));
     }
 
     /**

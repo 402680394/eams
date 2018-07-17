@@ -3,16 +3,19 @@ package com.ztdx.eams.domain.store.application;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.domain.store.model.Shelf;
+import com.ztdx.eams.domain.store.model.ShelfCell;
 import com.ztdx.eams.domain.store.model.ShelfSection;
+import com.ztdx.eams.domain.store.model.event.ShelfCellDeletedEvent;
 import com.ztdx.eams.domain.store.repository.ShelfCellRepository;
 import com.ztdx.eams.domain.store.repository.ShelfRepository;
 import com.ztdx.eams.domain.store.repository.ShelfSectionRepository;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ShelfSectionService {
@@ -27,7 +30,7 @@ public class ShelfSectionService {
         this.shelfSectionRepository = shelfSectionRepository;
         this.shelfCellRepository = shelfCellRepository;
         this.shelfRepository = shelfRepository;
-    }
+  }
 
     @Transactional(rollbackFor = Exception.class)
     public ShelfSection save(ShelfSection shelfSection) {
