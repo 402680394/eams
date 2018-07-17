@@ -1,11 +1,9 @@
 package com.ztdx.eams.controller.store;
 
-import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.basic.params.JsonParam;
+import com.ztdx.eams.domain.store.application.ShelfCellService;
 import com.ztdx.eams.domain.store.model.ShelfCell;
 import com.ztdx.eams.domain.store.repository.ShelfCellRepository;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +12,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(value = "/shelf/cell")
 public class ShelfCellController {
 
-    private ShelfCellRepository shelfCellRepository;
+    private ShelfCellService shelfCellService;
 
-    public ShelfCellController(ShelfCellRepository shelfCellRepository) {
-        this.shelfCellRepository = shelfCellRepository;
+    public ShelfCellController(ShelfCellService shelfCellService) {
+        this.shelfCellService = shelfCellService;
     }
 
     /**
@@ -35,26 +33,7 @@ public class ShelfCellController {
             , @JsonParam String barCode
             , @JsonParam String pointCode
     ){
-        ShelfCell cell = shelfCellRepository.findById(id).orElse(null);
-        if (cell == null){
-            throw new NotFoundException("密集架格不存在");
-        }
-
-        if (!StringUtils.isEmpty(barCode) && !barCode.equals(cell.getBarCode())){
-            if (shelfCellRepository.existsByBarCodeAndIdNot(barCode, id)){
-                throw new InvalidArgumentException("条码已存在");
-            }
-            cell.setBarCode(barCode);
-        }
-
-        if (!StringUtils.isEmpty(pointCode) && !pointCode.equals(cell.getPointCode())){
-            if (shelfCellRepository.existsByPointCodeAndIdNot(pointCode, id)){
-                throw new InvalidArgumentException("库位码已存在");
-            }
-            cell.setPointCode(pointCode);
-        }
-
-        shelfCellRepository.save(cell);
+        shelfCellService.update(id, barCode, pointCode);
     }
 
     /**
@@ -108,6 +87,6 @@ public class ShelfCellController {
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value ="size", required = false, defaultValue = "20") int size
     ){
-        return shelfCellRepository.findByShelfSectionId(shelfSectionId, PageRequest.of(page, size));
+        return shelfCellService.findByShelfSectionId(shelfSectionId, PageRequest.of(page, size));
     }
 }
