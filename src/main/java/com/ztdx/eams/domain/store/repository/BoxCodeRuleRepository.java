@@ -15,5 +15,5 @@ import javax.persistence.Table;
 @Qualifier("boxRepository")
 public interface BoxCodeRuleRepository extends JpaRepository<BoxCodeRule, Integer> {
 
-    BoxCodeRule findByArchivesIdAndType(int archivesId, byte type);
+    BoxCodeRule findByArchivesIdAndType(int archivesId, int type);
 }

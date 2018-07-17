@@ -80,7 +80,7 @@ public class BoxService {
     @Transactional
     public void save(Box box, int total) {
 
-        BoxCodeRule boxCodeRule = boxCodeRuleRepository.findByArchivesIdAndType(box.getArchivesId(), (byte) 5);
+        BoxCodeRule boxCodeRule = boxCodeRuleRepository.findByArchivesIdAndType(box.getArchivesId(), 5);
 
         NumberFormat formatter = NumberFormat.getNumberInstance();
         formatter.setMinimumIntegerDigits(boxCodeRule.getFlowNumberLength());

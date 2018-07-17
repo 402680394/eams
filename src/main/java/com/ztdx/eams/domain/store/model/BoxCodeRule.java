@@ -27,7 +27,7 @@ public class BoxCodeRule {
     private String value;
     //著录项id
     @Column(name = "description_item_id")
-    private int descriptionItemId;
+    private Integer descriptionItemId;
     //截取长度
     @Column(name = "interception_length")
     private byte interceptionLength;

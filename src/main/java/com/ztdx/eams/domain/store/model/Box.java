@@ -48,7 +48,7 @@ public class Box {
     @Column(name = "max_pages_total")
     private int maxPagesTotal;
     //盒子宽度
-    @Min(value = 1)
+    @Min(value = 0)
     @Column(name = "width")
     private int width;
     //备注

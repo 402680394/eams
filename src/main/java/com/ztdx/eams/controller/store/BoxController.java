@@ -66,6 +66,7 @@ public class BoxController {
      * @apiParam {Number} archivesId 档案库ID
      * @apiParam {String} codeRule 盒号规则(没有传"")
      * @apiParam {String} flowNumber 流水号
+     * @apiParam {Number} width 盒子宽度
      * @apiParam {Number} total 新增个数
      * @apiParam {Number} maxPagesTotal 最大容量（页）
      * @apiParam {String} remark 备注（未输入传""值）
@@ -73,7 +74,20 @@ public class BoxController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/", method = RequestMethod.POST)
-    public void save(@RequestBody Box box, @JsonParam int total) {
+    public void save(@JsonParam int archivesId
+            , @JsonParam String codeRule
+            , @JsonParam String flowNumber
+            , @JsonParam int total
+            , @JsonParam int maxPagesTotal
+            , @JsonParam String remark) {
+
+        Box box = new Box();
+        box.setArchivesId(archivesId);
+        box.setCodeRule(codeRule);
+        box.setFlowNumber(flowNumber);
+        box.setMaxPagesTotal(maxPagesTotal);
+        box.setRemark(remark);
+        box.setPoint("");
         boxService.save(box, total);
     }
 
