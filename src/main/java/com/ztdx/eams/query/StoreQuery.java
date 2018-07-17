@@ -289,6 +289,7 @@ public class StoreQuery {
             //容纳状况已满
         }
         resultMap.put("items", list);
+        resultMap.put("total", list.size());
         return resultMap;
     }
 

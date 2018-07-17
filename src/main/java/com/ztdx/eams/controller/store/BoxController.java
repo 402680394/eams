@@ -43,11 +43,12 @@ public class BoxController {
      * @apiSuccess (Success 200) {Number} pagesTotal 文件页数.
      * @apiSuccess (Success 200) {Number} maxPagesTotal 最大容量（页）.
      * @apiSuccess (Success 200) {Number} width 盒子宽度（毫米）.
-     * @apiSuccess (Success 200) {Boolean} onFrame 是否在架.
+     * @apiSuccess (Success 200) {Number} onFrame 是否在架(0-未在架  1-在架).
      * @apiSuccess (Success 200) {String} point 位置编码.
      * @apiSuccess (Success 200) {String} remark 备注.
+     * @apiSuccess (Success 200) {Number} total 条数.
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"items": [{"code": 盒号,"filesTotal": 文件份数,"pagesTotal": 文件页数,"maxPagesTotal": 容纳最大页数,"width": 盒子宽度,"onStand": 是否在架,"point": "位置编码","remark": "备注"}]}}.
+     * {"data": {"items": [{"total":条数,"code": 盒号,"filesTotal": 文件份数,"pagesTotal": 文件页数,"maxPagesTotal": 容纳最大页数,"width": 盒子宽度,"onFrame": 是否在架,"point": "位置编码","remark": "备注"}]}}.
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam(value = "pageNum", required = false, defaultValue = "1") int pageNum,
@@ -102,7 +103,6 @@ public class BoxController {
      */
     @RequestMapping(value = "/", method = RequestMethod.DELETE)
     public void delete(@RequestBody Map<String, Object> map) {
-        // TODO: 拆盒
         int archivesId = (int) map.get("archivesId");
         List<Integer> ids = (List<Integer>) map.get("ids");
         boxService.delete(ids);

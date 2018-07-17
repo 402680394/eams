@@ -70,7 +70,7 @@ public class BoxService {
     @Transactional
     public void downFrame(List<Integer> ids) {
         for (int id : ids) {
-            boxRepository.updateOnFrameById(id, true, "");
+            boxRepository.updateOnFrameById(id, false, "");
         }
     }
 
