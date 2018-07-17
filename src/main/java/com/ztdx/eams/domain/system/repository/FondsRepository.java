@@ -19,6 +19,8 @@ import java.util.List;
 @Qualifier("fondsRepository")
 public interface FondsRepository extends JpaRepository<Fonds, Integer> {
 
+    List<Fonds> findAllByIdAndGmtDeleted(Iterable Id, boolean gmtDeleted);
+
     boolean existsByCodeAndGmtDeleted(String code, boolean gmtDeleted);
 
     boolean existsByCodeAndId(String code, int id);
@@ -37,7 +39,7 @@ public interface FondsRepository extends JpaRepository<Fonds, Integer> {
     Fonds findById(int id);
 
     //查询所有的全宗
-    List<Fonds> findByParentIdNotNull();
+    List<Fonds> findByGmtDeletedAndParentIdNotNull(boolean gmtDeleted);
 
     //通过ID修改
     @Modifying

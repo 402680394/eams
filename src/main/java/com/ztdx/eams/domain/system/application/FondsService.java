@@ -122,10 +122,10 @@ public class FondsService {
     }
 
     public List<Fonds> findAllById(Collection<Integer> fondsIds) {
-        return fondsRepository.findAllById(fondsIds);
+        return fondsRepository.findAllByIdAndGmtDeleted(fondsIds, false);
     }
 
     public List<Fonds> findAll() {
-        return fondsRepository.findByParentIdNotNull();
+        return fondsRepository.findByGmtDeletedAndParentIdNotNull(false);
     }
 }
