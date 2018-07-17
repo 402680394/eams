@@ -11,7 +11,7 @@ import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.store.application.BoxService;
 import com.ztdx.eams.domain.store.model.Box;
-import com.ztdx.eams.domain.store.model.event.BoxChangeEvent;
+import com.ztdx.eams.domain.store.model.event.BoxInsideChangeEvent;
 import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import org.apache.commons.lang.StringUtils;
@@ -814,7 +814,7 @@ public class EntryController {
         entry.getItems().forEach((a, b) -> {
             DescriptionItem item = itemMap.get(a);
             if (item != null) {
-                String format = EntryItemConverter.format(b, item);
+                String format = EntryItemConverter.format(entry, item);
                 result.put(item.getDisplayName(), format);
             }
         });
@@ -1458,7 +1458,7 @@ public class EntryController {
 
         entryService.inBox(catalogueId, ids, boxCode);
 
-        applicationContext.publishEvent(new BoxChangeEvent(this, catalogueId, catalogue.getArchivesId(), Collections.singletonList(boxCode)));
+        applicationContext.publishEvent(new BoxInsideChangeEvent(this, catalogueId, catalogue.getArchivesId(), Collections.singletonList(boxCode)));
     }
 
     /**
@@ -1484,18 +1484,18 @@ public class EntryController {
 
         Set<String> boxCodes = entryService.unBox(catalogueId, ids);
 
-        applicationContext.publishEvent(new BoxChangeEvent(this, catalogueId, catalogue.getArchivesId(), boxCodes));
+        applicationContext.publishEvent(new BoxInsideChangeEvent(this, catalogueId, catalogue.getArchivesId(), boxCodes));
     }
 
     @Async
     @EventListener
     @Transactional
-    public void resetBoxCount(BoxChangeEvent boxChangeEvent) throws InterruptedException {
+    public void resetBoxCount(BoxInsideChangeEvent boxInsideChangeEvent) throws InterruptedException {
         Thread.sleep(3000L);
         System.out.println("处理盒变更事件");
-        int catalogueId = boxChangeEvent.getCatalogueId();
-        int archiveId = boxChangeEvent.getArchiveId();
-        Collection<String> boxCodes = boxChangeEvent.getBoxCodes();
+        int catalogueId = boxInsideChangeEvent.getCatalogueId();
+        int archiveId = boxInsideChangeEvent.getArchiveId();
+        Collection<String> boxCodes = boxInsideChangeEvent.getBoxCodes();
         Map<String, GroupCount> list =
                 entryService.groupCountPageCountByBox(boxCodes, catalogueId)
                         .stream().collect(Collectors.toMap(a -> a.key, a -> a));

@@ -4,6 +4,7 @@ import com.ztdx.eams.basic.WorkContext;
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.domain.archives.model.DefaultValue;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import com.ztdx.eams.domain.archives.model.Entry;
 import org.apache.commons.lang.StringUtils;
 
 import java.text.SimpleDateFormat;
@@ -11,8 +12,8 @@ import java.util.Date;
 
 public class StringEntryItemValue extends AbstractEntryItemValue<String> {
 
-    StringEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
-        super(descriptionItem, value, isValidate);
+    StringEntryItemValue(Entry entry, DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        super(entry, descriptionItem, value, isValidate);
     }
 
     @Override

@@ -5,8 +5,11 @@ import org.springframework.context.ApplicationEvent;
 
 import java.util.Collection;
 
+/**
+ * 盒内文件变更发出得事件
+ */
 @Getter
-public class BoxChangeEvent extends ApplicationEvent {
+public class BoxInsideChangeEvent extends ApplicationEvent {
 
     private int catalogueId;
     private int archiveId;
@@ -20,7 +23,7 @@ public class BoxChangeEvent extends ApplicationEvent {
      * @param archiveId 档案库id
      * @param boxCodes 盒号集合
      */
-    public BoxChangeEvent(Object source, int catalogueId, int archiveId, Collection<String> boxCodes) {
+    public BoxInsideChangeEvent(Object source, int catalogueId, int archiveId, Collection<String> boxCodes) {
         super(source);
         this.catalogueId = catalogueId;
         this.archiveId = archiveId;

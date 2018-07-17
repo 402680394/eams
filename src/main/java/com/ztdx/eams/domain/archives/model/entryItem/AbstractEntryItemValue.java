@@ -2,18 +2,21 @@ package com.ztdx.eams.domain.archives.model.entryItem;
 
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import com.ztdx.eams.domain.archives.model.Entry;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.lang.Nullable;
 
 import java.lang.reflect.ParameterizedType;
 
 public abstract class AbstractEntryItemValue<T> implements IEntryItemValue<T> {
+    protected final Entry entry;
     protected DescriptionItem descriptionItem;
     protected T value;
     private Class<T> entityClass;
 
     @SuppressWarnings("unchecked")
-    AbstractEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
+    AbstractEntryItemValue(Entry entry, DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        this.entry = entry;
         this.descriptionItem = descriptionItem;
 
         if (value == null) {

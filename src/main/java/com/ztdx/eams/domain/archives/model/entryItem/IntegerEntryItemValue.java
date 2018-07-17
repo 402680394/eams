@@ -2,11 +2,12 @@ package com.ztdx.eams.domain.archives.model.entryItem;
 
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import com.ztdx.eams.domain.archives.model.Entry;
 
 public class IntegerEntryItemValue extends AbstractEntryItemValue<Integer> {
 
-    IntegerEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
-        super(descriptionItem, value, isValidate);
+    IntegerEntryItemValue(Entry entry, DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        super(entry, descriptionItem, value, isValidate);
     }
 
     @Override

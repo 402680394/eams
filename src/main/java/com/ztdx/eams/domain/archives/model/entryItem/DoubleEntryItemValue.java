@@ -2,14 +2,15 @@ package com.ztdx.eams.domain.archives.model.entryItem;
 
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import com.ztdx.eams.domain.archives.model.Entry;
 import org.springframework.util.StringUtils;
 
 import java.text.SimpleDateFormat;
 
 public class DoubleEntryItemValue extends AbstractEntryItemValue<Double> {
 
-    DoubleEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
-        super(descriptionItem, value, isValidate);
+    DoubleEntryItemValue(Entry entry, DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        super(entry, descriptionItem, value, isValidate);
     }
 
     @Override

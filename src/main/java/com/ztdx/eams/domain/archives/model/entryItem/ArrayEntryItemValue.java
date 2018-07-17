@@ -3,6 +3,7 @@ package com.ztdx.eams.domain.archives.model.entryItem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import com.ztdx.eams.domain.archives.model.Entry;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
@@ -12,8 +13,8 @@ import java.util.Arrays;
 public class ArrayEntryItemValue extends AbstractEntryItemValue<ArrayList> {
     private ObjectMapper jsonMapper;
 
-    ArrayEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
-        super(descriptionItem, value, isValidate);
+    ArrayEntryItemValue(Entry entry, DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        super(entry, descriptionItem, value, isValidate);
         jsonMapper = new ObjectMapper();
     }
 

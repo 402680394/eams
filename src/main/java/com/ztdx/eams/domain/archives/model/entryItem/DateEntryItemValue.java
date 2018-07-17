@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.domain.archives.model.DefaultValue;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import com.ztdx.eams.domain.archives.model.Entry;
 import org.apache.commons.lang.StringUtils;
 
 import java.text.ParseException;
@@ -15,8 +16,8 @@ import static org.apache.commons.lang.StringUtils.isNumeric;
 
 public class DateEntryItemValue extends AbstractEntryItemValue<Date> {
 
-    DateEntryItemValue(DescriptionItem descriptionItem, Object value, boolean isValidate) {
-        super(descriptionItem, value, isValidate);
+    DateEntryItemValue(Entry entry, DescriptionItem descriptionItem, Object value, boolean isValidate) {
+        super(entry, descriptionItem, value, isValidate);
     }
 
     @Override

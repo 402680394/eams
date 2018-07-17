@@ -122,6 +122,7 @@ public class EntryService {
         entry.setGmtCreate(new Date());
         entry.setGmtModified(new Date());
         this.convertEntryItems(entry, EntryItemConverter::from, true);
+        //TODO @lijie 不能复制盒号？保存时要验证盒号是否存在
         entry = entryMongoRepository.save(entry);
 
         entryAsyncTask.index(entry);
@@ -214,7 +215,7 @@ public class EntryService {
         return PageableExecutionUtils.getPage(result , pageable, searchResult::getTotalElements);
     }
 
-    private void convertEntryItems(Entry entry, BiFunction<Object, DescriptionItem, Object> operator, boolean isGenerator) {
+    private void convertEntryItems(Entry entry, BiFunction<Entry, DescriptionItem, Object> operator, boolean isGenerator) {
         Map<String, DescriptionItem> descriptionItemMap = this.getDescriptionItems(entry.getCatalogueId());
         Map<String, Object> convert = new HashMap<>();
 
@@ -224,8 +225,7 @@ public class EntryService {
                 String idKey = String.format(IdGeneratorValue.ENTRY_ITEM_INCREMENT_FORMAT, entry.getCatalogueId(), item.getMetadataName());
                 val = idGeneratorRepository.get(idKey, item.getIncrement());
             }else {
-                Object value = entry.getItems().getOrDefault(item.getMetadataName(), null);
-                val = operator.apply(value, item);
+                val = operator.apply(entry, item);
             }
             if (val != null) {
                 convert.put(key, val);
