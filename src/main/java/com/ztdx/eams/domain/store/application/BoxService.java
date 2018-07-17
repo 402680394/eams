@@ -120,4 +120,8 @@ public class BoxService {
     public void updateTotal(String code, int archivesId, int pages, int files) {
         boxRepository.updateTotal(code, archivesId, pages, files);
     }
+
+    public boolean existsByCodeAndArchivesId(int archiveId, String boxCode) {
+        return boxRepository.existsByCodeAndArchivesId(boxCode, archiveId);
+    }
 }

@@ -1,12 +1,12 @@
 package com.ztdx.eams.domain.archives.application;
 
-import com.mongodb.MapReduceCommand;
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
+import com.ztdx.eams.domain.archives.model.event.EntryBoxNumberValidateEvent;
 import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
 import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
@@ -16,7 +16,6 @@ import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasti
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorValue;
-import com.ztdx.eams.domain.store.model.Box;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
@@ -26,19 +25,17 @@ import org.elasticsearch.join.query.JoinQueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.*;
-import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -47,7 +44,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
@@ -83,7 +79,9 @@ public class EntryService {
 
     private EntryAsyncTask entryAsyncTask;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, MongoOperations mongoOperations, IdGeneratorRepository idGeneratorRepository, EntryAsyncTask entryAsyncTask) {
+    private ApplicationContext applicationContext;
+
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, MongoOperations mongoOperations, IdGeneratorRepository idGeneratorRepository, EntryAsyncTask entryAsyncTask, ApplicationContext applicationContext) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
@@ -95,6 +93,7 @@ public class EntryService {
         this.mongoOperations = mongoOperations;
         this.idGeneratorRepository = idGeneratorRepository;
         this.entryAsyncTask = entryAsyncTask;
+        this.applicationContext = applicationContext;
     }
 
     public Entry save(Entry entry) {
@@ -122,7 +121,6 @@ public class EntryService {
         entry.setGmtCreate(new Date());
         entry.setGmtModified(new Date());
         this.convertEntryItems(entry, EntryItemConverter::from, true);
-        //TODO @lijie 不能复制盒号？保存时要验证盒号是否存在
         entry = entryMongoRepository.save(entry);
 
         entryAsyncTask.index(entry);
@@ -227,12 +225,31 @@ public class EntryService {
             }else {
                 val = operator.apply(entry, item);
             }
+
+            if (isGenerator) {
+                entryValidate(entry, val, item);
+            }
+
             if (val != null) {
                 convert.put(key, val);
             }
         });
 
         entry.setItems(convert);
+    }
+
+    private void entryValidate(Entry entry, Object val, DescriptionItem item) {
+        switch (item.getPropertyType()){
+            case BoxNumber:
+                applicationContext.publishEvent(
+                        new EntryBoxNumberValidateEvent(
+                                this
+                                , entry.getArchiveId()
+                                , val.toString()));
+                break;
+            default:
+                break;
+        }
     }
 
     private Map<String, DescriptionItem> getDescriptionItems(int catalogueId) {

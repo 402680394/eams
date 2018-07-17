@@ -9,6 +9,7 @@ import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
+import com.ztdx.eams.domain.archives.model.event.EntryBoxNumberValidateEvent;
 import com.ztdx.eams.domain.store.application.BoxService;
 import com.ztdx.eams.domain.store.model.Box;
 import com.ztdx.eams.domain.store.model.event.BoxInsideChangeEvent;
@@ -1491,7 +1492,6 @@ public class EntryController {
     @EventListener
     @Transactional
     public void resetBoxCount(BoxInsideChangeEvent boxInsideChangeEvent) throws InterruptedException {
-        Thread.sleep(3000L);
         System.out.println("处理盒变更事件");
         int catalogueId = boxInsideChangeEvent.getCatalogueId();
         int archiveId = boxInsideChangeEvent.getArchiveId();
@@ -1516,5 +1516,14 @@ public class EntryController {
             }
             boxService.updateTotal(a, archiveId, pages, files);
         });
+    }
+
+    @EventListener
+    public void validateBoxNumber(EntryBoxNumberValidateEvent event){
+        boolean exists = boxService.existsByCodeAndArchivesId(event.getArchiveId(), event.getBoxCode());
+
+        if (!exists){
+            throw new InvalidArgumentException(String.format("盒号(%s)不存在", event.getBoxCode()));
+        }
     }
 }
