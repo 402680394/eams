@@ -120,7 +120,7 @@ public class EntryService {
         entry.setId(UUID.randomUUID().toString());
         entry.setGmtCreate(new Date());
         entry.setGmtModified(new Date());
-        this.convertEntryItems(entry, EntryItemConverter::from, true);
+        this.convertEntryItems(entry, EntryItemConverter::from, true, true);
         entry = entryMongoRepository.save(entry);
 
         entryAsyncTask.index(entry);
@@ -144,7 +144,7 @@ public class EntryService {
         update.setItems(entry.getItems());
         update.setGmtModified(new Date());
         update.setVersion(entry.getVersion());
-        this.convertEntryItems(update, EntryItemConverter::from, false);
+        this.convertEntryItems(update, EntryItemConverter::from, false, true);
         update = entryMongoRepository.save(update);
 
         entryAsyncTask.index(update);
@@ -213,7 +213,7 @@ public class EntryService {
         return PageableExecutionUtils.getPage(result , pageable, searchResult::getTotalElements);
     }
 
-    private void convertEntryItems(Entry entry, BiFunction<Entry, DescriptionItem, Object> operator, boolean isGenerator) {
+    private void convertEntryItems(Entry entry, BiFunction<Entry, DescriptionItem, Object> operator, boolean isGenerator, boolean isValidate) {
         Map<String, DescriptionItem> descriptionItemMap = this.getDescriptionItems(entry.getCatalogueId());
         Map<String, Object> convert = new HashMap<>();
 
@@ -226,7 +226,7 @@ public class EntryService {
                 val = operator.apply(entry, item);
             }
 
-            if (isGenerator) {
+            if (isValidate) {
                 entryValidate(entry, val, item);
             }
 
@@ -236,6 +236,10 @@ public class EntryService {
         });
 
         entry.setItems(convert);
+    }
+
+    private void convertEntryItems(Entry entry, BiFunction<Entry, DescriptionItem, Object> operator, boolean isGenerator) {
+        convertEntryItems(entry, operator, isGenerator, false);
     }
 
     private void entryValidate(Entry entry, Object val, DescriptionItem item) {
@@ -623,7 +627,7 @@ public class EntryService {
         }
         result.setItems(items);
 
-        this.convertEntryItems(result, EntryItemConverter::from, true);
+        this.convertEntryItems(result, EntryItemConverter::from, true, true);
 
         return result;
     }

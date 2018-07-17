@@ -1,6 +1,7 @@
 package com.ztdx.eams.controller.archives;
 
 import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.basic.params.JsonParam;
@@ -1523,7 +1524,7 @@ public class EntryController {
         boolean exists = boxService.existsByCodeAndArchivesId(event.getArchiveId(), event.getBoxCode());
 
         if (!exists){
-            throw new InvalidArgumentException(String.format("盒号(%s)不存在", event.getBoxCode()));
+            throw new EntryValueConverException(String.format("盒号(%s)不存在", event.getBoxCode()));
         }
     }
 }
