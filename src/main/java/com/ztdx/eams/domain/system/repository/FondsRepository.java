@@ -51,6 +51,6 @@ public interface FondsRepository extends JpaRepository<Fonds, Integer> {
 
     //设置状态为删除
     @Modifying
-    @Query("update Fonds f set f.gmtCreate=:gmtCreate where f.id=:id")
-    void updateGmtDeletedById(@Param(value = "id") int id, @Param(value = "gmtCreate") boolean gmtCreate);
+    @Query("update Fonds f set f.gmtDeleted=:gmtDeleted where f.id=:id")
+    void updateGmtDeletedById(@Param(value = "id") int id, @Param(value = "gmtDeleted") boolean gmtDeleted);
 }
