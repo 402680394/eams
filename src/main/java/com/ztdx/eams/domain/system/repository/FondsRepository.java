@@ -19,7 +19,7 @@ import java.util.List;
 @Qualifier("fondsRepository")
 public interface FondsRepository extends JpaRepository<Fonds, Integer> {
 
-    List<Fonds> findAllByIdAndGmtDeleted(Iterable Id, boolean gmtDeleted);
+    List<Fonds> findAllByIdInAndGmtDeleted(Iterable<Integer> Id, boolean gmtDeleted);
 
     boolean existsByCodeAndGmtDeleted(String code, boolean gmtDeleted);
 
