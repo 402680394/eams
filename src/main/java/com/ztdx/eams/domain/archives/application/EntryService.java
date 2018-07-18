@@ -243,6 +243,9 @@ public class EntryService {
     }
 
     private void entryValidate(Entry entry, Object val, DescriptionItem item) {
+        if (val == null){
+            return;
+        }
         switch (item.getPropertyType()){
             case BoxNumber:
                 applicationContext.publishEvent(
