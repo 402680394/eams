@@ -435,21 +435,24 @@ public class StoreQuery {
     public Map<String, Object> maxFlowNumber(int archivesId, String codeRule) {
 
         int maxFlowNumber = 0;
-        List<Map<String, Object>> list = dslContext
+        String max = (String) dslContext
                 .select(storeBox.FLOW_NUMBER.add(0).max().as("maxFlowNumber"))
                 .from(storeBox)
                 .where(storeBox.CODE_RULE.equal(codeRule), storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)))
-                .fetch().intoMaps();
-        if (list.size() != 0) {
-            maxFlowNumber = Integer.parseInt((String) list.get(0).get("maxFlowNumber"));
+                .fetch().intoMaps().get(0).get("maxFlowNumber");
+        if (null != max) {
+            maxFlowNumber = Integer.parseInt(max);
         }
-
         maxFlowNumber = maxFlowNumber + 1;
 
-        byte flowNumberLength = (byte) dslContext.select(storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"))
+        List<Map<String, Object>> flowNumberLengthResult = dslContext.select(storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"))
                 .from(storeBoxCodeRule)
-                .where(storeBoxCodeRule.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)), storeBoxCodeRule.TYPE.equal((byte) 5))
-                .fetch().intoMaps().get(0).get("flowNumberLength");
+                .where(storeBoxCodeRule.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)), storeBoxCodeRule.TYPE.equal((byte) 4))
+                .fetch().intoMaps();
+        if (flowNumberLengthResult.size() != 1) {
+            throw new InvalidArgumentException("盒号生成规则配置错误，请检查数据");
+        }
+        byte flowNumberLength = (byte) flowNumberLengthResult.get(0).get("flowNumberLength");
         //位数
         int count = 0;
         int number = maxFlowNumber;
