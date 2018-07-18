@@ -335,9 +335,12 @@ public class StoreQuery {
                         rule.put("dictionaryType", descriptionItem.get("dictionaryType"));
                         rule.put("dictionaryNodeId", descriptionItem.get("dictionaryNodeId"));
                         rule.put("dictionaryRootSelect", descriptionItem.get("dictionaryRootSelect"));
-
-                        String metadataName = (String) descriptionItem.get("metadataName");
-                        rule.put("value", entry.getItems().get(metadataName));
+                        if (null != entry) {
+                            String metadataName = (String) descriptionItem.get("metadataName");
+                            rule.put("value", entry.getItems().get(metadataName));
+                        } else {
+                            rule.put("value", "");
+                        }
                     }
                 }
                 //3-档案库所属全宗号
@@ -419,14 +422,14 @@ public class StoreQuery {
         return resultMap;
     }
 
-    public Collection<String> getCellIdsByShelfSectionIdIn(Collection<Integer> shelfSectionIds){
+    public Collection<String> getCellIdsByShelfSectionIdIn(Collection<Integer> shelfSectionIds) {
         return dslContext.select(storeShelfCell.POINT_CODE)
                 .from(storeShelfCell)
                 .where(storeShelfCell.SHELF_SECTION_ID.in(shelfSectionIds))
                 .fetch().intoSet(storeShelfCell.POINT_CODE);
     }
 
-    public Collection<String> getCellIdsByShelfIdIn(Collection<Integer> shelfIds){
+    public Collection<String> getCellIdsByShelfIdIn(Collection<Integer> shelfIds) {
         return dslContext.select(storeShelfCell.POINT_CODE)
                 .from(storeShelfCell)
                 .where(storeShelfCell.SHELF_ID.in(shelfIds))
