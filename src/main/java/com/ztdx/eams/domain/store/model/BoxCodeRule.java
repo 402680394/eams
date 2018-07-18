@@ -16,7 +16,7 @@ public class BoxCodeRule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
-    //盒规则类型  1-著录项值 2-著录项值对应编码 3-档案库所属全宗号 4-固定值 5-流水号
+    //盒规则类型  1-著录项值 2-档案库所属全宗号 3-固定值 4-流水号
     @Column(name = "type")
     private int type;
     //名称

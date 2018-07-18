@@ -124,4 +124,8 @@ public class BoxService {
     public boolean existsByCodeAndArchivesId(int archiveId, String boxCode) {
         return boxRepository.existsByCodeAndArchivesId(boxCode, archiveId);
     }
+
+    public List<Box> getCodeByIds(List<Integer> ids) {
+        return boxRepository.findBoxesById(ids);
+    }
 }

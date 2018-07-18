@@ -3,6 +3,7 @@ package com.ztdx.eams.controller.store;
 import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.store.application.BoxService;
 import com.ztdx.eams.domain.store.model.Box;
+import com.ztdx.eams.query.ArchivesQuery;
 import com.ztdx.eams.query.StoreQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +23,13 @@ public class BoxController {
 
     private final BoxService boxService;
 
+    private final ArchivesQuery archivesQuery;
+
     @Autowired
-    public BoxController(StoreQuery storeQuery, BoxService boxService) {
+    public BoxController(StoreQuery storeQuery, BoxService boxService, ArchivesQuery archivesQuery) {
         this.storeQuery = storeQuery;
         this.boxService = boxService;
+        this.archivesQuery = archivesQuery;
     }
 
     /**
@@ -56,7 +60,7 @@ public class BoxController {
                                     @RequestParam("archivesId") int archivesId,
                                     @RequestParam(value = "code", required = false, defaultValue = "") String code,
                                     @RequestParam(name = "status", required = false, defaultValue = "0") int status,
-                                    @RequestParam(name = "onFrame", required = false, defaultValue = "0") int onFrame) {
+                                    @RequestParam(name = "onFrame", required = false, defaultValue = "0") byte onFrame) {
         return storeQuery.getBoxList(pageNum, size, archivesId, code, status, onFrame);
     }
 
@@ -104,7 +108,11 @@ public class BoxController {
     @RequestMapping(value = "/", method = RequestMethod.DELETE)
     public void delete(@RequestBody Map<String, Object> map) {
         int archivesId = (int) map.get("archivesId");
+        int catalogueId = archivesQuery.getCatalogueIdByArchivesIdAndType(UInteger.valueOf(archivesId)).intValue();
         List<Integer> ids = (List<Integer>) map.get("ids");
+        List<Box> boxes = boxService.getCodeByIds(ids);
+        //查询档案盒关联的条目
+
         boxService.delete(ids);
     }
 

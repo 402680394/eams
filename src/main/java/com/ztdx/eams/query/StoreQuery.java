@@ -182,9 +182,10 @@ public class StoreQuery {
     /**
      * 根据条件获取档案盒列表
      */
-    public Map<String, Object> getBoxList(int pageNum, int size, int archivesId, String code, int status, int onFrame) {
+    public Map<String, Object> getBoxList(int pageNum, int size, int archivesId, String code, int status, byte onFrame) {
         Map<String, Object> resultMap = new HashMap<>();
-        List<Map<String, Object>> list;
+        List<Map<String, Object>> list = null;
+        int total = 0;
         if (status == 1 && onFrame == 0) {
             //容纳状况已满
             list = dslContext.select(storeBox.ID.as("id"),
@@ -202,6 +203,13 @@ public class StoreQuery {
                             storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL))
                     .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
+
+            total = (int) dslContext.select(storeBox.ID.as("id").count()
+            ).from(storeBox)
+                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
+                            storeBox.CODE.like("%" + code + "%"),
+                            storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL))
+                    .fetch().getValue(0, 0);
         } else if (status == 2 && onFrame == 0) {
             //容纳状况未满
             list = dslContext.select(storeBox.ID.as("id"),
@@ -219,6 +227,13 @@ public class StoreQuery {
                             storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL))
                     .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
+
+            total = (int) dslContext.select(storeBox.ID.as("id").count()
+            ).from(storeBox)
+                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
+                            storeBox.CODE.like("%" + code + "%"),
+                            storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL))
+                    .fetch().getValue(0, 0);
         } else if (status == 0 && onFrame != 0) {
             //已上架或未上架
             list = dslContext.select(storeBox.ID.as("id"),
@@ -233,9 +248,16 @@ public class StoreQuery {
             ).from(storeBox)
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
-                            storeBox.ON_FRAME.equal((byte) onFrame))
+                            storeBox.ON_FRAME.equal(onFrame))
                     .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
+
+            total = (int) dslContext.select(storeBox.ID.as("id").count()
+            ).from(storeBox)
+                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
+                            storeBox.CODE.like("%" + code + "%"),
+                            storeBox.ON_FRAME.equal(onFrame))
+                    .fetch().getValue(0, 0);
         } else if (status == 1 && onFrame != 0) {
             list = dslContext.select(storeBox.ID.as("id"),
                     storeBox.CODE.as("code"),
@@ -250,9 +272,17 @@ public class StoreQuery {
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL),
-                            storeBox.ON_FRAME.equal((byte) onFrame))
+                            storeBox.ON_FRAME.equal(onFrame))
                     .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
+
+            total = (int) dslContext.select(storeBox.ID.as("id").count()
+            ).from(storeBox)
+                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
+                            storeBox.CODE.like("%" + code + "%"),
+                            storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL),
+                            storeBox.ON_FRAME.equal(onFrame))
+                    .fetch().getValue(0, 0);
         } else if (status == 2 && onFrame != 0) {
             list = dslContext.select(storeBox.ID.as("id"),
                     storeBox.CODE.as("code"),
@@ -267,9 +297,17 @@ public class StoreQuery {
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL),
-                            storeBox.ON_FRAME.equal((byte) onFrame))
+                            storeBox.ON_FRAME.equal(onFrame))
                     .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
+
+            total = (int) dslContext.select(storeBox.ID.as("id").count()
+            ).from(storeBox)
+                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
+                            storeBox.CODE.like("%" + code + "%"),
+                            storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL),
+                            storeBox.ON_FRAME.equal(onFrame))
+                    .fetch().getValue(0, 0);
         } else {
             //全部
             list = dslContext.select(storeBox.ID.as("id"),
@@ -286,10 +324,15 @@ public class StoreQuery {
                             storeBox.CODE.like("%" + code + "%"))
                     .limit((pageNum - 1) * size, size)
                     .fetch().intoMaps();
-            //容纳状况已满
+
+            total = (int) dslContext.select(storeBox.ID.as("id").count()
+            ).from(storeBox)
+                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
+                            storeBox.CODE.like("%" + code + "%"))
+                    .fetch().getValue(0, 0);
         }
         resultMap.put("items", list);
-        resultMap.put("total", list.size());
+        resultMap.put("total", total);
         return resultMap;
     }
 
@@ -326,14 +369,15 @@ public class StoreQuery {
 
         for (Map rule : rules) {
             byte type = (byte) rule.get("type");
-            //1-著录项值 2-著录项值对应编码
-            if (type == 1 || type == 2) {
+            //1-著录项值
+            if (type == 1) {
                 UInteger descriptionItemId = (UInteger) rule.get("descriptionItemId");
                 for (Map descriptionItem : descriptionItems) {
                     if (descriptionItemId.equals(descriptionItem.get("id"))) {
                         rule.put("isDictionary", descriptionItem.get("isDictionary"));
                         rule.put("dictionaryType", descriptionItem.get("dictionaryType"));
                         rule.put("dictionaryNodeId", descriptionItem.get("dictionaryNodeId"));
+                        rule.put("dictionaryValueType", descriptionItem.get("dictionaryValueType"));
                         rule.put("dictionaryRootSelect", descriptionItem.get("dictionaryRootSelect"));
                         if (null != entry) {
                             String metadataName = (String) descriptionItem.get("metadataName");
@@ -344,7 +388,7 @@ public class StoreQuery {
                     }
                 }
                 //3-档案库所属全宗号
-            } else if (type == 3) {
+            } else if (type == 2) {
                 rule.put("value", fondsCode);
             }
         }
@@ -389,11 +433,16 @@ public class StoreQuery {
     }
 
     public Map<String, Object> maxFlowNumber(int archivesId, String codeRule) {
-        int maxFlowNumber = Integer.parseInt((String) dslContext
+
+        int maxFlowNumber = 0;
+        List<Map<String, Object>> list = dslContext
                 .select(storeBox.FLOW_NUMBER.add(0).max().as("maxFlowNumber"))
                 .from(storeBox)
                 .where(storeBox.CODE_RULE.equal(codeRule), storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)))
-                .fetch().intoMaps().get(0).get("maxFlowNumber"));
+                .fetch().intoMaps();
+        if (list.size() != 0) {
+            maxFlowNumber = Integer.parseInt((String) list.get(0).get("maxFlowNumber"));
+        }
 
         maxFlowNumber = maxFlowNumber + 1;
 

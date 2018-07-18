@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
+import java.util.List;
 
 /**
  * Created by li on 2018/7/9.
@@ -35,5 +36,7 @@ public interface BoxRepository extends JpaRepository<Box, Integer> {
 
     @Modifying
     @Query("update Box b set b.pagesTotal = :pages, b.filesTotal = :files where b.code = :code and b.archivesId = :archivesId")
-    void updateTotal(@Param("code") String code,@Param("archivesId") int archivesId, @Param("pages") int pages, @Param("files") int files);
+    void updateTotal(@Param("code") String code, @Param("archivesId") int archivesId, @Param("pages") int pages, @Param("files") int files);
+
+    List<Box> findBoxesById(List<Integer> id);
 }
