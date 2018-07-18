@@ -1040,9 +1040,9 @@ public class ArchivesQuery {
     /**
      * 档案库所属全宗
      */
-    public int getFondsIdByArchiveId(UInteger archiveId) {
-        Result result = dslContext.select(archivesGroup.FONDS_ID).from(archivesGroup, archives)
-                .where(archives.ID.equal(archiveId), archives.ARCHIVES_GROUP_ID.equal(archivesGroup.ID)).fetch();
+    public int getFondsIdByArchiveId(UInteger catalogueId) {
+        Result result = dslContext.select(archivesGroup.FONDS_ID).from(archivesGroup, archives, archivesCatalogue)
+                .where(archivesCatalogue.ID.equal(catalogueId), archives.ID.equal(archivesCatalogue.ARCHIVES_ID), archives.ARCHIVES_GROUP_ID.equal(archivesGroup.ID)).fetch();
         if (result.size() == 0) {
             return 0;
         } else {
