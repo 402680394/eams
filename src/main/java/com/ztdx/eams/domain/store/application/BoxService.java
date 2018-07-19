@@ -130,16 +130,18 @@ public class BoxService {
         return boxRepository.existsByCodeAndArchivesId(boxCode, archiveId);
     }
 
-    public List<String> getOnFrameBoxCodesByIds(List<Integer> ids) {
+    public List<String> getCodeByIds(List<Integer> ids) {
         List<Box> list = boxRepository.findByIdIn(ids);
-        List<String> codes = new ArrayList<>();
+        return list.stream().map(Box::getCode).collect(Collectors.toList());
+    }
+
+    public void checkOnFrameByIds(List<Integer> ids) {
+        List<Box> list = boxRepository.findByIdIn(ids);
         for (Box box : list) {
             if (box.isOnFrame()) {
                 throw new InvalidArgumentException("需要先下架在架档案盒");
             }
-            codes.add(box.getCode());
         }
-        return codes;
     }
 
     @Async

@@ -115,6 +115,7 @@ public class BoxController {
         int archivesId = (int) map.get("archivesId");
         int catalogueId = archivesQuery.getCatalogueIdByArchivesIdAndType(UInteger.valueOf(archivesId)).intValue();
         List<Integer> ids = (List<Integer>) map.get("ids");
+        boxService.checkOnFrameByIds(ids);
 
         boxService.delete(ids);
 
