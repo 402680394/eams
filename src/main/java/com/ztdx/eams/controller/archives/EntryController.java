@@ -619,7 +619,7 @@ public class EntryController {
     }
 
     /**
-     * @api {get} /entry/searchByBox?boxId={boxId}&page={page}&size={size} 按关键字搜索条目，高级搜索
+     * @api {get} /entry/searchByBox?boxId={boxId}&page={page}&size={size} 查询盒内条目
      * @apiName searchByBox
      * @apiGroup entry
      * @apiParam {String} boxId 盒id(QueryString)
