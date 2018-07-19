@@ -7,6 +7,7 @@ import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.archives.model.event.EntryBoxNumberValidateEvent;
+import com.ztdx.eams.domain.archives.model.event.EntryUnboxEvent;
 import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
 import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
@@ -26,17 +27,22 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.context.event.EventListener;
 
 import java.io.IOException;
 import java.util.*;
@@ -128,11 +134,11 @@ public class EntryService {
     }
 
     public Entry update(Entry entry) {
-        if (entry.getCatalogueId() == 0){
+        if (entry.getCatalogueId() == 0) {
             throw new InvalidArgumentException("目录id不存在");
         }
 
-        if (StringUtils.isEmpty(entry.getId())){
+        if (StringUtils.isEmpty(entry.getId())) {
             throw new InvalidArgumentException("id字段不存在");
         }
 
@@ -174,17 +180,17 @@ public class EntryService {
             query.must(queryStringQuery(queryString).defaultOperator(Operator.AND));
         }
 
-        if (parentId != null){
+        if (parentId != null) {
             if (!StringUtils.isEmpty(parentId)) {
                 query.filter(termQuery("parentId", parentId));
-            }else{
+            } else {
                 query.filter(boolQuery().mustNot(existsQuery("parentId")));
             }
-        }else{
+        } else {
             //query.must(existsQuery("parentId"));
         }
 
-        if (owner != null){
+        if (owner != null) {
             query.filter(termQuery("owner", owner));
         }
 
@@ -200,7 +206,7 @@ public class EntryService {
 
         List<String> ids = searchResult.getContent().stream().map(Entry::getId).collect(Collectors.toList());
 
-        List<Entry> result = (List<Entry>)entryMongoRepository.findAllById(ids, getIndexName(catalogueId));
+        List<Entry> result = (List<Entry>) entryMongoRepository.findAllById(ids, getIndexName(catalogueId));
 
         result.sort(Comparator.comparing(a -> ids.indexOf(a.getId())));
 
@@ -210,7 +216,7 @@ public class EntryService {
             items.put("id", a.getId());
         });
 
-        return PageableExecutionUtils.getPage(result , pageable, searchResult::getTotalElements);
+        return PageableExecutionUtils.getPage(result, pageable, searchResult::getTotalElements);
     }
 
     private void convertEntryItems(Entry entry, BiFunction<Entry, DescriptionItem, Object> operator, boolean isGenerator, boolean isValidate) {
@@ -219,10 +225,10 @@ public class EntryService {
 
         descriptionItemMap.forEach((key, item) -> {
             Object val;
-            if (isGenerator && item.getIsIncrement() == 1 && item.getIncrement() > 1){
+            if (isGenerator && item.getIsIncrement() == 1 && item.getIncrement() > 1) {
                 String idKey = String.format(IdGeneratorValue.ENTRY_ITEM_INCREMENT_FORMAT, entry.getCatalogueId(), item.getMetadataName());
                 val = idGeneratorRepository.get(idKey, item.getIncrement());
-            }else {
+            } else {
                 val = operator.apply(entry, item);
             }
 
@@ -243,10 +249,10 @@ public class EntryService {
     }
 
     private void entryValidate(Entry entry, Object val, DescriptionItem item) {
-        if (val == null){
+        if (val == null) {
             return;
         }
-        switch (item.getPropertyType()){
+        switch (item.getPropertyType()) {
             case BoxNumber:
                 applicationContext.publishEvent(
                         new EntryBoxNumberValidateEvent(
@@ -265,9 +271,9 @@ public class EntryService {
 
     public Map<Integer, Long> aggsCatalogueCount(List<Integer> catalogueIds, List<Integer> archiveContentType, String keyWord) {
         Collection<String> indices = new ArrayList<>();
-        if (catalogueIds == null || catalogueIds.size() == 0){
-            indices.add(INDEX_NAME_PREFIX +"*");
-        }else{
+        if (catalogueIds == null || catalogueIds.size() == 0) {
+            indices.add(INDEX_NAME_PREFIX + "*");
+        } else {
             catalogueIds.forEach(a -> indices.add(getIndexName(a)));
         }
 
@@ -284,11 +290,11 @@ public class EntryService {
         if (archiveContentType != null && archiveContentType.size() > 0) {
             query = QueryBuilders.boolQuery().filter(
                     QueryBuilders.termsQuery("archiveContentType", archiveContentType));
-        }else{
+        } else {
             query = QueryBuilders.boolQuery();
         }
 
-        if (keyWord != null && !"".equals(keyWord)){
+        if (keyWord != null && !"".equals(keyWord)) {
             query.must(QueryBuilders.queryStringQuery(keyWord).defaultOperator(Operator.AND));
         }
 
@@ -296,14 +302,14 @@ public class EntryService {
 
         srBuilder.setQuery(query).setSize(0);
         Map<Integer, Long> result = new HashMap<>();
-        ((Terms)srBuilder.get().getAggregations().asList().get(0)).getBuckets().forEach(
-                a -> result.put(a.getKeyAsNumber().intValue(),a.getDocCount()));
+        ((Terms) srBuilder.get().getAggregations().asList().get(0)).getBuckets().forEach(
+                a -> result.put(a.getKeyAsNumber().intValue(), a.getDocCount()));
 
         return result;
     }
 
     public void delete(int catalogueId, Iterable<String> deletes) {
-        if(deletes == null || !deletes.iterator().hasNext()){
+        if (deletes == null || !deletes.iterator().hasNext()) {
             return;
         }
         Iterable<Entry> list = entryMongoRepository.findAllById(deletes, getIndexName(catalogueId));
@@ -316,10 +322,10 @@ public class EntryService {
         return entryMongoRepository.findById(id, getIndexName(catalogueId)).orElse(null);
     }
 
-    private String getIndexName(Integer catalogueId){
+    private String getIndexName(Integer catalogueId) {
         if (catalogueId == null) {
             return INDEX_NAME_PREFIX + "*";
-        }else{
+        } else {
             return String.format(INDEX_NAME_PREFIX + "%d", catalogueId);
         }
     }
@@ -377,13 +383,13 @@ public class EntryService {
 
         builder.withHighlightFields(field);
 
-        return (AggregatedPage<OriginalText>) originalTextElasticsearchRepository.search(builder.build(),new String[] {INDEX_NAME_PREFIX + "*"});
+        return (AggregatedPage<OriginalText>) originalTextElasticsearchRepository.search(builder.build(), new String[]{INDEX_NAME_PREFIX + "*"});
     }
 
     public Iterable<Entry> findAllById(Collection<String> entryIds, Integer catalogueId) {
         if (catalogueId == null) {
             return entryElasticsearchRepository.search(QueryBuilders.termsQuery("id", entryIds), new String[]{getIndexName(null)});
-        }else {
+        } else {
             return entryMongoRepository.findAllById(entryIds, getIndexName(catalogueId));
         }
     }
@@ -391,13 +397,13 @@ public class EntryService {
     /**
      * 更改批量鉴定
      */
-    public void batchIdentification(List<String> entryIds,Integer catalogueId,Integer isOpen,boolean isExpired,boolean isEndangered,boolean isLose){
+    public void batchIdentification(List<String> entryIds, Integer catalogueId, Integer isOpen, boolean isExpired, boolean isEndangered, boolean isLose) {
 
         //通过条目id和目录id获得所有的条目集合
         Iterable<Entry> entryList = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
 
         //遍历条目集合给每个条目设置鉴定状态
-        for (Entry entry:entryList) {
+        for (Entry entry : entryList) {
             entry.setIsOpen(OpenStatus.create(isOpen));
             entry.setExpired(isExpired);
             entry.setEndangered(isEndangered);
@@ -413,18 +419,18 @@ public class EntryService {
     /**
      * 查看单个鉴定信息
      */
-    public Map<String,Object> getIdentification(String entryId,Integer cid){
+    public Map<String, Object> getIdentification(String entryId, Integer cid) {
 
-        Map<String,Object> result = new HashMap<>();
+        Map<String, Object> result = new HashMap<>();
         //通过id获得条目信息
-        Optional<Entry> find = entryMongoRepository.findById(entryId,"archive_record_"+cid);
-        if (find.isPresent()){
+        Optional<Entry> find = entryMongoRepository.findById(entryId, "archive_record_" + cid);
+        if (find.isPresent()) {
 
             Entry entry = find.get();
-            result.put("isOpen",entry.getIsOpen());
-            result.put("isExpired",entry.isExpired());
-            result.put("isEndangered",entry.isEndangered());
-            result.put("isLose",entry.isLose());
+            result.put("isOpen", entry.getIsOpen());
+            result.put("isExpired", entry.isExpired());
+            result.put("isEndangered", entry.isEndangered());
+            result.put("isLose", entry.isLose());
 
             return result;
         }
@@ -435,11 +441,12 @@ public class EntryService {
 
     /**
      * 组新卷
-     * @param folderFileEntryIds 卷内条目id集合
+     *
+     * @param folderFileEntryIds    卷内条目id集合
      * @param folderFileCatalogueId 卷内目录ID
-     * @param entry 案卷条目
+     * @param entry                 案卷条目
      */
-    public void setNewVolume(List<String> folderFileEntryIds, int folderFileCatalogueId, Entry entry){
+    public void setNewVolume(List<String> folderFileEntryIds, int folderFileCatalogueId, Entry entry) {
 
         //通过条目id和目录id获得所有的条目集合
         Iterable<Entry> entryList = entryMongoRepository.findAllById(folderFileEntryIds, this.getIndexName(folderFileCatalogueId));
@@ -448,9 +455,9 @@ public class EntryService {
         Catalogue folderFileCatalogue = catalogueRepository.findById(folderFileCatalogueId).orElse(null);
         //通过档案库id和目录类型为案卷获得案卷目录
         assert folderFileCatalogue != null;
-        Optional<Catalogue> folderCatalogueList = catalogueRepository.findByArchivesIdAndCatalogueType(folderFileCatalogue.getArchivesId(),CatalogueType.Folder);
+        Optional<Catalogue> folderCatalogueList = catalogueRepository.findByArchivesIdAndCatalogueType(folderFileCatalogue.getArchivesId(), CatalogueType.Folder);
 
-        if (!folderCatalogueList.isPresent()){
+        if (!folderCatalogueList.isPresent()) {
             throw new InvalidArgumentException("卷内目录不存在");
         }
 
@@ -461,7 +468,7 @@ public class EntryService {
         Entry newEntry = save(entry);
 
         //修改卷内parentID
-        for (Entry entryForList:entryList) {
+        for (Entry entryForList : entryList) {
             entryForList.setParentId(newEntry.getId());
         }
 
@@ -472,16 +479,17 @@ public class EntryService {
 
     /**
      * 拆卷
-     * @param folderFileEntryIds 卷内条目id集合
+     *
+     * @param folderFileEntryIds    卷内条目id集合
      * @param folderFileCatalogueId 卷内目录ID
      */
-    public void separateVolume(List<String> folderFileEntryIds,int folderFileCatalogueId){
+    public void separateVolume(List<String> folderFileEntryIds, int folderFileCatalogueId) {
 
         //获得卷内条目集合
-        Iterable<Entry> folderFileEntryList = entryMongoRepository.findAllById(folderFileEntryIds,this.getIndexName(folderFileCatalogueId));
+        Iterable<Entry> folderFileEntryList = entryMongoRepository.findAllById(folderFileEntryIds, this.getIndexName(folderFileCatalogueId));
 
         //置空卷内条目中的上级id
-        for (Entry entry:folderFileEntryList) {
+        for (Entry entry : folderFileEntryList) {
             entry.setParentId(null);
         }
 
@@ -491,14 +499,13 @@ public class EntryService {
     }
 
 
-
-    public Page<Entry> scrollEntry(boolean archivingAll, int catalogueId, Collection<String> srcData, int page, int size){
+    public Page<Entry> scrollEntry(boolean archivingAll, int catalogueId, Collection<String> srcData, int page, int size) {
         Query query;
         if (archivingAll) {
             query = query(where("gmtDeleted")
                     .is(0))
                     .with(PageRequest.of(page, size));
-        }else{
+        } else {
             query = query(where("gmtDeleted")
                     .is(0)
                     .and("_id")
@@ -510,7 +517,7 @@ public class EntryService {
         return PageableExecutionUtils.getPage(list, PageRequest.of(page, size), () -> total);
     }
 
-    public Page<Entry> scrollSubEntry(int catalogueId, Collection<String> parentIds, int page, int size){
+    public Page<Entry> scrollSubEntry(int catalogueId, Collection<String> parentIds, int page, int size) {
         Query query = query(where("gmtDeleted")
                 .is(0)
                 .and("parentId")
@@ -567,7 +574,7 @@ public class EntryService {
                         , srcFields
                         , trgFields);
                 targets.add(add);
-            }catch (EntryValueConverException e){
+            } catch (EntryValueConverException e) {
                 msg = e.getMessage();
                 status = ArchivingResult.Status.failure;
             }
@@ -581,7 +588,7 @@ public class EntryService {
                             , ArchivingResult.Type.entry
                             , status
                             , a.getCatalogueId())
-                    );
+            );
         });
 
         entryMongoRepository.saveAll(targets);
@@ -590,7 +597,7 @@ public class EntryService {
         return error;
     }
 
-    public Map<String, String> generatorId(Collection<String> srcIds){
+    public Map<String, String> generatorId(Collection<String> srcIds) {
         return srcIds.parallelStream().collect(Collectors.toMap(a -> a, b -> UUID.randomUUID().toString()));
     }
 
@@ -605,7 +612,7 @@ public class EntryService {
             , String parentId
             , int owner
             , List<String> srcFields
-            , List<String> trgFields){
+            , List<String> trgFields) {
         Entry result = new Entry();
         result.setId(id);
         result.setCatalogueId(trgId);
@@ -622,7 +629,7 @@ public class EntryService {
         result.setGmtCreate(new Date());
         result.setGmtModified(new Date());
         Map<String, Object> items = new HashMap<>();
-        for (int i = 0; i < srcFields.size(); i ++){
+        for (int i = 0; i < srcFields.size(); i++) {
             String srcField = srcFields.get(i);
             String trgField = trgFields.get(i);
             Object srcValue = entry.getItems().getOrDefault(srcField, null);
@@ -638,12 +645,12 @@ public class EntryService {
     public void inBox(int catalogueId, Collection<String> ids, String boxCode) {
         DescriptionItem item =
                 descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
-        if (item == null){
+        if (item == null) {
             throw new InvalidArgumentException("没有盒号字段");
         }
 
         Iterable<Entry> list = findAllById(ids, catalogueId);
-        if (list == null || !list.iterator().hasNext()){
+        if (list == null || !list.iterator().hasNext()) {
             throw new InvalidArgumentException("条目不存在");
         }
 
@@ -653,22 +660,22 @@ public class EntryService {
         entryAsyncTask.indexAll(list, catalogueId);
     }
 
-    public Set<String> unBox(int catalogueId, Collection<String> ids){
+    public Set<String> unBox(int catalogueId, Collection<String> ids) {
         DescriptionItem item =
                 descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
-        if (item == null){
+        if (item == null) {
             throw new InvalidArgumentException("没有盒号字段");
         }
 
         Iterable<Entry> list = findAllById(ids, catalogueId);
-        if (list == null || !list.iterator().hasNext()){
+        if (list == null || !list.iterator().hasNext()) {
             throw new InvalidArgumentException("条目不存在");
         }
 
         Set<String> result = new HashSet<>();
         list.forEach(entry -> {
             Object boxCode = entry.getItems().getOrDefault(item.getMetadataName(), null);
-            if (boxCode == null || StringUtils.isEmpty(boxCode.toString())){
+            if (boxCode == null || StringUtils.isEmpty(boxCode.toString())) {
                 return;
             }
 
@@ -684,17 +691,17 @@ public class EntryService {
         return result;
     }
 
-    public List<GroupCount> groupCountPageCountByBox(Collection<String> boxCodes, int catalogueId){
+    public List<GroupCount> groupCountPageCountByBox(Collection<String> boxCodes, int catalogueId) {
 
         DescriptionItem boxNoItem =
                 descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
-        if (boxNoItem == null){
+        if (boxNoItem == null) {
             return null;
         }
 
         DescriptionItem pageTotalItem =
                 descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.PageTotal);
-        if (pageTotalItem == null){
+        if (pageTotalItem == null) {
             return null;
         }
 
@@ -710,10 +717,10 @@ public class EntryService {
         return mongoOperations.aggregate(agg, getIndexName(catalogueId), GroupCount.class).getMappedResults();
     }
 
-    public Map<String, List<String>> groupByBox(Collection<String> boxCodes, int catalogueId){
+    public Map<String, List<String>> groupByBox(Collection<String> boxCodes, int catalogueId) {
         DescriptionItem boxNoItem =
                 descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
-        if (boxNoItem == null){
+        if (boxNoItem == null) {
             return null;
         }
 
@@ -734,5 +741,37 @@ public class EntryService {
                                             return left;
                                         })
                         ));
+    }
+
+    @Async
+    @EventListener
+    @Transactional
+    public void entryUnbox(EntryUnboxEvent entryUnboxEvent) throws InterruptedException {
+
+        int catalogueId = entryUnboxEvent.getCatalogueId();
+        List<String> boxCodes = entryUnboxEvent.getBoxCodes();
+
+        DescriptionItem item =
+                descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
+        if (item == null) {
+            throw new InvalidArgumentException("没有盒号字段");
+        }
+
+        BoolQueryBuilder query = QueryBuilders.boolQuery();
+        for (String code : boxCodes) {
+            query.should(QueryBuilders.termQuery(item.getMetadataName(), code));
+        }
+
+
+        Iterable<Entry> searchResult = entryElasticsearchRepository.search(
+                query, new String[]{getIndexName(catalogueId)}
+        );
+
+        searchResult.forEach(entry -> {
+            entry.getItems().put(item.getMetadataName(), null);
+        });
+
+        entryMongoRepository.saveAll(searchResult);
+        entryAsyncTask.indexAll(searchResult, catalogueId);
     }
 }

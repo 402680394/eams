@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -125,7 +126,12 @@ public class BoxService {
         return boxRepository.existsByCodeAndArchivesId(boxCode, archiveId);
     }
 
-    public List<Box> getCodeByIds(List<Integer> ids) {
-        return boxRepository.findBoxesById(ids);
+    public List<String> getCodeByIds(List<Integer> ids) {
+        List<Box> list = boxRepository.findBoxesById(ids);
+        List<String> codes = new ArrayList<>();
+        for (Box box : list) {
+            codes.add(box.getCode());
+        }
+        return codes;
     }
 }

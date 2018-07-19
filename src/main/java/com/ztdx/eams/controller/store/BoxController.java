@@ -1,12 +1,14 @@
 package com.ztdx.eams.controller.store;
 
 import com.ztdx.eams.basic.params.JsonParam;
+import com.ztdx.eams.domain.archives.model.event.EntryUnboxEvent;
 import com.ztdx.eams.domain.store.application.BoxService;
 import com.ztdx.eams.domain.store.model.Box;
 import com.ztdx.eams.query.ArchivesQuery;
 import com.ztdx.eams.query.StoreQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,11 +27,14 @@ public class BoxController {
 
     private final ArchivesQuery archivesQuery;
 
+    private final ApplicationContext applicationContext;
+
     @Autowired
-    public BoxController(StoreQuery storeQuery, BoxService boxService, ArchivesQuery archivesQuery) {
+    public BoxController(StoreQuery storeQuery, BoxService boxService, ArchivesQuery archivesQuery, ApplicationContext applicationContext) {
         this.storeQuery = storeQuery;
         this.boxService = boxService;
         this.archivesQuery = archivesQuery;
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -110,10 +115,11 @@ public class BoxController {
         int archivesId = (int) map.get("archivesId");
         int catalogueId = archivesQuery.getCatalogueIdByArchivesIdAndType(UInteger.valueOf(archivesId)).intValue();
         List<Integer> ids = (List<Integer>) map.get("ids");
-        List<Box> boxes = boxService.getCodeByIds(ids);
-        //查询档案盒关联的条目
+        List<String> boxCodes = boxService.getCodeByIds(ids);
 
         boxService.delete(ids);
+
+        applicationContext.publishEvent(new EntryUnboxEvent(this, catalogueId, boxCodes));
     }
 
     /**
