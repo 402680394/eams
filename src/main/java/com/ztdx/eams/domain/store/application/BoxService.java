@@ -83,29 +83,47 @@ public class BoxService {
     *新增盒
     */
     @Transactional
-    public void save(Box box, int total) {
+    public void save(int archivesId
+            , String codeRule
+            , String flowNumber
+            , int total
+            , int maxPagesTotal
+            , String remark) {
 
-        BoxCodeRule boxCodeRule = boxCodeRuleRepository.findByArchivesIdAndType(box.getArchivesId(), 4);
+        BoxCodeRule boxCodeRule = boxCodeRuleRepository.findByArchivesIdAndType(archivesId, 4);
 
         NumberFormat formatter = NumberFormat.getNumberInstance();
         formatter.setMinimumIntegerDigits(boxCodeRule.getFlowNumberLength());
         formatter.setGroupingUsed(false);
-        for (int i = 0; i < total; i++) {
 
+        List<Box> list = new ArrayList<>();
+
+        for (int i = 0; i < total; i++) {
+            Box box = new Box();
+            box.setArchivesId(archivesId);
+            box.setCodeRule(codeRule);
+            box.setMaxPagesTotal(maxPagesTotal);
+            box.setRemark(remark);
+            box.setPoint("");
             try {
-                int flowNumber = formatter.parse(box.getFlowNumber()).intValue();
-                flowNumber = flowNumber + i;
-                //位数
-                int count = 0;
-                while (flowNumber > 0) {
-                    flowNumber = flowNumber / 10;
-                    count++;
+                int number = formatter.parse(flowNumber).intValue();
+                if (i != 0) {
+                    number++;
                 }
-                if (count > boxCodeRule.getFlowNumberLength()) {
+                //位数
+                int bit = 0;
+                int tmp = number;
+                while (tmp > 0) {
+                    tmp = tmp / 10;
+                    bit++;
+                }
+                if (bit > boxCodeRule.getFlowNumberLength()) {
                     throw new InvalidArgumentException("流水号超出最大限制");
                 }
-                box.setFlowNumber(formatter.format(flowNumber));
-                box.setCode(box.getCodeRule() + box.getFlowNumber());
+                flowNumber = formatter.format(number);
+
+                box.setFlowNumber(flowNumber);
+                box.setCode(codeRule + flowNumber);
             } catch (ParseException e) {
                 throw new InvalidArgumentException("流水号不是纯数字");
             }
@@ -113,9 +131,9 @@ public class BoxService {
             if (boxRepository.existsByCodeAndArchivesId(box.getCode(), box.getArchivesId())) {
                 throw new InvalidArgumentException("盒号已存在");
             }
-            boxRepository.save(box);
-
+            list.add(box);
         }
+        boxRepository.saveAll(list);
     }
 
     public Box getByCode(int archiveId, String code) {

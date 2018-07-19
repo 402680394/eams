@@ -91,14 +91,7 @@ public class BoxController {
             , @JsonParam int maxPagesTotal
             , @JsonParam String remark) {
 
-        Box box = new Box();
-        box.setArchivesId(archivesId);
-        box.setCodeRule(codeRule);
-        box.setFlowNumber(flowNumber);
-        box.setMaxPagesTotal(maxPagesTotal);
-        box.setRemark(remark);
-        box.setPoint("");
-        boxService.save(box, total);
+        boxService.save(archivesId, codeRule, flowNumber, total, maxPagesTotal, remark);
     }
 
     /**
