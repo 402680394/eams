@@ -758,10 +758,7 @@ public class EntryService {
         }
 
         BoolQueryBuilder query = QueryBuilders.boolQuery();
-        for (String code : boxCodes) {
-            query.should(QueryBuilders.termQuery(item.getMetadataName(), code));
-        }
-
+        query.should(QueryBuilders.termsQuery("items." + item.getMetadataName(), boxCodes));
 
         Iterable<Entry> searchResult = entryElasticsearchRepository.search(
                 query, new String[]{getIndexName(catalogueId)}
