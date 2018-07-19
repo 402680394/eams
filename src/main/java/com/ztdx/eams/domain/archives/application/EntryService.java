@@ -7,7 +7,6 @@ import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.archives.model.event.EntryBoxNumberValidateEvent;
-import com.ztdx.eams.domain.archives.model.event.EntryUnboxEvent;
 import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
 import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
@@ -37,12 +36,9 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.context.event.EventListener;
 
 import java.io.IOException;
 import java.util.*;
@@ -743,13 +739,7 @@ public class EntryService {
                         ));
     }
 
-    @Async
-    @EventListener
-    @Transactional
-    public void entryUnbox(EntryUnboxEvent entryUnboxEvent) throws InterruptedException {
-
-        int catalogueId = entryUnboxEvent.getCatalogueId();
-        List<String> boxCodes = entryUnboxEvent.getBoxCodes();
+    public void unBoxByBoxCode(int catalogueId, List<String> boxCodes) {
 
         DescriptionItem item =
                 descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
@@ -757,16 +747,14 @@ public class EntryService {
             throw new InvalidArgumentException("没有盒号字段");
         }
 
-        BoolQueryBuilder query = QueryBuilders.boolQuery();
-        query.should(QueryBuilders.termsQuery("items." + item.getMetadataName(), boxCodes));
+        String boxNumberColumnName = String.format("items.%s", item.getMetadataName());
 
-        Iterable<Entry> searchResult = entryElasticsearchRepository.search(
-                query, new String[]{getIndexName(catalogueId)}
+        List<Entry> searchResult = entryMongoRepository.findAll(
+                query(where(boxNumberColumnName).in(boxCodes))
+                ,getIndexName(catalogueId)
         );
 
-        searchResult.forEach(entry -> {
-            entry.getItems().put(item.getMetadataName(), null);
-        });
+        searchResult.forEach(entry -> entry.getItems().put(item.getMetadataName(), null));
 
         entryMongoRepository.saveAll(searchResult);
         entryAsyncTask.indexAll(searchResult, catalogueId);

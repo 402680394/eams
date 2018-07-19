@@ -1,7 +1,7 @@
 package com.ztdx.eams.controller.store;
 
 import com.ztdx.eams.basic.params.JsonParam;
-import com.ztdx.eams.domain.archives.model.event.EntryUnboxEvent;
+import com.ztdx.eams.domain.store.model.event.BoxDeleteEvent;
 import com.ztdx.eams.domain.store.application.BoxService;
 import com.ztdx.eams.domain.store.model.Box;
 import com.ztdx.eams.query.ArchivesQuery;
@@ -115,11 +115,10 @@ public class BoxController {
         int archivesId = (int) map.get("archivesId");
         int catalogueId = archivesQuery.getCatalogueIdByArchivesIdAndType(UInteger.valueOf(archivesId)).intValue();
         List<Integer> ids = (List<Integer>) map.get("ids");
-        List<String> boxCodes = boxService.getOnFrameBoxCodesByIds(ids);
 
         boxService.delete(ids);
 
-        applicationContext.publishEvent(new EntryUnboxEvent(this, catalogueId, boxCodes));
+        applicationContext.publishEvent(new BoxDeleteEvent(this, catalogueId, ids));
     }
 
     /**

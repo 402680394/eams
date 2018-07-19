@@ -13,6 +13,7 @@ import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.archives.model.event.EntryBoxNumberValidateEvent;
 import com.ztdx.eams.domain.store.application.BoxService;
 import com.ztdx.eams.domain.store.model.Box;
+import com.ztdx.eams.domain.store.model.event.BoxDeleteEvent;
 import com.ztdx.eams.domain.store.model.event.BoxInsideChangeEvent;
 import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
@@ -1526,5 +1527,17 @@ public class EntryController {
         if (!exists){
             throw new EntryValueConverException(String.format("盒号(%s)不存在", event.getBoxCode()));
         }
+    }
+
+    @Async
+    @EventListener
+    public void entryUnBox(BoxDeleteEvent boxDeleteEvent) {
+
+        int catalogueId = boxDeleteEvent.getCatalogueId();
+        List<Integer> boxIds = boxDeleteEvent.getBoxIds();
+
+        List<String> boxCodes = boxService.getCodeByIds(boxIds);
+
+        entryService.unBoxByBoxCode(catalogueId, boxCodes);
     }
 }
