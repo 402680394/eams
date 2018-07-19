@@ -3,9 +3,12 @@ package com.ztdx.eams.domain.store.application;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.store.model.Box;
 import com.ztdx.eams.domain.store.model.BoxCodeRule;
+import com.ztdx.eams.domain.store.model.event.ShelfCellDeletedEvent;
 import com.ztdx.eams.domain.store.repository.BoxCodeRuleRepository;
 import com.ztdx.eams.domain.store.repository.BoxRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,7 +84,7 @@ public class BoxService {
     @Transactional
     public void save(Box box, int total) {
 
-        BoxCodeRule boxCodeRule = boxCodeRuleRepository.findByArchivesIdAndType(box.getArchivesId(), 5);
+        BoxCodeRule boxCodeRule = boxCodeRuleRepository.findByArchivesIdAndType(box.getArchivesId(), 4);
 
         NumberFormat formatter = NumberFormat.getNumberInstance();
         formatter.setMinimumIntegerDigits(boxCodeRule.getFlowNumberLength());
@@ -136,5 +139,15 @@ public class BoxService {
             codes.add(box.getCode());
         }
         return codes;
+    }
+
+    @Async
+    @EventListener
+    @Transactional
+    public void shelfCellDeleted(ShelfCellDeletedEvent shelfCellDeletedEvent) throws InterruptedException {
+        shelfCellDeletedEvent.getShelfCellPointCodes().forEach(point -> {
+            boxRepository.updateOnFrameByPoint(false, "", point);
+        });
+
     }
 }

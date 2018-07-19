@@ -198,5 +198,4 @@ public class BoxController {
     public Map<String, Object> maxFlowNumber(@RequestParam("archivesId") int archivesId, @RequestParam("codeRule") String codeRule) {
         return storeQuery.maxFlowNumber(archivesId, codeRule);
     }
-
 }

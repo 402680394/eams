@@ -39,4 +39,8 @@ public interface BoxRepository extends JpaRepository<Box, Integer> {
     void updateTotal(@Param("code") String code, @Param("archivesId") int archivesId, @Param("pages") int pages, @Param("files") int files);
 
     List<Box> findByIdIn(List<Integer> ids);
+
+    @Modifying
+    @Query("update Box b set b.onFrame = :onFrame, b.point = :beforePoint where b.point = :point")
+    void updateOnFrameByPoint(@Param("onFrame") boolean onFrame, @Param("beforePoint") String beforePoint, @Param("point") String point);
 }
