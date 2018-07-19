@@ -3,14 +3,10 @@ package com.ztdx.eams.domain.store.application;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.domain.store.model.Shelf;
-import com.ztdx.eams.domain.store.model.ShelfCell;
 import com.ztdx.eams.domain.store.model.ShelfSection;
-import com.ztdx.eams.domain.store.model.Storage;
 import com.ztdx.eams.domain.store.repository.ShelfCellRepository;
 import com.ztdx.eams.domain.store.repository.ShelfRepository;
 import com.ztdx.eams.domain.store.repository.ShelfSectionRepository;
-import com.ztdx.eams.query.StoreQuery;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -121,7 +117,7 @@ public class ShelfService {
     public List<Map<String, Object>> list(int storageId) {
         List<Shelf> list = shelfRepository.findByStorageId(storageId);
         List<Integer> ids = list.stream().map(Shelf::getId).collect(Collectors.toList());
-        List<ShelfSection> sections = shelfSectionRepository.findByShelfIdIn(ids);
+        List<ShelfSection> sections = shelfSectionRepository.findByShelfIdInAndGmtDeleted(ids, 0);
         Map<Integer, List<ShelfSection>> sectionGroups = sections.stream().collect(Collectors.groupingBy(ShelfSection::getShelfId));
         return list.stream().map(a -> {
             Map<String, Object> map = new HashMap<>();

@@ -7,11 +7,11 @@ import java.util.Collection;
 import java.util.List;
 
 public interface ShelfSectionRepository extends JpaRepository<ShelfSection, Integer>, CustomShelfSectionRepository {
-    boolean existsByShelfIdAndName(int shelfId, String name);
+    boolean existsByShelfIdAndNameAndGmtDeleted(int shelfId, String name, int gmtDeleted);
 
-    boolean existsByShelfIdAndCode(int shelfId, String code);
+    boolean existsByShelfIdAndCodeAndGmtDeleted(int shelfId, String code, int gmtDeleted);
 
     int countByShelfIdAndGmtDeleted(int shelfId, int gmtDeleted);
 
-    List<ShelfSection> findByShelfIdIn(Collection<Integer> ids);
+    List<ShelfSection> findByShelfIdInAndGmtDeleted(Collection<Integer> ids, int gmtDeleted);
 }

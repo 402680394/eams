@@ -8,9 +8,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ShelfCellRepository extends JpaRepository<ShelfCell, Integer>, CustomShelfCellRepository {
-    boolean existsByBarCodeAndIdNot(String barCode, int id);
+    boolean existsByBarCodeAndIdNotAndGmtDeleted(String barCode, int id, int gmtDeleted);
 
-    boolean existsByPointCodeAndIdNot(String pointCode, int id);
+    boolean existsByPointCodeAndIdNotAndGmtDeleted(String pointCode, int id, int gmtDeleted);
 
-    Page<ShelfCell> findByShelfSectionId(int shelfSectionId, Pageable pageable);
+    Page<ShelfCell> findByShelfSectionIdAndGmtDeleted(int shelfSectionId, Pageable pageable, int gmtDeleted);
 }

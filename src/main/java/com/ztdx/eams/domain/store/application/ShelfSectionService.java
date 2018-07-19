@@ -3,19 +3,14 @@ package com.ztdx.eams.domain.store.application;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.domain.store.model.Shelf;
-import com.ztdx.eams.domain.store.model.ShelfCell;
 import com.ztdx.eams.domain.store.model.ShelfSection;
-import com.ztdx.eams.domain.store.model.event.ShelfCellDeletedEvent;
 import com.ztdx.eams.domain.store.repository.ShelfCellRepository;
 import com.ztdx.eams.domain.store.repository.ShelfRepository;
 import com.ztdx.eams.domain.store.repository.ShelfSectionRepository;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class ShelfSectionService {
@@ -38,11 +33,11 @@ public class ShelfSectionService {
             throw new NotFoundException("密集架不存在");
         }
 
-        if (shelfSectionRepository.existsByShelfIdAndName(shelfSection.getShelfId(), shelfSection.getName())){
+        if (shelfSectionRepository.existsByShelfIdAndNameAndGmtDeleted(shelfSection.getShelfId(), shelfSection.getName(), 0)){
             throw new InvalidArgumentException("密集架列名称已存在");
         }
 
-        if (shelfSectionRepository.existsByShelfIdAndCode(shelfSection.getShelfId(), shelfSection.getCode())){
+        if (shelfSectionRepository.existsByShelfIdAndCodeAndGmtDeleted(shelfSection.getShelfId(), shelfSection.getCode(), 0)){
             throw new InvalidArgumentException("密集架列编码已存在");
         }
 

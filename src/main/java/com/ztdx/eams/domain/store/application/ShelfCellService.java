@@ -2,15 +2,12 @@ package com.ztdx.eams.domain.store.application;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
-import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.store.model.ShelfCell;
 import com.ztdx.eams.domain.store.repository.ShelfCellRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 @Service
 public class ShelfCellService {
@@ -32,14 +29,14 @@ public class ShelfCellService {
         }
 
         if (!StringUtils.isEmpty(barCode) && !barCode.equals(cell.getBarCode())){
-            if (shelfCellRepository.existsByBarCodeAndIdNot(barCode, id)){
+            if (shelfCellRepository.existsByBarCodeAndIdNotAndGmtDeleted(barCode, id, 0)){
                 throw new InvalidArgumentException("条码已存在");
             }
             cell.setBarCode(barCode);
         }
 
         if (!StringUtils.isEmpty(pointCode) && !pointCode.equals(cell.getPointCode())){
-            if (shelfCellRepository.existsByPointCodeAndIdNot(pointCode, id)){
+            if (shelfCellRepository.existsByPointCodeAndIdNotAndGmtDeleted(pointCode, id, 0)){
                 throw new InvalidArgumentException("库位码已存在");
             }
             cell.setPointCode(pointCode);
@@ -49,6 +46,6 @@ public class ShelfCellService {
     }
 
     public Page<ShelfCell> findByShelfSectionId(int shelfSectionId, Pageable pageable){
-        return shelfCellRepository.findByShelfSectionId(shelfSectionId, pageable);
+        return shelfCellRepository.findByShelfSectionIdAndGmtDeleted(shelfSectionId, pageable, 0);
     }
 }
