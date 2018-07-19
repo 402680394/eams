@@ -6,6 +6,7 @@ import com.ztdx.eams.basic.utils.DateUtils;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
 import com.ztdx.eams.domain.archives.model.Entry;
+import com.ztdx.eams.domain.archives.model.PropertyType;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -226,5 +227,9 @@ public class DescriptionItemService {
 
     public boolean checkString(String pattern, String string) {
         return string.matches(pattern);
+    }
+
+    public DescriptionItem findByCatalogueIdAndPropertyType(int catalogueId, PropertyType boxNumber) {
+        return descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, boxNumber);
     }
 }

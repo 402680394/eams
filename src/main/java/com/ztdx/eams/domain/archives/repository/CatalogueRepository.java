@@ -15,5 +15,6 @@ import java.util.Optional;
 @Qualifier("catalogueRepository")
 public interface CatalogueRepository extends JpaRepository<Catalogue, Integer> {
     Optional<Catalogue> findByArchivesIdAndCatalogueType(int archiveId, CatalogueType catalogueType);
+    Optional<Catalogue> findByArchivesIdAndCatalogueTypeNot(int archiveId, CatalogueType catalogueType);
     List<Catalogue> findAllByArchivesIdAndCatalogueType(List<Integer> archivesId, CatalogueType catalogueType);
 }

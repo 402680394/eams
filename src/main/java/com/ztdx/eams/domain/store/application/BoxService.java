@@ -122,6 +122,10 @@ public class BoxService {
         return boxRepository.findByArchivesIdAndCode(archiveId, code);
     }
 
+    public Box get(int id) {
+        return boxRepository.findById(id).orElse(null);
+    }
+
     public void updateTotal(String code, int archivesId, int pages, int files) {
         boxRepository.updateTotal(code, archivesId, pages, files);
     }

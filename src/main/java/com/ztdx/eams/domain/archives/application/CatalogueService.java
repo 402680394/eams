@@ -40,4 +40,8 @@ public class CatalogueService {
     public boolean exists(int id){
         return catalogueRepository.existsById(id);
     }
+
+    public Catalogue getMainCatalogue(int archivesId) {
+        return catalogueRepository.findByArchivesIdAndCatalogueTypeNot(archivesId, CatalogueType.FolderFile).orElse(null);
+    }
 }

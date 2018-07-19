@@ -19,12 +19,14 @@ import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -614,6 +616,94 @@ public class EntryController {
         QueryBuilder query = conditionService.convert2ElasticsearchQuery(entryCondition.getCatalogueId(), entryCondition.getConditions());
         Page<Entry> content = entryService.search(entryCondition.getCatalogueId(), queryString, query, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
         return getSearchMap(entryCondition.getCatalogueId(), content);
+    }
+
+    /**
+     * @api {get} /entry/searchByBox?boxId={boxId}&page={page}&size={size} 按关键字搜索条目，高级搜索
+     * @apiName searchByBox
+     * @apiGroup entry
+     * @apiParam {String} boxId 盒id(QueryString)
+     * @apiParam {Number} page 页码(QueryString)
+     * @apiParam {Number} size 页行数(QueryString)
+     * @apiSuccess (Success 200) {Array} content 列表内容
+     * @apiSuccess (Success 200) {Number} content.id 条目id
+     * @apiSuccess (Success 200) {Number} content.title 标题
+     * @apiSuccess (Success 200) {Number=1,2,3} content.danghao 档号
+     * @apiSuccess (Success 200) {Number} totalElements 总元素数
+     * @apiSuccessExample {json} Success-Response:
+     * {
+     *     "data":{
+     *         "content":[
+     *             {
+     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     *                 "title":1,
+     *                 "danghao":1,
+     *             }
+     *         ],
+     *         "totalElements":14
+     *     }
+     * }
+     */
+    //@PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
+    @RequestMapping(value = "/searchByBox", method = RequestMethod.GET)
+    public Map<String, Object> searchByBox(
+            @RequestParam(value = "boxId") int boxId
+            , @RequestParam(value = "page", required = false, defaultValue = "0") int page
+            , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
+
+        Box box = boxService.get(boxId);
+
+        Catalogue catalogue = catalogueService.getMainCatalogue(box.getArchivesId());
+
+        if (catalogue == null){
+            throw new InvalidArgumentException("目录不存在");
+        }
+
+        /*DescriptionItem boxNumberItem = descriptionItemService.findByCatalogueIdAndPropertyType(catalogue.getId(), PropertyType.BoxNumber);
+        String prefix = "items.%s";
+        if (DescriptionItemDataType.String == boxNumberItem.getDataType()){
+            prefix = "items.%s.keyword";
+        }
+        String boxNumberColumnName = String.format(prefix, boxNumberItem.getMetadataName());
+
+        QueryBuilder query = QueryBuilders.termQuery(boxNumberColumnName, box.getCode());
+
+        Page<Entry> content =  entryService.search(
+                catalogue.getId()
+                , null
+                , query
+                , null
+                , null
+                , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));*/
+
+        Page<Entry>  content = entryService.listInBox(catalogue.getId(), box.getCode(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+
+        DescriptionItem titleItem = descriptionItemService.findByCatalogueIdAndPropertyType(catalogue.getId(), PropertyType.Title);
+
+        DescriptionItem danghaoItem = descriptionItemService.findByCatalogueIdAndPropertyType(catalogue.getId(), PropertyType.Reference);
+
+        List<Map<String, String>> maps = content.getContent().stream().map(a -> {
+            String title = "";
+            if (titleItem != null){
+                title = a.getItems().getOrDefault(titleItem.getMetadataName(), "无标题").toString();
+            }
+
+            String danghao = "";
+            if (danghaoItem != null){
+                danghao = a.getItems().getOrDefault(danghaoItem.getMetadataName(), "无档号").toString();
+            }
+            Map<String, String> r = new HashMap<>();
+            r.put("title", title);
+            r.put("danghao", danghao);
+            r.put("id", a.getId());
+            return r;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("content", maps);
+        result.put("totalElements", content.getTotalElements());
+        result.put("totalPages", content.getTotalPages());
+        return result;
     }
 
     /**

@@ -759,4 +759,15 @@ public class EntryService {
         entryMongoRepository.saveAll(searchResult);
         entryAsyncTask.indexAll(searchResult, catalogueId);
     }
+
+    public Page<Entry>  listInBox(int catalogueId, String boxCode, Pageable pageable) {
+        DescriptionItem boxNumberItem = descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
+        String prefix = "items.%s";
+        String boxNumberColumnName = String.format(prefix, boxNumberItem.getMetadataName());
+
+        Query query = query(where(boxNumberColumnName).is(boxCode)).with(pageable);
+        long total = mongoOperations.count(query, getIndexName(catalogueId));
+        List<Entry> list = entryMongoRepository.findAll(query, getIndexName(catalogueId));
+        return PageableExecutionUtils.getPage(list, pageable, () -> total);
+    }
 }
