@@ -127,7 +127,7 @@ public class BoxService {
     }
 
     public List<String> getOnFrameBoxCodesByIds(List<Integer> ids) {
-        List<Box> list = boxRepository.findBoxesById(ids);
+        List<Box> list = boxRepository.findByIdIn(ids);
         List<String> codes = new ArrayList<>();
         for (Box box : list) {
             if (box.isOnFrame()) {
