@@ -126,10 +126,13 @@ public class BoxService {
         return boxRepository.existsByCodeAndArchivesId(boxCode, archiveId);
     }
 
-    public List<String> getCodeByIds(List<Integer> ids) {
+    public List<String> getOnFrameBoxCodesByIds(List<Integer> ids) {
         List<Box> list = boxRepository.findBoxesById(ids);
         List<String> codes = new ArrayList<>();
         for (Box box : list) {
+            if (box.isOnFrame()) {
+                throw new InvalidArgumentException("需要先下架在架档案盒");
+            }
             codes.add(box.getCode());
         }
         return codes;

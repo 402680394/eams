@@ -107,7 +107,7 @@ public class BoxController {
      * @apiGroup box
      * @apiParam {Number} archivesId 档案库ID
      * @apiParam {Number[]} ids 盒ID
-     * @apiError (Error 400) message 1.需要先下架在架档案盒.
+     * @apiError (Error 400) message 需要先下架在架档案盒.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "/", method = RequestMethod.DELETE)
@@ -115,7 +115,7 @@ public class BoxController {
         int archivesId = (int) map.get("archivesId");
         int catalogueId = archivesQuery.getCatalogueIdByArchivesIdAndType(UInteger.valueOf(archivesId)).intValue();
         List<Integer> ids = (List<Integer>) map.get("ids");
-        List<String> boxCodes = boxService.getCodeByIds(ids);
+        List<String> boxCodes = boxService.getOnFrameBoxCodesByIds(ids);
 
         boxService.delete(ids);
 
