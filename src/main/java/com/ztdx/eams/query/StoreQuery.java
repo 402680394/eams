@@ -54,7 +54,7 @@ public class StoreQuery {
                 storage.FONDS_ID.as("fonds_id"),
                 sysFonds.FONDS_NAME.as("fonds_name"))
                 .from(storage, sysFonds)
-                .where(storage.FONDS_ID.equal(sysFonds.ID))
+                .where(storage.FONDS_ID.equal(sysFonds.ID), sysFonds.GMT_DELETED.equal((byte) 0))
                 .fetch().intoMaps();
         resultMap.put("items", list);
         return resultMap;
@@ -74,6 +74,7 @@ public class StoreQuery {
                 sysFonds.FONDS_NAME.as("fonds_name"))
                 .from(storage, sysFonds)
                 .where(storage.FONDS_ID.equal(sysFonds.ID),
+                        sysFonds.GMT_DELETED.equal((byte) 0),
                         storage.NAME.like("%" + keyWord.trim() + "%")
                                 .or(storage.NUMBER.like("%" + keyWord.trim() + "%"))
                                 .or(storage.DESCRIPTION.like("%" + keyWord.trim() + "%")))
