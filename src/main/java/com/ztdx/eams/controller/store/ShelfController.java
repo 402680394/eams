@@ -264,8 +264,8 @@ public class ShelfController {
 
 
     /**
-     * @api {get} /shelf/tree?archiveId={archiveId} 密集架列表
-     * @apiName list_shelf
+     * @api {get} /shelf/tree?archiveId={archiveId} 密集架列表（树形结构）
+     * @apiName listByArchiveId
      * @apiGroup shelf
      * @apiParam {Number} archiveId 档案库id(QueryString参数)
      * @apiSuccess {Object[]} data 列表
@@ -307,7 +307,7 @@ public class ShelfController {
      *
      */
     @RequestMapping(value = "/tree", method = RequestMethod.GET)
-    public List<Map<String, Object>> listByFondsId(@RequestParam int archiveId){
+    public List<Map<String, Object>> listByArchiveId(@RequestParam int archiveId){
 
         Archives archives = archivesService.get(archiveId);
         if (archives == null){
