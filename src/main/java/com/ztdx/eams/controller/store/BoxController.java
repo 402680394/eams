@@ -1,6 +1,10 @@
 package com.ztdx.eams.controller.store;
 
+import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.params.JsonParam;
+import com.ztdx.eams.domain.archives.application.CatalogueService;
+import com.ztdx.eams.domain.archives.application.EntryService;
+import com.ztdx.eams.domain.archives.model.Catalogue;
 import com.ztdx.eams.domain.store.model.event.BoxDeleteEvent;
 import com.ztdx.eams.domain.store.application.BoxService;
 import com.ztdx.eams.domain.store.model.Box;
@@ -29,12 +33,18 @@ public class BoxController {
 
     private final ApplicationContext applicationContext;
 
+    private final CatalogueService catalogueService;
+
+    private final EntryService entryService;
+
     @Autowired
-    public BoxController(StoreQuery storeQuery, BoxService boxService, ArchivesQuery archivesQuery, ApplicationContext applicationContext) {
+    public BoxController(StoreQuery storeQuery, BoxService boxService, ArchivesQuery archivesQuery, ApplicationContext applicationContext, CatalogueService catalogueService, EntryService entryService) {
         this.storeQuery = storeQuery;
         this.boxService = boxService;
         this.archivesQuery = archivesQuery;
         this.applicationContext = applicationContext;
+        this.catalogueService = catalogueService;
+        this.entryService = entryService;
     }
 
     /**
@@ -191,5 +201,33 @@ public class BoxController {
     @RequestMapping(value = "/maxFlowNumber", method = RequestMethod.GET)
     public Map<String, Object> maxFlowNumber(@RequestParam("archivesId") int archivesId, @RequestParam("codeRule") String codeRule) {
         return storeQuery.maxFlowNumber(archivesId, codeRule);
+    }
+
+    /**
+     * @api {post} /box/unBox 拆盒
+     * @apiName unBox
+     * @apiGroup entry
+     * @apiParam {Number} archiveId 档案库id
+     * @apiParam {Number[]} ids 盒id数组
+     * @apiParamExample {json} Request-Example
+     * {
+     *     "archiveId": 1,
+     *     "ids": [1,2]
+     * }
+     * @apiError message 目录不存在
+     *
+     */
+    @RequestMapping(value = "/unBox", method = RequestMethod.POST)
+    public void unBox(@JsonParam List<Integer> ids,@JsonParam int archiveId){
+        catalogueService.getMainCatalogue(archiveId);
+        Catalogue catalogue = catalogueService.getMainCatalogue(archiveId);
+
+        if (catalogue == null){
+            throw new InvalidArgumentException("目录不存在");
+        }
+
+        List<String> boxCodes = boxService.getCodeByIds(ids);
+
+        entryService.unBoxByBoxCode(catalogue.getId(), boxCodes);
     }
 }

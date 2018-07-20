@@ -1521,13 +1521,13 @@ public class EntryController {
 
 
     /**
-     * @api {post} /entry/inbox 装盒
+     * @api {post} /entry/setBoxCode 装盒（设置盒号）
      * @apiName inBox
      * @apiGroup entry
      * @apiParam {Number} catalogueId 目录id
      * @apiParam {String[]} ids 条目id数组
      * @apiParam {String} boxCode 盒号
-     * @apiParamExample {json} Reqeust-Example
+     * @apiParamExample {json} Request-Example
      * {
      *     "catalogueId": 1,
      *     "ids": ["xxxx-xxxx-xxxx"],
@@ -1536,9 +1536,9 @@ public class EntryController {
      * @apiError message 1.没有盒号字段 2.盒不存在 3.目录不存在 4.条目不存在
      *
      */
-    @RequestMapping(value = "/inbox", method = RequestMethod.POST)
+    @RequestMapping(value = "/setBoxCode", method = RequestMethod.POST)
     @Transactional
-    public void inBox(@JsonParam List<String> ids, @JsonParam String boxCode,@JsonParam int catalogueId){
+    public void setBoxCode(@JsonParam List<String> ids, @JsonParam String boxCode,@JsonParam int catalogueId){
         Catalogue catalogue = catalogueService.get(catalogueId);
         if (catalogue == null){
             throw new InvalidArgumentException("目录不存在");
@@ -1555,12 +1555,12 @@ public class EntryController {
     }
 
     /**
-     * @api {post} /entry/unbox 拆盒
+     * @api {post} /entry/unSetBoxCode 拆盒（清除盒号）
      * @apiName unBox
      * @apiGroup entry
      * @apiParam {Number} catalogueId 目录id
      * @apiParam {String[]} ids 条目id数组
-     * @apiParamExample {json} Reqeust-Example
+     * @apiParamExample {json} Request-Example
      * {
      *     "catalogueId": 1,
      *     "ids": ["xxxx-xxxx-xxxx"]
@@ -1568,8 +1568,8 @@ public class EntryController {
      * @apiError message 1.没有盒号字段 2.条目不存在 3.目录不存在
      *
      */
-    @RequestMapping(value = "/unbox", method = RequestMethod.POST)
-    public void unBox(@JsonParam List<String> ids,@JsonParam int catalogueId){
+    @RequestMapping(value = "/unSetBoxCode", method = RequestMethod.POST)
+    public void unSetBoxCode(@JsonParam List<String> ids,@JsonParam int catalogueId){
         Catalogue catalogue = catalogueService.get(catalogueId);
         if (catalogue == null){
             throw new InvalidArgumentException("目录不存在");
