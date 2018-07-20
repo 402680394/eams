@@ -27,4 +27,8 @@ public class ArchivesGroupService {
     public List<ArchivesGroup> findAllById(List<Integer> archiveGroupIds) {
         return archivesGroupRepository.findAllById(archiveGroupIds);
     }
+
+    public ArchivesGroup get(int id){
+        return archivesGroupRepository.findById(id).orElse(null);
+    }
 }

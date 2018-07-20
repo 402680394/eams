@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
+import java.util.List;
 
 @Repository
 @Table(name = "store_storage")
@@ -23,4 +24,5 @@ public interface StorageRepository extends JpaRepository<Storage, Integer> {
     @Query("update Storage s set s.name=:#{#storage.name},s.number=:#{#storage.number},s.description=:#{#storage.description} where s.id=:#{#storage.id}")
     void updateById(@Param(value = "storage") Storage storage);
 
+    List<Storage> findAllByFondsId(int fondsIds);
 }

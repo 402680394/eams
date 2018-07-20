@@ -4,9 +4,11 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.domain.store.model.Shelf;
 import com.ztdx.eams.domain.store.model.ShelfSection;
+import com.ztdx.eams.domain.store.model.Storage;
 import com.ztdx.eams.domain.store.repository.ShelfCellRepository;
 import com.ztdx.eams.domain.store.repository.ShelfRepository;
 import com.ztdx.eams.domain.store.repository.ShelfSectionRepository;
+import com.ztdx.eams.domain.store.repository.StorageRepository;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -23,10 +25,13 @@ public class ShelfService {
 
     private ShelfCellRepository shelfCellRepository;
 
-    public ShelfService(ShelfRepository shelfRepository, ShelfSectionRepository shelfSectionRepository, ShelfCellRepository shelfCellRepository) {
+    private StorageRepository storageRepository;
+
+    public ShelfService(ShelfRepository shelfRepository, ShelfSectionRepository shelfSectionRepository, ShelfCellRepository shelfCellRepository, StorageRepository storageRepository) {
         this.shelfRepository = shelfRepository;
         this.shelfSectionRepository = shelfSectionRepository;
         this.shelfCellRepository = shelfCellRepository;
+        this.storageRepository = storageRepository;
     }
 
     @Transactional
@@ -132,6 +137,66 @@ public class ShelfService {
             List<ShelfSection> sectionList = sectionGroups.getOrDefault(a.getId(), null);
             if (sectionList != null){
                 map.put("children", sectionList);
+            }
+
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    public List<Map<String, Object>> listByFondsId(int fondsIds) {
+        List<Storage> storages = storageRepository.findAllByFondsId(fondsIds);
+        List<Integer> storageIds = storages.stream().map(Storage::getId).collect(Collectors.toList());
+
+        List<Shelf> shelves = shelfRepository.findByStorageIdInAndGmtDeleted(storageIds, 0);
+
+        List<Integer> ShelfIds = shelves.stream().map(Shelf::getId).collect(Collectors.toList());
+        List<ShelfSection> sections = shelfSectionRepository.findByShelfIdInAndGmtDeleted(ShelfIds, 0);
+
+        Map<Integer, List<Shelf>> shelfGroups = shelves.stream().collect(Collectors.groupingBy(Shelf::getStorageId));
+
+        Map<Integer, List<ShelfSection>> sectionGroups = sections.stream().collect(Collectors.groupingBy(ShelfSection::getShelfId));
+
+        return storages.stream().map(a -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", a.getId());
+            map.put("name", a.getName());
+            map.put("nodeType", "storage");
+
+            List<Shelf> tmpShelfList =  shelfGroups.getOrDefault(a.getId(), null);
+            List<Map<String, Object>> shelfList = new ArrayList<>();
+            if (tmpShelfList != null) {
+
+                shelfList = shelfGroups.getOrDefault(a.getId(), null).stream().map(b -> {
+                    Map<String, Object> map1 = new HashMap<>();
+                    map1.put("id", b.getId());
+                    map1.put("name", b.getName());
+                    map1.put("nodeType", "shelf");
+
+                    List<Map<String, Object>> sectionList = new ArrayList<>();
+
+                    List<ShelfSection> tmpShelfSectionList = sectionGroups.getOrDefault(b.getId(), null);
+
+                    if (tmpShelfSectionList != null) {
+                        sectionList = tmpShelfSectionList.stream().map(c -> {
+                            Map<String, Object> map2 = new HashMap<>();
+                            map2.put("id", c.getId());
+                            map2.put("name", c.getName());
+                            map2.put("nodeType", "shelfSection");
+
+                            return map2;
+                        }).collect(Collectors.toList());
+                    }
+
+                    if (sectionList != null) {
+                        map1.put("children", sectionList);
+                    }
+
+                    return map1;
+                }).collect(Collectors.toList());
+            }
+
+            if (shelfList != null){
+                map.put("children", shelfList);
             }
 
             return map;

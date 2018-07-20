@@ -2,11 +2,16 @@ package com.ztdx.eams.controller.store;
 
 import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.basic.params.JsonParam;
+import com.ztdx.eams.domain.archives.application.ArchivesGroupService;
+import com.ztdx.eams.domain.archives.application.ArchivesService;
+import com.ztdx.eams.domain.archives.model.Archives;
+import com.ztdx.eams.domain.archives.model.ArchivesGroup;
 import com.ztdx.eams.domain.store.application.ShelfService;
 import com.ztdx.eams.domain.store.application.StorageService;
 import com.ztdx.eams.domain.store.model.Shelf;
 import com.ztdx.eams.domain.store.model.Storage;
 import com.ztdx.eams.domain.store.model.event.ShelfCellDeletedEvent;
+import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.query.StoreQuery;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.*;
@@ -27,11 +32,20 @@ public class ShelfController {
 
     private ApplicationContext applicationContext;
 
-    public ShelfController(ShelfService shelfService, StorageService storageService, StoreQuery storeQuery, ApplicationContext applicationContext) {
+    private RoleService roleService;
+
+    private ArchivesService archivesService;
+
+    private ArchivesGroupService archivesGroupService;
+
+    public ShelfController(ShelfService shelfService, StorageService storageService, StoreQuery storeQuery, ApplicationContext applicationContext, RoleService roleService, ArchivesService archivesService, ArchivesGroupService archivesGroupService) {
         this.shelfService = shelfService;
         this.storageService = storageService;
         this.storeQuery = storeQuery;
         this.applicationContext = applicationContext;
+        this.roleService = roleService;
+        this.archivesService = archivesService;
+        this.archivesGroupService = archivesGroupService;
     }
 
     /**
@@ -183,7 +197,7 @@ public class ShelfController {
     }
 
     /**
-     * @api {get} /shelf?q={q}&storageId={storageId}&page={page}&size={size} 密集架列表
+     * @api {get} /shelf?storageId={storageId} 密集架列表
      * @apiName list_shelf
      * @apiGroup shelf
      * @apiParam {Number} storageId 库房id(QueryString参数)
@@ -245,7 +259,66 @@ public class ShelfController {
      */
     @RequestMapping(value = "", method = RequestMethod.GET)
     public List<Map<String, Object>> list(@RequestParam int storageId){
-        //return storeQuery.listShelf(queryString, storageId, PageRequest.of(page, size));
         return shelfService.list(storageId);
+    }
+
+
+    /**
+     * @api {get} /shelf/tree?archiveId={archiveId} 密集架列表
+     * @apiName list_shelf
+     * @apiGroup shelf
+     * @apiParam {Number} archiveId 档案库id(QueryString参数)
+     * @apiSuccess {Object[]} data 列表
+     * @apiSuccess {Number} data.id 库房id
+     * @apiSuccess {String} data.name 库房名称
+     * @apiSuccess {String} data.nodeType 节点类型 storage:库房 shelf:密集架 shelfSection:密集架列
+     * @apiSuccess {Object[]} data.children 下级密集架
+     * @apiSuccess {Number} data.children.id 密集架id
+     * @apiSuccess {String} data.children.name 密集架名称
+     * @apiSuccess {String} data.children.nodeType 节点类型 storage:库房 shelf:密集架 shelfSection:密集架列
+     * @apiSuccess {Object[]} data.children.children 密集架列
+     * @apiSuccess {String} data.children.children.id 密集架列id
+     * @apiSuccess {String} data.children.children.name 密集架列名称
+     * @apiSuccess {String} data.children.children.nodeType 节点类型 storage:库房 shelf:密集架 shelfSection:密集架列
+     * @apiSuccessExample {json} Response-Example
+     * {
+     *     "data": [
+     *         {
+     *             "children": [
+     *                 {
+     *                     "children": [
+     *                         {
+     *                             "name": "11",
+     *                             "id": 13,
+     *                             "nodeType": "shelfSection"
+     *                         }
+     *                     ],
+     *                     "name": "测试1",
+     *                     "id": 5,
+     *                     "nodeType": "shelf"
+     *                 }
+     *             ],
+     *             "name": "石家庄库房",
+     *             "id": 11,
+     *             "nodeType": "storage"
+     *         }
+     *     ]
+     * }
+     *
+     */
+    @RequestMapping(value = "/tree", method = RequestMethod.GET)
+    public List<Map<String, Object>> listByFondsId(@RequestParam int archiveId){
+
+        Archives archives = archivesService.get(archiveId);
+        if (archives == null){
+            throw new NotFoundException("档案库不存在");
+        }
+
+        ArchivesGroup group = archivesGroupService.get(archives.getArchivesGroupId());
+        if (group == null){
+            throw new NotFoundException("档案库不存在");
+        }
+
+        return shelfService.listByFondsId(group.getFondsId());
     }
 }
