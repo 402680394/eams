@@ -206,7 +206,7 @@ public class BoxController {
     /**
      * @api {post} /box/unBox 拆盒
      * @apiName unBox
-     * @apiGroup entry
+     * @apiGroup box
      * @apiParam {Number} archiveId 档案库id
      * @apiParam {Number[]} ids 盒id数组
      * @apiParamExample {json} Request-Example

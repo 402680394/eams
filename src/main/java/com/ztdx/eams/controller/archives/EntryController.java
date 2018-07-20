@@ -487,7 +487,7 @@ public class EntryController {
     }
 
     /**
-     * @api {post} /entry/search?q={q}&page={page}&size={size} 按关键字搜索条目，高级搜索
+     * @api {post} /entry/search?q={q}&page={page}&size={size} 高级搜索
      * @apiName search_adv
      * @apiGroup entry
      * @apiParam {String} q 关键字(QueryString)
@@ -1522,7 +1522,7 @@ public class EntryController {
 
     /**
      * @api {post} /entry/setBoxCode 装盒（设置盒号）
-     * @apiName inBox
+     * @apiName setBoxCode
      * @apiGroup entry
      * @apiParam {Number} catalogueId 目录id
      * @apiParam {String[]} ids 条目id数组
@@ -1556,7 +1556,7 @@ public class EntryController {
 
     /**
      * @api {post} /entry/unSetBoxCode 拆盒（清除盒号）
-     * @apiName unBox
+     * @apiName unSetBoxCode
      * @apiGroup entry
      * @apiParam {Number} catalogueId 目录id
      * @apiParam {String[]} ids 条目id数组
