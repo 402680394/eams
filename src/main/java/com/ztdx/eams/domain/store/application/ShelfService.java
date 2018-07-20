@@ -66,19 +66,19 @@ public class ShelfService {
     }
 
     public boolean existsByName(int storageId, String name){
-        return shelfRepository.existsByStorageIdAndName(storageId, name);
+        return shelfRepository.existsByStorageIdAndNameAndGmtDeleted(storageId, name, 0);
     }
 
     public boolean existsByCode(int storageId, String code){
-        return shelfRepository.existsByStorageIdAndCode(storageId, code);
+        return shelfRepository.existsByStorageIdAndCodeAndGmtDeleted(storageId, code, 0);
     }
 
     public boolean existsByName(int storageId, int shelfId, String name){
-        return shelfRepository.existsByStorageIdAndIdNotAndName(storageId, shelfId, name);
+        return shelfRepository.existsByStorageIdAndIdNotAndNameAndGmtDeleted(storageId, shelfId, name, 0);
     }
 
     public boolean existsByCode(int storageId, int shelfId, String code){
-        return shelfRepository.existsByStorageIdAndIdNotAndCode(storageId, shelfId, code);
+        return shelfRepository.existsByStorageIdAndIdNotAndCodeAndGmtDeleted(storageId, shelfId, code, 0);
     }
 
     public void update(Shelf shelf){
@@ -115,7 +115,7 @@ public class ShelfService {
 
 
     public List<Map<String, Object>> list(int storageId) {
-        List<Shelf> list = shelfRepository.findByStorageId(storageId);
+        List<Shelf> list = shelfRepository.findByStorageIdAndGmtDeleted(storageId, 0);
         List<Integer> ids = list.stream().map(Shelf::getId).collect(Collectors.toList());
         List<ShelfSection> sections = shelfSectionRepository.findByShelfIdInAndGmtDeleted(ids, 0);
         Map<Integer, List<ShelfSection>> sectionGroups = sections.stream().collect(Collectors.groupingBy(ShelfSection::getShelfId));

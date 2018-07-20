@@ -9,13 +9,13 @@ import java.util.List;
 @Repository
 public interface ShelfRepository extends JpaRepository<Shelf, Integer> {
 
-    boolean existsByStorageIdAndName(int storageId, String name);
+    boolean existsByStorageIdAndNameAndGmtDeleted(int storageId, String name, int gmtDeleted);
 
-    boolean existsByStorageIdAndCode(int storageId, String code);
+    boolean existsByStorageIdAndCodeAndGmtDeleted(int storageId, String code, int gmtDeleted);
 
-    boolean existsByStorageIdAndIdNotAndName(int storageId, int shelfId, String name);
+    boolean existsByStorageIdAndIdNotAndNameAndGmtDeleted(int storageId, int shelfId, String name, int gmtDeleted);
 
-    boolean existsByStorageIdAndIdNotAndCode(int storageId, int shelfId, String code);
+    boolean existsByStorageIdAndIdNotAndCodeAndGmtDeleted(int storageId, int shelfId, String code, int gmtDeleted);
 
-    List<Shelf> findByStorageId(int storageId);
+    List<Shelf> findByStorageIdAndGmtDeleted(int storageId, int gmtDeleted);
 }
