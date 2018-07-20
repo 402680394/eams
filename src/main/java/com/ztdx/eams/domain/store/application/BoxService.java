@@ -86,6 +86,7 @@ public class BoxService {
     public void save(int archivesId
             , String codeRule
             , String flowNumber
+            , int width
             , int total
             , int maxPagesTotal
             , String remark) {
@@ -102,6 +103,7 @@ public class BoxService {
             Box box = new Box();
             box.setArchivesId(archivesId);
             box.setCodeRule(codeRule);
+            box.setWidth(width);
             box.setMaxPagesTotal(maxPagesTotal);
             box.setRemark(remark);
             box.setPoint("");

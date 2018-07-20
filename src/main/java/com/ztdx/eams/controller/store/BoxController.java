@@ -87,11 +87,12 @@ public class BoxController {
     public void save(@JsonParam int archivesId
             , @JsonParam String codeRule
             , @JsonParam String flowNumber
+            , @JsonParam int width
             , @JsonParam int total
             , @JsonParam int maxPagesTotal
             , @JsonParam String remark) {
 
-        boxService.save(archivesId, codeRule, flowNumber, total, maxPagesTotal, remark);
+        boxService.save(archivesId, codeRule, flowNumber, width, total, maxPagesTotal, remark);
     }
 
     /**
