@@ -186,6 +186,7 @@ public class StorageController {
      * @api {get} /store/monitoringPointTypeList 监测点类型下拉列表
      * @apiName selectList
      * @apiGroup store
+     * @apiParam {Number} storageId 库房ID(url参数)
      * @apiSuccess (Success 200) {Number} id 监测点ID.
      * @apiSuccess (Success 200) {String} number 监测点编号.
      * @apiSuccess (Success 200) {Number} type 监测点类型（1 温度记录仪 2 湿度记录仪 3 温湿度记录仪）.
@@ -197,8 +198,8 @@ public class StorageController {
      * }
      */
     @RequestMapping(value = "/monitoringPointTypeList", method = RequestMethod.GET)
-    public Map<String,Object> monitoringPointType() {
-        return storeQuery.getMonitoringPointType();
+    public Map<String,Object> monitoringPointType(@RequestParam("storageId") Integer storageId) {
+        return storeQuery.getMonitoringPointType(storageId);
     }
 
 

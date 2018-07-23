@@ -126,7 +126,8 @@ public class StoreQuery {
                 monitoringRecord.TEMPERATURE_VALUE.as("temperature_value"),
                 monitoringRecord.HUMIDITY_VALUE.as("humidity_value"),
                 monitoringRecord.TAKE_STEPS.as("take_steps"),
-                monitoringRecord.STORAGE_ID.as("storage_id"))
+                monitoringRecord.STORAGE_ID.as("storage_id"),
+                monitoringPoint.TYPE.as("type"))
                 .from(monitoringRecord, monitoringPoint)
                 .where(monitoringRecord.MONITORING_POINT_ID.equal(monitoringPoint.ID))
                 .fetch().intoMaps();
@@ -156,7 +157,8 @@ public class StoreQuery {
                 monitoringRecord.TEMPERATURE_VALUE.as("temperature_value"),
                 monitoringRecord.HUMIDITY_VALUE.as("humidity_value"),
                 monitoringRecord.TAKE_STEPS.as("take_steps"),
-                monitoringRecord.STORAGE_ID.as("storage_id"))
+                monitoringRecord.STORAGE_ID.as("storage_id"),
+                monitoringPoint.TYPE.as("type"))
                 .from(monitoringRecord, monitoringPoint)
                 .where(conditions)
                 .fetch().intoMaps();
@@ -169,12 +171,13 @@ public class StoreQuery {
     /**
      * 查询监测点下拉列表
      */
-    public Map<String, Object> getMonitoringPointType() {
+    public Map<String, Object> getMonitoringPointType(Integer storageId) {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = dslContext.select(monitoringPoint.ID.as("id"),
-                monitoringPoint.NUMBER.as("number")
-                , monitoringPoint.TYPE.as("type"))
+                monitoringPoint.NUMBER.as("number"),
+                monitoringPoint.TYPE.as("type"))
                 .from(monitoringPoint)
+                .where(monitoringPoint.STORAGE_ID.equal(UInteger.valueOf(storageId)))
                 .fetch().intoMaps();
         resultMap.put("items", list);
         return resultMap;

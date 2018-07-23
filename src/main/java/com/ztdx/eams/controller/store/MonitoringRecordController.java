@@ -43,6 +43,7 @@ public class MonitoringRecordController {
      * @apiSuccess (Success 200) {Number} humidityValue 湿度值.(最大100，最小-100)
      * @apiSuccess (Success 200) {String{100}} takeSteps 采取措施.
      * @apiSuccess (Success 200) {Number} storageId 所属库房id.
+     * @apiSuccess (Success 200) {Number} type 监测点类型（1 温度记录仪 2 湿度记录仪 3 温湿度记录仪）.
      * @apiSuccessExample {json} Success-Response:
      * {
      *      "id": 1,
@@ -51,7 +52,8 @@ public class MonitoringRecordController {
      *      "temperature_value": 100,
      *      "humidity_value": 0,
      *      "take_steps": "降温",
-     *      "storage_id": 1
+     *      "storage_id": 1,
+     *      "type" : 2
      * }
      */
     @RequestMapping(value = "/monitoringRecordList", method = RequestMethod.GET)
