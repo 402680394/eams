@@ -122,6 +122,7 @@ public class StoreQuery {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = dslContext.select(monitoringRecord.ID.as("id"),
                 monitoringPoint.NUMBER.as("number"),
+                monitoringRecord.MONITORING_POINT_ID.as("monitoring_point_id"),
                 monitoringRecord.MONITORING_TIME.as("monitoring_time"),
                 monitoringRecord.TEMPERATURE_VALUE.as("temperature_value"),
                 monitoringRecord.HUMIDITY_VALUE.as("humidity_value"),
@@ -153,6 +154,7 @@ public class StoreQuery {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = dslContext.select(monitoringRecord.ID.as("id"),
                 monitoringPoint.NUMBER.as("number"),
+                monitoringRecord.MONITORING_POINT_ID.as("monitoring_point_id"),
                 monitoringRecord.MONITORING_TIME.as("monitoring_time"),
                 monitoringRecord.TEMPERATURE_VALUE.as("temperature_value"),
                 monitoringRecord.HUMIDITY_VALUE.as("humidity_value"),
