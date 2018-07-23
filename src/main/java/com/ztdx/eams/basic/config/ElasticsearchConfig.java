@@ -7,7 +7,6 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +21,7 @@ import org.springframework.util.Assert;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import static org.apache.commons.lang.StringUtils.split;
-import static org.apache.commons.lang.StringUtils.substringAfterLast;
-import static org.apache.commons.lang.StringUtils.substringBeforeLast;
+import static org.apache.commons.lang.StringUtils.*;
 
 @Configuration
 @EnableElasticsearchRepositories(
@@ -35,8 +32,8 @@ public class ElasticsearchConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(TransportClientFactoryBean.class);
     private final ElasticsearchProperties properties;
-    static final String COLON = ":";
-    static final String COMMA = ",";
+    private static final String COLON = ":";
+    private static final String COMMA = ",";
 
     public ElasticsearchConfig(ElasticsearchProperties properties) {
         this.properties = properties;
@@ -44,7 +41,6 @@ public class ElasticsearchConfig {
 
     @Bean
     public TransportClient transportClient() throws UnknownHostException {
-        //TODO @lijie 按照自动配置在优化一下
         TransportClient client = new PreBuiltXPackTransportClient(Settings.builder()
                 .put("cluster.name", properties.getClusterName())
                 .put(properties.getProperties())
