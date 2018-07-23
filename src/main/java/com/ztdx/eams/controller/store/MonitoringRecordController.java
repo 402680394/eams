@@ -5,6 +5,7 @@ import com.ztdx.eams.domain.store.application.MonitoringRecordService;
 import com.ztdx.eams.domain.store.model.MonitoringRecord;
 import com.ztdx.eams.query.StoreQuery;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -58,6 +59,7 @@ public class MonitoringRecordController {
      *      "type" : 2
      * }
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "/monitoringRecordList", method = RequestMethod.GET)
     public Map<String, Object> monitoringRecordList(@RequestParam(name = "storageId",required = false) Integer storageId, @RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
         if (storageId!=null){
@@ -79,6 +81,7 @@ public class MonitoringRecordController {
      * @apiError (Error 400) message
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void saveMonitoringRecord(@RequestBody MonitoringRecord monitoringRecord) {
         monitoringRecordService.save(monitoringRecord);
@@ -98,6 +101,7 @@ public class MonitoringRecordController {
      * @apiError (Error 400) message
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "", method = RequestMethod.PUT)
     public void updateMonitoringRecord(@RequestBody MonitoringRecord monitoringRecord) {
         monitoringRecordService.update(monitoringRecord);
@@ -109,6 +113,7 @@ public class MonitoringRecordController {
      * @apiGroup monitoringRecord
      * @apiParam {Array} monitoringRecordIds 监测记录ID数组
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/deleteMonitoringRecordIds", method = RequestMethod.DELETE)
     public void delete(@JsonParam List<Integer> monitoringRecordIds) {
         monitoringRecordService.delete(monitoringRecordIds);

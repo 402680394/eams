@@ -14,6 +14,7 @@ import com.ztdx.eams.domain.store.model.event.ShelfCellDeletedEvent;
 import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.query.StoreQuery;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -92,6 +93,7 @@ public class ShelfController {
      * }
      * @apiError message 1.密集架名称已存在 2.密集架编码已存在 3.库房不存在
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public Shelf save(@RequestBody Shelf shelf){
         Storage storage = storageService.get(shelf.getStorageId());
@@ -114,6 +116,7 @@ public class ShelfController {
      * @apiParam {String} remark 备注
      * @apiError message 1.密集架名称已存在 2.密集架编码已存在 3.密集架不存在
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public void update(@PathVariable("id") int id, @JsonParam String name, @JsonParam String code, @JsonParam String remark){
 
@@ -162,6 +165,7 @@ public class ShelfController {
      * @apiGroup shelf
      * @apiParam {Number[]} ids 要删除的密集架id数组
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "", method = RequestMethod.DELETE)
     public void delete(@JsonParam List<Integer> ids){
         shelfService.delete(ids);
@@ -181,6 +185,7 @@ public class ShelfController {
      * apiParam {String} remark 备注
      * @apiError message 1.密集架名称已存在 2.密集架编码已存在 3.不允许跨全宗复制
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/{id}/copy", method = RequestMethod.POST)
     public void copy(@PathVariable("id") int id, @JsonParam String name, @JsonParam String code, @JsonParam String remark){
         Shelf shelf = shelfService.get(id);
@@ -257,6 +262,7 @@ public class ShelfController {
      * }
      *
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "", method = RequestMethod.GET)
     public List<Map<String, Object>> list(@RequestParam int storageId){
         return shelfService.list(storageId);
@@ -306,6 +312,7 @@ public class ShelfController {
      * }
      *
      */
+    //@PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "/tree", method = RequestMethod.GET)
     public List<Map<String, Object>> listByArchiveId(@RequestParam int archiveId){
 

@@ -7,6 +7,7 @@ import com.ztdx.eams.domain.store.model.MonitoringPoint;
 import com.ztdx.eams.domain.store.model.Storage;
 import com.ztdx.eams.query.StoreQuery;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,6 +54,7 @@ public class StorageController {
      *      "fonds_id": "2"
      * }
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "/storageList", method = RequestMethod.GET)
     public Map<String,Object> storageList(@RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
         if (keyWord!=null && !keyWord.trim().equals("")){
@@ -72,6 +74,7 @@ public class StorageController {
      * @apiError (Error 400) message 库房编号已存在.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/saveStorage", method = RequestMethod.POST)
     public void save(@RequestBody Storage storage) {
         storageService.save(storage);
@@ -89,6 +92,7 @@ public class StorageController {
      * @apiError (Error 400) message 库房编号已存在.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/updateStorage", method = RequestMethod.PUT)
     public void update(@RequestBody Storage storage) {
         storageService.update(storage);
@@ -100,6 +104,7 @@ public class StorageController {
      * @apiGroup store
      * @apiParam {Array} storageIds 库房ID数组
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/deleteStorage", method = RequestMethod.DELETE)
     public void deleteStorage(@JsonParam List<Integer> storageIds) {
         storageService.delete(storageIds);
@@ -118,6 +123,7 @@ public class StorageController {
      * @apiError (Error 400) message 监测点编号已存在.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/saveMonitoringPoint", method = RequestMethod.POST)
     public void saveMonitoringPoint(@RequestBody MonitoringPoint monitoringPoint) {
         monitoringPointService.save(monitoringPoint);
@@ -136,6 +142,7 @@ public class StorageController {
      * @apiError (Error 400) message 监测点编号已存在.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/updateMonitoringPoint", method = RequestMethod.PUT)
     public void updateMonitoringPoint(@RequestBody MonitoringPoint monitoringPoint) {
         monitoringPointService.update(monitoringPoint);
@@ -147,6 +154,7 @@ public class StorageController {
      * @apiGroup store
      * @apiParam {Array} monitoringPointIds 监测点ID数组
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/deleteMonitoringPoint", method = RequestMethod.DELETE)
     public void deleteMonitoringPoint(@JsonParam List<Integer> monitoringPointIds) {
         monitoringPointService.delete(monitoringPointIds);
@@ -177,6 +185,7 @@ public class StorageController {
      *         "name": "cc"
      * }
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "/monitoringPointList", method = RequestMethod.GET)
     public Map<String,Object> monitoringPointList(@RequestParam("storageId") Integer storageId, @RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
         return storeQuery.getMonitoringPointList(storageId,keyWord);
@@ -197,6 +206,7 @@ public class StorageController {
      *         "type": 1
      * }
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "/monitoringPointTypeList", method = RequestMethod.GET)
     public Map<String,Object> monitoringPointType(@RequestParam("storageId") Integer storageId) {
         return storeQuery.getMonitoringPointType(storageId);

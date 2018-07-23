@@ -1088,6 +1088,7 @@ public class EntryController {
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
     @RequestMapping(value = "/setNewVolume",method = RequestMethod.POST)
     public void setNewVolume(@JsonParam List<String> folderFileEntryIds,@JsonParam int folderFileCatalogueId,@JsonParam Entry entry){
         entryService.setNewVolume(folderFileEntryIds,folderFileCatalogueId,entry);
@@ -1102,6 +1103,7 @@ public class EntryController {
      * @apiError (Error 400) message
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #folderFileCatalogueId)")
     @RequestMapping(value = "/separateVolume",method = RequestMethod.PUT)
     public void separateVolume(@JsonParam List<String> folderFileEntryIds,@JsonParam int folderFileCatalogueId){
         entryService.separateVolume(folderFileEntryIds,folderFileCatalogueId);
@@ -1208,6 +1210,7 @@ public class EntryController {
      * }
      * @apiError message 1.源目录id不存在 2.归档目录id不存在 3.字段映射错误
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #mainTrgId) && hasAnyAuthority('archive_entry_read_' + #mainSrcId)")
     @RequestMapping(value = "/archiving", method = RequestMethod.POST)
     public Object archiving(@JsonParam(path = "delSrc") Boolean delSrc
             , @JsonParam(path = "originalType") List<Integer> originalType
@@ -1536,6 +1539,7 @@ public class EntryController {
      * @apiError message 1.没有盒号字段 2.盒不存在 3.目录不存在 4.条目不存在
      *
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #catalogueId)")
     @RequestMapping(value = "/setBoxCode", method = RequestMethod.POST)
     @Transactional
     public void setBoxCode(@JsonParam List<String> ids, @JsonParam String boxCode,@JsonParam int catalogueId){
@@ -1568,6 +1572,7 @@ public class EntryController {
      * @apiError message 1.没有盒号字段 2.条目不存在 3.目录不存在
      *
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #catalogueId)")
     @RequestMapping(value = "/unSetBoxCode", method = RequestMethod.POST)
     public void unSetBoxCode(@JsonParam List<String> ids,@JsonParam int catalogueId){
         Catalogue catalogue = catalogueService.get(catalogueId);

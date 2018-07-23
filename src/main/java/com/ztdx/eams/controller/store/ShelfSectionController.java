@@ -9,6 +9,7 @@ import com.ztdx.eams.domain.store.model.ShelfSection;
 import com.ztdx.eams.domain.store.model.event.ShelfCellDeletedEvent;
 import com.ztdx.eams.query.StoreQuery;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -75,6 +76,7 @@ public class ShelfSectionController {
      * }
      * @apiError message 1.密集架列名称已存在 2.密集架列编码已存在
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ShelfSection save(@RequestBody ShelfSection shelfSection){
         return shelfSectionService.save(shelfSection);
@@ -111,6 +113,7 @@ public class ShelfSectionController {
      * }
      * @apiError message 1.密集架不存在
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/multi", method = RequestMethod.POST)
     public void saveAll(
             @JsonParam int shelfId
@@ -164,6 +167,7 @@ public class ShelfSectionController {
      * }
      * @apiError message 1.密集架列名称已存在 2.密集架列编码已存在
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public void update(
             @PathVariable("id") int id
@@ -225,6 +229,7 @@ public class ShelfSectionController {
      * @apiGroup shelf
      * @apiParam {Number[]} ids 要删除的密集架列id数组
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "", method = RequestMethod.DELETE)
     public void delete(@JsonParam List<Integer> ids){
         shelfSectionService.delete(ids);

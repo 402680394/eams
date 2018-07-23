@@ -6,6 +6,7 @@ import com.ztdx.eams.domain.store.model.ShelfCell;
 import com.ztdx.eams.domain.store.repository.ShelfCellRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,6 +28,7 @@ public class ShelfCellController {
      * @apiParam {String} pointCode 库位码
      * @apiError message 1.条码已存在 2.库位码已存在 3.密集架格不存在
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_write')")
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public void update(
             @PathVariable("id") int id
@@ -81,6 +83,7 @@ public class ShelfCellController {
      *     }
      * }
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "", method = RequestMethod.GET)
     public Page<ShelfCell> list(
             @RequestParam int shelfSectionId
