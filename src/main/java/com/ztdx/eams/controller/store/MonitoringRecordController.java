@@ -38,6 +38,7 @@ public class MonitoringRecordController {
      * @apiParam {String} keyWord 检索框输入的内容(未输入传""值)(url参数)
      * @apiSuccess (Success 200) {Number} id 监测记录ID.
      * @apiSuccess (Success 200) {Number} monitoringPointId 监测点id.
+     * @apiSuccess (Success 200) {String} number 监测点编号.
      * @apiSuccess (Success 200) {Timestamp} monitoringTime 监测时间.
      * @apiSuccess (Success 200) {Number} temperatureValue 温度值.(最大100，最小-100)
      * @apiSuccess (Success 200) {Number} humidityValue 湿度值.(最大100，最小-100)
@@ -48,6 +49,7 @@ public class MonitoringRecordController {
      * {
      *      "id": 1,
      *      "number": "BH001",
+     *      "monitoring_point_id": 1,
      *      "monitoring_time": 1528684108,
      *      "temperature_value": 100,
      *      "humidity_value": 0,
