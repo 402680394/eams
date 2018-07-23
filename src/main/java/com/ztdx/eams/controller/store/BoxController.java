@@ -13,6 +13,7 @@ import com.ztdx.eams.query.StoreQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -69,6 +70,7 @@ public class BoxController {
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"total":条数,"code": 盒号,"filesTotal": 文件份数,"pagesTotal": 文件页数,"maxPagesTotal": 容纳最大页数,"width": 盒子宽度,"onFrame": 是否在架,"point": "位置编码","remark": "备注"}]}}.
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_read')")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam(value = "pageNum", required = false, defaultValue = "1") int pageNum,
                                     @RequestParam(name = "size", required = false, defaultValue = "20") int size,
@@ -93,6 +95,7 @@ public class BoxController {
      * @apiError (Error 400) message 盒号已存在.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "/", method = RequestMethod.POST)
     public void save(@JsonParam int archivesId
             , @JsonParam String codeRule
@@ -114,6 +117,7 @@ public class BoxController {
      * @apiError (Error 400) message 需要先下架在架档案盒.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "/", method = RequestMethod.DELETE)
     public void delete(@RequestBody Map<String, Object> map) {
         int archivesId = (int) map.get("archivesId");
@@ -139,6 +143,7 @@ public class BoxController {
      * @apiError (Error 400) message 盒号已存在.
      * @apiUse ErrorExample
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "", method = RequestMethod.PUT)
     public void update(@RequestBody Box box) {
         boxService.update(box);
@@ -158,6 +163,7 @@ public class BoxController {
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"id": 盒ID,"code": "盒号","width": 盒子宽度,"maxPagesTotal": 最大容量,"remark": "备注"}}.
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_read')")
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {
         return storeQuery.getBox(UInteger.valueOf(id));
@@ -170,6 +176,7 @@ public class BoxController {
      * @apiParam {String} cellCode 密集架格的编码
      * @apiParam {Number[]} ids 盒ID
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "/onFrame", method = RequestMethod.PUT)
     public void onFrame(@RequestBody Map<String, Object> map) {
         String cellCode = (String) map.get("cellCode");
@@ -183,6 +190,7 @@ public class BoxController {
      * @apiGroup box
      * @apiParam {Number[]} ids 盒ID
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "/downFrame", method = RequestMethod.PUT)
     public void downFrame(@RequestBody List<Integer> ids) {
         boxService.downFrame(ids);
@@ -198,6 +206,7 @@ public class BoxController {
      * @apiSuccessExample {json} Success-Response:
      * {"data":{"maxFlowNumber": 流水号最大值}}.
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "/maxFlowNumber", method = RequestMethod.GET)
     public Map<String, Object> maxFlowNumber(@RequestParam("archivesId") int archivesId, @RequestParam("codeRule") String codeRule) {
         return storeQuery.maxFlowNumber(archivesId, codeRule);
@@ -217,6 +226,7 @@ public class BoxController {
      * @apiError message 目录不存在
      *
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "/unBox", method = RequestMethod.POST)
     public void unBox(@JsonParam List<Integer> ids,@JsonParam int archiveId){
         catalogueService.getMainCatalogue(archiveId);

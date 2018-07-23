@@ -6,6 +6,7 @@ import com.ztdx.eams.query.ArchivesQuery;
 import com.ztdx.eams.query.StoreQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,6 +55,7 @@ public class BoxCodeRuleController {
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"code": 盒号,"filesTotal": 文件份数,"pagesTotal": 文件页数,"maxPagesTotal": 容纳最大页数,"width": 盒子宽度,"onStand": 是否在架,"point": "位置编码","remark": "备注"}]}}.
      */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "/ruleApply", method = RequestMethod.GET)
     public Map<String, Object> get(@RequestParam("archivesId") int archivesId, @RequestParam(name = "entryId", required = false, defaultValue = "") String entryId) {
 
