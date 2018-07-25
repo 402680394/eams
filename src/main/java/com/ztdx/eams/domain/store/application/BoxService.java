@@ -35,8 +35,8 @@ public class BoxService {
     }
 
     /*
-    *修改盒信息
-    */
+     *修改盒信息
+     */
     @Transactional
     public void update(Box box) {
         Box b = boxRepository.findById(box.getId()).get();
@@ -51,8 +51,8 @@ public class BoxService {
     }
 
     /*
-    *删除盒
-    */
+     *删除盒
+     */
     @Transactional
     public void delete(List<Integer> ids) {
         List<Box> list = boxRepository.findAllById(ids);
@@ -60,28 +60,28 @@ public class BoxService {
     }
 
     /*
-    *上架盒
-    */
+     *上架盒
+     */
     @Transactional
     public void onFrame(String cellCode, List<Integer> ids) {
         for (int id : ids) {
-            boxRepository.updateOnFrameById(id, true, cellCode);
+            boxRepository.updateOnFrameById(id, 1, cellCode);
         }
     }
 
     /*
-    *下架盒
-    */
+     *下架盒
+     */
     @Transactional
     public void downFrame(List<Integer> ids) {
         for (int id : ids) {
-            boxRepository.updateOnFrameById(id, false, "");
+            boxRepository.updateOnFrameById(id, 0, "");
         }
     }
 
     /*
-    *新增盒
-    */
+     *新增盒
+     */
     @Transactional
     public void save(int archivesId
             , String codeRule
@@ -162,7 +162,7 @@ public class BoxService {
     public void checkOnFrameByIds(List<Integer> ids) {
         List<Box> list = boxRepository.findByIdIn(ids);
         for (Box box : list) {
-            if (box.isOnFrame()) {
+            if (box.getOnFrame() == 1) {
                 throw new InvalidArgumentException("需要先下架在架档案盒");
             }
         }
@@ -173,7 +173,7 @@ public class BoxService {
     @Transactional
     public void shelfCellDeleted(ShelfCellDeletedEvent shelfCellDeletedEvent) throws InterruptedException {
         shelfCellDeletedEvent.getShelfCellPointCodes().forEach(point -> {
-            boxRepository.updateOnFrameByPoint(false, "", point);
+            boxRepository.updateOnFrameByPoint(0, "", point);
         });
 
     }

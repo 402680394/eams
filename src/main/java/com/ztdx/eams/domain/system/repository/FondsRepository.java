@@ -19,9 +19,9 @@ import java.util.List;
 @Qualifier("fondsRepository")
 public interface FondsRepository extends JpaRepository<Fonds, Integer> {
 
-    List<Fonds> findAllByIdInAndGmtDeleted(Iterable<Integer> Id, boolean gmtDeleted);
+    List<Fonds> findAllByIdInAndGmtDeleted(Iterable<Integer> Id, int gmtDeleted);
 
-    boolean existsByCodeAndGmtDeleted(String code, boolean gmtDeleted);
+    boolean existsByCodeAndGmtDeleted(String code, int gmtDeleted);
 
     boolean existsByCodeAndId(String code, int id);
 
@@ -39,7 +39,7 @@ public interface FondsRepository extends JpaRepository<Fonds, Integer> {
     Fonds findById(int id);
 
     //查询所有的全宗
-    List<Fonds> findByGmtDeletedAndParentIdNotNull(boolean gmtDeleted);
+    List<Fonds> findByGmtDeletedAndParentIdNotNull(int gmtDeleted);
 
     //通过ID修改
     @Modifying
@@ -54,5 +54,5 @@ public interface FondsRepository extends JpaRepository<Fonds, Integer> {
     //设置状态为删除
     @Modifying
     @Query("update Fonds f set f.gmtDeleted=:gmtDeleted where f.id=:id")
-    void updateGmtDeletedById(@Param(value = "id") int id, @Param(value = "gmtDeleted") boolean gmtDeleted);
+    void updateGmtDeletedById(@Param(value = "id") int id, @Param(value = "gmtDeleted") int gmtDeleted);
 }

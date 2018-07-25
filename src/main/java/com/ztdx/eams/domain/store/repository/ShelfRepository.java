@@ -21,4 +21,6 @@ public interface ShelfRepository extends JpaRepository<Shelf, Integer> {
     List<Shelf> findByStorageIdAndGmtDeleted(int storageId, int gmtDeleted);
 
     List<Shelf> findByStorageIdInAndGmtDeleted(Collection<Integer> storageIds, int gmtDeleted);
+
+    List<Shelf> findByStorageIdIn(Collection<Integer> storageIds);
 }

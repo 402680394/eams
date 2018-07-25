@@ -77,7 +77,7 @@ public class BoxController {
                                     @RequestParam("archivesId") int archivesId,
                                     @RequestParam(value = "code", required = false, defaultValue = "") String code,
                                     @RequestParam(name = "status", required = false, defaultValue = "0") int status,
-                                    @RequestParam(name = "onFrame", required = false, defaultValue = "0") byte onFrame) {
+                                    @RequestParam(name = "onFrame", required = false, defaultValue = "0") int onFrame) {
         return storeQuery.getBoxList(pageNum, size, archivesId, code, status, onFrame);
     }
 

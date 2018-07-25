@@ -6,6 +6,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
+
 @Repository
 public interface ShelfCellRepository extends JpaRepository<ShelfCell, Integer>, CustomShelfCellRepository {
     boolean existsByBarCodeAndIdNotAndGmtDeleted(String barCode, int id, int gmtDeleted);
@@ -13,4 +16,6 @@ public interface ShelfCellRepository extends JpaRepository<ShelfCell, Integer>, 
     boolean existsByPointCodeAndIdNotAndGmtDeleted(String pointCode, int id, int gmtDeleted);
 
     Page<ShelfCell> findByShelfSectionIdAndGmtDeleted(int shelfSectionId, Pageable pageable, int gmtDeleted);
+
+    List<ShelfCell> findByShelfIdIn(Collection<Integer> shelfIds);
 }

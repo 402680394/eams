@@ -54,7 +54,7 @@ public class StoreQuery {
                 storage.FONDS_ID.as("fonds_id"),
                 sysFonds.FONDS_NAME.as("fonds_name"))
                 .from(storage, sysFonds)
-                .where(storage.FONDS_ID.equal(sysFonds.ID), sysFonds.GMT_DELETED.equal((byte) 0))
+                .where(storage.FONDS_ID.equal(sysFonds.ID), storage.GMT_DELETED.equal(0), sysFonds.GMT_DELETED.equal(0))
                 .fetch().intoMaps();
         resultMap.put("items", list);
         return resultMap;
@@ -74,7 +74,7 @@ public class StoreQuery {
                 sysFonds.FONDS_NAME.as("fonds_name"))
                 .from(storage, sysFonds)
                 .where(storage.FONDS_ID.equal(sysFonds.ID),
-                        sysFonds.GMT_DELETED.equal((byte) 0),
+                        sysFonds.GMT_DELETED.equal(0),
                         storage.NAME.like("%" + keyWord.trim() + "%")
                                 .or(storage.NUMBER.like("%" + keyWord.trim() + "%"))
                                 .or(storage.DESCRIPTION.like("%" + keyWord.trim() + "%")))
@@ -188,7 +188,7 @@ public class StoreQuery {
     /**
      * 根据条件获取档案盒列表
      */
-    public Map<String, Object> getBoxList(int pageNum, int size, int archivesId, String code, int status, byte onFrame) {
+    public Map<String, Object> getBoxList(int pageNum, int size, int archivesId, String code, int status, int onFrame) {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = null;
         int total = 0;

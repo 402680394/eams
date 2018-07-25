@@ -36,6 +36,10 @@ public class Storage {
     @Column(name = "fonds_id")
     private int fondsId;
 
+    //是否删除
+    @Column(name = "gmt_deleted")
+    private int gmtDeleted;
+
     //创建时间
     @Column(name = "gmt_create")
     private Date gmtCreate;

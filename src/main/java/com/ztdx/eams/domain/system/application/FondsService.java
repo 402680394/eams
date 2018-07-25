@@ -35,7 +35,7 @@ public class FondsService {
     @Transactional
     public void save(Fonds fonds, ArrayList<Integer> associationList) {
 
-        if (fondsRepository.existsByCodeAndGmtDeleted(fonds.getCode(), false)) {
+        if (fondsRepository.existsByCodeAndGmtDeleted(fonds.getCode(), 0)) {
             throw new InvalidArgumentException("全宗号已存在");
         }
         //设置排序
@@ -71,7 +71,7 @@ public class FondsService {
             //取消机构关联
             organizationRepository.updatefondsIdByfondsId(id);
             //删除本全宗
-            fondsRepository.updateGmtDeletedById(id, true);
+            fondsRepository.updateGmtDeletedById(id, 1);
         }
     }
 
@@ -81,7 +81,7 @@ public class FondsService {
     @Transactional
     public void update(Fonds fonds, ArrayList<Integer> associationList) {
         if (!fondsRepository.existsByCodeAndId(fonds.getCode(), fonds.getId())) {
-            if (fondsRepository.existsByCodeAndGmtDeleted(fonds.getCode(), false)) {
+            if (fondsRepository.existsByCodeAndGmtDeleted(fonds.getCode(), 0)) {
                 throw new InvalidArgumentException("全宗号已存在");
             }
         }
@@ -122,10 +122,10 @@ public class FondsService {
     }
 
     public List<Fonds> findAllById(Collection<Integer> fondsIds) {
-        return fondsRepository.findAllByIdInAndGmtDeleted(fondsIds, false);
+        return fondsRepository.findAllByIdInAndGmtDeleted(fondsIds, 0);
     }
 
     public List<Fonds> findAll() {
-        return fondsRepository.findByGmtDeletedAndParentIdNotNull(false);
+        return fondsRepository.findByGmtDeletedAndParentIdNotNull(0);
     }
 }

@@ -45,7 +45,7 @@ public class Fonds {
     private String remark;
     //是否删除
     @Column(name = "gmt_deleted")
-    private boolean gmtDeleted;
+    private int gmtDeleted;
 
     //创建时间
     @Column(name = "gmt_create")

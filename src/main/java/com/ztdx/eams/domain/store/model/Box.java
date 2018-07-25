@@ -57,7 +57,7 @@ public class Box {
     private String remark;
     //是否在架
     @Column(name = "on_frame")
-    private boolean onFrame;
+    private int onFrame;
     //放置位置编码
     @Size(max = 50)
     @Column(name = "point")

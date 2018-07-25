@@ -242,7 +242,7 @@ public class ArchivesQuery {
                 sysFonds.ORDER_NUMBER.as("orderNumber"),
                 sysFonds.REMARK.as("remark"))
                 .from(sysFonds)
-                .where(sysFonds.GMT_DELETED.equal((byte) 0))
+                .where(sysFonds.GMT_DELETED.equal(0))
                 .orderBy(sysFonds.ORDER_NUMBER)
                 .fetch().intoMaps();
     }

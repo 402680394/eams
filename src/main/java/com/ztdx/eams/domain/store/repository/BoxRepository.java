@@ -30,7 +30,7 @@ public interface BoxRepository extends JpaRepository<Box, Integer> {
     //通过ID修改上架信息
     @Modifying
     @Query("update Box b set b.onFrame=:onFrame,b.point=:point where b.id=:id")
-    void updateOnFrameById(@Param("id") int id, @Param("onFrame") boolean onFrame, @Param("point") String point);
+    void updateOnFrameById(@Param("id") int id, @Param("onFrame") int onFrame, @Param("point") String point);
 
     Box findByArchivesIdAndCode(int archiveId, String code);
 
@@ -42,5 +42,5 @@ public interface BoxRepository extends JpaRepository<Box, Integer> {
 
     @Modifying
     @Query("update Box b set b.onFrame = :onFrame, b.point = :beforePoint where b.point = :point")
-    void updateOnFrameByPoint(@Param("onFrame") boolean onFrame, @Param("beforePoint") String beforePoint, @Param("point") String point);
+    void updateOnFrameByPoint(@Param("onFrame") int onFrame, @Param("beforePoint") String beforePoint, @Param("point") String point);
 }

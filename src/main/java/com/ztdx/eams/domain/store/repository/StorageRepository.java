@@ -17,7 +17,7 @@ import java.util.List;
 @Qualifier("storageRepository")
 public interface StorageRepository extends JpaRepository<Storage, Integer> {
 
-    boolean existsByNumber(String number);
+    boolean existsByNumberAndGmtDeleted(String number,int gmtDeleted);
 
     //通过ID修改
     @Modifying
