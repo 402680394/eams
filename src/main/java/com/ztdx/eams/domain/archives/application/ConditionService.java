@@ -1,6 +1,7 @@
 package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.BusinessException;
+import com.ztdx.eams.basic.exception.NotFoundException;
 import com.ztdx.eams.domain.archives.model.condition.EntryCondition;
 import com.ztdx.eams.domain.archives.model.condition.EntryConditionType;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
@@ -44,16 +45,18 @@ public class ConditionService {
     public void save(EntryCondition condition) {
 
         EntryConditionType entryConditionType = condition.getEntryConditionType();
-        switch (entryConditionType){
-            case system:
-                if (conditionMongoRepository.existsByName(condition.getName())){
-                    throw new BusinessException("名称已存在");
-                }
-                break;
-            case custom:
-                if (conditionMongoRepository.existsByNameAndOwner(condition.getName(),condition.getOwner())){
-                    throw new BusinessException("名称已存在");
-                }
+        if (condition.getName() != null) {
+            switch (entryConditionType) {
+                case system:
+                    if (conditionMongoRepository.existsByNameAndCatalogueId(condition.getName(), condition.getCatalogueId())) {
+                        throw new BusinessException("名称已存在");
+                    }
+                    break;
+                case custom:
+                    if (conditionMongoRepository.existsByNameAndOwnerAndCatalogueId(condition.getName(), condition.getOwner(), condition.getCatalogueId())) {
+                        throw new BusinessException("名称已存在");
+                    }
+            }
         }
         conditionMongoRepository.save(condition);
 
@@ -64,24 +67,37 @@ public class ConditionService {
      */
     public void update(String id,EntryCondition condition) {
 
-        EntryCondition entryCondition = conditionMongoRepository.findById(id,"archive_entry_condition").orElse(null);
-        if (entryCondition.getName().equals(condition.getName()) || !conditionMongoRepository.existsByName(condition.getName()) || !conditionMongoRepository.existsByNameAndOwner(condition.getName(),condition.getOwner())){
+        EntryCondition entryCondition = conditionMongoRepository.findById(id).orElse(null);
 
-            Optional<EntryCondition> find = conditionMongoRepository.findById(id);
-            if (!find.isPresent()) {
-                save(condition);
+        if (entryCondition == null){
+            save(condition);
+            return;
+        }
+
+        String currentName = "";
+        if (entryCondition.getName() != null){
+            currentName = entryCondition.getName();
+        }
+
+        if (condition.getName() != null) {
+            EntryConditionType entryConditionType = condition.getEntryConditionType();
+            switch (entryConditionType) {
+                case system:
+                    if (!currentName.equals(condition.getName()) && conditionMongoRepository.existsByNameAndCatalogueId(condition.getName(), condition.getCatalogueId())) {
+                        throw new BusinessException("名称已存在");
+                    }
+                    break;
+                case custom:
+                    if (!currentName.equals(condition.getName()) && conditionMongoRepository.existsByNameAndOwnerAndCatalogueId(condition.getName(), condition.getOwner(), condition.getCatalogueId())) {
+                        throw new BusinessException("名称已存在");
+                    }
             }
+        }
 
-            EntryCondition update = find.get();
-            update.setId(id);
-            update.setName(condition.getName());
-            update.setConditions(condition.getConditions());
-            conditionMongoRepository.save(update);
-
-        }else {
-           throw new BusinessException("名称已存在");
-       }
-
+        entryCondition.setId(id);
+        entryCondition.setName(condition.getName());
+        entryCondition.setConditions(condition.getConditions());
+        conditionMongoRepository.save(entryCondition);
     }
 
     /**
@@ -294,4 +310,7 @@ public class ConditionService {
         return groupMongoRepository.findById(cid.toString(),"archive_entry_search_group").orElse(null);
     }
 
+    public void delete(String id) {
+        conditionMongoRepository.deleteById(id);
+    }
 }

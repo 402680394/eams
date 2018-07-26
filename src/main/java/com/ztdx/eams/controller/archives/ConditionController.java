@@ -176,6 +176,18 @@ public class ConditionController {
     }
 
     /**
+     * @api {delete} /condition/entry/{id} 删除档案库查询条件
+     * @apiName deleteEntryCondition
+     * @apiGroup condition
+     * @apiParam {String} id 条件id
+     *
+     */
+    @RequestMapping(value = "/entry/{id}",method = RequestMethod.DELETE)
+    public void deleteEntryCondition(@PathVariable("id") String id){
+        conditionService.delete(id);
+    }
+
+    /**
      * @api {get} /condition/entry?cid={cid} 查询档案库的查询条件
      * @apiName listEntryCondition
      * @apiGroup condition

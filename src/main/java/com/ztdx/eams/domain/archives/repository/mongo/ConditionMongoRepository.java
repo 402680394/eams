@@ -9,9 +9,9 @@ import java.util.List;
 
 @Repository
 public interface ConditionMongoRepository extends CustomMongoRepository<EntryCondition, String> {
-    boolean existsByName(String name);
+    boolean existsByNameAndCatalogueId(String name, int catalogueId);
 
-    boolean existsByNameAndOwner(String name,int owner);
+    boolean existsByNameAndOwnerAndCatalogueId(String name,int owner, int catalogueId);
 
     List<EntryCondition> findAllByCatalogueId(int catalogueId);
 }
