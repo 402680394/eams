@@ -79,16 +79,16 @@ public class ConditionService {
             currentName = entryCondition.getName();
         }
 
-        if (condition.getName() != null) {
-            EntryConditionType entryConditionType = condition.getEntryConditionType();
+        if (entryCondition.getName() != null) {
+            EntryConditionType entryConditionType = entryCondition.getEntryConditionType();
             switch (entryConditionType) {
                 case system:
-                    if (!currentName.equals(condition.getName()) && conditionMongoRepository.existsByNameAndCatalogueId(condition.getName(), condition.getCatalogueId())) {
+                    if (!currentName.equals(condition.getName()) && conditionMongoRepository.existsByNameAndCatalogueId(condition.getName(), entryCondition.getCatalogueId())) {
                         throw new BusinessException("名称已存在");
                     }
                     break;
                 case custom:
-                    if (!currentName.equals(condition.getName()) && conditionMongoRepository.existsByNameAndOwnerAndCatalogueId(condition.getName(), condition.getOwner(), condition.getCatalogueId())) {
+                    if (!currentName.equals(condition.getName()) && conditionMongoRepository.existsByNameAndOwnerAndCatalogueId(condition.getName(), entryCondition.getOwner(), entryCondition.getCatalogueId())) {
                         throw new BusinessException("名称已存在");
                     }
             }
