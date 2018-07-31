@@ -441,7 +441,7 @@ public class ArchivesQuery {
                 businessMetadata.ORDER_NUMBER.as("orderNumber"),
                 businessMetadata.REMARK.as("remark"))
                 .from(businessMetadata)
-                .where(businessMetadata.ID.equal(metadataStandardsId), businessMetadata.METADATA_NAME.like("%" + name + "%"))
+                .where(businessMetadata.METADATA_STANDARDS_ID.equal(metadataStandardsId), businessMetadata.METADATA_NAME.like("%" + name + "%"))
                 .orderBy(businessMetadata.ORDER_NUMBER)
                 .fetch().intoMaps();
         resultMap.put("items", list);
@@ -896,7 +896,7 @@ public class ArchivesQuery {
             int catalogueId = ((UInteger) map.get("id")).intValue();
             if (treeMap.get("id").equals(map.get("archivesId"))
                     && hasCataloguePermission.apply(catalogueId)
-                    ) {
+            ) {
                 //获取下级节点
                 map.put("childrenType", "Catalogue");
                 childrenList.add(map);
