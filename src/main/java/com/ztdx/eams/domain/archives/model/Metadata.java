@@ -40,7 +40,7 @@ public class Metadata {
     //数据类型
     @Convert(converter = DescriptionItemDataType.EnumConverter.class)
     @Min(value = 1)
-    @Max(value = 4)
+    @Max(value = 6)
     @Column(name = "data_type")
     private DescriptionItemDataType dataType;
 
