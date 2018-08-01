@@ -42,6 +42,10 @@ public class Metadata {
     @Column(name = "data_type")
     private DescriptionItemDataType dataType;
 
+    //显示宽度
+    @Column(name = "display_width")
+    private Integer displayWidth;
+
     //字段宽度
     @Column(name = "field_width")
     private Integer fieldWidth;
