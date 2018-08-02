@@ -1013,7 +1013,8 @@ public class ArchivesQuery {
                 archivesDescriptionItem.DICTIONARY_TYPE.as("dictionaryType"),
                 archivesDescriptionItem.DICTIONARY_NODE_ID.as("dictionaryNodeId"),
                 archivesDescriptionItem.DICTIONARY_VALUE_TYPE.as("dictionaryValueType"),
-                archivesDescriptionItem.DICTIONARY_ROOT_SELECT.as("dictionaryRootSelect"))
+                archivesDescriptionItem.DICTIONARY_ROOT_SELECT.as("dictionaryRootSelect"),
+                archivesDescriptionItem.DISPLAY_WIDTH.as("displayWidth"))
                 .from(archivesDescriptionItem)
                 .where(archivesDescriptionItem.CATALOGUE_ID.equal(catalogueId))
                 .fetch().intoMaps();
