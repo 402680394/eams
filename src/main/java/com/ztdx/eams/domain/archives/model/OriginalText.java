@@ -24,6 +24,19 @@ public class OriginalText {
     //所属目录
     @IndexNamePostfix
     private int catalogueId;
+
+    /**
+     * 档案库内容类型
+     */
+    @Field(type = FieldType.Integer)
+    private int archiveContentType;
+
+    /**
+     * 全宗id
+     */
+    @Field(type = FieldType.Integer)
+    private int fondsId;
+
     //所属条目
     @Parent(type = "record")
     @Field(type = FieldType.keyword)

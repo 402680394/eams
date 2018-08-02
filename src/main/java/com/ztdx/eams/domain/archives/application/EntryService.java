@@ -16,13 +16,18 @@ import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasti
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorValue;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.join.query.JoinQueryBuilders;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.context.ApplicationContext;
@@ -125,7 +130,7 @@ public class EntryService {
         this.convertEntryItems(entry, EntryItemConverter::from, true, true);
         entry = entryMongoRepository.save(entry);
 
-        entryAsyncTask.index(entry);
+        entryAsyncTask.copyItemsFieldToSystemField(entry);
         return entry;
     }
 
@@ -149,7 +154,7 @@ public class EntryService {
         this.convertEntryItems(update, EntryItemConverter::from, false, true);
         update = entryMongoRepository.save(update);
 
-        entryAsyncTask.index(update);
+        entryAsyncTask.copyItemsFieldToSystemField(entry);
         return update;
     }
 
@@ -327,50 +332,62 @@ public class EntryService {
     }
 
     public AggregatedPage<OriginalText> searchFulltext(Set<Integer> archiveContentType
-            , Set<String> searchParams
+            , List<String> searchParams
             , String includeWords
             , String rejectWords
             , Pageable pageable) {
+        return searchFulltext(archiveContentType, searchParams, includeWords, rejectWords, null, null, null, pageable);
+    }
+
+    public AggregatedPage<OriginalText> searchFulltext(Set<Integer> archiveContentType
+            , List<String> searchParams
+            , String includeWords
+            , String rejectWords
+            , Integer catalogueId
+            , Map<String, Object> items
+            , List<TermsAggregationParam> aggs
+            , Pageable pageable) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
-        BoolQueryBuilder fileQuery = QueryBuilders.boolQuery();
-        BoolQueryBuilder parentQuery = QueryBuilders.boolQuery();
+        BoolQueryBuilder queryByOr = QueryBuilders.boolQuery();
+        BoolQueryBuilder fileQueryByOr = QueryBuilders.boolQuery();
+        BoolQueryBuilder fileQueryByAnd = QueryBuilders.boolQuery();
+        BoolQueryBuilder entryQueryByOr = QueryBuilders.boolQuery();
+        BoolQueryBuilder entryQueryByAnd = QueryBuilders.boolQuery();
 
-        if (!StringUtils.isEmpty(includeWords)) {
-            if (searchParams.contains(SearchFulltextOption.file.name())) {
-                fileQuery.must(queryStringQuery(includeWords).defaultOperator(Operator.AND));
-            }
-            parentQuery.must(queryStringQuery(includeWords).field(FULL_CONTENT).defaultOperator(Operator.AND));
-        }
-
-        if (!StringUtils.isEmpty(rejectWords)) {
-            if (searchParams.contains(SearchFulltextOption.file.name())) {
-                fileQuery.mustNot(queryStringQuery(rejectWords).defaultOperator(Operator.AND));
-            }
-            parentQuery.mustNot(queryStringQuery(rejectWords).field(FULL_CONTENT).defaultOperator(Operator.AND));
-        }
-
-        if (archiveContentType != null && archiveContentType.size() > 0) {
-            parentQuery.filter(QueryBuilders.termsQuery("archiveContentType", archiveContentType));
-        }
-
-        parentQuery.filter(termQuery("gmtDeleted", 0));
+        makeFulltextQuery(
+                archiveContentType
+                , searchParams
+                , includeWords
+                , rejectWords
+                , catalogueId
+                , items
+                , fileQueryByOr
+                , fileQueryByAnd
+                , entryQueryByOr
+                , entryQueryByAnd);
 
         if (searchParams.contains(SearchFulltextOption.entry.name())) {
-            query.should(JoinQueryBuilders.hasParentQuery(
+            queryByOr.should(JoinQueryBuilders.hasParentQuery(
                     "record",
-                    parentQuery,
+                    entryQueryByOr,
                     false));
         }
 
         if (searchParams.contains(SearchFulltextOption.file.name())) {
-            query.should(fileQuery);
+            queryByOr.should(fileQueryByOr);
         }
+        query.must(fileQueryByAnd);
+        query.must(JoinQueryBuilders.hasParentQuery(
+                "record",
+                entryQueryByAnd,
+                false));
+        query.must(queryByOr);
 
         NativeSearchQueryBuilder builder = new NativeSearchQueryBuilder();
-        //builder.withIndices(INDEX_NAME_PREFIX + "*");
-        //builder.withTypes("originalText");
         builder.withQuery(query);
         builder.withPageable(pageable);
+
+        addAggs(aggs, builder);
 
         HighlightBuilder.Field field = new HighlightBuilder.Field("contentIndex");
         field.requireFieldMatch(false);
@@ -379,7 +396,253 @@ public class EntryService {
 
         builder.withHighlightFields(field);
 
-        return (AggregatedPage<OriginalText>) originalTextElasticsearchRepository.search(builder.build(), new String[]{INDEX_NAME_PREFIX + "*"});
+        String index;
+        if (catalogueId == null) {
+            index = INDEX_NAME_PREFIX + "*";
+        } else {
+            index = INDEX_NAME_PREFIX + catalogueId;
+        }
+
+        return (AggregatedPage<OriginalText>) originalTextElasticsearchRepository.search(builder.build(), new String[]{index});
+    }
+
+    private void makeFulltextQuery(
+            Set<Integer> archiveContentType
+            , List<String> searchParams
+            , String includeWords
+            , String rejectWords
+            , Integer catalogueId
+            , Map<String, Object> items
+            , BoolQueryBuilder fileQueryByOr
+            , BoolQueryBuilder fileQueryByAnd
+            , BoolQueryBuilder entryQueryByOr
+            , BoolQueryBuilder entryQueryByAnd
+    ) {
+        addEntryQuery(entryQueryByAnd, catalogueId, items);
+
+        if (!StringUtils.isEmpty(includeWords)) {
+            if (searchParams.contains(SearchFulltextOption.file.name())) {
+                fileQueryByOr.must(queryStringQuery(includeWords).defaultOperator(Operator.AND));
+            }
+            entryQueryByOr.must(queryStringQuery(includeWords).field(FULL_CONTENT).defaultOperator(Operator.AND));
+        }
+
+        if (!StringUtils.isEmpty(rejectWords)) {
+            if (searchParams.contains(SearchFulltextOption.file.name())) {
+                fileQueryByAnd.mustNot(queryStringQuery(rejectWords).defaultOperator(Operator.AND));
+            }
+            entryQueryByAnd.mustNot(queryStringQuery(rejectWords).field(FULL_CONTENT).defaultOperator(Operator.AND));
+        }
+
+        if (archiveContentType != null && archiveContentType.size() > 0) {
+            entryQueryByAnd.filter(QueryBuilders.termsQuery("archiveContentType", archiveContentType));
+        }
+
+        fileQueryByAnd.filter(termQuery("gmtDeleted", 0));
+        entryQueryByAnd.filter(termQuery("gmtDeleted", 0));
+    }
+
+    public List<TermsAggregationResult> aggregationFulltext(Set<Integer> archiveContentType
+            , List<String> searchParams
+            , String includeWords
+            , String rejectWords
+            , Integer catalogueId
+            , Map<String, Object> items
+            , List<TermsAggregationParam> aggs){
+        BoolQueryBuilder query = QueryBuilders.boolQuery();
+        BoolQueryBuilder queryByOr = QueryBuilders.boolQuery();
+        BoolQueryBuilder fileQueryByOr = QueryBuilders.boolQuery();
+        BoolQueryBuilder fileQueryByAnd = QueryBuilders.boolQuery();
+        BoolQueryBuilder entryQueryByOr = QueryBuilders.boolQuery();
+        BoolQueryBuilder entryQueryByAnd = QueryBuilders.boolQuery();
+
+        makeFulltextQuery(
+                archiveContentType
+                , searchParams
+                , includeWords
+                , rejectWords
+                , catalogueId
+                , items
+                , fileQueryByOr
+                , fileQueryByAnd
+                , entryQueryByOr
+                , entryQueryByAnd);
+
+        if (searchParams.contains(SearchFulltextOption.entry.name())) {
+            queryByOr.should(JoinQueryBuilders.hasParentQuery(
+                    "record",
+                    entryQueryByOr,
+                    false));
+            query.must(JoinQueryBuilders.hasParentQuery(
+                    "record",
+                    entryQueryByAnd,
+                    false));
+        }
+
+        if (searchParams.contains(SearchFulltextOption.file.name())) {
+            queryByOr.should(fileQueryByOr);
+            query.must(fileQueryByAnd);
+        }
+        query.must(queryByOr);
+
+        Collection<String> indices = new ArrayList<>();
+        if (catalogueId == null) {
+            indices.add(INDEX_NAME_PREFIX + "*");
+        } else {
+            indices.add(INDEX_NAME_PREFIX + catalogueId);
+        }
+
+        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(indices.toArray(new String[0]));
+
+        addAggs(aggs, srBuilder);
+
+        srBuilder.setTypes("originalText");
+
+        srBuilder.setQuery(query).setSize(0);
+
+        return convertAggregationToResult(srBuilder.get().getAggregations(), aggs);
+    }
+
+    public List<TermsAggregationResult> convertAggregationToResult(Aggregations aggregations, List<TermsAggregationParam> params){
+        Map<String, TermsAggregationParam> map =
+                params.stream().collect(Collectors.toMap(TermsAggregationParam::getField, a-> a));
+
+
+        List<TermsAggregationResult> result = new ArrayList<>();
+
+        if (aggregations == null){
+            return result;
+        }
+
+        aggregations.forEach(aggregation -> {
+
+            TermsAggregationParam param = map.get(aggregation.getName());
+
+            TermsAggregationResult termsAggregationResult = new TermsAggregationResult(
+                    aggregation.getName()
+                    , param.getName()
+                    , 0
+            );
+
+            result.add(termsAggregationResult);
+
+            if (Terms.class.isAssignableFrom(aggregation.getClass())){
+                Terms terms = (Terms)aggregation;
+                termsAggregationResult.getChildren().addAll(convertBucketsToResult(terms.getBuckets(), param.getChildren()));
+            }
+
+            termsAggregationResult.setCount(
+                    termsAggregationResult
+                            .getChildren()
+                            .stream()
+                            .reduce(0, (a, b) -> a + b.getCount(), Integer::sum));
+        });
+
+        return result;
+    }
+
+    private Collection<? extends TermsAggregationResult> convertBucketsToResult(List<? extends Terms.Bucket> buckets, List<TermsAggregationParam> params) {
+        List<TermsAggregationResult> result = new ArrayList<>();
+
+        if (buckets == null){
+            return result;
+        }
+
+        buckets.forEach(bucket -> {
+
+            TermsAggregationResult termsAggregationResult = new TermsAggregationResult(
+                    bucket.getKeyAsString()
+                    , bucket.getKeyAsString()
+                    , (int)bucket.getDocCount()
+            );
+
+            result.add(termsAggregationResult);
+
+            termsAggregationResult.getChildren().addAll(convertAggregationToResult(bucket.getAggregations(), params));
+        });
+
+        return result;
+    }
+
+    private void addEntryQuery(BoolQueryBuilder entryQuery, Integer catalogueId, Map<String,Object> items) {
+        if (catalogueId == null || items == null || items.size() ==0 ){
+            return;
+        }
+
+        Map<String, DescriptionItemDataType> map =
+                descriptionItemRepository
+                        .findByCatalogueId(catalogueId)
+                        .stream()
+                        .collect(Collectors.toMap(DescriptionItem::getMetadataName, DescriptionItem::getDataType));
+
+        items.forEach((field, value) -> {
+            String searchFieldName = String.format("items.%s", field);
+
+            switch (map.get(field)){
+                case Array:
+                case Integer:
+                case Double:
+                case Date:
+                    entryQuery.must(QueryBuilders.termQuery(searchFieldName, value));
+                    break;
+                case String:
+                    if (value.toString().contains("*") || value.toString().contains("?")){
+                        entryQuery.must(QueryBuilders.wildcardQuery(searchFieldName, value.toString()));
+                    }else{
+                        entryQuery.must(QueryBuilders.termQuery(searchFieldName, value));
+                    }
+                    break;
+                case Text:
+                    entryQuery.must(QueryBuilders.matchQuery(searchFieldName, value).operator(Operator.AND));
+                    break;
+            }
+        });
+    }
+
+    private void addAggs(List<TermsAggregationParam> aggs, SearchRequestBuilder builder){
+
+        if (aggs == null || aggs.size() == 0){
+            return;
+        }
+
+        aggs.forEach(termsAggregationParam -> {
+            AbstractAggregationBuilder agg = addChildAggs(termsAggregationParam);
+            builder.addAggregation(agg);
+        });
+    }
+
+    private void addAggs(List<TermsAggregationParam> aggs, NativeSearchQueryBuilder builder){
+
+        if (aggs == null || aggs.size() == 0){
+            return;
+        }
+
+        aggs.forEach(termsAggregationParam -> {
+            AbstractAggregationBuilder agg = addChildAggs(termsAggregationParam);
+            builder.addAggregation(agg);
+        });
+    }
+
+    private AbstractAggregationBuilder addChildAggs(TermsAggregationParam termsAggregationParam){
+        AbstractAggregationBuilder agg = AggregationBuilders
+                .terms(termsAggregationParam.getField())
+                .field(termsAggregationParam.getField())
+                .size(termsAggregationParam.getSize())
+                .order(Terms.Order.count(false));
+
+        addChildAggs(termsAggregationParam.getChildren(), agg);
+        return agg;
+    }
+
+    private void addChildAggs(List<TermsAggregationParam> termsAggregationParams, AbstractAggregationBuilder agg) {
+        if (termsAggregationParams.size() > 0){
+            termsAggregationParams.forEach(child -> {
+                AggregationBuilder aggregationBuilder = addChildAggs(child);
+                if (aggregationBuilder != null) {
+                    agg.subAggregation(aggregationBuilder);
+                }
+            });
+        }
     }
 
     public Iterable<Entry> findAllById(Collection<String> entryIds, Integer catalogueId) {

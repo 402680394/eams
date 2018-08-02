@@ -585,6 +585,8 @@ public class OriginalTextService {
         result.setGmtCreate(new Date());
         result.setGmtModified(new Date());
         result.setGmtDeleted(originalText.getGmtDeleted());
+        result.setFondsId(originalText.getFondsId());
+        result.setArchiveContentType(originalText.getArchiveContentType());
 
         return result;
     }

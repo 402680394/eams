@@ -1,11 +1,10 @@
 package com.ztdx.eams.domain.archives.application.task;
 
+import com.google.common.collect.Iterables;
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.task.Job;
-import com.ztdx.eams.domain.archives.model.DescriptionItem;
-import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
-import com.ztdx.eams.domain.archives.model.Entry;
-import com.ztdx.eams.domain.archives.model.OriginalText;
+import com.ztdx.eams.basic.utils.StringUtils;
+import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
@@ -26,7 +25,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -105,27 +108,87 @@ public class EntryAsyncTask {
     }
 
     @Async
+    public void copyItemsFieldToSystemField(Entry entry) {
+        List<PropertyType> propertyTypes = Arrays.asList(
+                  PropertyType.Rank
+                , PropertyType.CarrierType
+                , PropertyType.ClassificationNumber
+                , PropertyType.department
+                , PropertyType.RecordType
+                , PropertyType.TimeLimitForStorage
+                , PropertyType.Year
+        );
+
+        List<DescriptionItem> items = descriptionItemRepository.findByCatalogueId(entry.getCatalogueId());
+        Map<PropertyType, String> map = items.stream().collect(Collectors.toMap(DescriptionItem::getPropertyType, DescriptionItem::getMetadataName));
+        map.forEach((propertyType, fieldName) -> {
+
+            if (!propertyTypes.contains(propertyType)) {
+                return;
+            }
+
+            Object value = entry.getItems().getOrDefault(fieldName, null);
+            if (value == null){
+                return;
+            }
+
+            String methodName = String.format("set%s",StringUtils.toUpperCaseFirstOne(fieldName));
+            try {
+                Method method = Entry.class.getDeclaredMethod(methodName, String.class);
+                method.invoke(entry, value.toString());
+            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
+            }
+
+            /*switch (propertyType){
+                case Rank:
+                    entry.setRank(value.toString());
+                    break;
+                case CarrierType:
+                    entry.setCarrierType(value.toString());
+                    break;
+                case ClassificationNumber:
+                    entry.setClassificationNumber(value.toString());
+                    break;
+                case department:
+
+                    break;
+                case RecordType:
+                    break;
+                case TimeLimitForStorage:
+                    break;
+                case Year:
+                    break;
+                default:
+                    break;
+            }*/
+        });
+
+        entryMongoRepository.save(entry);
+        index(entry);
+    }
+
     public void test(String uuid) {
+        rebuild();
+        //rebuildById(Integer.parseInt(uuid));
+    }
+
+    private void rebuildById(int id) {
         try {
-            elasticsearchOperations.deleteIndex(this.getIndexName(Integer.parseInt(uuid)));
-            originalTextElasticsearchRepository.createIndex(this.getIndexName(Integer.parseInt(uuid)));
+            elasticsearchOperations.deleteIndex(this.getIndexName(id));
+            originalTextElasticsearchRepository.createIndex(this.getIndexName(id));
 
-            initIndex(Integer.parseInt(uuid));
-            putMapping(Integer.parseInt(uuid));
+            initIndex(id);
+            putMapping(id);
 
-            rebuildCatalogueEntry(Integer.parseInt(uuid));
-            rebuildCatalogueOriginalText(Integer.parseInt(uuid));
+            rebuildCatalogueEntry(id);
+            rebuildCatalogueOriginalText(id);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    @Async
+    
     public void rebuild(){
-        catalogueRepository.findAll().forEach(a -> {
-            rebuildCatalogueEntry(a.getId());
-            rebuildCatalogueOriginalText(a.getId());
-        });
+        catalogueRepository.findAll().forEach(a -> rebuildById(a.getId()));
     }
 
     private void rebuildCatalogueEntry(int catalogueId){
@@ -151,6 +214,22 @@ public class EntryAsyncTask {
             if (list.getContent().size() == 0){
                 return;
             }
+
+            List<String> ids = list.getContent().stream().map(OriginalText::getEntryId).collect(Collectors.toList());
+
+            Iterable<Entry> list1 = entryMongoRepository.findAllById(ids, "archive_record_" + catalogueId);
+
+            Map<String, Entry> map = StreamSupport.stream(list1.spliterator(), true).collect(Collectors.toMap(Entry::getId, a -> a));
+
+            list.forEach(a -> {
+                Entry entry = map.getOrDefault(a.getEntryId(), null);
+                if (entry == null){
+                    return;
+                }
+                a.setArchiveContentType(entry.getArchiveContentType());
+                a.setFondsId(entry.getFondsId());
+            });
+
             originalTextElasticsearchRepository.saveAll(list);
         }
     }

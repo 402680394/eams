@@ -19,14 +19,12 @@ import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +34,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RestController
 @RequestMapping(value = "/entry")
@@ -63,7 +62,9 @@ public class EntryController {
 
     private ApplicationContext applicationContext;
 
-    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask, BoxService boxService, ApplicationContext applicationContext) {
+    private ContentTypeService contentTypeService;
+
+    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask, BoxService boxService, ApplicationContext applicationContext, ContentTypeService contentTypeService) {
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
         this.catalogueService = catalogueService;
@@ -75,6 +76,7 @@ public class EntryController {
         this.entryAsyncTask = entryAsyncTask;
         this.boxService = boxService;
         this.applicationContext = applicationContext;
+        this.contentTypeService = contentTypeService;
     }
 
     /**
@@ -717,6 +719,8 @@ public class EntryController {
      * @apiParam {Array="words","entry","file"} searchParam 搜索参数 words:全词匹配 entry:条目 file:全文
      * @apiParam {String} includeWords 包含关键字
      * @apiParam {String} rejectWords 排除关键字
+     * @apiParam {Number} [catalogueId] 目录id
+     * @apiParam {Object} [items] 著录项内容，与目录id一起传递。
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.id 条目id
      * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
@@ -777,15 +781,56 @@ public class EntryController {
      *                 }
      *             }
      *         ],
-     *         "aggregations":{
-     *             "archiveContentType":[
-     *                 {
-     *                     "id":1,
-     *                     "name":"文书档案",
-     *                     "count":10
-     *                 }
-     *             ]
-     *         },
+     *         "aggregations":[
+     *             {
+     *                 "id":"archiveContentType",
+     *                 "name": "档案类型",
+     *                 "count": 10,
+     *                 "children":[
+     *                     {
+     *                         "id": "1",
+     *                         "name":"文书档案",
+     *                         "count":10
+     *                     }
+     *                 ],
+     *             },
+     *             {
+     *                 "id":"fondsId",
+     *                 "name": "全宗",
+     *                 "count": 10,
+     *                 "children":[
+     *                     {
+     *                         "id":"1",
+     *                         "name":"全宗A",
+     *                         "count":10
+     *                     }
+     *                 ],
+     *             },
+     *             {
+     *                 "id":"archiveId",
+     *                 "name": "档案库",
+     *                 "count": 10,
+     *                 "children":[
+     *                     {
+     *                         "id":"1",
+     *                         "name":"一文一件库",
+     *                         "count":10
+     *                     }
+     *                 ],
+     *             },
+     *             {
+     *                 "id":"year",
+     *                 "name": "年度",
+     *                 "count": 10,
+     *                 "children":[
+     *                     {
+     *                         "id":"1",
+     *                         "name":"2018年",
+     *                         "count":10
+     *                     }
+     *                 ],
+     *             }
+     *         ],
      *         "totalElements": 14,
      *         "totalPages": 1
      *     }
@@ -793,24 +838,66 @@ public class EntryController {
      */
     @RequestMapping(value = "/searchFulltext", method = RequestMethod.POST)
     public Object searchFulltext(
-            @JsonParam Set<Integer> archiveContentType
-            , @JsonParam Set<String> searchParam
+            @RequestBody Map<String, Object> body
+            /*, @JsonParam Set<Integer> archiveContentType
+            , @JsonParam List<String> searchParam
             , @JsonParam String includeWords
             , @JsonParam String rejectWords
+            , @JsonParam Integer catalogueId*/
             , @RequestParam(value = "page", defaultValue = "0") int page
             , @RequestParam(value = "size", defaultValue = "20") int size) {
 
+        Set<Integer> archiveContentType = null;
+        if (body.get("archiveContentType") != null) {
+            archiveContentType = (Set<Integer>) body.get("archiveContentType");
+        }
+        List<String> searchParam = null;
+        if (body.get("searchParam") != null) {
+            searchParam = (List<String>) body.get("searchParam");
+        }
+        String includeWords = null;
+        if (body.get("includeWords")!= null) {
+            includeWords = (String) body.get("includeWords");
+        }
+        String rejectWords = null;
+        if (body.get("rejectWords")!= null) {
+            rejectWords = (String) body.get("rejectWords");
+        }
+        Integer catalogueId = null;
+        if (body.get("catalogueId") != null) {
+            catalogueId = (Integer) body.get("catalogueId");
+        }
+        Map<String, Object> entryItems = null;
+        if (body.get("entryItems") != null) {
+            entryItems = (Map<String, Object>) body.get("entryItems");
+        }
+
+        assert searchParam != null;
         if (!searchParam.contains(SearchFulltextOption.entry.name())
                 && !searchParam.contains(SearchFulltextOption.file.name())){
             throw new InvalidArgumentException("请选择条目或者全文其中一项");
         }
+
+        List<TermsAggregationParam> termsAggregationParams = getFulltextSearchAggregation();
 
         AggregatedPage<OriginalText> list = entryService.searchFulltext(
                 archiveContentType
                 , searchParam
                 , includeWords
                 , rejectWords
+                , catalogueId
+                , entryItems
+                , termsAggregationParams
                 , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+
+        /*List<TermsAggregationResult> aggs = entryService.aggregationFulltext(
+                archiveContentType
+                , searchParam
+                , includeWords
+                , rejectWords
+                , catalogueId
+                , entryItems
+                , termsAggregationParams);*/
 
         Map<String, Object> result = new HashMap<>();
 
@@ -820,6 +907,8 @@ public class EntryController {
             result.put("content", null);
             return result;
         }
+
+        List<TermsAggregationResult> aggs = entryService.convertAggregationToResult(list.getAggregations(), termsAggregationParams);
 
         Set<Integer> catalogueIds = new HashSet<>();
         Set<String> entryIds = new HashSet<>();
@@ -848,59 +937,136 @@ public class EntryController {
 
         result.put("totalElements", list.getTotalElements());
         result.put("totalPages", list.getTotalPages());
-        result.put("content", list.stream().map(a -> {
-            Map<String, Object> r = new HashMap<>();
-
-            Entry entry = entries.get(a.getEntryId());
-            Archives archives = null;
-            Fonds fonds = null;
-
-            r.put("id", a.getEntryId());
-            r.put("catalogueId", a.getCatalogueId());
-
-            if (entry != null) {
-                r.put("catalogueType", entry.getCatalogueType());
-                r.put("archiveId", entry.getArchiveId());
-
-                Map<String, Object> items = formatEntryItems(entry, descItems.get(entry.getCatalogueId()));
-                r.put("items", items);
-
-                archives = archivesMap.get(entry.getArchiveId());
-            }
-
-            if (archives != null) {
-                r.put("archiveName", archives.getName());
-                r.put("archiveType", archives.getType());
-                r.put("archiveContentType", archives.getContentTypeId());
-                ArchivesGroup archivesGroup = archivesGroupMap.get(archives.getArchivesGroupId());
-                if (archivesGroup != null) {
-                    fonds = fondsMap.get(archivesGroup.getFondsId());
-                }
-            }
-
-            if (fonds != null) {
-                r.put("fondsName", fonds.getName());
-            }
-
-            Map<String, Object> file = new HashMap<>();
-            r.put("file", file);
-
-            file.put("fileId", a.getId());
-            file.put("title", a.getTitle());
-            file.put("fileType", a.getType());
-            file.put("pdfConvertStatus", a.getPdfConverStatus());
-            String highLight = a.getContentIndex();
-            if (highLight != null && highLight.length() > 300){
-                highLight = highLight.substring(0, a.getContentIndex().length() > 300 ? 300 : a.getContentIndex().length());
-            }
-            file.put("highLight", highLight);
-            file.put("fileName", a.getName());
-
-            return r;
-        }).collect(Collectors.toList()));
+        makeAggregations(aggs);
+        result.put("aggregations", aggs);
+        result.put("content", list.stream()
+                .map(a -> mapSearchResult(
+                        archivesMap
+                        , archivesGroupMap
+                        , fondsMap
+                        , entries
+                        , descItems
+                        , a))
+                .collect(Collectors.toList()));
 
         return result;
     }
+
+    private Map<String, Object> mapSearchResult(Map<Integer, Archives> archivesMap, Map<Integer, ArchivesGroup> archivesGroupMap, Map<Integer, Fonds> fondsMap, Map<String, Entry> entries, Map<Integer, Map<String, DescriptionItem>> descItems, OriginalText a) {
+        Map<String, Object> r = new HashMap<>();
+
+        Entry entry = entries.get(a.getEntryId());
+        Archives archives = null;
+        Fonds fonds = null;
+
+        r.put("id", a.getEntryId());
+        r.put("catalogueId", a.getCatalogueId());
+
+        if (entry != null) {
+            r.put("catalogueType", entry.getCatalogueType());
+            r.put("archiveId", entry.getArchiveId());
+
+            Map<String, Object> items = formatEntryItems(entry, descItems.get(entry.getCatalogueId()));
+            r.put("items", items);
+
+            archives = archivesMap.get(entry.getArchiveId());
+        }
+
+        if (archives != null) {
+            r.put("archiveName", archives.getName());
+            r.put("archiveType", archives.getType());
+            r.put("archiveContentType", archives.getContentTypeId());
+            ArchivesGroup archivesGroup = archivesGroupMap.get(archives.getArchivesGroupId());
+            if (archivesGroup != null) {
+                fonds = fondsMap.get(archivesGroup.getFondsId());
+            }
+        }
+
+        if (fonds != null) {
+            r.put("fondsName", fonds.getName());
+        }
+
+        Map<String, Object> file = new HashMap<>();
+        r.put("file", file);
+
+        file.put("fileId", a.getId());
+        file.put("title", a.getTitle());
+        file.put("fileType", a.getType());
+        file.put("pdfConvertStatus", a.getPdfConverStatus());
+        String highLight = a.getContentIndex();
+        if (highLight != null && highLight.length() > 300){
+            highLight = highLight.substring(0, a.getContentIndex().length() > 300 ? 300 : a.getContentIndex().length());
+        }
+        file.put("highLight", highLight);
+        file.put("fileName", a.getName());
+
+        return r;
+    }
+
+    private List<TermsAggregationParam> getFulltextSearchAggregation() {
+        List<TermsAggregationParam> result = new ArrayList<>();
+        result.add(new TermsAggregationParam("archiveContentType", "档案类型"));
+        result.add(new TermsAggregationParam("fondsId", "全宗"));
+        result.add(new TermsAggregationParam("catalogueId", "档案库"));
+        //TODO @lijie 一下三种还未实现
+        //result.add(new TermsAggregationParam("year", TermsAggregationParam.TermsAggregationParamFieldType.custom));
+        //result.add(new TermsAggregationParam("classificationNumber", TermsAggregationParam.TermsAggregationParamFieldType.custom));
+        //result.add(new TermsAggregationParam("department", TermsAggregationParam.TermsAggregationParamFieldType.custom));
+
+        return result;
+    }
+
+    private void makeAggregations(List<TermsAggregationResult> aggregations){
+
+        aggregations.forEach(termsAggregationResult -> {
+            List<String> ids = termsAggregationResult.getChildren().stream().map(TermsAggregationResult::getId).collect(Collectors.toList());
+
+            Map<String, String> map = null;
+
+            switch (termsAggregationResult.getId()) {
+                case "archiveContentType":
+                    map = mapArchiveContentTypeList();
+                    break;
+                case "fondsId":
+                    map = mapFondsList(ids.stream().map(Integer::parseInt).collect(Collectors.toList()));
+                    break;
+                case "catalogueId":
+                    map = mapCatalogueList(ids.stream().map(Integer::parseInt).collect(Collectors.toList()));
+                    break;
+            }
+
+            if (map != null){
+                Map<String, String> finalMap = map;
+                termsAggregationResult.getChildren().forEach(a -> a.setName(finalMap.getOrDefault(a.getId(), a.getId())));
+            }
+        });
+    }
+
+    private Map<String, String> mapCatalogueList(List<Integer> ids) {
+        List<Catalogue> list = catalogueService.findAllById(ids);
+        List<Integer> archiveIds = list.stream().map(Catalogue::getArchivesId).collect(Collectors.toList());
+
+        Map<Integer, String> archiveMap = archivesService.findAllById(archiveIds).stream().collect(Collectors.toMap(Archives::getId, Archives::getName));
+
+        return list.stream().collect(Collectors.toMap(a -> String.format("%s", a.getId()), a -> {
+            String archiveName = archiveMap.get(a.getArchivesId());
+            if (a.getCatalogueType() == CatalogueType.Folder){
+                archiveName += "_案卷";
+            }else if (a.getCatalogueType() == CatalogueType.FolderFile){
+                archiveName += "_卷内";
+            }
+            return archiveName;
+        }));
+    }
+
+    private Map<String,String> mapFondsList(Collection<Integer> ids) {
+        return fondsService.findAllById(ids).stream().collect(Collectors.toMap(a -> String.format("%s", a.getId()), Fonds::getName));
+    }
+
+    private Map<String, String> mapArchiveContentTypeList() {
+        return contentTypeService.list().stream().collect(Collectors.toMap(a -> String.format("%s", a.getId()), ContentType::getName));
+    }
+
 
     private Map<String, Object> formatEntryItems(Entry entry, Map<String, DescriptionItem> itemMap){
         Map<String, Object> result = new HashMap<>();
