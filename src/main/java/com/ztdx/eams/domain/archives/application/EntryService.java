@@ -336,11 +336,12 @@ public class EntryService {
             , String includeWords
             , String rejectWords
             , Pageable pageable) {
-        return searchFulltext(archiveContentType, searchParams, includeWords, rejectWords, null, null, null, pageable);
+        return searchFulltext(archiveContentType, searchParams, includeWords, null, rejectWords, null, null, null, pageable);
     }
 
     public AggregatedPage<OriginalText> searchFulltext(Set<Integer> archiveContentType
             , List<String> searchParams
+            , String queryString
             , String includeWords
             , String rejectWords
             , Integer catalogueId
@@ -348,40 +349,16 @@ public class EntryService {
             , List<TermsAggregationParam> aggs
             , Pageable pageable) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
-        BoolQueryBuilder queryByOr = QueryBuilders.boolQuery();
-        BoolQueryBuilder fileQueryByOr = QueryBuilders.boolQuery();
-        BoolQueryBuilder fileQueryByAnd = QueryBuilders.boolQuery();
-        BoolQueryBuilder entryQueryByOr = QueryBuilders.boolQuery();
-        BoolQueryBuilder entryQueryByAnd = QueryBuilders.boolQuery();
 
         makeFulltextQuery(
                 archiveContentType
                 , searchParams
+                , queryString
                 , includeWords
                 , rejectWords
                 , catalogueId
                 , items
-                , fileQueryByOr
-                , fileQueryByAnd
-                , entryQueryByOr
-                , entryQueryByAnd);
-
-        if (searchParams.contains(SearchFulltextOption.entry.name())) {
-            queryByOr.should(JoinQueryBuilders.hasParentQuery(
-                    "record",
-                    entryQueryByOr,
-                    false));
-        }
-
-        if (searchParams.contains(SearchFulltextOption.file.name())) {
-            queryByOr.should(fileQueryByOr);
-        }
-        query.must(fileQueryByAnd);
-        query.must(JoinQueryBuilders.hasParentQuery(
-                "record",
-                entryQueryByAnd,
-                false));
-        query.must(queryByOr);
+                , query);
 
         NativeSearchQueryBuilder builder = new NativeSearchQueryBuilder();
         builder.withQuery(query);
@@ -409,30 +386,19 @@ public class EntryService {
     private void makeFulltextQuery(
             Set<Integer> archiveContentType
             , List<String> searchParams
+            , String queryString
             , String includeWords
             , String rejectWords
             , Integer catalogueId
             , Map<String, Object> items
-            , BoolQueryBuilder fileQueryByOr
-            , BoolQueryBuilder fileQueryByAnd
-            , BoolQueryBuilder entryQueryByOr
-            , BoolQueryBuilder entryQueryByAnd
+            , BoolQueryBuilder query
     ) {
+        BoolQueryBuilder queryByOr = QueryBuilders.boolQuery();
+        BoolQueryBuilder queryAgain = QueryBuilders.boolQuery();
+        BoolQueryBuilder fileQueryByAnd = QueryBuilders.boolQuery();
+        BoolQueryBuilder entryQueryByAnd = QueryBuilders.boolQuery();
+
         addEntryQuery(entryQueryByAnd, catalogueId, items);
-
-        if (!StringUtils.isEmpty(includeWords)) {
-            if (searchParams.contains(SearchFulltextOption.file.name())) {
-                fileQueryByOr.must(queryStringQuery(includeWords).defaultOperator(Operator.AND));
-            }
-            entryQueryByOr.must(queryStringQuery(includeWords).field(FULL_CONTENT).defaultOperator(Operator.AND));
-        }
-
-        if (!StringUtils.isEmpty(rejectWords)) {
-            if (searchParams.contains(SearchFulltextOption.file.name())) {
-                fileQueryByAnd.mustNot(queryStringQuery(rejectWords).defaultOperator(Operator.AND));
-            }
-            entryQueryByAnd.mustNot(queryStringQuery(rejectWords).field(FULL_CONTENT).defaultOperator(Operator.AND));
-        }
 
         if (archiveContentType != null && archiveContentType.size() > 0) {
             entryQueryByAnd.filter(QueryBuilders.termsQuery("archiveContentType", archiveContentType));
@@ -440,67 +406,43 @@ public class EntryService {
 
         fileQueryByAnd.filter(termQuery("gmtDeleted", 0));
         entryQueryByAnd.filter(termQuery("gmtDeleted", 0));
-    }
-
-    public List<TermsAggregationResult> aggregationFulltext(Set<Integer> archiveContentType
-            , List<String> searchParams
-            , String includeWords
-            , String rejectWords
-            , Integer catalogueId
-            , Map<String, Object> items
-            , List<TermsAggregationParam> aggs){
-        BoolQueryBuilder query = QueryBuilders.boolQuery();
-        BoolQueryBuilder queryByOr = QueryBuilders.boolQuery();
-        BoolQueryBuilder fileQueryByOr = QueryBuilders.boolQuery();
-        BoolQueryBuilder fileQueryByAnd = QueryBuilders.boolQuery();
-        BoolQueryBuilder entryQueryByOr = QueryBuilders.boolQuery();
-        BoolQueryBuilder entryQueryByAnd = QueryBuilders.boolQuery();
-
-        makeFulltextQuery(
-                archiveContentType
-                , searchParams
-                , includeWords
-                , rejectWords
-                , catalogueId
-                , items
-                , fileQueryByOr
-                , fileQueryByAnd
-                , entryQueryByOr
-                , entryQueryByAnd);
 
         if (searchParams.contains(SearchFulltextOption.entry.name())) {
-            queryByOr.should(JoinQueryBuilders.hasParentQuery(
-                    "record",
-                    entryQueryByOr,
-                    false));
-            query.must(JoinQueryBuilders.hasParentQuery(
-                    "record",
-                    entryQueryByAnd,
-                    false));
+            if (!StringUtils.isEmpty(queryString)) {
+                queryByOr.should(JoinQueryBuilders.hasParentQuery(
+                        "record"
+                        , queryStringQuery(queryString).field(FULL_CONTENT).defaultOperator(Operator.AND)
+                        , false));
+            }
+            if (!StringUtils.isEmpty(includeWords)) {
+                queryAgain.should(JoinQueryBuilders.hasParentQuery(
+                        "record"
+                        , queryStringQuery(includeWords).field(FULL_CONTENT).defaultOperator(Operator.AND)
+                        , false));
+            }
+            if (!StringUtils.isEmpty(rejectWords)) {
+                entryQueryByAnd.mustNot(queryStringQuery(rejectWords).field(FULL_CONTENT).defaultOperator(Operator.AND));
+            }
         }
 
         if (searchParams.contains(SearchFulltextOption.file.name())) {
-            queryByOr.should(fileQueryByOr);
-            query.must(fileQueryByAnd);
+            if (!StringUtils.isEmpty(queryString)) {
+                queryByOr.should(queryStringQuery(queryString).defaultOperator(Operator.AND));
+            }
+            if (!StringUtils.isEmpty(includeWords)) {
+                queryAgain.should(queryStringQuery(includeWords).defaultOperator(Operator.AND));
+            }
+            if (!StringUtils.isEmpty(rejectWords)) {
+                fileQueryByAnd.mustNot(queryStringQuery(rejectWords).defaultOperator(Operator.AND));
+            }
         }
+        query.must(fileQueryByAnd);
+        query.must(JoinQueryBuilders.hasParentQuery(
+                "record"
+                , entryQueryByAnd
+                , false));
         query.must(queryByOr);
-
-        Collection<String> indices = new ArrayList<>();
-        if (catalogueId == null) {
-            indices.add(INDEX_NAME_PREFIX + "*");
-        } else {
-            indices.add(INDEX_NAME_PREFIX + catalogueId);
-        }
-
-        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(indices.toArray(new String[0]));
-
-        addAggs(aggs, srBuilder);
-
-        srBuilder.setTypes("originalText");
-
-        srBuilder.setQuery(query).setSize(0);
-
-        return convertAggregationToResult(srBuilder.get().getAggregations(), aggs);
+        query.must(queryAgain);
     }
 
     public List<TermsAggregationResult> convertAggregationToResult(Aggregations aggregations, List<TermsAggregationParam> params){

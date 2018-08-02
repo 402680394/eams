@@ -714,11 +714,12 @@ public class EntryController {
      * @apiGroup entry
      * @apiParam {Number} page 页码(QueryString)
      * @apiParam {Number} size 页行数(QueryString)
+     * @apiParam {String} queryString 查询关键字
      * @apiParam {Array} archiveContentType 档案内容类型
      * @apiParam {String="3year","6year","8year"} dateRange 时间
      * @apiParam {Array="words","entry","file"} searchParam 搜索参数 words:全词匹配 entry:条目 file:全文
-     * @apiParam {String} includeWords 包含关键字
-     * @apiParam {String} rejectWords 排除关键字
+     * @apiParam {String} includeWords 在结果中查找-包含关键字
+     * @apiParam {String} rejectWords 在结果中查找-排除关键字
      * @apiParam {Number} [catalogueId] 目录id
      * @apiParam {Object} [items] 著录项内容，与目录id一起传递。
      * @apiSuccess (Success 200) {Array} content 列表内容
@@ -841,6 +842,7 @@ public class EntryController {
             @RequestBody Map<String, Object> body
             /*, @JsonParam Set<Integer> archiveContentType
             , @JsonParam List<String> searchParam
+            , @JsonParam String queryString
             , @JsonParam String includeWords
             , @JsonParam String rejectWords
             , @JsonParam Integer catalogueId*/
@@ -854,6 +856,10 @@ public class EntryController {
         List<String> searchParam = null;
         if (body.get("searchParam") != null) {
             searchParam = (List<String>) body.get("searchParam");
+        }
+        String queryString = null;
+        if (body.get("queryString")!= null) {
+            queryString = (String) body.get("queryString");
         }
         String includeWords = null;
         if (body.get("includeWords")!= null) {
@@ -883,21 +889,13 @@ public class EntryController {
         AggregatedPage<OriginalText> list = entryService.searchFulltext(
                 archiveContentType
                 , searchParam
+                , queryString
                 , includeWords
                 , rejectWords
                 , catalogueId
                 , entryItems
                 , termsAggregationParams
                 , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
-
-        /*List<TermsAggregationResult> aggs = entryService.aggregationFulltext(
-                archiveContentType
-                , searchParam
-                , includeWords
-                , rejectWords
-                , catalogueId
-                , entryItems
-                , termsAggregationParams);*/
 
         Map<String, Object> result = new HashMap<>();
 
