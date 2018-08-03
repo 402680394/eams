@@ -331,7 +331,7 @@ public class EntryService {
         }
     }
 
-    public AggregatedPage<OriginalText> searchFulltext(Set<Integer> archiveContentType
+    public AggregatedPage<OriginalText> searchFulltext(List<Integer> archiveContentType
             , List<String> searchParams
             , String includeWords
             , String rejectWords
@@ -339,7 +339,7 @@ public class EntryService {
         return searchFulltext(archiveContentType, searchParams, includeWords, null, rejectWords, null, null, null, pageable);
     }
 
-    public AggregatedPage<OriginalText> searchFulltext(Set<Integer> archiveContentType
+    public AggregatedPage<OriginalText> searchFulltext(List<Integer> archiveContentType
             , List<String> searchParams
             , String queryString
             , String includeWords
@@ -384,7 +384,7 @@ public class EntryService {
     }
 
     private void makeFulltextQuery(
-            Set<Integer> archiveContentType
+            List<Integer> archiveContentType
             , List<String> searchParams
             , String queryString
             , String includeWords

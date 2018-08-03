@@ -840,7 +840,7 @@ public class EntryController {
     @RequestMapping(value = "/searchFulltext", method = RequestMethod.POST)
     public Object searchFulltext(
             @RequestBody Map<String, Object> body
-            /*, @JsonParam Set<Integer> archiveContentType
+            /*, @JsonParam List<Integer> archiveContentType
             , @JsonParam List<String> searchParam
             , @JsonParam String queryString
             , @JsonParam String includeWords
@@ -849,9 +849,9 @@ public class EntryController {
             , @RequestParam(value = "page", defaultValue = "0") int page
             , @RequestParam(value = "size", defaultValue = "20") int size) {
 
-        Set<Integer> archiveContentType = null;
+        List<Integer> archiveContentType = null;
         if (body.get("archiveContentType") != null) {
-            archiveContentType = (Set<Integer>) body.get("archiveContentType");
+            archiveContentType = (List<Integer>) body.get("archiveContentType");
         }
         List<String> searchParam = null;
         if (body.get("searchParam") != null) {
