@@ -98,34 +98,34 @@ public class EntryController {
      * @apiSuccess (Success 200) {int} items.age 年龄
      * @apiSuccessExample {json} Response-Example:
      * {
-     *     "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *     "catalogueId":1,
-     *     "catalogueType":1,
-     *     "archiveId":0,
-     *     "archiveType":0,
-     *     "archiveContentType":0,
-     *     "items":{
-     *         "birthday":"2018-05-16T14:44:56.328+0800",
-     *         "amount":73824039.1873,
-     *         "aihao":[
-     *             "电影",
-     *             "足球",
-     *             "汽车"
-     *         ],
-     *         "name":"里斯1",
-     *         "age":41
-     *     },
-     *     "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *     "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
      * }
      * @apiError (Error 404) message 1.条目不存在
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public Entry get(@PathVariable("id") String id, @RequestParam("cid") int catalogueId){
+    public Entry get(@PathVariable("id") String id, @RequestParam("cid") int catalogueId) {
         Entry entry = entryService.get(catalogueId, id);
-        if (entry == null){
+        if (entry == null) {
             throw new NotFoundException("条目不存在");
         }
         return entry;
@@ -144,26 +144,33 @@ public class EntryController {
      * @apiParam {String[]} items.interest 爱好
      * @apiParamExample {json} Request-Example:
      * {
-     *     "catalogueId":1,
-     *     "items":{
-     *         "name":"姓名",
-     *         "age":41,
-     *         "birthday":"2018-05-09T00:00:00",
-     *         "amount":73824039.1873,
-     *         "aihao":[
-     *             "电影",
-     *             "汽车"
-     *         ]
-     *     }
+     * "catalogueId":1,
+     * "items":{
+     * "name":"姓名",
+     * "age":41,
+     * "birthday":"2018-05-09T00:00:00",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "汽车"
+     * ]
+     * }
      * }
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
+     * @apiSuccessExample {json} Success-Response:
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9"
+     * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
     @RequestMapping(value = "", method = RequestMethod.POST)
-    public void save(@RequestBody Entry entry, @SessionAttribute UserCredential LOGIN_USER) {
+    public Map<String, String> save(@RequestBody Entry entry, @SessionAttribute UserCredential LOGIN_USER) {
         entry.setOwner(LOGIN_USER.getUserId());
-        entryService.save(entry);
+        entry = entryService.save(entry);
+        Map<String, String> resultMap = new HashMap<>();
+        resultMap.put("id", entry.getId());
+        return resultMap;
     }
 
     /**
@@ -179,16 +186,16 @@ public class EntryController {
      * @apiParam {String[]} items.interest 爱好
      * @apiParamExample {json} Request-Example:
      * {
-     *     "items":{
-     *         "name":"姓名",
-     *         "age":41,
-     *         "birthday":"2018-05-09T00:00:00",
-     *         "amount":73824039.1873,
-     *         "aihao":[
-     *             "电影",
-     *             "汽车"
-     *         ]
-     *     }
+     * "items":{
+     * "name":"姓名",
+     * "age":41,
+     * "birthday":"2018-05-09T00:00:00",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "汽车"
+     * ]
+     * }
      * }
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
@@ -208,19 +215,19 @@ public class EntryController {
      * @apiParam {String[]} deletes 要删除的条目id数组
      * @apiParamExample {json} Request-Example:
      * {
-     *     "cid": 1,
-     *     "deletes": [
-     *         "322c3c75-08a5-4a01-a60f-084b6a6f9be9"
-     *     ]
+     * "cid": 1,
+     * "deletes": [
+     * "322c3c75-08a5-4a01-a60f-084b6a6f9be9"
+     * ]
      * }
      * @apiError (Error 400) message 1.档案目录不存在
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.DELETE)
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #cid)")
-    public void delete(@JsonParam() int cid, @JsonParam List<String> deletes){
+    public void delete(@JsonParam() int cid, @JsonParam List<String> deletes) {
         Catalogue catalogue = catalogueService.get(cid);
-        if (catalogue == null){
+        if (catalogue == null) {
             throw new InvalidArgumentException("档案目录不存在");
         }
         entryService.delete(cid, deletes);
@@ -271,64 +278,63 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} totalElements 总行数
      * @apiSuccess (Success 200) {Number} totalPages 总页数
      * @apiSuccess (Success 200) {Number} innerCatalogueId 卷内目录id
-     *
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "birthday":"2018-05-16T14:44:56.328+0800",
-     *                     "amount":73824039.1873,
-     *                     "aihao":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "name":"里斯1",
-     *                     "age":41
-     *                 },
-     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
-     *             }
-     *         ],
-     *         "column":{
-     *             "name": {
-     *                 "metadataId":1,
-     *                 "metadataName":"name",
-     *                 "displayName":"姓名"
-     *             },
-     *             "birthday": {
-     *                 "metadataId":2,
-     *                 "metadataName":"birthday",
-     *                 "displayName":"生日"
-     *             },
-     *             "amount": {
-     *                 "metadataId":3,
-     *                 "metadataName":"amount",
-     *                 "displayName":"资产"
-     *             },
-     *             "aihao": {
-     *                 "metadataId":4,
-     *                 "metadataName":"aihao",
-     *                 "displayName":"爱好"
-     *             },
-     *             "age": {
-     *                 "metadataId":5,
-     *                 "metadataName":"age",
-     *                 "displayName":"年龄"
-     *             }
-     *         },
-     *         "totalElements": 14,
-     *         "totalPages": 1,
-     *         "innerCatalogueId":2
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * }
+     * ],
+     * "column":{
+     * "name": {
+     * "metadataId":1,
+     * "metadataName":"name",
+     * "displayName":"姓名"
+     * },
+     * "birthday": {
+     * "metadataId":2,
+     * "metadataName":"birthday",
+     * "displayName":"生日"
+     * },
+     * "amount": {
+     * "metadataId":3,
+     * "metadataName":"amount",
+     * "displayName":"资产"
+     * },
+     * "aihao": {
+     * "metadataId":4,
+     * "metadataName":"aihao",
+     * "displayName":"爱好"
+     * },
+     * "age": {
+     * "metadataId":5,
+     * "metadataName":"age",
+     * "displayName":"年龄"
+     * }
+     * },
+     * "totalElements": 14,
+     * "totalPages": 1,
+     * "innerCatalogueId":2
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
@@ -336,8 +342,8 @@ public class EntryController {
     public Map<String, Object> search(@RequestParam("cid") int catalogueId
             , @RequestParam(value = "q", required = false, defaultValue = "") String queryString
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
-            , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
-        Page<Entry> content =  entryService.search(catalogueId, queryString, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+            , @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+        Page<Entry> content = entryService.search(catalogueId, queryString, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
 
         return getSearchMap(catalogueId, content);
     }
@@ -385,63 +391,62 @@ public class EntryController {
      * @apiSuccess (Success 200) {int} metadataId 字段id
      * @apiSuccess (Success 200) {String} metadataName 字段名称
      * @apiSuccess (Success 200) {String} displayName 字段显示名称
-     *
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "birthday":"2018-05-16T14:44:56.328+0800",
-     *                     "amount":73824039.1873,
-     *                     "aihao":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "name":"里斯1",
-     *                     "age":41
-     *                 },
-     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
-     *             }
-     *         ],
-     *         "column":{
-     *             "name": {
-     *                 "metadataId":1,
-     *                 "metadataName":"name",
-     *                 "displayName":"姓名"
-     *             },
-     *             "birthday": {
-     *                 "metadataId":2,
-     *                 "metadataName":"birthday",
-     *                 "displayName":"生日"
-     *             },
-     *             "amount": {
-     *                 "metadataId":3,
-     *                 "metadataName":"amount",
-     *                 "displayName":"资产"
-     *             },
-     *             "aihao": {
-     *                 "metadataId":4,
-     *                 "metadataName":"aihao",
-     *                 "displayName":"爱好"
-     *             },
-     *             "age": {
-     *                 "metadataId":5,
-     *                 "metadataName":"age",
-     *                 "displayName":"年龄"
-     *             }
-     *         },
-     *         "totalElements": 14,
-     *         "totalPages": 1
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * }
+     * ],
+     * "column":{
+     * "name": {
+     * "metadataId":1,
+     * "metadataName":"name",
+     * "displayName":"姓名"
+     * },
+     * "birthday": {
+     * "metadataId":2,
+     * "metadataName":"birthday",
+     * "displayName":"生日"
+     * },
+     * "amount": {
+     * "metadataId":3,
+     * "metadataName":"amount",
+     * "displayName":"资产"
+     * },
+     * "aihao": {
+     * "metadataId":4,
+     * "metadataName":"aihao",
+     * "displayName":"爱好"
+     * },
+     * "age": {
+     * "metadataId":5,
+     * "metadataName":"age",
+     * "displayName":"年龄"
+     * }
+     * },
+     * "totalElements": 14,
+     * "totalPages": 1
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
@@ -450,12 +455,12 @@ public class EntryController {
             , @RequestParam(value = "pid", required = false, defaultValue = "") String parentId
             , @RequestParam(value = "q", required = false, defaultValue = "") String queryString
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
-            , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
-        Catalogue folderFile =  catalogueService.getFolderFileCatalogueByFolderCatalogueId(catalogueId);
-        if (folderFile == null){
+            , @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+        Catalogue folderFile = catalogueService.getFolderFileCatalogueByFolderCatalogueId(catalogueId);
+        if (folderFile == null) {
             throw new InvalidArgumentException("卷内目录未找到");
         }
-        Page<Entry> content =  entryService.search(
+        Page<Entry> content = entryService.search(
                 folderFile.getId()
                 , queryString
                 , null
@@ -503,36 +508,36 @@ public class EntryController {
      * @apiParam {String} value 查询的值，可嵌套一组新的条件。
      * @apiParamExample {json} Request-Example
      * {
-     * 	"cid": 5,
-     * 	"conditions": [
-     * 		{
-     * 			"column": "age",
-     * 			"operator": "greaterThanOrEqual",
-     * 			"value": 1
-     * 		},
-     * 		{
-     * 			"logical": "and",
-     * 			"column": "age",
-     * 			"operator": "lessThanOrEqual",
-     * 			"value": 100
-     * 		},
-     * 		{
-     * 			"logical": "and",
-     * 			"value": [
-     * 				{
-     * 					"column": "name",
-     * 					"operator": "equal",
-     * 					"value": "接收到卡"
-     * 				},
-     * 				{
-     * 					"logical": "or",
-     * 					"column": "name",
-     * 					"operator": "equal",
-     * 					"value": "5561"
-     * 				}
-     * 			]
-     * 		}
-     * 	]
+     * "cid": 5,
+     * "conditions": [
+     * {
+     * "column": "age",
+     * "operator": "greaterThanOrEqual",
+     * "value": 1
+     * },
+     * {
+     * "logical": "and",
+     * "column": "age",
+     * "operator": "lessThanOrEqual",
+     * "value": 100
+     * },
+     * {
+     * "logical": "and",
+     * "value": [
+     * {
+     * "column": "name",
+     * "operator": "equal",
+     * "value": "接收到卡"
+     * },
+     * {
+     * "logical": "or",
+     * "column": "name",
+     * "operator": "equal",
+     * "value": "5561"
+     * }
+     * ]
+     * }
+     * ]
      * }
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.id 条目id
@@ -553,59 +558,59 @@ public class EntryController {
      * @apiSuccess (Success 200) {Array} column.displayName 爱好
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "birthday":"2018-05-16T14:44:56.328+0800",
-     *                     "amount":73824039.1873,
-     *                     "aihao":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "name":"里斯1",
-     *                     "age":41
-     *                 },
-     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
-     *             }
-     *         ],
-     *         "column":[
-     *             {
-     *                 "metadataId":1,
-     *                 "metadataName":"name",
-     *                 "displayName":"姓名"
-     *             },
-     *             {
-     *                 "metadataId":2,
-     *                 "metadataName":"birthday",
-     *                 "displayName":"生日"
-     *             },
-     *             {
-     *                 "metadataId":3,
-     *                 "metadataName":"amount",
-     *                 "displayName":"资产"
-     *             },
-     *             {
-     *                 "metadataId":4,
-     *                 "metadataName":"aihao",
-     *                 "displayName":"爱好"
-     *             },
-     *             {
-     *                 "metadataId":5,
-     *                 "metadataName":"age",
-     *                 "displayName":"年龄"
-     *             }
-     *         ],
-     *         "totalElements":14
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * }
+     * ],
+     * "column":[
+     * {
+     * "metadataId":1,
+     * "metadataName":"name",
+     * "displayName":"姓名"
+     * },
+     * {
+     * "metadataId":2,
+     * "metadataName":"birthday",
+     * "displayName":"生日"
+     * },
+     * {
+     * "metadataId":3,
+     * "metadataName":"amount",
+     * "displayName":"资产"
+     * },
+     * {
+     * "metadataId":4,
+     * "metadataName":"aihao",
+     * "displayName":"爱好"
+     * },
+     * {
+     * "metadataId":5,
+     * "metadataName":"age",
+     * "displayName":"年龄"
+     * }
+     * ],
+     * "totalElements":14
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #entryCondition.catalogueId)")
@@ -634,16 +639,16 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} totalElements 总元素数
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "title":1,
-     *                 "danghao":1,
-     *             }
-     *         ],
-     *         "totalElements":14
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "title":1,
+     * "danghao":1,
+     * }
+     * ],
+     * "totalElements":14
+     * }
      * }
      */
     //@PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
@@ -651,13 +656,13 @@ public class EntryController {
     public Map<String, Object> searchByBox(
             @RequestParam(value = "boxId") int boxId
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
-            , @RequestParam(value ="size", required = false, defaultValue = "20") int size){
+            , @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
 
         Box box = boxService.get(boxId);
 
         Catalogue catalogue = catalogueService.getMainCatalogue(box.getArchivesId());
 
-        if (catalogue == null){
+        if (catalogue == null) {
             throw new InvalidArgumentException("目录不存在");
         }
 
@@ -678,7 +683,7 @@ public class EntryController {
                 , null
                 , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));*/
 
-        Page<Entry>  content = entryService.listInBox(catalogue.getId(), box.getCode(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+        Page<Entry> content = entryService.listInBox(catalogue.getId(), box.getCode(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
 
         DescriptionItem titleItem = descriptionItemService.findByCatalogueIdAndPropertyType(catalogue.getId(), PropertyType.Title);
 
@@ -686,12 +691,12 @@ public class EntryController {
 
         List<Map<String, String>> maps = content.getContent().stream().map(a -> {
             String title = "";
-            if (titleItem != null){
+            if (titleItem != null) {
                 title = a.getItems().getOrDefault(titleItem.getMetadataName(), "无标题").toString();
             }
 
             String danghao = "";
-            if (danghaoItem != null){
+            if (danghaoItem != null) {
                 danghao = a.getItems().getOrDefault(danghaoItem.getMetadataName(), "无档号").toString();
             }
             Map<String, String> r = new HashMap<>();
@@ -750,91 +755,91 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} totalElements 总记录数
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveName":"一文一件库",
-     *                 "fondsName":"测试全宗",
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "生日":"2018-05-16T14:44:56.328+0800",
-     *                     "金额":73824039.1873,
-     *                     "爱好":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "姓名":"里斯1",
-     *                     "年龄":41
-     *                 },
-     *                 "file":{
-     *                     "fileId":"文件id",
-     *                     "title":"这是一个文件标题",
-     *                     "fileType":"word",
-     *                     "highLight":"这是高亮文本内容",
-     *                     "fileName": "文件名",
-     *                     "pdfConverStatus"
-     *                 }
-     *             }
-     *         ],
-     *         "aggregations":[
-     *             {
-     *                 "id":"archiveContentType",
-     *                 "name": "档案类型",
-     *                 "count": 10,
-     *                 "children":[
-     *                     {
-     *                         "id": "1",
-     *                         "name":"文书档案",
-     *                         "count":10
-     *                     }
-     *                 ],
-     *             },
-     *             {
-     *                 "id":"fondsId",
-     *                 "name": "全宗",
-     *                 "count": 10,
-     *                 "children":[
-     *                     {
-     *                         "id":"1",
-     *                         "name":"全宗A",
-     *                         "count":10
-     *                     }
-     *                 ],
-     *             },
-     *             {
-     *                 "id":"archiveId",
-     *                 "name": "档案库",
-     *                 "count": 10,
-     *                 "children":[
-     *                     {
-     *                         "id":"1",
-     *                         "name":"一文一件库",
-     *                         "count":10
-     *                     }
-     *                 ],
-     *             },
-     *             {
-     *                 "id":"year",
-     *                 "name": "年度",
-     *                 "count": 10,
-     *                 "children":[
-     *                     {
-     *                         "id":"1",
-     *                         "name":"2018年",
-     *                         "count":10
-     *                     }
-     *                 ],
-     *             }
-     *         ],
-     *         "totalElements": 14,
-     *         "totalPages": 1
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveName":"一文一件库",
+     * "fondsName":"测试全宗",
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "生日":"2018-05-16T14:44:56.328+0800",
+     * "金额":73824039.1873,
+     * "爱好":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "姓名":"里斯1",
+     * "年龄":41
+     * },
+     * "file":{
+     * "fileId":"文件id",
+     * "title":"这是一个文件标题",
+     * "fileType":"word",
+     * "highLight":"这是高亮文本内容",
+     * "fileName": "文件名",
+     * "pdfConverStatus"
+     * }
+     * }
+     * ],
+     * "aggregations":[
+     * {
+     * "id":"archiveContentType",
+     * "name": "档案类型",
+     * "count": 10,
+     * "children":[
+     * {
+     * "id": "1",
+     * "name":"文书档案",
+     * "count":10
+     * }
+     * ],
+     * },
+     * {
+     * "id":"fondsId",
+     * "name": "全宗",
+     * "count": 10,
+     * "children":[
+     * {
+     * "id":"1",
+     * "name":"全宗A",
+     * "count":10
+     * }
+     * ],
+     * },
+     * {
+     * "id":"archiveId",
+     * "name": "档案库",
+     * "count": 10,
+     * "children":[
+     * {
+     * "id":"1",
+     * "name":"一文一件库",
+     * "count":10
+     * }
+     * ],
+     * },
+     * {
+     * "id":"year",
+     * "name": "年度",
+     * "count": 10,
+     * "children":[
+     * {
+     * "id":"1",
+     * "name":"2018年",
+     * "count":10
+     * }
+     * ],
+     * }
+     * ],
+     * "totalElements": 14,
+     * "totalPages": 1
+     * }
      * }
      */
     @RequestMapping(value = "/searchFulltext", method = RequestMethod.POST)
@@ -858,15 +863,15 @@ public class EntryController {
             searchParam = (List<String>) body.get("searchParam");
         }
         String queryString = null;
-        if (body.get("queryString")!= null) {
+        if (body.get("queryString") != null) {
             queryString = (String) body.get("queryString");
         }
         String includeWords = null;
-        if (body.get("includeWords")!= null) {
+        if (body.get("includeWords") != null) {
             includeWords = (String) body.get("includeWords");
         }
         String rejectWords = null;
-        if (body.get("rejectWords")!= null) {
+        if (body.get("rejectWords") != null) {
             rejectWords = (String) body.get("rejectWords");
         }
         Integer catalogueId = null;
@@ -880,7 +885,7 @@ public class EntryController {
 
         assert searchParam != null;
         if (!searchParam.contains(SearchFulltextOption.entry.name())
-                && !searchParam.contains(SearchFulltextOption.file.name())){
+                && !searchParam.contains(SearchFulltextOption.file.name())) {
             throw new InvalidArgumentException("请选择条目或者全文其中一项");
         }
 
@@ -899,7 +904,7 @@ public class EntryController {
 
         Map<String, Object> result = new HashMap<>();
 
-        if (list == null || list.getTotalElements() == 0){
+        if (list == null || list.getTotalElements() == 0) {
             result.put("totalElements", 0);
             result.put("totalPages", 0);
             result.put("content", null);
@@ -992,7 +997,7 @@ public class EntryController {
         file.put("fileType", a.getType());
         file.put("pdfConvertStatus", a.getPdfConverStatus());
         String highLight = a.getContentIndex();
-        if (highLight != null && highLight.length() > 300){
+        if (highLight != null && highLight.length() > 300) {
             highLight = highLight.substring(0, a.getContentIndex().length() > 300 ? 300 : a.getContentIndex().length());
         }
         file.put("highLight", highLight);
@@ -1014,7 +1019,7 @@ public class EntryController {
         return result;
     }
 
-    private void makeAggregations(List<TermsAggregationResult> aggregations){
+    private void makeAggregations(List<TermsAggregationResult> aggregations) {
 
         aggregations.forEach(termsAggregationResult -> {
             List<String> ids = termsAggregationResult.getChildren().stream().map(TermsAggregationResult::getId).collect(Collectors.toList());
@@ -1033,7 +1038,7 @@ public class EntryController {
                     break;
             }
 
-            if (map != null){
+            if (map != null) {
                 Map<String, String> finalMap = map;
                 termsAggregationResult.getChildren().forEach(a -> a.setName(finalMap.getOrDefault(a.getId(), a.getId())));
             }
@@ -1048,16 +1053,16 @@ public class EntryController {
 
         return list.stream().collect(Collectors.toMap(a -> String.format("%s", a.getId()), a -> {
             String archiveName = archiveMap.get(a.getArchivesId());
-            if (a.getCatalogueType() == CatalogueType.Folder){
+            if (a.getCatalogueType() == CatalogueType.Folder) {
                 archiveName += "_案卷";
-            }else if (a.getCatalogueType() == CatalogueType.FolderFile){
+            } else if (a.getCatalogueType() == CatalogueType.FolderFile) {
                 archiveName += "_卷内";
             }
             return archiveName;
         }));
     }
 
-    private Map<String,String> mapFondsList(Collection<Integer> ids) {
+    private Map<String, String> mapFondsList(Collection<Integer> ids) {
         return fondsService.findAllById(ids).stream().collect(Collectors.toMap(a -> String.format("%s", a.getId()), Fonds::getName));
     }
 
@@ -1066,7 +1071,7 @@ public class EntryController {
     }
 
 
-    private Map<String, Object> formatEntryItems(Entry entry, Map<String, DescriptionItem> itemMap){
+    private Map<String, Object> formatEntryItems(Entry entry, Map<String, DescriptionItem> itemMap) {
         Map<String, Object> result = new HashMap<>();
         entry.getItems().forEach((a, b) -> {
             DescriptionItem item = itemMap.get(a);
@@ -1082,7 +1087,7 @@ public class EntryController {
             , List<Catalogue> catalogues
             , Map<Integer, Archives> archivesMap
             , Map<Integer, ArchivesGroup> archivesGroupMap
-            , Map<Integer, Fonds> fondsMap){
+            , Map<Integer, Fonds> fondsMap) {
         catalogues.addAll(catalogueService.findAllById(catalogueIds));
 
         List<Integer> archiveIds = catalogues.stream().map(Catalogue::getArchivesId).collect(Collectors.toList());
@@ -1095,7 +1100,7 @@ public class EntryController {
 
         List<ArchivesGroup> archivesGroups = archivesGroupService.findAllById(archiveGroupIds);
 
-        archivesGroupMap.putAll(archivesGroups.stream().collect(Collectors.toMap(ArchivesGroup::getId, a-> a)));
+        archivesGroupMap.putAll(archivesGroups.stream().collect(Collectors.toMap(ArchivesGroup::getId, a -> a)));
 
         List<Integer> fondsIds = archivesGroups.stream().map(ArchivesGroup::getFondsId).collect(Collectors.toList());
 
@@ -1122,29 +1127,29 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} content.items.count 统计结果
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data": {
-     *         "content": [
-     *             {
-     *                 "archiveId": 1,
-     *                 "archiveName": "一文一件库",
-     *                 "fondsName": "测试全宗",
-     *                 "items":[
-     *                     {
-     *                         "catalogueId": 1,
-     *                         "catalogueType": 1,
-     *                         "count": 1
-     *                     }
-     *                 ]
-     *             }
-     *         ]
-     *     }
+     * "data": {
+     * "content": [
+     * {
+     * "archiveId": 1,
+     * "archiveName": "一文一件库",
+     * "fondsName": "测试全宗",
+     * "items":[
+     * {
+     * "catalogueId": 1,
+     * "catalogueType": 1,
+     * "count": 1
+     * }
+     * ]
+     * }
+     * ]
+     * }
      * }
      */
     @RequestMapping(value = "/searchFullArchive", method = RequestMethod.POST)
     public List searchFullArchive(
             @JsonParam List<Integer> catalogueIds
-            ,@JsonParam List<Integer> archiveContentType
-            ,@JsonParam String keyWord
+            , @JsonParam List<Integer> archiveContentType
+            , @JsonParam String keyWord
     ) {
         Map<Integer, Long> aggs = entryService.aggsCatalogueCount(catalogueIds, archiveContentType, keyWord);
 
@@ -1164,14 +1169,14 @@ public class EntryController {
             archive.put("archiveName", archivesMap.get(aid).getName());
             archive.put("fondsName", fondsMap.get(
                     archivesGroupMap.get(archivesMap.get(aid).getArchivesGroupId()).getFondsId()).getName());
-            archive.put("items", c.stream().map(a ->mapCatalogue(a, aggs)).collect(Collectors.toList()));
+            archive.put("items", c.stream().map(a -> mapCatalogue(a, aggs)).collect(Collectors.toList()));
             result.add(archive);
         });
 
         return result;
     }
 
-    private Map<String, Object> mapCatalogue(Catalogue catalogue, Map<Integer, Long> aggs){
+    private Map<String, Object> mapCatalogue(Catalogue catalogue, Map<Integer, Long> aggs) {
         Map<String, Object> result = new HashMap<>();
         result.put("catalogueId", catalogue.getId());
         result.put("catalogueType", catalogue.getCatalogueType());
@@ -1180,7 +1185,7 @@ public class EntryController {
     }
 
     @RequestMapping(value = "/test/{id}", method = RequestMethod.GET)
-    public void test(@PathVariable("id") String id){
+    public void test(@PathVariable("id") String id) {
         entryAsyncTask.test(id);
         //entryService.groupCountPageCountByBox(Collections.singletonList("222"), 7);
         //Object a = entryService.groupByBox(Collections.singletonList("222"), 7);
@@ -1198,18 +1203,18 @@ public class EntryController {
      * @apiParam {Number} isLose 遗失鉴定(0 未遗失  1 已遗失).
      * @apiParamExample {json} Request-Example:
      * {
-     *   "entryIds":["ea5ebe11-a6c3-4db6-91e4-df783be235c3","26a5aa18-2606-46fc-bbd9-5f4d78e57956"],
-     *   "catalogueId":10,
-     *   "isOpen":2,
-     *   "isExpired":0,
-     *   "isEndangered":1,
-     *   "isLose":0
+     * "entryIds":["ea5ebe11-a6c3-4db6-91e4-df783be235c3","26a5aa18-2606-46fc-bbd9-5f4d78e57956"],
+     * "catalogueId":10,
+     * "isOpen":2,
+     * "isExpired":0,
+     * "isEndangered":1,
+     * "isLose":0
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #catalogueId)")
-    @RequestMapping(value = "/batchIdentification",method = RequestMethod.PUT)
-    public void batchIdentification(@JsonParam List<String> entryIds,@JsonParam int catalogueId,@JsonParam Integer isOpen,@JsonParam Boolean isExpired,@JsonParam Boolean isEndangered,@JsonParam Boolean isLose ){
-        entryService.batchIdentification(entryIds,catalogueId,isOpen,isExpired,isEndangered,isLose);
+    @RequestMapping(value = "/batchIdentification", method = RequestMethod.PUT)
+    public void batchIdentification(@JsonParam List<String> entryIds, @JsonParam int catalogueId, @JsonParam Integer isOpen, @JsonParam Boolean isExpired, @JsonParam Boolean isEndangered, @JsonParam Boolean isLose) {
+        entryService.batchIdentification(entryIds, catalogueId, isOpen, isExpired, isEndangered, isLose);
     }
 
     /**
@@ -1223,18 +1228,18 @@ public class EntryController {
      * @apiSuccess (Success 200) {boolean=true,false} isLose 遗失鉴定(false:未遗失  true:已遗失).
      * @apiSuccessExample {json} Response-Example:
      * {
-     *   "data": {
-     *     "isOpen": 2,
-     *     "isLose": false,
-     *     "isEndangered": true,
-     *     "isExpired": false
-     *   }
+     * "data": {
+     * "isOpen": 2,
+     * "isLose": false,
+     * "isEndangered": true,
+     * "isExpired": false
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
-    @RequestMapping(value = "/getIdentification/{id}",method = RequestMethod.GET)
-    public Map<String,Object> getIdentification(@PathVariable String id,@RequestParam("catalogueId") Integer catalogueId){
-        return entryService.getIdentification(id,catalogueId);
+    @RequestMapping(value = "/getIdentification/{id}", method = RequestMethod.GET)
+    public Map<String, Object> getIdentification(@PathVariable String id, @RequestParam("catalogueId") Integer catalogueId) {
+        return entryService.getIdentification(id, catalogueId);
     }
 
     /**
@@ -1253,9 +1258,9 @@ public class EntryController {
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
-    @RequestMapping(value = "/setNewVolume",method = RequestMethod.POST)
-    public void setNewVolume(@JsonParam List<String> folderFileEntryIds,@JsonParam int folderFileCatalogueId,@JsonParam Entry entry){
-        entryService.setNewVolume(folderFileEntryIds,folderFileCatalogueId,entry);
+    @RequestMapping(value = "/setNewVolume", method = RequestMethod.POST)
+    public void setNewVolume(@JsonParam List<String> folderFileEntryIds, @JsonParam int folderFileCatalogueId, @JsonParam Entry entry) {
+        entryService.setNewVolume(folderFileEntryIds, folderFileCatalogueId, entry);
     }
 
     /**
@@ -1268,9 +1273,9 @@ public class EntryController {
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #folderFileCatalogueId)")
-    @RequestMapping(value = "/separateVolume",method = RequestMethod.PUT)
-    public void separateVolume(@JsonParam List<String> folderFileEntryIds,@JsonParam int folderFileCatalogueId){
-        entryService.separateVolume(folderFileEntryIds,folderFileCatalogueId);
+    @RequestMapping(value = "/separateVolume", method = RequestMethod.PUT)
+    public void separateVolume(@JsonParam List<String> folderFileEntryIds, @JsonParam int folderFileCatalogueId) {
+        entryService.separateVolume(folderFileEntryIds, folderFileCatalogueId);
     }
 
     /**
@@ -1288,26 +1293,26 @@ public class EntryController {
      * @apiParam {String[]} mapping.srcData 归档的数据，如果为空则归档全部数据
      * @apiParamExample {json} Request-Example
      * {
-     *     "delSrc": true,
-     *     "originalType": [1,2],
-     *     "archivingAll": true,
-     *     "mapping":[
-     *         {
-     *             "srcId": 1,
-     *             "trgId": 2,
-     *             "srcFields":[
-     *                 "name",
-     *                 "age"
-     *             ],
-     *             "trgFields":[
-     *                 "name",
-     *                 "age"
-     *             ],
-     *             "srcData":[
-     *                 "xxxx-xxxx-xxxx"
-     *             ]
-     *         }
-     *     ]
+     * "delSrc": true,
+     * "originalType": [1,2],
+     * "archivingAll": true,
+     * "mapping":[
+     * {
+     * "srcId": 1,
+     * "trgId": 2,
+     * "srcFields":[
+     * "name",
+     * "age"
+     * ],
+     * "trgFields":[
+     * "name",
+     * "age"
+     * ],
+     * "srcData":[
+     * "xxxx-xxxx-xxxx"
+     * ]
+     * }
+     * ]
      * }
      * @apiSuccess {Object} success 成功记录数
      * @apiSuccess {Number} success.total 总成功数
@@ -1328,49 +1333,49 @@ public class EntryController {
      * @apiSuccess {Object[]} items.children 下级信息，结构同items
      * @apiSuccessExample {json} Response-Example
      * {
-     *     "success": {
-     *         "total": 110,
-     *         "main": 2,
-     *         "children": 8,
-     *         "file": 100
-     *     },
-     *     "failure": {
-     *          "total": 5,
-     *          "main": 1,
-     *          "children": 2,
-     *          "file": 2
-     *      },
-     *     "items": [
-     *         {
-     *             "id": "cef91008-e167-4fb6-ae99-d9961ad9f328",
-     *             "parentId": null,
-     *             "title": "测试归档4",
-     *             "errorMsg": "成功",
-     *             "type": 1,
-     *             "status": 1,
-     *             "children": [
-     *                 {
-     *                     "id": "d1fbabee-8ce2-4a1e-a6c0-23083c6f754e",
-     *                     "parentId": "cef91008-e167-4fb6-ae99-d9961ad9f328",
-     *                     "title": "测试卷内归档",
-     *                     "errorMsg": "成功",
-     *                     "type": 1,
-     *                     "status": 1,
-     *                     "children": [
-     *                         {
-     *                             "id": "bb375230-45f8-46d9-a9aa-12320e929f8e",
-     *                             "parentId": "d1fbabee-8ce2-4a1e-a6c0-23083c6f754e",
-     *                             "title": "测试原文归档",
-     *                             "errorMsg": "成功",
-     *                             "type": 2,
-     *                             "status": 1,
-     *                             "children": []
-     *                         }
-     *                     ]
-     *                 }
-     *             ]
-     *         }
-     *     ]
+     * "success": {
+     * "total": 110,
+     * "main": 2,
+     * "children": 8,
+     * "file": 100
+     * },
+     * "failure": {
+     * "total": 5,
+     * "main": 1,
+     * "children": 2,
+     * "file": 2
+     * },
+     * "items": [
+     * {
+     * "id": "cef91008-e167-4fb6-ae99-d9961ad9f328",
+     * "parentId": null,
+     * "title": "测试归档4",
+     * "errorMsg": "成功",
+     * "type": 1,
+     * "status": 1,
+     * "children": [
+     * {
+     * "id": "d1fbabee-8ce2-4a1e-a6c0-23083c6f754e",
+     * "parentId": "cef91008-e167-4fb6-ae99-d9961ad9f328",
+     * "title": "测试卷内归档",
+     * "errorMsg": "成功",
+     * "type": 1,
+     * "status": 1,
+     * "children": [
+     * {
+     * "id": "bb375230-45f8-46d9-a9aa-12320e929f8e",
+     * "parentId": "d1fbabee-8ce2-4a1e-a6c0-23083c6f754e",
+     * "title": "测试原文归档",
+     * "errorMsg": "成功",
+     * "type": 2,
+     * "status": 1,
+     * "children": []
+     * }
+     * ]
+     * }
+     * ]
+     * }
+     * ]
      * }
      * @apiError message 1.源目录id不存在 2.归档目录id不存在 3.字段映射错误
      */
@@ -1389,7 +1394,7 @@ public class EntryController {
             , @JsonParam(path = "mapping[1].srcFields") List<String> slaveSrcFields
             , @JsonParam(path = "mapping[1].trgFields") List<String> slaveTrgFields
             , @SessionAttribute UserCredential LOGIN_USER
-    ){
+    ) {
         List<ArchivingResult> error = new ArrayList<>();
         Map<String, String> mainIdMap = archivingEntry(
                 mainSrcId
@@ -1432,7 +1437,7 @@ public class EntryController {
             }
         }
 
-        if (delSrc){
+        if (delSrc) {
             Map<Integer, Set<String>> delEntryIds = new HashMap<>();
             Map<Integer, Set<String>> delOriginalIds = new HashMap<>();
 
@@ -1459,23 +1464,23 @@ public class EntryController {
     private void getDeleteIds(
             List<ArchivingResult> error
             , Map<Integer, Set<String>> delEntryIds
-            , Map<Integer, Set<String>> delOriginalIds){
+            , Map<Integer, Set<String>> delOriginalIds) {
         error.forEach(a -> {
-            if (a.getStatus() == ArchivingResult.Status.failure){
+            if (a.getStatus() == ArchivingResult.Status.failure) {
                 return;
             }
 
-            if (a.getType() == ArchivingResult.Type.entry){
+            if (a.getType() == ArchivingResult.Type.entry) {
                 Set<String> entryIds = delEntryIds.get(a.getCatalogId());
                 entryIds.add(a.getId());
-            }else{
+            } else {
                 Set<String> originalIds = delOriginalIds.get(a.getCatalogId());
                 originalIds.add(a.getId());
             }
         });
     }
 
-    private Map<String, Object> formatArchivingResult(List<ArchivingResult> list){
+    private Map<String, Object> formatArchivingResult(List<ArchivingResult> list) {
         AtomicInteger successMain = new AtomicInteger(0);
         AtomicInteger successChildren = new AtomicInteger(0);
         AtomicInteger successFile = new AtomicInteger(0);
@@ -1484,25 +1489,25 @@ public class EntryController {
         AtomicInteger failureFile = new AtomicInteger(0);
         Map<String, ArchivingResult> items = new HashMap<>();
         list.forEach(a -> {
-            if (a.getStatus() == ArchivingResult.Status.success){
+            if (a.getStatus() == ArchivingResult.Status.success) {
                 countArchivingResult(a, successMain, successChildren, successFile);
-            }else {
+            } else {
                 countArchivingResult(a, failureMain, failureChildren, failureFile);
             }
 
             String parentId = a.getParentId();
 
             ArchivingResult current = items.getOrDefault(a.getId(), null);
-            if (current != null){
+            if (current != null) {
                 a.setChildren(current.getChildren());
             }
             items.put(a.getId(), a);
 
-            if (parentId != null){
+            if (parentId != null) {
                 ArchivingResult parent = items.getOrDefault(parentId, null);
                 if (parent != null) {
                     parent.getChildren().add(a);
-                }else{
+                } else {
                     ArchivingResult tmp = new ArchivingResult();
                     tmp.getChildren().add(a);
                     items.put(parentId, tmp);
@@ -1526,19 +1531,19 @@ public class EntryController {
         return success;
     }
 
-    private void countArchivingResult(ArchivingResult a, AtomicInteger mainCnt, AtomicInteger childrenCnt, AtomicInteger fileCnt){
-        if (a.getParentId() == null){
+    private void countArchivingResult(ArchivingResult a, AtomicInteger mainCnt, AtomicInteger childrenCnt, AtomicInteger fileCnt) {
+        if (a.getParentId() == null) {
             mainCnt.set(mainCnt.get() + 1);
-        }else if (a.getType() == ArchivingResult.Type.entry){
+        } else if (a.getType() == ArchivingResult.Type.entry) {
             childrenCnt.set(childrenCnt.get() + 1);
         }
 
-        if (a.getType() == ArchivingResult.Type.file){
+        if (a.getType() == ArchivingResult.Type.file) {
             fileCnt.set(fileCnt.get() + 1);
         }
     }
 
-    private void delOriginal(Set<String> ids, Integer srcId){
+    private void delOriginal(Set<String> ids, Integer srcId) {
         if (ids != null && ids.size() > 0 && srcId != null) {
             List<Map<String, Object>> batch = ids.stream().map(a -> {
                 Map<String, Object> map = new HashMap<>();
@@ -1557,11 +1562,11 @@ public class EntryController {
             , Map<String, String> srcDataMap
             , Collection<Integer> originalType
             , List<ArchivingResult> error) {
-        if (!catalogueService.exists(srcId)){
+        if (!catalogueService.exists(srcId)) {
             throw new InvalidArgumentException("源目录id不存在");
         }
 
-        if (!catalogueService.exists(trgId)){
+        if (!catalogueService.exists(trgId)) {
             throw new InvalidArgumentException("归档目录id不存在");
         }
 
@@ -1572,7 +1577,7 @@ public class EntryController {
         Map<String, String> result = new HashMap<>();
         do {
             mainOriginalTexts = originalTextService.scroll(archivingAll, srcId, srcData, originalType, page++, size);
-            if (mainOriginalTexts.getNumberOfElements() == 0){
+            if (mainOriginalTexts.getNumberOfElements() == 0) {
                 return result;
             }
             List<String> mainSrcOriginalTextsData = mainOriginalTexts.stream().map(OriginalText::getId).collect(Collectors.toList());
@@ -1601,24 +1606,24 @@ public class EntryController {
             , int owner
             , List<ArchivingResult> error) {
 
-        if (srcFields.size() != trgFields.size()){
+        if (srcFields.size() != trgFields.size()) {
             throw new InvalidArgumentException("字段映射错误");
         }
 
-        for (int i = 0; i < srcFields.size() ; i++){
+        for (int i = 0; i < srcFields.size(); i++) {
             if (StringUtils.isEmpty(srcFields.get(i))
-                    || StringUtils.isEmpty(trgFields.get(i))){
+                    || StringUtils.isEmpty(trgFields.get(i))) {
                 srcFields.remove(i);
                 trgFields.remove(i);
                 i--;
             }
         }
 
-        if (!catalogueService.exists(srcId)){
+        if (!catalogueService.exists(srcId)) {
             throw new InvalidArgumentException("源目录id不存在");
         }
 
-        if (!catalogueService.exists(trgId)){
+        if (!catalogueService.exists(trgId)) {
             throw new InvalidArgumentException("归档目录id不存在");
         }
 
@@ -1642,10 +1647,10 @@ public class EntryController {
             //归档条目
             if (archivingAll || parentDataMap == null) {
                 entries = entryService.scrollEntry(archivingAll, srcId, srcData, page++, size);
-            }else{
+            } else {
                 entries = entryService.scrollSubEntry(srcId, parentDataMap.keySet(), page++, size);
             }
-            if (entries.getNumberOfElements() == 0){
+            if (entries.getNumberOfElements() == 0) {
                 return result;
             }
             List<String> srcIds = entries.stream().map(Entry::getId).collect(Collectors.toList());
@@ -1661,9 +1666,9 @@ public class EntryController {
                     , entries
                     , owner
                     , (a) -> {
-                        if (titleField.get() == null){
+                        if (titleField.get() == null) {
                             return a.getId();
-                        }else{
+                        } else {
                             Object titleValue = a.getItems().getOrDefault(titleField.get().getMetadataName(), a.getId());
                             return titleValue.toString();
                         }
@@ -1681,7 +1686,7 @@ public class EntryController {
 
     private void validateArchivingFields(Map<String, DescriptionItem> descriptionItems, List<String> fields) {
         Set<String> qryFields = descriptionItems.keySet();
-        if (!qryFields.containsAll(fields)){
+        if (!qryFields.containsAll(fields)) {
             throw new InvalidArgumentException("字段设置错误");
         }
     }
@@ -1696,24 +1701,23 @@ public class EntryController {
      * @apiParam {String} boxCode 盒号
      * @apiParamExample {json} Request-Example
      * {
-     *     "catalogueId": 1,
-     *     "ids": ["xxxx-xxxx-xxxx"],
-     *     "boxCode": "box001"
+     * "catalogueId": 1,
+     * "ids": ["xxxx-xxxx-xxxx"],
+     * "boxCode": "box001"
      * }
      * @apiError message 1.没有盒号字段 2.盒不存在 3.目录不存在 4.条目不存在
-     *
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #catalogueId)")
     @RequestMapping(value = "/setBoxCode", method = RequestMethod.POST)
     @Transactional
-    public void setBoxCode(@JsonParam List<String> ids, @JsonParam String boxCode,@JsonParam int catalogueId){
+    public void setBoxCode(@JsonParam List<String> ids, @JsonParam String boxCode, @JsonParam int catalogueId) {
         Catalogue catalogue = catalogueService.get(catalogueId);
-        if (catalogue == null){
+        if (catalogue == null) {
             throw new InvalidArgumentException("目录不存在");
         }
 
         Box box = boxService.getByCode(catalogue.getArchivesId(), boxCode);
-        if (box == null){
+        if (box == null) {
             throw new InvalidArgumentException("盒不存在");
         }
 
@@ -1730,17 +1734,16 @@ public class EntryController {
      * @apiParam {String[]} ids 条目id数组
      * @apiParamExample {json} Request-Example
      * {
-     *     "catalogueId": 1,
-     *     "ids": ["xxxx-xxxx-xxxx"]
+     * "catalogueId": 1,
+     * "ids": ["xxxx-xxxx-xxxx"]
      * }
      * @apiError message 1.没有盒号字段 2.条目不存在 3.目录不存在
-     *
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #catalogueId)")
     @RequestMapping(value = "/unSetBoxCode", method = RequestMethod.POST)
-    public void unSetBoxCode(@JsonParam List<String> ids,@JsonParam int catalogueId){
+    public void unSetBoxCode(@JsonParam List<String> ids, @JsonParam int catalogueId) {
         Catalogue catalogue = catalogueService.get(catalogueId);
-        if (catalogue == null){
+        if (catalogue == null) {
             throw new InvalidArgumentException("目录不存在");
         }
 
@@ -1767,12 +1770,12 @@ public class EntryController {
             int files = 0;
             int pages = 0;
             GroupCount groupCount = list.getOrDefault(a, null);
-            if (groupCount != null){
+            if (groupCount != null) {
                 pages = groupCount.count;
             }
             //TODO @lijie 优化到循环外面
             List<String> boxIds = group.getOrDefault(a, null);
-            if (boxIds != null && boxIds.size() > 0){
+            if (boxIds != null && boxIds.size() > 0) {
                 files = originalTextService.countByCatalogueIdAndEntryIdIn(catalogueId, boxIds);
             }
             boxService.updateTotal(a, archiveId, pages, files);
@@ -1780,10 +1783,10 @@ public class EntryController {
     }
 
     @EventListener
-    public void validateBoxNumber(EntryBoxNumberValidateEvent event){
+    public void validateBoxNumber(EntryBoxNumberValidateEvent event) {
         boolean exists = boxService.existsByCodeAndArchivesId(event.getArchiveId(), event.getBoxCode());
 
-        if (!exists){
+        if (!exists) {
             throw new EntryValueConverException(String.format("盒号(%s)不存在", event.getBoxCode()));
         }
     }

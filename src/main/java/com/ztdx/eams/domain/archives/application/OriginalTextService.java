@@ -389,13 +389,48 @@ public class OriginalTextService {
         getFileMetadata(originalText, file);
 
         Optional<Entry> find = entryMongoRepository.findById(originalText.getEntryId(), "archive_record_" + originalText.getCatalogueId());
-        if (find.isPresent()) {
+        if (find.isPresent() && find.get().getGmtDeleted() == 0) {
             originalTextMongoRepository.save(originalText);
             originalTextElasticsearchRepository.save(originalText);
         }
         //删除本地文件
         if (file.exists()) {
             file.delete();
+        }
+    }
+
+    /**
+     * 异步处理文件（全文索引，元数据信息，PDF转换）（批量）
+     */
+    @Async
+    public void placeOnFiles(OriginalText[] originalTexts) {
+        for (OriginalText originalText : originalTexts) {
+            Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(originalText.getCatalogueId());
+            if (null == fondsId) {
+                return;
+            }
+            String name = originalText.getName();
+            File file = new File(name);
+            //设置路径
+            String[] path = new String[]{String.valueOf(fondsId), originalText.getMd5().substring(0, 2), originalText.getMd5().substring(2, 4)};
+            //下载到本地
+            ftpUtil.downloadFile(path, originalText.getMd5(), file);
+            //生成全文索引
+            createContentIndex(originalText, file);
+            //转为pdf格式文件并上传ftp
+            converter2PdfAndUpload(fondsId, originalText, file);
+            //获取文件元数据属性
+            getFileMetadata(originalText, file);
+
+            //删除本地文件
+            if (file.exists()) {
+                file.delete();
+            }
+        }
+        Optional<Entry> find = entryMongoRepository.findById(originalTexts[0].getEntryId(), "archive_record_" + originalTexts[0].getCatalogueId());
+        if (find.isPresent() && find.get().getGmtDeleted() == 0) {
+            originalTextMongoRepository.saveAll(Arrays.asList(originalTexts));
+            originalTextElasticsearchRepository.saveAll(Arrays.asList(originalTexts));
         }
     }
 
@@ -600,6 +635,53 @@ public class OriginalTextService {
                                 .and("gmtDeleted")
                                 .is(0)
                 ), indexName), Integer.class);
+    }
+
+    public OriginalText[] saveMany(OriginalText[] originalTexts, MultipartFile[] files) {
+
+
+        if (files.length == 0 || originalTexts.length != files.length) {
+            throw new InvalidArgumentException("原文文件未上传");
+        }
+        Integer fondsId = archivesGroupRepository.findFondsIdByCatalogue_CatalogueId(originalTexts[0].getCatalogueId());
+        if (null == fondsId) {
+            throw new InvalidArgumentException("全宗档案库不存在");
+        }
+        Optional<Entry> find = entryMongoRepository.findById(originalTexts[0].getEntryId(), "archive_record_" + originalTexts[0].getCatalogueId());
+        if (!find.isPresent()) {
+            throw new InvalidArgumentException("条目不存在");
+        }
+
+        //设置排序号
+        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch("archive_record_" + originalTexts[0].getCatalogueId());
+        srBuilder.setTypes("originalText");
+        srBuilder.addAggregation(AggregationBuilders.max("maxOrderNumber").field("orderNumber"));
+        srBuilder.setQuery(QueryBuilders.termQuery("entryId", originalTexts[0].getEntryId()));
+        double maxOrderNumber = ((Max) srBuilder.get().getAggregations().getAsMap().get("maxOrderNumber")).getValue();
+        if (maxOrderNumber == (-Infinity)) {
+            maxOrderNumber = 1;
+
+        } else {
+            maxOrderNumber = maxOrderNumber + 1;
+        }
+
+        for (int i = 0; i < originalTexts.length; i++) {
+            //文件上传到本地服务器,然后上传至ftp
+            fileUpload(fondsId, originalTexts[i], files[i]);
+
+            originalTexts[i].setId(String.valueOf(UUID.randomUUID()));
+            originalTexts[i].setOrderNumber((int) maxOrderNumber + i);
+            originalTexts[i].setCreateTime(new Date());
+            originalTexts[i].setGmtCreate(new Date());
+            originalTexts[i].setGmtModified(new Date());
+        }
+
+        //存入MongoDB
+        originalTextMongoRepository.saveAll(Arrays.asList(originalTexts));
+        //存入Elasticsearch
+        originalTextElasticsearchRepository.saveAll(Arrays.asList(originalTexts));
+
+        return originalTexts;
     }
 }
 

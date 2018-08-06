@@ -40,8 +40,8 @@ public class PlaceOnFileJob extends QuartzJobBean {
     @Override
     protected void executeInternal(JobExecutionContext jobExecutionContext) throws JobExecutionException {
 
-        for (OriginalText originalText : list) {
-            originalTextService.placeOnFile(originalText);
-        }
+//        for (OriginalText originalText : list) {
+//            originalTextService.placeOnFile(originalText);
+//        }
     }
 }

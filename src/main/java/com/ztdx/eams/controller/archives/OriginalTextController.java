@@ -82,7 +82,7 @@ public class OriginalTextController {
                     "ROLE_ADMIN"
                     , "archive_file_write_"
                             + a.getOrDefault("catalogueId", "").toString())
-                    ) {
+            ) {
                 throw new ForbiddenException("没有权限删除原文");
             }
         });
@@ -273,4 +273,43 @@ public class OriginalTextController {
         originalTextService.sort(upId, downId, catalogueId);
     }
 
+    /**
+     * @api {post} /originalText/saveMany 批量新增原文
+     * @apiName saveMany
+     * @apiGroup originalText
+     * @apiParam {Number} catalogueId 目录ID(form-data参数)
+     * @apiParam {String} entryId 条目ID(form-data参数)
+     * @apiParam {String} title 文件标题(form-data参数)(上传文件的参数均名为file,按表单参数顺序对应)
+     * @apiParam {Number} type 文件类型(form-data参数)(上传文件的参数均名为file,按表单参数顺序对应)
+     * @apiParam {String} version 文件版本(form-data参数)(上传文件的参数均名为file,按表单参数顺序对应)
+     * @apiParam {String} remark 备注(form-data参数)(上传文件的参数均名为file,按表单参数顺序对应)
+     * @apiParam {File} file 原文文件(form-data参数)(上传文件的参数均名为file,按表单参数顺序对应)
+     * @apiError (Error 400) message 1.全宗档案库不存在;2.条目不存在;3.原文文件未上传.
+     * @apiError (Error 500) message 1.文件上传失败;2.未连接到ftp服务;3.ftp服务未正常关闭.4.文件传输流未关闭.
+     * @apiUse ErrorExample
+     */
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_write_' + #request.getParameter(\"catalogueId\"))")
+    @RequestMapping(value = "/saveMany", method = RequestMethod.POST)
+    public void saveMany(HttpServletRequest request
+            , @RequestParam("catalogueId") int catalogueId
+            , @RequestParam("entryId") String entryId
+            , @RequestParam("title") String[] title
+            , @RequestParam("type") int[] type
+            , @RequestParam("version") String[] version
+            , @RequestParam("remark") String[] remark
+            , @RequestParam("file") MultipartFile[] files) {
+        OriginalText[] originalTexts = new OriginalText[files.length];
+        for (int i = 0; i < files.length; i++) {
+            OriginalText originalText = new OriginalText();
+            originalText.setCatalogueId(catalogueId);
+            originalText.setEntryId(entryId);
+            originalText.setTitle(title[i]);
+            originalText.setType(type[i]);
+            originalText.setVersion(version[i]);
+            originalText.setRemark(remark[i]);
+            originalTexts[i] = originalText;
+        }
+        originalTexts = originalTextService.saveMany(originalTexts, files);
+        originalTextService.placeOnFiles(originalTexts);
+    }
 }
