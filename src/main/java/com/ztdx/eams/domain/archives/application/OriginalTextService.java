@@ -108,6 +108,9 @@ public class OriginalTextService {
         originalText.setCreateTime(new Date());
         originalText.setGmtCreate(new Date());
         originalText.setGmtModified(new Date());
+        originalText.setArchiveContentType(find.get().getArchiveContentType());
+        originalText.setFondsId(find.get().getFondsId());
+
         //存入MongoDB
         originalTextMongoRepository.save(originalText);
         //存入Elasticsearch
