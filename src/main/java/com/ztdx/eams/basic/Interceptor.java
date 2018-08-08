@@ -38,8 +38,20 @@ public class Interceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, Exception e) throws Exception {
+        
         if (e != null) {
             appendToResponse(httpServletRequest, httpServletResponse, e);
+            //状态码是200，且请求方式不为get
+        } else if (!httpServletRequest.getRequestURL().toString().endsWith("/user/login")
+                && !(httpServletRequest.getRequestURL().toString().endsWith("/entry") && httpServletRequest.getMethod().equals("POST"))) {
+            if (httpServletResponse.getStatus() == 200 && !httpServletRequest.getMethod().equals("GET")) {
+                StringBuilder response = new StringBuilder();
+                response.append("{\"message\":\"successful\"}");
+                OutputStream os = httpServletResponse.getOutputStream();
+                os.write(response.toString().getBytes());
+                os.flush();
+                os.close();
+            }
         }
     }
 
@@ -54,10 +66,10 @@ public class Interceptor implements HandlerInterceptor {
         if (exception instanceof ApplicationException) {
             errorCode = ((ApplicationException) exception).getCode();
             message = exception.getMessage();
-        } else if(exception instanceof AccessDeniedException) {
+        } else if (exception instanceof AccessDeniedException) {
             errorCode = 403;
             message = "您没有权限，请联系管理员";
-        } else{
+        } else {
             message = "系统忙，请稍后重试";
         }
 
@@ -72,7 +84,7 @@ public class Interceptor implements HandlerInterceptor {
         response.append(message);
         response.append("\",\"path\":\"");
         response.append(httpServletRequest.getServletPath());
-        if (debug){
+        if (debug) {
             response.append("\",\"class\":\"");
             response.append(exception.getClass().toString());
             response.append("\",\"stackTrace\":\"");
