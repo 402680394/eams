@@ -881,6 +881,7 @@ public class EntryController {
         Map<String, Object> entryItems = null;
         if (body.get("entryItems") != null) {
             entryItems = (Map<String, Object>) body.get("entryItems");
+            makeEntryItems(entryItems);
         }
 
         assert searchParam != null;
@@ -953,6 +954,19 @@ public class EntryController {
                 .collect(Collectors.toList()));
 
         return result;
+    }
+
+    private void makeEntryItems(Map<String, Object> entryItems) {
+        replaceMapKey(entryItems, "catalogueId");
+        replaceMapKey(entryItems, "fondsId");
+        replaceMapKey(entryItems, "archiveContentType");
+    }
+
+    private void replaceMapKey(Map<String, Object> map, String key){
+        if (map.containsKey(key)){
+            map.put("_".concat(key), map.get(key));
+            map.remove(key);
+        }
     }
 
     private Map<String, Object> mapSearchResult(Map<Integer, Archives> archivesMap, Map<Integer, ArchivesGroup> archivesGroupMap, Map<Integer, Fonds> fondsMap, Map<String, Entry> entries, Map<Integer, Map<String, DescriptionItem>> descItems, OriginalText a) {

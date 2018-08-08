@@ -518,7 +518,12 @@ public class EntryService {
                         .collect(Collectors.toMap(DescriptionItem::getMetadataName, DescriptionItem::getDataType));
 
         items.forEach((field, value) -> {
-            String searchFieldName = String.format("items.%s", field);
+            String searchFieldName;
+            if (field.indexOf("_") == 0){
+                searchFieldName = field.substring(1);
+            }else{
+                searchFieldName = String.format("items.%s", field);
+            }
 
             switch (map.get(field)){
                 case Array:
