@@ -344,11 +344,15 @@ public class EntryService {
             , String queryString
             , String includeWords
             , String rejectWords
-            , Integer catalogueId
+            , Collection<Integer> catalogueIds
             , Map<String, Object> items
             , List<TermsAggregationParam> aggs
             , Pageable pageable) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
+
+        if (catalogueIds == null || catalogueIds.size() == 0) {
+            return null;
+        }
 
         makeFulltextQuery(
                 archiveContentType
@@ -356,7 +360,7 @@ public class EntryService {
                 , queryString
                 , includeWords
                 , rejectWords
-                , catalogueId
+                , catalogueIds
                 , items
                 , query);
 
@@ -373,14 +377,9 @@ public class EntryService {
 
         builder.withHighlightFields(field);
 
-        String index;
-        if (catalogueId == null) {
-            index = INDEX_NAME_PREFIX + "*";
-        } else {
-            index = INDEX_NAME_PREFIX + catalogueId;
-        }
+        String[] indices = catalogueIds.stream().map(a -> INDEX_NAME_PREFIX + a).collect(Collectors.toList()).toArray(new String[]{});
 
-        return (AggregatedPage<OriginalText>) originalTextElasticsearchRepository.search(builder.build(), new String[]{index});
+        return (AggregatedPage<OriginalText>) originalTextElasticsearchRepository.search(builder.build(), indices);
     }
 
     private void makeFulltextQuery(
@@ -389,7 +388,7 @@ public class EntryService {
             , String queryString
             , String includeWords
             , String rejectWords
-            , Integer catalogueId
+            , Collection<Integer> catalogueIds
             , Map<String, Object> items
             , BoolQueryBuilder query
     ) {
@@ -398,7 +397,7 @@ public class EntryService {
         BoolQueryBuilder fileQueryByAnd = QueryBuilders.boolQuery();
         BoolQueryBuilder entryQueryByAnd = QueryBuilders.boolQuery();
 
-        addEntryQuery(entryQueryByAnd, catalogueId, items);
+        addEntryQuery(entryQueryByAnd, catalogueIds, items);
 
         if (archiveContentType != null && archiveContentType.size() > 0) {
             entryQueryByAnd.filter(QueryBuilders.termsQuery("archiveContentType", archiveContentType));
@@ -506,10 +505,12 @@ public class EntryService {
         return result;
     }
 
-    private void addEntryQuery(BoolQueryBuilder entryQuery, Integer catalogueId, Map<String,Object> items) {
-        if (catalogueId == null || items == null || items.size() ==0 ){
+    private void addEntryQuery(BoolQueryBuilder entryQuery, Collection<Integer> catalogueIds, Map<String,Object> items) {
+        if (catalogueIds == null || catalogueIds.size() != 1 || items == null || items.size() ==0 ){
             return;
         }
+
+        int catalogueId = catalogueIds.iterator().next();
 
         Map<String, DescriptionItemDataType> map =
                 descriptionItemRepository

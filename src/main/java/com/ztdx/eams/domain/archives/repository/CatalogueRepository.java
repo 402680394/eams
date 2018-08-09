@@ -16,5 +16,6 @@ import java.util.Optional;
 public interface CatalogueRepository extends JpaRepository<Catalogue, Integer> {
     Optional<Catalogue> findByArchivesIdAndCatalogueType(int archiveId, CatalogueType catalogueType);
     Optional<Catalogue> findByArchivesIdAndCatalogueTypeNot(int archiveId, CatalogueType catalogueType);
-    List<Catalogue> findAllByArchivesIdAndCatalogueType(List<Integer> archivesId, CatalogueType catalogueType);
+    List<Catalogue> findAllByArchivesIdInAndCatalogueType(List<Integer> archivesId, CatalogueType catalogueType);
+    List<Catalogue> findAllByArchivesIdIn(List<Integer> archivesId);
 }

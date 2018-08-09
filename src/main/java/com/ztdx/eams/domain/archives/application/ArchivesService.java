@@ -40,4 +40,8 @@ public class ArchivesService {
     public List<Archives> findAllById(List<Integer> archiveIds) {
         return archivesRepository.findAllById(archiveIds);
     }
+
+    public List<Archives> findByType(Integer archiveType){
+        return archivesRepository.findByType(archiveType);
+    }
 }

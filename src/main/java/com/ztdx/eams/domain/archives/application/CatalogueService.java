@@ -1,20 +1,24 @@
 package com.ztdx.eams.domain.archives.application;
 
-import com.ztdx.eams.basic.exception.InvalidArgumentException;
+import com.ztdx.eams.domain.archives.model.Archives;
 import com.ztdx.eams.domain.archives.model.Catalogue;
 import com.ztdx.eams.domain.archives.model.CatalogueType;
+import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CatalogueService {
     private CatalogueRepository catalogueRepository;
+    private ArchivesRepository archivesRepository;
 
-    public CatalogueService(CatalogueRepository catalogueRepository) {
+    public CatalogueService(CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository) {
         this.catalogueRepository = catalogueRepository;
+        this.archivesRepository = archivesRepository;
     }
 
     public List<Catalogue> findAllById(Collection<Integer> ids){
@@ -43,5 +47,20 @@ public class CatalogueService {
 
     public Catalogue getMainCatalogue(int archivesId) {
         return catalogueRepository.findByArchivesIdAndCatalogueTypeNot(archivesId, CatalogueType.FolderFile).orElse(null);
+    }
+
+
+    public List<Catalogue> list(Integer archiveType) {
+        List<Archives> archives = archivesRepository.findByType(archiveType);
+        if (archives == null || archives.size() == 0){
+            return null;
+        }
+        List<Integer> ids = archives.stream().map(Archives::getId).collect(Collectors.toList());
+        return catalogueRepository.findAllByArchivesIdIn(ids);
+    }
+
+    public List<Catalogue> getRelationCatalogueIds(List<Integer> mainCatalogueIds){
+        List<Integer> archiveIds = catalogueRepository.findAllById(mainCatalogueIds).stream().map(Catalogue::getArchivesId).collect(Collectors.toList());
+        return catalogueRepository.findAllByArchivesIdInAndCatalogueType(archiveIds, CatalogueType.FolderFile);
     }
 }

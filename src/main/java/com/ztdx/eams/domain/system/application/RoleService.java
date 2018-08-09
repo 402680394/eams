@@ -225,6 +225,11 @@ public class RoleService {
         return this.listRolePermission(ids);
     }
 
+    public List<Permission> listUserPermissionSimple(int userId) {
+        Iterable<Long> ids = this.getUserRoleIds(userId);
+        return permissionRepository.findByRoleIdIn(ids);
+    }
+
     private Map<Integer, List<Long>> groupPermission(
             List<Permission> permissions
             , String groupColumn

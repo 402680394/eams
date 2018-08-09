@@ -265,7 +265,7 @@ public class GeneratingBusiness {
             List<Catalogue> folderCatalogueList = catalogueRepository.findAllById(catalogueIdList);
             //3.通过目录中的档案库id和目录类型为卷内得到卷内目录集合
             List<Integer> archivesId = folderCatalogueList.stream().map(Catalogue::getArchivesId).collect(Collectors.toList());
-            List<Catalogue> folderFileCatalogueList = catalogueRepository.findAllByArchivesIdAndCatalogueType(archivesId,CatalogueType.FolderFile);
+            List<Catalogue> folderFileCatalogueList = catalogueRepository.findAllByArchivesIdInAndCatalogueType(archivesId,CatalogueType.FolderFile);
             //4.得到卷内的目录id集合
             List<Integer> folderFileCatalogueIds = folderFileCatalogueList.stream().map(Catalogue::getId).collect(Collectors.toList());
             //5.通过卷内的目录id集合得到卷内所有条目集合

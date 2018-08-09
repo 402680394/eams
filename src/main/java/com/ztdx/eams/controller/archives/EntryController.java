@@ -16,7 +16,10 @@ import com.ztdx.eams.domain.store.model.Box;
 import com.ztdx.eams.domain.store.model.event.BoxDeleteEvent;
 import com.ztdx.eams.domain.store.model.event.BoxInsideChangeEvent;
 import com.ztdx.eams.domain.system.application.FondsService;
+import com.ztdx.eams.domain.system.application.PermissionService;
+import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.domain.system.model.Fonds;
+import com.ztdx.eams.domain.system.model.Permission;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.context.ApplicationContext;
@@ -34,7 +37,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @RestController
 @RequestMapping(value = "/entry")
@@ -64,7 +66,11 @@ public class EntryController {
 
     private ContentTypeService contentTypeService;
 
-    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask, BoxService boxService, ApplicationContext applicationContext, ContentTypeService contentTypeService) {
+    private PermissionService permissionService;
+
+    private RoleService roleService;
+
+    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask, BoxService boxService, ApplicationContext applicationContext, ContentTypeService contentTypeService, PermissionService permissionService, RoleService roleService) {
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
         this.catalogueService = catalogueService;
@@ -77,6 +83,8 @@ public class EntryController {
         this.boxService = boxService;
         this.applicationContext = applicationContext;
         this.contentTypeService = contentTypeService;
+        this.permissionService = permissionService;
+        this.roleService = roleService;
     }
 
     /**
@@ -852,7 +860,9 @@ public class EntryController {
             , @JsonParam String rejectWords
             , @JsonParam Integer catalogueId*/
             , @RequestParam(value = "page", defaultValue = "0") int page
-            , @RequestParam(value = "size", defaultValue = "20") int size) {
+            , @RequestParam(value = "size", defaultValue = "20") int size
+            , @SessionAttribute UserCredential LOGIN_USER
+    ) {
 
         List<Integer> archiveContentType = null;
         if (body.get("archiveContentType") != null) {
@@ -892,13 +902,22 @@ public class EntryController {
 
         List<TermsAggregationParam> termsAggregationParams = getFulltextSearchAggregation();
 
+        Collection<Integer> catalogueIds = getHasPermissionCatalogueIds(LOGIN_USER.getUserId());
+        if (catalogueId != null && catalogueIds != null){
+            if (catalogueIds.contains(catalogueId)) {
+                catalogueIds = Collections.singletonList(catalogueId);
+            }else {
+                catalogueIds = null;
+            }
+        }
+
         AggregatedPage<OriginalText> list = entryService.searchFulltext(
                 archiveContentType
                 , searchParam
                 , queryString
                 , includeWords
                 , rejectWords
-                , catalogueId
+                , catalogueIds
                 , entryItems
                 , termsAggregationParams
                 , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
@@ -914,10 +933,10 @@ public class EntryController {
 
         List<TermsAggregationResult> aggs = entryService.convertAggregationToResult(list.getAggregations(), termsAggregationParams);
 
-        Set<Integer> catalogueIds = new HashSet<>();
+        Set<Integer> resultCatalogueIds = new HashSet<>();
         Set<String> entryIds = new HashSet<>();
         list.stream().forEach(a -> {
-            catalogueIds.add(a.getCatalogueId());
+            resultCatalogueIds.add(a.getCatalogueId());
             entryIds.add(a.getEntryId());
         });
 
@@ -926,12 +945,12 @@ public class EntryController {
         Map<Integer, ArchivesGroup> archivesGroupMap = new HashMap<>();
         Map<Integer, Fonds> fondsMap = new HashMap<>();
 
-        getCatalogueInfo(catalogueIds, catalogues, archivesMap, archivesGroupMap, fondsMap);
+        getCatalogueInfo(resultCatalogueIds, catalogues, archivesMap, archivesGroupMap, fondsMap);
 
         Map<String, Entry> entries = new HashMap<>();
         entryService.findAllById(entryIds, null).forEach(a -> entries.put(a.getId(), a));
 
-        Map<Integer, Map<String, DescriptionItem>> descItems = descriptionItemService.findAllByCatalogueIdIn(catalogueIds)
+        Map<Integer, Map<String, DescriptionItem>> descItems = descriptionItemService.findAllByCatalogueIdIn(resultCatalogueIds)
                 .stream().collect(
                         Collectors.groupingBy(
                                 DescriptionItem::getCatalogueId
@@ -954,6 +973,23 @@ public class EntryController {
                 .collect(Collectors.toList()));
 
         return result;
+    }
+
+    private Collection<Integer> getHasPermissionCatalogueIds(int userId){
+        List<Catalogue> catalogues = catalogueService.list(2);
+        List<Integer> ids = catalogues.stream().map(Catalogue::getId).collect(Collectors.toList());
+        if (permissionService.hasAnyAuthority("ROLE_ADMIN")){
+            return ids;
+        }
+
+        List<Permission> permissions = roleService.listUserPermissionSimple(userId);
+        List<Integer> mainCatalogueIds = permissions.stream()
+                .filter(a -> a.getArchiveId() != null
+                        && a.getResourceUrl() != null
+                        && a.getResourceUrl().equals("archive_file_search_" + a.getArchiveId()))
+                .map(Permission::getArchiveId).collect(Collectors.toList());
+        mainCatalogueIds.retainAll(ids);
+        return mainCatalogueIds;
     }
 
     private void makeEntryItems(Map<String, Object> entryItems) {
