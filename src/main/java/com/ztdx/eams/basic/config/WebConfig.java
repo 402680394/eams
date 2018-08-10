@@ -2,12 +2,14 @@ package com.ztdx.eams.basic.config;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ztdx.eams.basic.CustomErrorController;
 import com.ztdx.eams.basic.Interceptor;
-import com.ztdx.eams.basic.task.quartz.QuartzTaskExecutor;
 import com.ztdx.eams.basic.params.JsonParamResolver;
-import org.quartz.Scheduler;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.quartz.SchedulerConfigException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
@@ -25,6 +27,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupp
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @EnableAsync
 @Configuration
@@ -32,11 +35,13 @@ public class WebConfig extends WebMvcConfigurationSupport {
 
     private final Interceptor interceptor;
     private final ObjectMapper jsonMapper;
+    private final ServerProperties serverProperties;
 
     @Autowired
-    public WebConfig(Interceptor interceptor,ObjectMapper jsonMapper) {
+    public WebConfig(Interceptor interceptor, ObjectMapper jsonMapper, ServerProperties serverProperties) {
         this.interceptor = interceptor;
         this.jsonMapper = jsonMapper;
+        this.serverProperties = serverProperties;
     }
 
     /**
@@ -83,7 +88,29 @@ public class WebConfig extends WebMvcConfigurationSupport {
     public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
         MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter = new MappingJackson2HttpMessageConverter() {
             protected void writePrefix(JsonGenerator generator, Object object) throws IOException {
-                generator.writeRaw("{\"data\":");
+                StringBuilder response = new StringBuilder();
+                Map map = (Map)object;
+
+                response.append("{\"timestamp\":");
+                response.append(System.currentTimeMillis());
+                response.append(",\"code\":");
+                response.append((map == null || map.get("code") == null) ? 200 : map.get("code"));
+                response.append(",\"status\":");
+                response.append(map == null || map.get("status") == null ? 200 : map.get("status"));
+                response.append(",\"message\":\"");
+                response.append(format(map, "message", ""));
+                response.append("\",\"path\":\"");
+                response.append(format(map, "path", ""));
+                response.append("\",\"trace\":\"");
+                response.append(format(map, "trace", ""));
+                response.append("\",\"exception\":\"");
+                response.append(format(map, "exception", ""));
+                response.append("\",\"data\":");
+
+                generator.writeRaw(response.toString());
+                if (map != null && map.get("code") != null && map.get("status") != null && map.get("message") != null){
+                    map.clear();
+                }
                 super.writePrefix(generator, object);
             }
 
@@ -96,6 +123,16 @@ public class WebConfig extends WebMvcConfigurationSupport {
         return  mappingJackson2HttpMessageConverter;
     }
 
+    private Object format(Map map, String field, Object def){
+        String result;
+        if (map == null || map.get(field) == null ){
+            result = def.toString();
+        }else{
+            result = map.get(field).toString();
+        }
+        return StringEscapeUtils.escapeJava(result);
+    }
+
     @Bean
     public ExpressionParser getExpressionParser(){
         return new SpelExpressionParser();
@@ -105,6 +142,11 @@ public class WebConfig extends WebMvcConfigurationSupport {
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(mappingJackson2HttpMessageConverter());
         super.addDefaultHttpMessageConverters(converters);
+    }
+
+    @Bean
+    public CustomErrorController basicErrorController(ErrorAttributes errorAttributes) {
+        return new CustomErrorController(errorAttributes, this.serverProperties.getError());
     }
 
     @Bean
