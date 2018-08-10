@@ -35,10 +35,7 @@ public class PermissionController {
      * 302, "档案管理-传统立卷案卷"
      * 303, "档案管理-传统立卷卷内"
      * 304, "档案管理-项目档案"
-     * 401, "档案利用-一文一件档案"
-     * 402, "档案利用-传统立卷案卷"
-     * 403, "档案利用-传统立卷卷内"
-     * 403, "档案利用-项目档案"
+     * 401, "对象授权"
      * @apiSuccess (Success 200) {Array} data 档案目录权限列表
      * @apiSuccess (Success 200) {number} data.id 子节点id
      * @apiSuccess (Success 200) {String="FunctionGroup","Function"} data.type 子节点类型
@@ -151,10 +148,7 @@ public class PermissionController {
      *         "CatalogueFolder": [],
      *         "CatalogueFolderInside": [],
      *         "CatalogueSubject": [],
-     *         "CatalogueUseFile": [],
-     *         "CatalogueUseFolder": [],
-     *         "CatalogueUseFolderInside": [],
-     *         "CatalogueUseSubject": []
+     *         "Object": [],
      *     }
      * }
      */
@@ -205,6 +199,7 @@ public class PermissionController {
      * @apiSuccess (Success 200) {number} archiveCatalogue.catalogueId.permissionKey.fondsId 全宗id
      * @apiSuccess (Success 200) {number} archiveCatalogue.catalogueId.permissionKey.archiveId 档案id
      * @apiSuccess (Success 200) {String} archiveCatalogue.catalogueId.permissionKey.resourceUrl 资源url
+     * @apiSuccess (Success 200) {Object} object 对象权限
      *
      *
      *
@@ -265,6 +260,13 @@ public class PermissionController {
      *                     "archiveId": null,
      *                     "resourceUrl": "user_add"
      *                 }
+     *             }
+     *         },
+     *         "object": {
+     *             "object_original_text_view_bea8cd38-6a46-485a-a4c4-c15259552eed": {
+     *                 "resourceUrl": "object_original_text_view_{originalTextId}",
+     *                 "name": "查看原文",
+     *                 "id": 85
      *             }
      *         }
      *     }

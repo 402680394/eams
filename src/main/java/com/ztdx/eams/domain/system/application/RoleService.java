@@ -194,8 +194,10 @@ public class RoleService {
     private <R> Map<String, Object> formatRolePermission(Map<Integer, R> fonds, Map<Integer, R> archive) {
         Map<String, Object> result = new HashMap<>();
         result.put("global", fonds.get(0));
+        result.put("object", fonds.get(-1));
         fonds.remove(0);
         fonds.remove(-1);
+        fonds.remove(-2);
         archive.remove(0);
         result.put("fonds", fonds);
         result.put("archiveCatalogue", archive);
@@ -212,7 +214,18 @@ public class RoleService {
                 .stream().collect(Collectors.toMap(Resource::getId,p -> p));
 
         Map<Integer, Map<String, Object>> fonds = groupPermission(permissions
-                , a -> a.getFondsId() == null ? (a.getArchiveId() == null ? 0 : -1) : a.getFondsId(), resourceMap );
+                , a -> {
+                    String g = a.getResourceUrl().split("_")[0];
+                    switch (g) {
+                        case "global":
+                            return 0;
+                        case "object":
+                            return -1;
+                        default:
+                            return a.getFondsId() != null ? a.getFondsId() : -2;
+                    }
+                }//a -> a.getFondsId() == null ? (a.getArchiveId() == null ? 0 : -1) : a.getFondsId()
+                , resourceMap );
 
         Map<Integer, Map<String, Object>> archive = groupPermission(permissions
                 , a -> a.getArchiveId() == null ? 0 : a.getArchiveId(), resourceMap );
@@ -297,6 +310,9 @@ public class RoleService {
     }
 
     private String PermissionKeyMap(Permission permission, Map<Long, Resource> resourceMap){
+        if (permission.getResourceUrl().split("_")[0].equals("object")){
+            return permission.getResourceUrl();
+        }
         return resourceMap.get(permission.getResourceId()).getResourceUrl();
     }
 

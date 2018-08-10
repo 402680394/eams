@@ -1,7 +1,6 @@
 package com.ztdx.eams.controller.system;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.basic.exception.ForbiddenException;
@@ -13,9 +12,7 @@ import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Permission;
 import com.ztdx.eams.domain.system.model.Resource;
 import com.ztdx.eams.domain.system.model.Role;
-import jdk.nashorn.internal.runtime.regexp.joni.constants.NodeType;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -57,6 +54,9 @@ public class RoleController {
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.POST)
+    @PreAuthorize("hasAnyRole('ADMIN') " +
+            "|| (#role.fondsId != null) && hasAnyAuthority('fonds_role_write_' + #role.fondsId) " +
+            "|| (#role.fondsId == null) && hasAnyAuthority('global_role_write')")
     public void save(@RequestBody Role role) {
         roleService.save(role);
     }

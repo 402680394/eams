@@ -19,10 +19,7 @@ public enum ResourceCategory {
     CatalogueFolder(302, "传统立卷案卷"),
     CatalogueFolderInside(303, "传统立卷卷内"),
     CatalogueSubject(304, "项目档案"),
-    CatalogueUseFile(401, "档案利用-一文一件档案"),
-    CatalogueUseFolder(402, "档案利用-传统立卷案卷"),
-    CatalogueUseFolderInside(403, "档案利用-传统立卷卷内"),
-    CatalogueUseSubject(403, "档案利用-项目档案");
+    Object(401, "对象");
 
     private Integer code;
     private String description;

@@ -168,7 +168,7 @@ public class OriginalTextController {
      * @apiError (Error 400) message 1.全宗档案库不存在;2.文件下载失败;3.ftp服务未正常关闭;4.文件传输流未关闭.
      * @apiUse ErrorExample
      */
-    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId, 'object_original_text_download_' + #id)")
     @RequestMapping(value = "/download", method = RequestMethod.GET)
     public void download(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id, HttpServletResponse response) {
         originalTextService.fileDownload(1, catalogueId, id, response);
@@ -183,7 +183,7 @@ public class OriginalTextController {
      * @apiError (Error 400) message 1.全宗档案库不存在;2.文件下载失败;3.ftp服务未正常关闭;4.文件传输流未关闭.
      * @apiUse ErrorExample
      */
-    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId)")
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_read_' + #catalogueId, 'object_original_text_view_' + #id)")
     @RequestMapping(value = "/downloadPDF", method = RequestMethod.GET)
     public void downloadPDF(@RequestParam("catalogueId") int catalogueId, @RequestParam("id") String id, HttpServletResponse response) {
         originalTextService.fileDownload(2, catalogueId, id, response);
