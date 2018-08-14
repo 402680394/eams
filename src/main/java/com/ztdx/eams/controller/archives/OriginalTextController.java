@@ -279,11 +279,11 @@ public class OriginalTextController {
      * @apiGroup originalText
      * @apiParam {Number} catalogueId 目录ID(form-data参数)
      * @apiParam {String} entryId 条目ID(form-data参数)
-     * @apiParam {String} title 文件标题(form-data参数)(上传文件的参数均名为file,按表单参数顺序对应)
-     * @apiParam {Number} type 文件类型(form-data参数)(上传文件的参数均名为file,按表单参数顺序对应)
-     * @apiParam {String} version 文件版本(form-data参数)(上传文件的参数均名为file,按表单参数顺序对应)
-     * @apiParam {String} remark 备注(form-data参数)(上传文件的参数均名为file,按表单参数顺序对应)
-     * @apiParam {File} file 原文文件(form-data参数)(上传文件的参数均名为file,按表单参数顺序对应)
+     * @apiParam {String} title 文件标题(form-data参数)(上传文件的文件标题参数名均为title,按表单参数顺序对应)
+     * @apiParam {Number} type 文件类型(form-data参数)(上传文件的文件类型参数名均为type,按表单参数顺序对应)
+     * @apiParam {String} version 文件版本(form-data参数)(上传文件的文件版本参数名均为version,按表单参数顺序对应)
+     * @apiParam {String} remark 备注(form-data参数)(上传文件的备注参数名均为remark,按表单参数顺序对应)
+     * @apiParam {File} file 原文文件(form-data参数)(上传文件的原文文件参数名均为file,按表单参数顺序对应)
      * @apiError (Error 400) message 1.全宗档案库不存在;2.条目不存在;3.原文文件未上传.
      * @apiError (Error 500) message 1.文件上传失败;2.未连接到ftp服务;3.ftp服务未正常关闭.4.文件传输流未关闭.
      * @apiUse ErrorExample
