@@ -751,6 +751,9 @@ public class EntryController {
      * @apiSuccess (Success 200) {String="word","excel","pdf","ppt"} content.file.fileType 类型
      * @apiSuccess (Success 200) {String} content.file.highLight 高亮文本
      * @apiSuccess (Success 200) {String} content.file.fileName 文件名
+     * @apiSuccess (Success 200) {Boolean} content.file.isView 是否可查看
+     * @apiSuccess (Success 200) {Boolean} content.file.isDownload 是否可下载
+     * @apiSuccess (Success 200) {Boolean} content.file.isPrint 是否可打印
      * @apiSuccess (Success 200) {Array} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
      * @apiSuccess (Success 200) {Number} column.metadataId 元数据id
      * @apiSuccess (Success 200) {String} column.metadataName
@@ -791,7 +794,10 @@ public class EntryController {
      *                     "fileType":"word",
      *                     "highLight":"这是高亮文本内容",
      *                     "fileName": "文件名",
-     *                     "pdfConverStatus"
+     *                     "pdfConverStatus",
+     *                     "isView": true,
+     *                     "isDownload": true,
+     *                     "isPrint": true
      *                 }
      *             }
      *         ],
@@ -1048,15 +1054,37 @@ public class EntryController {
         r.put("file", file);
 
         file.put("fileId", a.getId());
-        file.put("title", a.getTitle());
+
         file.put("fileType", a.getType());
         file.put("pdfConvertStatus", a.getPdfConverStatus());
-        String highLight = a.getContentIndex();
+
+        boolean isView = permissionService.hasAuthority("object_original_text_view_" + a.getId());
+
+        String highLight;
+        String title;
+        String fileName;
+        if (isView){
+            highLight = a.getContentIndex();
+            title = a.getTitle();
+            fileName = a.getName();
+        }else
+        {
+            highLight = "您没有原文查看权限";
+            title = "您无权查看";
+            fileName = "您无权查看";
+        }
+
         if (highLight != null && highLight.length() > 300) {
             highLight = highLight.substring(0, a.getContentIndex().length() > 300 ? 300 : a.getContentIndex().length());
         }
         file.put("highLight", highLight);
-        file.put("fileName", a.getName());
+        file.put("fileName", fileName);
+        file.put("title", title);
+
+
+        file.put("isView", isView);
+        file.put("isDownload", permissionService.hasAuthority("object_original_text_download_" + a.getId()));
+        file.put("isPrint", permissionService.hasAuthority("object_original_text_print_" + a.getId()));
 
         return r;
     }
