@@ -120,7 +120,7 @@ public class EntryAsyncTask {
         );
 
         List<DescriptionItem> items = descriptionItemRepository.findByCatalogueId(entry.getCatalogueId());
-        Map<PropertyType, String> map = items.stream().collect(Collectors.toMap(DescriptionItem::getPropertyType, DescriptionItem::getMetadataName));
+        Map<PropertyType, String> map = items.stream().collect(Collectors.toMap(DescriptionItem::getPropertyType, DescriptionItem::getMetadataName, (a, b) -> a));
         map.forEach((propertyType, fieldName) -> {
 
             if (!propertyTypes.contains(propertyType)) {

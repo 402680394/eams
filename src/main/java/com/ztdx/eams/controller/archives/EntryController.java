@@ -902,14 +902,7 @@ public class EntryController {
 
         List<TermsAggregationParam> termsAggregationParams = getFulltextSearchAggregation();
 
-        Collection<Integer> catalogueIds = getHasPermissionCatalogueIds(LOGIN_USER.getUserId());
-        if (catalogueId != null && catalogueIds != null){
-            if (catalogueIds.contains(catalogueId)) {
-                catalogueIds = Collections.singletonList(catalogueId);
-            }else {
-                catalogueIds = null;
-            }
-        }
+        Collection<Integer> catalogueIds = getHasPermissionCatalogueIds(LOGIN_USER.getUserId(), catalogueId);
 
         AggregatedPage<OriginalText> list = entryService.searchFulltext(
                 archiveContentType
@@ -973,6 +966,18 @@ public class EntryController {
                 .collect(Collectors.toList()));
 
         return result;
+    }
+
+    private Collection<Integer> getHasPermissionCatalogueIds(int userId, Integer catalogueId) {
+        Collection<Integer> catalogueIds = getHasPermissionCatalogueIds(userId);
+        if (catalogueId != null && catalogueIds != null){
+            if (catalogueIds.contains(catalogueId)) {
+                catalogueIds = Collections.singletonList(catalogueId);
+            }else {
+                catalogueIds = null;
+            }
+        }
+        return catalogueIds;
     }
 
     private Collection<Integer> getHasPermissionCatalogueIds(int userId){
@@ -1200,7 +1205,12 @@ public class EntryController {
             @JsonParam List<Integer> catalogueIds
             , @JsonParam List<Integer> archiveContentType
             , @JsonParam String keyWord
+            , @SessionAttribute UserCredential LOGIN_USER
     ) {
+        //TODO @lijie 权限需要换成条目的
+        /*Collection<Integer> hasPermissionCatalogueIds = getHasPermissionCatalogueIds(LOGIN_USER.getUserId());
+        catalogueIds.retainAll(hasPermissionCatalogueIds);*/
+
         Map<Integer, Long> aggs = entryService.aggsCatalogueCount(catalogueIds, archiveContentType, keyWord);
 
         List<Catalogue> catalogues = new ArrayList<>();
