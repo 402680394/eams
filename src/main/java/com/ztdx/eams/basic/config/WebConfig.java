@@ -89,7 +89,10 @@ public class WebConfig extends WebMvcConfigurationSupport {
         MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter = new MappingJackson2HttpMessageConverter() {
             protected void writePrefix(JsonGenerator generator, Object object) throws IOException {
                 StringBuilder response = new StringBuilder();
-                Map map = (Map)object;
+                Map map = null;
+                if (object instanceof Map){
+                    map = (Map)object;
+                }
 
                 response.append("{\"timestamp\":");
                 response.append(System.currentTimeMillis());
