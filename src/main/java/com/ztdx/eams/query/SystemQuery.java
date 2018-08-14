@@ -284,11 +284,14 @@ public class SystemQuery {
                 sysUser.WORKERS.as("workers"),
                 sysUser.USERNAME.as("username"),
                 sysUser.ORGANIZATION_ID.as("organizationId"),
+                sysOrganization.ORG_NAME.as("organizationName"),
                 sysUser.PHONE.as("phone"),
                 sysUser.EMAIL.as("email"),
                 sysUser.JOB.as("job"),
                 sysUser.REMARK.as("remark"))
-                .from(sysUser).where(sysUser.ID.equal(id)).fetch().intoMaps().get(0);
+                .from(sysUser)
+                .where(sysUser.ID.equal(id), sysUser.ORGANIZATION_ID.equal(sysOrganization.ID))
+                .fetch().intoMaps().get(0);
     }
 
     /**

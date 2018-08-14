@@ -250,4 +250,25 @@ public class UserController {
         return systemQuery.getUser(UInteger.valueOf(id));
     }
 
+    /**
+     * @api {get} /user/self 获取当前登录用户信息
+     * @apiName self
+     * @apiGroup user
+     * @apiSuccess (Success 200) {String} name 姓名
+     * @apiSuccess (Success 200) {String} workers 工号
+     * @apiSuccess (Success 200) {String} username 用户名
+     * @apiSuccess (Success 200) {Number} organizationId 所属机构ID
+     * @apiSuccess (Success 200) {String} organizationName 所属机构名称
+     * @apiSuccess (Success 200) {String} phone 电话
+     * @apiSuccess (Success 200) {String} email 邮箱
+     * @apiSuccess (Success 200) {String} job 职位
+     * @apiSuccess (Success 200) {String} remark 备注
+     * @apiSuccessExample {json} Success-Response:
+     * {"data":{"name":"姓名","workers":"工号","username":"用户名","organizationName":所属机构名称,"organizationId":所属机构ID,"phone":"电话","email":"邮箱","job":"职位","remark":"备注"}}.
+     */
+    @RequestMapping(value = "/self", method = RequestMethod.GET)
+    public Map<String, Object> self() {
+        return systemQuery.getUser(UInteger.valueOf(user.getUserId()));
+    }
+
 }
