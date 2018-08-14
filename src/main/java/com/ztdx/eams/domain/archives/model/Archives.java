@@ -21,8 +21,6 @@ public class Archives {
     private int id;
 
     //档案库结构(1 一文一件；2 传统立卷；3 项目)
-    @Min(value = 1)
-    @Max(value = 3)
     @Column(name = "structure")
     @Convert(converter = Structure.EnumConverter.class)
     private Structure structure;

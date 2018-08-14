@@ -289,7 +289,7 @@ public class SystemQuery {
                 sysUser.EMAIL.as("email"),
                 sysUser.JOB.as("job"),
                 sysUser.REMARK.as("remark"))
-                .from(sysUser)
+                .from(sysUser,sysOrganization)
                 .where(sysUser.ID.equal(id), sysUser.ORGANIZATION_ID.equal(sysOrganization.ID))
                 .fetch().intoMaps().get(0);
     }

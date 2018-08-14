@@ -267,8 +267,9 @@ public class UserController {
      * {"data":{"name":"姓名","workers":"工号","username":"用户名","organizationName":所属机构名称,"organizationId":所属机构ID,"phone":"电话","email":"邮箱","job":"职位","remark":"备注"}}.
      */
     @RequestMapping(value = "/self", method = RequestMethod.GET)
-    public Map<String, Object> self() {
-        return systemQuery.getUser(UInteger.valueOf(user.getUserId()));
+    public Map<String, Object> self(HttpSession session) {
+        UserCredential userCredential = (UserCredential) session.getAttribute(UserCredential.KEY);
+        return systemQuery.getUser(UInteger.valueOf(userCredential.getUserId()));
     }
 
 }
