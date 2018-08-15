@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 
 
@@ -147,5 +148,9 @@ public class UserService {
 
     public User getByUserName(String userName){
         return userRepository.findByUsername(userName);
+    }
+
+    public List<User> findAllById(Collection<Integer> ids) {
+        return userRepository.findAllById(ids);
     }
 }

@@ -4,9 +4,16 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.system.model.Organization;
 import com.ztdx.eams.domain.system.repository.OrganizationRepository;
 import com.ztdx.eams.domain.system.repository.UserRepository;
+import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by li on 2018/4/11.
@@ -119,5 +126,41 @@ public class OrganizationService {
 
     public Organization get(int id) {
         return organizationRepository.findById(id);
+    }
+
+    public Map<Integer, Pair<String, String>> listDepartmentAndCompany(Collection<Integer> ids){
+        List<Organization> organizations = organizationRepository.findAll();
+        Map<Integer, Organization> map = organizations.stream().collect(Collectors.toMap(Organization::getId, a->a));
+        Map<Integer, Pair<String, String>> result = new HashMap<>();
+        ids.forEach(a -> {
+            Pair<String, String> find = new Pair<>("", "");
+            find = findCompany(map, a, find);
+            result.put(a, find);
+        });
+        return result;
+    }
+
+    private Pair<String, String> findCompany(Map<Integer, Organization> map, Integer id, Pair<String, String> result){
+        Organization organization = map.get(id);
+        if (organization == null){
+            return result;
+        }
+
+        Pair<String, String > find;
+
+        if (organization.getType() == 2){
+            find = new Pair<>(organization.getName(), "");
+        }else if (organization.getType() == 1){
+            find = new Pair<>(result.getKey(), organization.getName());
+            return find;
+        }else{
+            find = result;
+        }
+
+        if (organization.getParentId() != null){
+            return findCompany(map, organization.getParentId(), find);
+        }
+
+        return find;
     }
 }
