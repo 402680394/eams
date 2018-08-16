@@ -1058,7 +1058,7 @@ public class EntryController {
         file.put("fileType", a.getType());
         file.put("pdfConvertStatus", a.getPdfConverStatus());
 
-        boolean isView = permissionService.hasAuthority("object_original_text_view_" + a.getId());
+        boolean isView = permissionService.hasAnyAuthority("ROLE_ADMIN", "object_original_text_view_" + a.getId());
 
         String highLight;
         String title;
@@ -1083,8 +1083,8 @@ public class EntryController {
 
 
         file.put("isView", isView);
-        file.put("isDownload", permissionService.hasAuthority("object_original_text_download_" + a.getId()));
-        file.put("isPrint", permissionService.hasAuthority("object_original_text_print_" + a.getId()));
+        file.put("isDownload", permissionService.hasAnyAuthority("ROLE_ADMIN", "object_original_text_download_" + a.getId()));
+        file.put("isPrint", permissionService.hasAnyAuthority("ROLE_ADMIN", "object_original_text_print_" + a.getId()));
 
         return r;
     }
