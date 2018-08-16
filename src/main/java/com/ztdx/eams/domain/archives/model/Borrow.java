@@ -45,7 +45,7 @@ public class Borrow {
     @Column(name = "tel")
     private String tel;
     //借阅天数
-    @Min(value = 0)
+    @Min(value = 1)
     @Column(name = "days")
     private int days;
     //借阅目的

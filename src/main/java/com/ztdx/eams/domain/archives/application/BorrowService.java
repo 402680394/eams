@@ -32,4 +32,14 @@ public class BorrowService {
 
         borrowRepository.save(borrow);
     }
+
+    @Transactional
+    public void update(Borrow borrow) {
+        borrowRepository.save(borrow);
+    }
+
+    public Borrow get(Integer orderId) {
+        Borrow borrow = borrowRepository.findById(orderId).orElse(null);
+        return borrow;
+    }
 }
