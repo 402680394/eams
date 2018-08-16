@@ -41,17 +41,18 @@ public class SystemSecurityQuery {
     }
 
     public Map<String,Object> getUser(String userName) {
-        String sql = dslContext.select(sysUser.PWD,sysUser.FLAG)
+        String sql = dslContext.select(sysUser.PWD,sysUser.FLAG,sysUser.ID)
                 .from(sysUser)
                 .where(sysUser.USERNAME.equal(userName)).getSQL();
 
-        SysUserRecord result = dslContext.select(sysUser.PWD,sysUser.FLAG)
+        SysUserRecord result = dslContext.select(sysUser.PWD,sysUser.FLAG,sysUser.ID)
                 .from(sysUser)
                 .where(sysUser.USERNAME.equal(userName)).fetchOne().into(sysUser);
 
         Map<String, Object> map = new HashMap<>();
         map.put("pwd", result.getPwd());
         map.put("flag", result.getFlag());
+        map.put("id", result.getId().intValue());
         return map;
     }
 }
