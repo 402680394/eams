@@ -87,11 +87,6 @@ public class Borrow {
     //简要说明
     @Column(name = "descript")
     private String descript;
-    //审批状态（0-待审批 1-已完成 2-已拒绝）
-    @Min(value = 0)
-    @Max(value = 2)
-    @Column(name = "state")
-    private int state;
     //创建时间
     @Column(name = "gmt_create")
     private Date gmtCreate;
