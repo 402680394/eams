@@ -9,12 +9,10 @@ import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.PropertyType;
 import com.ztdx.eams.domain.work.application.WorkService;
+import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import java.util.Date;
@@ -101,7 +99,7 @@ public class BorrowController {
         //流程类型
         map.put("type", "borrow");
         //审批状态
-        map.put("statu", "待审批");
+        map.put("status", "待审批");
 
         List<Map<String, Object>> entryIndexs = (List) map.get("entryIndexs");
         map.remove("entryIndexs");
@@ -131,8 +129,57 @@ public class BorrowController {
             map.put("id", (String) entryIndex.get("entryId"));
             //审批档案员
             map.put("filer", 22);
-            workService.startBorrowing(map);
+            workService.startBorrow(map);
         }
+    }
+
+    /**
+     * @api {get} /borrow/{id} 获取借阅单详情
+     * @apiName details
+     * @apiGroup borrow
+     * @apiParam {Number} id 借阅单ID(url参数)
+     * @apiSuccess (Success 200) {Number} id 借阅单ID.
+     * @apiSuccess (Success 200) {String} code 借阅单编号.
+     * @apiSuccess (Success 200) {Number} applicantDate 申请日期.
+     * @apiSuccess (Success 200) {String} applicantName 申请人.
+     * @apiSuccess (Success 200) {String} department 部门.
+     * @apiSuccess (Success 200) {String} email 电子邮件.
+     * @apiSuccess (Success 200) {String} tel 电话.
+     * @apiSuccess (Success 200) {Number} days 借阅天数.
+     * @apiSuccess (Success 200) {String} objective 借阅目的.
+     * @apiSuccess (Success 200) {Number} type 借阅类型（1-电子利用 2-实体外借 3-实体查阅）.
+     * @apiSuccess (Success 200) {Number} isSee 是否查看（0-否 1-是）.
+     * @apiSuccess (Success 200) {Number} isPrint 是否打印.
+     * @apiSuccess (Success 200) {Number} isDownload 是否下载.
+     * @apiSuccess (Success 200) {Number} isCopy 是否复印.
+     * @apiSuccess (Success 200) {Number} isHandwrite 是否手抄.
+     * @apiSuccess (Success 200) {String} descript 简要说明.
+     * @apiSuccess (Success 200) {String} effect 利用效果.
+     * @apiSuccess (Success 200) {Object[]} borrowContent 借阅内容.
+     * @apiSuccessExample {json} Success-Response:
+     * {"data":
+     *      {"id": 6,
+     *      "code": "借阅单编号",
+     *      "applicantDate": 1534385981,
+     *      "applicantName": "申请人",
+     *      "department": "部门",
+     *      "email": "电子邮件",
+     *      "tel": "电话",
+     *      "days": 10,
+     *      "objective": "借阅目的",
+     *      "type": 1,
+     *      "isSee": 1,
+     *      "isPrint": 0,
+     *      "isDownload": 0,
+     *      "isCopy": 0,
+     *      "isHandwrite": 0,
+     *      "descript": "简要说明",
+     *      "effect": "利用效果",
+     *      "borrowContent": [{"processId": "审批流程ID","displayName": "显示名称"}]}}.
+     */
+    @RequestMapping(value = "", method = RequestMethod.GET)
+    public Map<String, Object> details(@PathVariable("id") int borrowId) {
+        return null;
     }
 
 }

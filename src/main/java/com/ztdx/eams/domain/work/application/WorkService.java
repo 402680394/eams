@@ -21,7 +21,7 @@ public class WorkService {
     }
 
     //开启一个借阅流程
-    public void startBorrowing(Map<String, Object> map) {
+    public void startBorrow(Map<String, Object> map) {
         runtimeService.startProcessInstanceByKey("borrow", map);
     }
 }
