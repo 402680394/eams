@@ -9,10 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -128,30 +125,30 @@ public class OrganizationService {
         return organizationRepository.findById(id);
     }
 
-    public Map<Integer, Pair<String, String>> listDepartmentAndCompany(Collection<Integer> ids){
+    public Map<Integer, List<String>> listDepartmentAndCompany(Collection<Integer> ids){
         List<Organization> organizations = organizationRepository.findAll();
         Map<Integer, Organization> map = organizations.stream().collect(Collectors.toMap(Organization::getId, a->a));
-        Map<Integer, Pair<String, String>> result = new HashMap<>();
+        Map<Integer, List<String>> result = new HashMap<>();
         ids.forEach(a -> {
-            Pair<String, String> find = new Pair<>("", "");
+            List<String> find = Arrays.asList("", "");
             find = findCompany(map, a, find);
             result.put(a, find);
         });
         return result;
     }
 
-    private Pair<String, String> findCompany(Map<Integer, Organization> map, Integer id, Pair<String, String> result){
+    private List<String> findCompany(Map<Integer, Organization> map, Integer id, List<String> result){
         Organization organization = map.get(id);
         if (organization == null){
             return result;
         }
 
-        Pair<String, String > find;
+        List<String> find;
 
         if (organization.getType() == 2){
-            find = new Pair<>(organization.getName(), "");
+            find = Arrays.asList(organization.getName(), "");
         }else if (organization.getType() == 1){
-            find = new Pair<>(result.getKey(), organization.getName());
+            find = Arrays.asList(result.get(0), organization.getName());
             return find;
         }else{
             find = result;
