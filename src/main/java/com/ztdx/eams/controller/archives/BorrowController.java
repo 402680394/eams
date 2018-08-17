@@ -260,7 +260,7 @@ public class BorrowController {
         Object tmpCatalogueId = event.getWorkflow().getRawVars().get("catalogueId");
         if (!StringUtils.isNumeric(tmpCatalogueId.toString())
                 || borrow == null
-                || borrow.getType() != 1){
+                || borrow.getType() != 0){
             return;
         }
 
