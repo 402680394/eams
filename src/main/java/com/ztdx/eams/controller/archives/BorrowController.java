@@ -1,6 +1,7 @@
 package com.ztdx.eams.controller.archives;
 
 import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.domain.archives.application.ArchivesService;
 import com.ztdx.eams.domain.archives.application.BorrowService;
 import com.ztdx.eams.domain.archives.application.DescriptionItemService;
 import com.ztdx.eams.domain.archives.application.EntryService;
@@ -32,12 +33,15 @@ public class BorrowController {
 
     private final DescriptionItemService descriptionItemService;
 
+    private final ArchivesService archivesService;
+
     @Autowired
-    public BorrowController(BorrowService borrowService, WorkService workService, EntryService entryService, DescriptionItemService descriptionItemService) {
+    public BorrowController(BorrowService borrowService, WorkService workService, EntryService entryService, DescriptionItemService descriptionItemService, ArchivesService archivesService) {
         this.borrowService = borrowService;
         this.workService = workService;
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
+        this.archivesService = archivesService;
     }
 
     /**
@@ -61,7 +65,6 @@ public class BorrowController {
      * @apiError (Error 500) message
      * @apiUse ErrorExample
      */
-    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_file_search_' + #request.getParameter(\"catalogueId\"))")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void apply(@RequestBody Map<String, Object> map, HttpSession session) {
         //保存申请单信息
@@ -82,7 +85,6 @@ public class BorrowController {
         borrow.setApplicantId(((UserCredential) session.getAttribute(UserCredential.KEY)).getUserId());
         borrow.setApplicationDate(new Date());
         borrow.setEffect("");
-
         borrowService.apply(borrow);
 
         //开启借阅审批流程
@@ -98,6 +100,8 @@ public class BorrowController {
         map.put("departmentLeader", 22);
         //流程类型
         map.put("type", "borrow");
+        //审批时间
+        map.put("approvalTime", "");
         //审批状态
         map.put("status", "待审批");
 
@@ -108,6 +112,8 @@ public class BorrowController {
             int catalogueId = (int) entryIndex.get("catalogueId");
             String entryId = (String) entryIndex.get("entryId");
             Entry entry = entryService.get(catalogueId, entryId);
+
+            String archiveName = archivesService.findArchivesNameByCatalogue_CatalogueId(catalogueId);
 
             DescriptionItem titleItem = descriptionItemService.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.Title);
 
@@ -121,6 +127,8 @@ public class BorrowController {
             if (referenceItem != null) {
                 reference = entry.getItems().getOrDefault(referenceItem.getMetadataName(), "").toString();
             }
+            //档案库名称
+            map.put("archiveName", archiveName);
             //提名
             map.put("title", title);
             //档号
@@ -129,7 +137,7 @@ public class BorrowController {
             map.put("id", (String) entryIndex.get("entryId"));
             //审批档案员
             map.put("filer", 22);
-            workService.startBorrow(map);
+            workService.start("borrow", map);
         }
     }
 
@@ -137,7 +145,9 @@ public class BorrowController {
      * @api {get} /borrow/{id} 获取借阅单详情
      * @apiName details
      * @apiGroup borrow
-     * @apiParam {Number} id 借阅单ID(url参数)
+     * @apiParam {Number} id 借阅单ID
+     * @apiParam {Number} size 借阅数据显示条数(url参数)
+     * @apiParam {Number} page 借阅数据显示页次 (url参数)
      * @apiSuccess (Success 200) {Number} id 借阅单ID.
      * @apiSuccess (Success 200) {String} code 借阅单编号.
      * @apiSuccess (Success 200) {Number} applicantDate 申请日期.
@@ -155,31 +165,79 @@ public class BorrowController {
      * @apiSuccess (Success 200) {Number} isHandwrite 是否手抄.
      * @apiSuccess (Success 200) {String} descript 简要说明.
      * @apiSuccess (Success 200) {String} effect 利用效果.
-     * @apiSuccess (Success 200) {Object[]} borrowContent 借阅内容.
+     * @apiSuccess (Success 200) {String} total 借阅内容总条数.
+     * @apiSuccess (Success 200) {String} borrowContent 借阅内容.
+     * @apiSuccess (Success 200) {String} borrowContent:processId 审批流程ID.
+     * @apiSuccess (Success 200) {String} borrowContent:archiveName 档案库名称.
+     * @apiSuccess (Success 200) {String} borrowContent:title 提名.
+     * @apiSuccess (Success 200) {String} borrowContent:reference 档号.
+     * @apiSuccess (Success 200) {String} borrowContent:approvalTime 审批时间.
+     * @apiSuccess (Success 200) {String} borrowContent:status 审批状态.
+     * @apiSuccess (Success 200) {Number} borrowContent:days 天数.
      * @apiSuccessExample {json} Success-Response:
      * {"data":
-     *      {"id": 6,
-     *      "code": "借阅单编号",
-     *      "applicantDate": 1534385981,
-     *      "applicantName": "申请人",
-     *      "department": "部门",
-     *      "email": "电子邮件",
-     *      "tel": "电话",
-     *      "days": 10,
-     *      "objective": "借阅目的",
-     *      "type": 1,
-     *      "isSee": 1,
-     *      "isPrint": 0,
-     *      "isDownload": 0,
-     *      "isCopy": 0,
-     *      "isHandwrite": 0,
-     *      "descript": "简要说明",
-     *      "effect": "利用效果",
-     *      "borrowContent": [{"processId": "审批流程ID","displayName": "显示名称"}]}}.
+     * {"id": 6,
+     * "code": "借阅单编号",
+     * "applicantDate": 1534385981,
+     * "applicantName": "申请人",
+     * "department": "部门",
+     * "email": "电子邮件",
+     * "tel": "电话",
+     * "days": 10,
+     * "objective": "借阅目的",
+     * "type": 1,
+     * "isSee": 1,
+     * "isPrint": 0,
+     * "isDownload": 0,
+     * "isCopy": 0,
+     * "isHandwrite": 0,
+     * "descript": "简要说明",
+     * "effect": "利用效果",
+     * "total": 10,
+     * "borrowContent": [{"processId": "审批流程ID","archiveName": "档案库名称","title": "提名","reference": "档号","approvalTime": "审批时间","status": "审批状态","days": 10}]}}.
      */
-    @RequestMapping(value = "", method = RequestMethod.GET)
-    public Map<String, Object> details(@PathVariable("id") int borrowId) {
-        return null;
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public Map<String, Object> details(@PathVariable("id") int borrowId, @RequestParam(name = "size", defaultValue = "15") int size, @RequestParam(name = "page", defaultValue = "1") int page) {
+
+        Map<String, Object> resultMap = workService.queryByVariable(borrowId, size, page);
+        Borrow borrow = borrowService.get(borrowId);
+        resultMap.put("id", borrow.getId());
+        resultMap.put("code", borrow.getCode());
+        resultMap.put("applicantDate", borrow.getApplicationDate());
+        resultMap.put("applicantName", borrow.getApplicantName());
+        resultMap.put("department", borrow.getDepartment());
+        resultMap.put("email", borrow.getEmail());
+        resultMap.put("tel", borrow.getTel());
+        resultMap.put("days", borrow.getDays());
+        resultMap.put("objective", borrow.getObjective());
+        resultMap.put("type", borrow.getType());
+        resultMap.put("isSee", borrow.getIsSee());
+        resultMap.put("isPrint", borrow.getIsPrint());
+        resultMap.put("isDownload", borrow.getIsDownload());
+        resultMap.put("isCopy", borrow.getIsCopy());
+        resultMap.put("isHandwrite", borrow.getIsHandwrite());
+        resultMap.put("descript", borrow.getDescript());
+        resultMap.put("effect", borrow.getEffect());
+        System.out.println(resultMap.size());
+        return resultMap;
     }
 
+    /**
+     * @api {post} /borrow/approval 审批
+     * @apiName approval
+     * @apiGroup borrow
+     * @apiParam {String[]} processId 流程ID
+     * @apiParam {Number} isAgree 是否同意（0-同意 1-拒绝）
+     * @apiParam {String} Opinion 审批意见
+     */
+    @RequestMapping(value = "/approval", method = RequestMethod.POST)
+    public void approval(@RequestBody Map<String, Object> map) {
+        int isAgree = (int) map.get("isAgree");
+        List<String> processId = (List<String>) map.get("processId");
+        if (isAgree == 0) {
+            workService.agree(processId);
+        } else {
+            workService.refuse(processId);
+        }
+    }
 }

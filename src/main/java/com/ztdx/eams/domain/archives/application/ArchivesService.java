@@ -28,20 +28,24 @@ public class ArchivesService {
     /**
      * 更新档案库
      */
-    public void save(Archives archives){
+    public void save(Archives archives) {
         archivesRepository.save(archives);
     }
 
-    public Archives get(Integer id){
+    public Archives get(Integer id) {
         Optional<Archives> archives = archivesRepository.findById(id);
-        return  archives.get();
+        return archives.get();
     }
 
     public List<Archives> findAllById(List<Integer> archiveIds) {
         return archivesRepository.findAllById(archiveIds);
     }
 
-    public List<Archives> findByType(Integer archiveType){
+    public List<Archives> findByType(Integer archiveType) {
         return archivesRepository.findByType(archiveType);
+    }
+
+    public String findArchivesNameByCatalogue_CatalogueId(int catalogueId) {
+        return archivesRepository.findArchivesNameByCatalogue_CatalogueId(catalogueId);
     }
 }

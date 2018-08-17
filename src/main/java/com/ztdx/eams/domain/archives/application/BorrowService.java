@@ -32,4 +32,8 @@ public class BorrowService {
 
         borrowRepository.save(borrow);
     }
+
+    public Borrow get(Integer id) {
+        return borrowRepository.findById(id).get();
+    }
 }
