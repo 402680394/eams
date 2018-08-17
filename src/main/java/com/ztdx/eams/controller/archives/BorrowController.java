@@ -110,7 +110,7 @@ public class BorrowController {
         //审批时间
         map.put("approvalTime", "");
         //审批状态
-        map.put("status", "待审批");
+        map.put("status", "pending");
 
         List<Map<String, Object>> entryIndexs = (List) map.get("entryIndexs");
         map.remove("entryIndexs");
