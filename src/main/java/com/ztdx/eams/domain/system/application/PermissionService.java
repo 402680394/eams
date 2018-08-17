@@ -158,22 +158,38 @@ public class PermissionService {
         return sb.toString();
     }
 
-    public void addUserPermission(int userId, String resourceUrl, int days){
-        addUserPermission(userId, resourceUrl, Date.from(Instant.now().plus(days, ChronoUnit.DAYS)));
+    public void addUserPermission(int userId, Collection<String> resourceUrls, int days){
+        addUserPermission(userId, resourceUrls, Date.from(Instant.now().plus(days, ChronoUnit.DAYS)));
     }
 
-    public void addUserPermission(int userId, String resourceUrl, Date expiryTime){
-        if (userPermissionRepository.existsByUserIdAndResourceUrlAndExpiryTimeGreaterThanEqual(userId, resourceUrl, Date.from(Instant.now()))){
-            return;
-        }
-        if (expiryTime == null){
-            expiryTime = Date.from(Instant.now().plus(10, ChronoUnit.YEARS));
-        }
-        UserPermission userPermission = new UserPermission();
-        userPermission.setUserId(userId);
-        userPermission.setExpiryTime(expiryTime);
-        userPermission.setResourceUrl(resourceUrl);
-        userPermissionRepository.save(userPermission);
+    public void addUserPermission(int userId, Collection<String> resourceUrls, Date expiryTime){
+        List<UserPermission> list = new ArrayList<>();
+
+        List<UserPermission> exists = userPermissionRepository.findByUserIdAndResourceUrlInAndExpiryTimeGreaterThanEqual(userId, resourceUrls, Date.from(Instant.now()));
+
+        Set<String> existsKey = exists.stream().map(UserPermission::getResourceUrl).collect(Collectors.toSet());
+
+        resourceUrls.forEach(resourceUrl -> {
+            if (existsKey.contains(resourceUrl)){
+                return;
+            }
+
+            Date time;
+            if (expiryTime == null){
+                time = Date.from(Instant.now().plus(10, ChronoUnit.YEARS));
+            }else{
+                time = expiryTime;
+            }
+            UserPermission userPermission = new UserPermission();
+            userPermission.setUserId(userId);
+            userPermission.setExpiryTime(time);
+            userPermission.setResourceUrl(resourceUrl);
+            userPermission.setGmtCreate(Date.from(Instant.now()));
+
+            list.add(userPermission);
+        });
+
+        userPermissionRepository.saveAll(list);
     }
 
     public List<UserPermission> listUserPermission(int userId){
