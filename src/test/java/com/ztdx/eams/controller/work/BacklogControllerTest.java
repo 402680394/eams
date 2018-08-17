@@ -43,7 +43,8 @@ public class BacklogControllerTest {
         clear();
 
         Map<String, Object> map = new HashMap<>();
-        map.put("id", "c837ce6a-2081-435a-8fd7-7ca9446aab80");
+        map.put("id", "bf2a87af-3f18-4593-85c5-779173d48991");
+        map.put("catalogueId", 9);
         map.put("type", "borrow");
         map.put("title", "测试借阅申请");
         map.put("orderCode", "JYD201808150001");
@@ -59,7 +60,36 @@ public class BacklogControllerTest {
         Map<String, Object> result = backlogController.applyList(0, 20, new UserCredential(23, "ceshi"));
     }
 
-    private void clear(){
+    //@Test
+    public void all(){
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", "bf2a87af-3f18-4593-85c5-779173d48991");
+        map.put("catalogueId", 9);
+        map.put("type", "borrow");
+        map.put("title", "测试借阅申请");
+        map.put("orderCode", "JYSQ2018081730");
+        map.put("orderId", 42);
+        map.put("applicantId", 23);
+        //ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("test", map);
+        ProcessInstance processInstance = runtimeService.createProcessInstanceBuilder().processDefinitionKey("test").variables(map).start();
+
+        List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstance.getId()).list();
+        tasks.forEach(a -> {
+            Map<String, Object> map1 = new HashMap<>();
+            map1.put("result", "agree");
+            taskService.complete(a.getId(), map1);
+        });
+
+        tasks = taskService.createTaskQuery().processInstanceId(processInstance.getId()).list();
+        tasks.forEach(a -> {
+            Map<String, Object> map1 = new HashMap<>();
+            map1.put("result", "agree");
+            taskService.complete(a.getId(), map1);
+        });
+    }
+
+    //@Test
+    public void clear(){
         List<ProcessInstance> r = runtimeService.createProcessInstanceQuery().list();
         r.forEach(a -> {
             runtimeService.deleteProcessInstance(a.getId(), "clear");
