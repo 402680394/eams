@@ -97,21 +97,21 @@ public class WebConfig extends WebMvcConfigurationSupport {
                 response.append("{\"timestamp\":");
                 response.append(System.currentTimeMillis());
                 response.append(",\"code\":");
-                response.append((map == null || map.get("code") == null) ? 200 : map.get("code"));
+                response.append((map == null || map.get("system_code") == null) ? 200 : map.get("system_code"));
                 response.append(",\"status\":");
-                response.append(map == null || map.get("status") == null ? 200 : map.get("status"));
+                response.append(map == null || map.get("system_status") == null ? 200 : map.get("system_status"));
                 response.append(",\"message\":\"");
-                response.append(format(map, "message", ""));
+                response.append(format(map, "system_message", ""));
                 response.append("\",\"path\":\"");
-                response.append(format(map, "path", ""));
+                response.append(format(map, "system_path", ""));
                 response.append("\",\"trace\":\"");
-                response.append(format(map, "trace", ""));
+                response.append(format(map, "system_trace", ""));
                 response.append("\",\"exception\":\"");
-                response.append(format(map, "exception", ""));
+                response.append(format(map, "system_exception", ""));
                 response.append("\",\"data\":");
 
                 generator.writeRaw(response.toString());
-                if (map != null && map.get("code") != null && map.get("status") != null && map.get("message") != null){
+                if (map != null && map.get("system_code") != null && map.get("system_status") != null && map.get("system_message") != null){
                     map.clear();
                 }
                 super.writePrefix(generator, object);

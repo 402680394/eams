@@ -27,14 +27,14 @@ public class ErrorHandler {
         message = message.replaceAll("\"", "'");
 
         Map<String, Object> result = new HashMap<>();
-        result.put("timestamp", System.currentTimeMillis());
-        result.put("code", errorCode);
-        result.put("status", 200);
-        result.put("message", message);
+        result.put("system_timestamp", System.currentTimeMillis());
+        result.put("system_code", errorCode);
+        result.put("system_status", 200);
+        result.put("system_message", message);
         if (debug){
-            result.put("path", httpServletRequest.getServletPath());
-            result.put("trace", Arrays.toString(exception.getStackTrace()));
-            result.put("exception", exception.getClass().getName());
+            result.put("system_path", httpServletRequest.getServletPath());
+            result.put("system_trace", Arrays.toString(exception.getStackTrace()));
+            result.put("system_exception", exception.getClass().getName());
         }
 
         return new ResponseEntity<>(result, HttpStatus.OK);

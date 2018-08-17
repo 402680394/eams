@@ -22,8 +22,8 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
+//@RunWith(SpringRunner.class)
+//@SpringBootTest
 public class BacklogControllerTest {
 
     @Autowired

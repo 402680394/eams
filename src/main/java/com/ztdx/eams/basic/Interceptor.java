@@ -55,17 +55,17 @@ public class Interceptor implements HandlerInterceptor {
         message = "success";
 
         StringBuilder response = new StringBuilder();
-        response.append("{\"timestamp\":");
+        response.append("{\"system_timestamp\":");
         response.append(System.currentTimeMillis());
-        response.append(",\"code\":");
+        response.append(",\"system_code\":");
         response.append(errorCode);
-        response.append(",\"status\":");
+        response.append(",\"system_status\":");
         response.append(errorCode);
-        response.append(",\"message\":\"");
+        response.append(",\"system_message\":\"");
         response.append(message);
-        response.append("\",\"path\":\"");
+        response.append("\",\"system_path\":\"");
         response.append(httpServletRequest.getServletPath());
-        response.append("\",\"data\":{}}");
+        response.append("\",\"system_data\":{}}");
 
         httpServletResponse.setStatus(200);
         OutputStream os = httpServletResponse.getOutputStream();
