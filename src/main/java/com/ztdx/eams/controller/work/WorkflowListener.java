@@ -42,7 +42,7 @@ public class WorkflowListener extends AbstractFlowableEventListener{
             ExecutionEntity processInstance = (ExecutionEntity)event.getEntity();
             Map<String, VariableInstance> vars = processInstance.getVariableInstances();
 
-            if (vars.get("result") == null || !vars.get("result").getValue().equals("agree")){
+            if (vars.get("result") == null){
                 return;
             }
 
