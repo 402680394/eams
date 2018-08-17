@@ -1,14 +1,8 @@
 package com.ztdx.eams.controller.archives;
 
 import com.ztdx.eams.basic.UserCredential;
-import com.ztdx.eams.domain.archives.application.ArchivesService;
-import com.ztdx.eams.domain.archives.application.BorrowService;
-import com.ztdx.eams.domain.archives.application.DescriptionItemService;
-import com.ztdx.eams.domain.archives.application.EntryService;
-import com.ztdx.eams.domain.archives.model.Borrow;
-import com.ztdx.eams.domain.archives.model.DescriptionItem;
-import com.ztdx.eams.domain.archives.model.Entry;
-import com.ztdx.eams.domain.archives.model.PropertyType;
+import com.ztdx.eams.domain.archives.application.*;
+import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.work.application.WorkService;
 import com.ztdx.eams.domain.work.model.Workflow;
@@ -16,10 +10,12 @@ import com.ztdx.eams.domain.work.model.WorkflowCompleteEvent;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -41,14 +37,17 @@ public class BorrowController {
 
     private final ArchivesService archivesService;
 
+    private final OriginalTextService originalTextService;
+
     @Autowired
-    public BorrowController(BorrowService borrowService, WorkService workService, EntryService entryService, DescriptionItemService descriptionItemService, PermissionService permissionService, ArchivesService archivesService) {
+    public BorrowController(BorrowService borrowService, WorkService workService, EntryService entryService, DescriptionItemService descriptionItemService, PermissionService permissionService, ArchivesService archivesService, OriginalTextService originalTextService) {
         this.borrowService = borrowService;
         this.workService = workService;
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
         this.permissionService = permissionService;
         this.archivesService = archivesService;
+        this.originalTextService = originalTextService;
     }
 
     /**
@@ -246,6 +245,9 @@ public class BorrowController {
                 || event.getWorkflow() == null
                 || !StringUtils.isNumeric(event.getWorkflow().getOrderId())
                 || event.getWorkflow().getApplicantId() == null
+                || event.getWorkflow().getOid() == null
+                || event.getWorkflow().getRawVars() == null
+                || event.getWorkflow().getRawVars().get("catalogueId") == null
                 || event.getWorkflow().getStatus() == null
                 || event.getWorkflow().getStatus() != Workflow.WorkflowResult.agree) {
             return;
@@ -255,32 +257,37 @@ public class BorrowController {
 
         Borrow borrow = borrowService.get(Integer.parseInt(event.getWorkflow().getOrderId()));
 
-        if (borrow.getType() == 1) {
-            if (borrow.getIsSee() == 1) {
-                permissionService.addUserPermission(
-                        userId
-                        , String.format(
-                                "object_original_text_view_%s"
-                                , event.getWorkflow().getOid())
-                        , borrow.getDays());
-            }
-            if (borrow.getIsDownload() == 1) {
-                permissionService.addUserPermission(
-                        userId
-                        , String.format(
-                                "object_original_text_download_%s"
-                                , event.getWorkflow().getOid())
-                        , borrow.getDays());
-            }
-            if (borrow.getIsPrint() == 1) {
-                permissionService.addUserPermission(
-                        userId
-                        , String.format(
-                                "object_original_text_print_%s"
-                                , event.getWorkflow().getOid())
-                        , borrow.getDays());
-            }
+        Object tmpCatalogueId = event.getWorkflow().getRawVars().get("catalogueId");
+        if (!StringUtils.isNumeric(tmpCatalogueId.toString())
+                || borrow == null
+                || borrow.getType() != 1){
+            return;
         }
+
+        List<String> urlResources = new ArrayList<>();
+        int count;
+
+        do {
+            Page<OriginalText> pages = originalTextService.list(
+                    Integer.parseInt(tmpCatalogueId.toString()), event.getWorkflow().getOid(), "", 0, 100);
+            pages.getContent().forEach(a -> {
+                if (borrow.getIsSee() == 1) {
+                    urlResources.add(String.format("object_original_text_view_%s", a.getId()));
+                }
+                if (borrow.getIsDownload() == 1) {
+                    urlResources.add(String.format("object_original_text_download_%s", a.getId()));
+                }
+                if (borrow.getIsPrint() == 1) {
+                    urlResources.add(String.format("object_original_text_print_%s", a.getId()));
+                }
+            });
+            count = pages.getNumber();
+        }while (count > 0);
+
+        permissionService.addUserPermission(
+                userId
+                , urlResources
+                , borrow.getDays());
     }
 
     /**

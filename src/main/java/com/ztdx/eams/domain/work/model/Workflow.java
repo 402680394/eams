@@ -2,6 +2,8 @@ package com.ztdx.eams.domain.work.model;
 
 import lombok.Data;
 
+import java.util.Map;
+
 @Data
 public class Workflow {
 
@@ -44,6 +46,8 @@ public class Workflow {
      * 申请人id
      */
     private Integer applicantId;
+
+    private Map<String, Object> rawVars;
 
     public enum WorkflowType{
         borrow

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.flowable.common.engine.api.delegate.event.FlowableEngineEventType.PROCESS_COMPLETED;
@@ -70,6 +71,12 @@ public class WorkflowListener extends AbstractFlowableEventListener{
             }else {
                 workflow.setType(Workflow.WorkflowType.valueOf(type));
             }
+
+            Map<String, Object> all = new HashMap<>();
+            vars.forEach((k, v) -> {
+                all.put(k, v.getValue());
+            });
+            workflow.setRawVars(all);
 
             applicationContext.publishEvent(new WorkflowCompleteEvent(this, workflow));
         }
