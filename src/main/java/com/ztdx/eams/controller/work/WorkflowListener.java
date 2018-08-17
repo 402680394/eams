@@ -46,8 +46,6 @@ public class WorkflowListener extends AbstractFlowableEventListener{
                 return;
             }
 
-            //runtimeService.setVariable(processInstance.getSuperExecutionId(), "status", vars.get("result"));
-
             Workflow workflow = new Workflow();
             workflow.setApplicantId(getIntegerValue(vars, "applicantId"));
             workflow.setOid(getStringValue(vars, "id"));
@@ -62,6 +60,8 @@ public class WorkflowListener extends AbstractFlowableEventListener{
             }else {
                 workflow.setStatus(Workflow.WorkflowResult.valueOf(result));
                 workflow.setResult(Workflow.WorkflowResult.valueOf(result));
+
+                processInstance.setVariable("status", result);
             }
 
             String type = getStringValue(vars, "type");
@@ -70,6 +70,7 @@ public class WorkflowListener extends AbstractFlowableEventListener{
             }else {
                 workflow.setType(Workflow.WorkflowType.valueOf(type));
             }
+
             applicationContext.publishEvent(new WorkflowCompleteEvent(this, workflow));
         }
     }
