@@ -9,10 +9,16 @@ import com.ztdx.eams.domain.archives.model.Borrow;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.PropertyType;
+import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.work.application.WorkService;
-import org.jooq.types.UInteger;
+import com.ztdx.eams.domain.work.model.Workflow;
+import com.ztdx.eams.domain.work.model.WorkflowCompleteEvent;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
@@ -33,14 +39,18 @@ public class BorrowController {
 
     private final DescriptionItemService descriptionItemService;
 
+    private final PermissionService permissionService;
+
     private final ArchivesService archivesService;
 
     @Autowired
+    public BorrowController(BorrowService borrowService, WorkService workService, EntryService entryService, DescriptionItemService descriptionItemService, PermissionService permissionService) {
     public BorrowController(BorrowService borrowService, WorkService workService, EntryService entryService, DescriptionItemService descriptionItemService, ArchivesService archivesService) {
         this.borrowService = borrowService;
         this.workService = workService;
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
+        this.permissionService = permissionService;
         this.archivesService = archivesService;
     }
 
@@ -222,6 +232,50 @@ public class BorrowController {
         return resultMap;
     }
 
+    //@Async
+    @Transactional
+    @EventListener
+    public void completeEvent(WorkflowCompleteEvent event){
+        if (event == null
+                || event.getWorkflow() == null
+                || !StringUtils.isNumeric(event.getWorkflow().getOrderId())
+                || event.getWorkflow().getApplicantId() == null
+                || event.getWorkflow().getStatus() == null
+                || event.getWorkflow().getStatus() != Workflow.WorkflowResult.agree){
+            return;
+        }
+
+        int userId = event.getWorkflow().getApplicantId();
+
+        Borrow borrow = borrowService.get(Integer.parseInt(event.getWorkflow().getOrderId()));
+
+        if (borrow.getType() == 1){
+            if (borrow.getIsSee() == 1){
+                permissionService.addUserPermission(
+                        userId
+                        , String.format(
+                                "object_original_text_view_%s"
+                                , event.getWorkflow().getOid())
+                        , borrow.getDays());
+            }
+            if (borrow.getIsDownload() == 1){
+                permissionService.addUserPermission(
+                        userId
+                        , String.format(
+                                "object_original_text_download_%s"
+                                , event.getWorkflow().getOid())
+                        , borrow.getDays());
+            }
+            if (borrow.getIsPrint() == 1){
+                permissionService.addUserPermission(
+                        userId
+                        , String.format(
+                                "object_original_text_print_%s"
+                                , event.getWorkflow().getOid())
+                        , borrow.getDays());
+            }
+        }
+    }
     /**
      * @api {post} /borrow/approval 审批
      * @apiName approval

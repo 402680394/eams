@@ -2,27 +2,34 @@ package com.ztdx.eams.controller.work;
 
 import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.domain.system.application.OrganizationService;
+import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.system.application.UserService;
 import com.ztdx.eams.domain.system.model.User;
+import com.ztdx.eams.domain.work.model.Workflow;
+import com.ztdx.eams.domain.work.model.WorkflowCompleteEvent;
 import javafx.util.Pair;
 import org.apache.commons.lang.StringUtils;
+import org.flowable.common.engine.api.delegate.event.FlowableEntityEvent;
+import org.flowable.common.engine.api.delegate.event.FlowableEvent;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.TaskService;
 import org.flowable.engine.history.HistoricProcessInstance;
+import org.flowable.engine.runtime.ProcessInstance;
 import org.flowable.task.api.Task;
 import org.flowable.variable.api.history.HistoricVariableInstance;
 import org.flowable.variable.api.persistence.entity.VariableInstance;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.SessionAttribute;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.flowable.common.engine.api.delegate.event.FlowableEngineEventType.PROCESS_COMPLETED;
 
 @RestController
 @RequestMapping(value = "/backlog")
@@ -38,12 +45,15 @@ public class BacklogController {
 
     private HistoryService historyService;
 
-    public BacklogController(RuntimeService runtimeService, TaskService taskService, UserService userService, OrganizationService organizationService, HistoryService historyService) {
+    private ApplicationContext applicationContext;
+
+    public BacklogController(RuntimeService runtimeService, TaskService taskService, UserService userService, OrganizationService organizationService, HistoryService historyService, ApplicationContext applicationContext) {
         this.runtimeService = runtimeService;
         this.taskService = taskService;
         this.userService = userService;
         this.organizationService = organizationService;
         this.historyService = historyService;
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -83,6 +93,7 @@ public class BacklogController {
      *     }
      * }
      */
+    @RequestMapping(path = "/todoList", method = RequestMethod.GET)
     public Map<String, Object> todoList(
             @RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value = "size", required = false, defaultValue = "20") int size
@@ -108,7 +119,7 @@ public class BacklogController {
 
         Collection<Integer> organIds = users.stream().map(User::getOrganizationId).collect(Collectors.toList());
 
-        Map<Integer, Pair<String, String>> companies = organizationService.listDepartmentAndCompany(organIds);
+        Map<Integer, List<String>> companies = organizationService.listDepartmentAndCompany(organIds);
 
         Map<Integer, User> userMap = users.stream().collect(Collectors.toMap(User::getId, a -> a));
 
@@ -134,10 +145,10 @@ public class BacklogController {
             if (StringUtils.isNumeric(applicantId) && userMap.get(Integer.parseInt(applicantId)) != null){
                 User user = userMap.get(Integer.parseInt(applicantId));
                 name = user.getName();
-                Pair<String, String> pair = companies.get(user.getOrganizationId());
+                List<String> pair = companies.get(user.getOrganizationId());
                 if (pair != null) {
-                    department = pair.getKey();
-                    company = pair.getValue();
+                    department = pair.get(0);
+                    company = pair.get(1);
                 }
             }
 
@@ -185,6 +196,7 @@ public class BacklogController {
      *     }
      * }
      */
+    @RequestMapping(path = "/applyList", method = RequestMethod.GET)
     public Map<String, Object> applyList(@RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value = "size", required = false, defaultValue = "20") int size
             , @SessionAttribute UserCredential LOGIN_USER){

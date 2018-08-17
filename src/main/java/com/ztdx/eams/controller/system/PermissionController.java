@@ -4,6 +4,7 @@ import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.domain.system.model.ResourceCategory;
+import com.ztdx.eams.domain.system.model.UserPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -274,6 +275,23 @@ public class PermissionController {
      */
     @RequestMapping(value = "/my", method = RequestMethod.GET)
     public Map myPermission(@SessionAttribute UserCredential LOGIN_USER){
-        return roleService.listUserPermission(LOGIN_USER.getUserId());
+        Map<String, Object> map = roleService.listUserPermission(LOGIN_USER.getUserId());
+        List<UserPermission> userPermissions = permissionService.listUserPermission(LOGIN_USER.getUserId());
+
+        Map objectMap = (Map)map.get("object");
+
+        userPermissions.forEach(a -> {
+            if (objectMap.get(a.getResourceUrl()) != null){
+                return;
+            }
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("resourceUrl", a.getResourceUrl());
+            item.put("name", null);
+            item.put("id", null);
+            objectMap.put(a.getResourceUrl(), item);
+        });
+
+        return map;
     }
 }

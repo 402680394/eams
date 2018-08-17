@@ -37,8 +37,9 @@ public class Interceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, Exception e) throws Exception {
         WebRequest webRequest = new ServletWebRequest(httpServletRequest);
-        if (((HandlerMethod) o).getMethod().getReturnType().getName().equals("void")
-        && errorAttributes.getError(webRequest) == null) {
+        if (o instanceof HandlerMethod
+                &&((HandlerMethod) o).getMethod().getReturnType().getName().equals("void")
+                && errorAttributes.getError(webRequest) == null) {
             appendToResponse(httpServletRequest, httpServletResponse, null);
         }
     }

@@ -4,8 +4,10 @@ import com.ztdx.eams.basic.spel.TemplateParserContext;
 import com.ztdx.eams.domain.system.model.Permission;
 import com.ztdx.eams.domain.system.model.Resource;
 import com.ztdx.eams.domain.system.model.ResourceCategory;
+import com.ztdx.eams.domain.system.model.UserPermission;
 import com.ztdx.eams.domain.system.repository.PermissionRepository;
 import com.ztdx.eams.domain.system.repository.ResourceRepository;
+import com.ztdx.eams.domain.system.repository.UserPermissionRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,6 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,10 +29,13 @@ public class PermissionService {
 
     private ExpressionParser parser;
 
-    public PermissionService(PermissionRepository permissionRepository, ResourceRepository resourceRepository, ExpressionParser parser) {
+    private UserPermissionRepository userPermissionRepository;
+
+    public PermissionService(PermissionRepository permissionRepository, ResourceRepository resourceRepository, ExpressionParser parser, UserPermissionRepository userPermissionRepository) {
         this.permissionRepository = permissionRepository;
         this.resourceRepository = resourceRepository;
         this.parser = parser;
+        this.userPermissionRepository = userPermissionRepository;
     }
 
     public List<Map> listCategoryPermission(ResourceCategory resourceCategory) {
@@ -149,5 +156,27 @@ public class PermissionService {
         }
 
         return sb.toString();
+    }
+
+    public void addUserPermission(int userId, String resourceUrl, int days){
+        addUserPermission(userId, resourceUrl, Date.from(Instant.now().plus(days, ChronoUnit.DAYS)));
+    }
+
+    public void addUserPermission(int userId, String resourceUrl, Date expiryTime){
+        if (userPermissionRepository.existsByUserIdAndResourceUrlAndExpiryTimeGreaterThanEqual(userId, resourceUrl, Date.from(Instant.now()))){
+            return;
+        }
+        if (expiryTime == null){
+            expiryTime = Date.from(Instant.now().plus(10, ChronoUnit.YEARS));
+        }
+        UserPermission userPermission = new UserPermission();
+        userPermission.setUserId(userId);
+        userPermission.setExpiryTime(expiryTime);
+        userPermission.setResourceUrl(resourceUrl);
+        userPermissionRepository.save(userPermission);
+    }
+
+    public List<UserPermission> listUserPermission(int userId){
+        return userPermissionRepository.findByUserIdAndExpiryTimeGreaterThanEqual(userId, Date.from(Instant.now()));
     }
 }

@@ -1,6 +1,8 @@
 package com.ztdx.eams.controller.work;
 
 import com.ztdx.eams.basic.UserCredential;
+import org.flowable.common.engine.api.delegate.event.FlowableEvent;
+import org.flowable.common.engine.api.delegate.event.FlowableEventListener;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.RepositoryService;
 import org.flowable.engine.RuntimeService;
@@ -36,7 +38,7 @@ public class BacklogControllerTest {
     @Autowired
     private HistoryService historyService;
 
-    @Test
+    //@Test
     public void todoList(){
         clear();
 
@@ -52,7 +54,7 @@ public class BacklogControllerTest {
         Map<String, Object> result = backlogController.todoList(0, 20, new UserCredential(22, "ceshi"));
     }
 
-    @Test
+    //@Test
     public void applyList(){
         Map<String, Object> result = backlogController.applyList(0, 20, new UserCredential(23, "ceshi"));
     }
@@ -67,14 +69,26 @@ public class BacklogControllerTest {
         });
     }
 
-    @Test
+    //@Test
     public void start(){
         ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("test");
     }
 
-    @Test
+    //@Test
     public void agree() {
+        todoList();
         List<ProcessInstance> r = runtimeService.createProcessInstanceQuery().list();
+
+        r.forEach(a -> {
+            List<Task> tasks = taskService.createTaskQuery().processInstanceId(a.getId()).list();
+            tasks.forEach(b -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("result", "agree");
+                taskService.complete(b.getId(), map);
+            });
+        });
+
+        r = runtimeService.createProcessInstanceQuery().list();
 
         r.forEach(a -> {
             List<Task> tasks = taskService.createTaskQuery().processInstanceId(a.getId()).list();
@@ -86,7 +100,7 @@ public class BacklogControllerTest {
         });
     }
 
-    @Test
+    //@Test
     public void refuse() {
         List<ProcessInstance> r = runtimeService.createProcessInstanceQuery().list();
 
@@ -100,7 +114,7 @@ public class BacklogControllerTest {
         });
     }
 
-    @Test
+    //@Test
     public void delete(){
         List<ProcessInstance> r = runtimeService.createProcessInstanceQuery().list();
 
@@ -112,7 +126,7 @@ public class BacklogControllerTest {
         });
     }
 
-    @Test
+    //@Test
     public void resolve(){
         List<ProcessInstance> r = runtimeService.createProcessInstanceQuery().list();
 
@@ -124,7 +138,7 @@ public class BacklogControllerTest {
         });
     }
 
-    @Test
+    //@Test
     public void history(){
         List<HistoricProcessInstance> processInstances = historyService.createHistoricProcessInstanceQuery().list();
     }
