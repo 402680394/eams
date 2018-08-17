@@ -51,9 +51,9 @@ public class Borrow {
     //借阅目的
     @Column(name = "objective")
     private String objective;
-    //借阅类型（1-电子利用 2-实体外借 3-实体查阅）
-    @Min(value = 1)
-    @Max(value = 3)
+    //借阅类型（0-电子利用 1-实体外借 2-实体查阅）
+    @Min(value = 0)
+    @Max(value = 2)
     @Column(name = "type")
     private int type;
     //是否查看（0-否 1-是）

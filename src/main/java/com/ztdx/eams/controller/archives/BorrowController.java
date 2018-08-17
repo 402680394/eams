@@ -60,8 +60,8 @@ public class BorrowController {
      * @apiParam {String} email 电子邮件
      * @apiParam {String} tel 电话
      * @apiParam {Number} days 借阅天数
-     * @apiParam {String} objective 借阅目的（1-档案编研 2-工作考察 3-编史修志 4-学术研究 5-经济建设 6-宣传教育 7-其他）（取文本值）
-     * @apiParam {Number} type 借阅类型（1-电子利用 2-实体外借 3-实体查阅）
+     * @apiParam {String} objective 借阅目的（0-档案编研 1-工作考察 2-编史修志 3-学术研究 4-经济建设 5-宣传教育 6-其他）（取文本值）
+     * @apiParam {Number} type 借阅类型（0-电子利用 1-实体外借 2-实体查阅）
      * @apiParam {Number} isSee 是否查看（0-否 1-是）
      * @apiParam {Number} isPrint 是否打印
      * @apiParam {Number} isDownload 是否下载
@@ -155,6 +155,7 @@ public class BorrowController {
      * @apiParam {Number} id 借阅单ID
      * @apiParam {Number} size 借阅数据显示条数(url参数)
      * @apiParam {Number} page 借阅数据显示页次 (url参数)
+     * @apiParam {Number} isApproval 是否审批页 (url参数)(0-查看页 1-审批页)
      * @apiSuccess (Success 200) {Number} id 借阅单ID.
      * @apiSuccess (Success 200) {String} code 借阅单编号.
      * @apiSuccess (Success 200) {Number} applicantDate 申请日期.
@@ -164,7 +165,7 @@ public class BorrowController {
      * @apiSuccess (Success 200) {String} tel 电话.
      * @apiSuccess (Success 200) {Number} days 借阅天数.
      * @apiSuccess (Success 200) {String} objective 借阅目的.
-     * @apiSuccess (Success 200) {Number} type 借阅类型（1-电子利用 2-实体外借 3-实体查阅）.
+     * @apiSuccess (Success 200) {Number} type 借阅类型（0-电子利用 1-实体外借 2-实体查阅）.
      * @apiSuccess (Success 200) {Number} isSee 是否查看（0-否 1-是）.
      * @apiSuccess (Success 200) {Number} isPrint 是否打印.
      * @apiSuccess (Success 200) {Number} isDownload 是否下载.
@@ -174,7 +175,7 @@ public class BorrowController {
      * @apiSuccess (Success 200) {String} effect 利用效果.
      * @apiSuccess (Success 200) {String} total 借阅内容总条数.
      * @apiSuccess (Success 200) {String} borrowContent 借阅内容.
-     * @apiSuccess (Success 200) {String} borrowContent:processId 审批流程ID.
+     * @apiSuccess (Success 200) {String} borrowContent:taskId 任务ID(审批页返回).
      * @apiSuccess (Success 200) {String} borrowContent:archiveName 档案库名称.
      * @apiSuccess (Success 200) {String} borrowContent:title 提名.
      * @apiSuccess (Success 200) {String} borrowContent:reference 档号.
@@ -204,9 +205,17 @@ public class BorrowController {
      * "borrowContent": [{"processId": "审批流程ID","archiveName": "档案库名称","title": "提名","reference": "档号","approvalTime": "审批时间","status": "审批状态","days": 10}]}}.
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public Map<String, Object> details(@PathVariable("id") int borrowId, @RequestParam(name = "size", defaultValue = "15") int size, @RequestParam(name = "page", defaultValue = "1") int page) {
-
-        Map<String, Object> resultMap = workService.queryByVariable(borrowId, size, page);
+    public Map<String, Object> details(@PathVariable("id") int borrowId
+            , @RequestParam(name = "size", defaultValue = "15") int size
+            , @RequestParam(name = "page", defaultValue = "1") int page
+            , @RequestParam("isApproval") int isApproval) {
+        Map<String, Object> resultMap = null;
+        //查看
+        if (isApproval == 0) {
+            resultMap = workService.queryAllBorrowData(borrowId, size, page);
+        } else {
+            resultMap = workService.queryApprovalBorrowData(borrowId, size, page);
+        }
         Borrow borrow = borrowService.get(borrowId);
         resultMap.put("id", borrow.getId());
         resultMap.put("code", borrow.getCode());
@@ -225,20 +234,19 @@ public class BorrowController {
         resultMap.put("isHandwrite", borrow.getIsHandwrite());
         resultMap.put("descript", borrow.getDescript());
         resultMap.put("effect", borrow.getEffect());
-        System.out.println(resultMap.size());
         return resultMap;
     }
 
     //@Async
     @Transactional
     @EventListener
-    public void completeEvent(WorkflowCompleteEvent event){
+    public void completeEvent(WorkflowCompleteEvent event) {
         if (event == null
                 || event.getWorkflow() == null
                 || !StringUtils.isNumeric(event.getWorkflow().getOrderId())
                 || event.getWorkflow().getApplicantId() == null
                 || event.getWorkflow().getStatus() == null
-                || event.getWorkflow().getStatus() != Workflow.WorkflowResult.agree){
+                || event.getWorkflow().getStatus() != Workflow.WorkflowResult.agree) {
             return;
         }
 
@@ -246,8 +254,8 @@ public class BorrowController {
 
         Borrow borrow = borrowService.get(Integer.parseInt(event.getWorkflow().getOrderId()));
 
-        if (borrow.getType() == 1){
-            if (borrow.getIsSee() == 1){
+        if (borrow.getType() == 1) {
+            if (borrow.getIsSee() == 1) {
                 permissionService.addUserPermission(
                         userId
                         , String.format(
@@ -255,7 +263,7 @@ public class BorrowController {
                                 , event.getWorkflow().getOid())
                         , borrow.getDays());
             }
-            if (borrow.getIsDownload() == 1){
+            if (borrow.getIsDownload() == 1) {
                 permissionService.addUserPermission(
                         userId
                         , String.format(
@@ -263,7 +271,7 @@ public class BorrowController {
                                 , event.getWorkflow().getOid())
                         , borrow.getDays());
             }
-            if (borrow.getIsPrint() == 1){
+            if (borrow.getIsPrint() == 1) {
                 permissionService.addUserPermission(
                         userId
                         , String.format(
@@ -273,22 +281,23 @@ public class BorrowController {
             }
         }
     }
+
     /**
      * @api {post} /borrow/approval 审批
      * @apiName approval
      * @apiGroup borrow
-     * @apiParam {String[]} processId 流程ID
+     * @apiParam {String[]} taskId 流程ID
      * @apiParam {Number} isAgree 是否同意（0-同意 1-拒绝）
      * @apiParam {String} Opinion 审批意见
      */
     @RequestMapping(value = "/approval", method = RequestMethod.POST)
     public void approval(@RequestBody Map<String, Object> map) {
         int isAgree = (int) map.get("isAgree");
-        List<String> processId = (List<String>) map.get("processId");
+        List<String> taskId = (List<String>) map.get("taskId");
         if (isAgree == 0) {
-            workService.agree(processId);
+            workService.agree(taskId);
         } else {
-            workService.refuse(processId);
+            workService.refuse(taskId);
         }
     }
 }

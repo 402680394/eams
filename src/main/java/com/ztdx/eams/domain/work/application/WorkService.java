@@ -8,6 +8,7 @@ import org.flowable.engine.runtime.Execution;
 import org.flowable.engine.runtime.ProcessInstance;
 import org.flowable.task.api.Task;
 import org.flowable.variable.api.history.HistoricVariableInstance;
+import org.flowable.variable.api.persistence.entity.VariableInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,57 +39,36 @@ public class WorkService {
 
     //同意
     @Transactional
-    public void agree(List<String> processIds) {
+    public void agree(List<String> taskIds) {
 
-        List<Task> list = taskService.createTaskQuery().processInstanceIdIn(processIds).list();
         Map<String, Object> map = new HashMap<>();
         map.put("approvalTime", new Date());
         map.put("result", "agree");
-        list.forEach(a -> {
-            System.out.println("执行任务id" + a.getId());
-            System.out.println("执行任务名" + a.getName());
+        taskIds.forEach(a -> {
             //判断流程是否执行结束
-            ProcessInstance p = runtimeService.createProcessInstanceQuery().processInstanceId(a.getProcessInstanceId()).singleResult();
+            ProcessInstance p = runtimeService.createProcessInstanceQuery().processInstanceId(taskService.createTaskQuery().taskId(a).singleResult().getProcessInstanceId()).singleResult();
             if (p.isEnded()) {
-                System.out.println("流程已结束");
                 map.put("status", "已结束");
             } else {
-                System.out.println("流程已审批");
                 map.put("status", "审批中");
             }
-            taskService.complete(a.getId(), map);
+            taskService.complete(a, map);
         });
-        //        processIds.forEach(processId -> {
-//            Execution execution = runtimeService.createExecutionQuery().processInstanceId(processId).singleResult();
-//            Map<String, Object> map = new HashMap<>();
-//            map.put("approvalTime", new Date());
-//            map.put("result", "agree");
-//            System.out.println("执行流程：" + execution.getName());
-//            if (execution.isEnded()) {
-//                System.out.println("流程已结束");
-//                map.put("status", "已结束");
-//            } else {
-//                System.out.println("流程已审批");
-//                map.put("status", "审批中");
-//            }
-//            runtimeService.signalEventReceived(execution.getId());
-//        });
     }
 
     //拒绝
     @Transactional
-    public void refuse(List<String> processId) {
-        List<Task> list = taskService.createTaskQuery().processInstanceIdIn(processId).list();
+    public void refuse(List<String> taskIds) {
         Map<String, Object> map = new HashMap<>();
         map.put("approvalTime", new Date());
         map.put("status", "已拒绝");
         map.put("result", "refuse");
-        list.forEach(a -> {
-            taskService.complete(a.getId(), map);
+        taskIds.forEach(a -> {
+            taskService.complete(a, map);
         });
     }
 
-    public Map<String, Object> queryByVariable(int orderId, int size, int page) {
+    public Map<String, Object> queryAllBorrowData(int orderId, int size, int page) {
 
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> borrowContents = new ArrayList<>();
@@ -103,7 +83,6 @@ public class WorkService {
                             .processInstanceId(historicProcessInstance.getId())
                             .list();
             Map<String, Object> borrowContent = new HashMap<>();
-            borrowContent.put("processId", historicProcessInstance.getId());
             historicVariableInstances.forEach(b -> {
                 if (b.getVariableName().equals("archiveName")
                         || b.getVariableName().equals("title")
@@ -116,7 +95,38 @@ public class WorkService {
             borrowContents.add(borrowContent);
         }
 
-        HistoricVariableInstance historicVariableInstance = historicVariableInstances.get(0);
+        resultMap.put("borrowContent", borrowContents);
+        resultMap.put("total", total);
+
+        return resultMap;
+    }
+
+    public Map<String, Object> queryApprovalBorrowData(int orderId, int size, int page) {
+
+        Map<String, Object> resultMap = new HashMap<>();
+        List<Map<String, Object>> borrowContents = new ArrayList<>();
+
+        long total = taskService.createTaskQuery().processVariableValueEquals("orderId", orderId).count();
+        List<Task> list = taskService.createTaskQuery().processVariableValueEquals("orderId", orderId).listPage(page - 1, size);
+
+        for (Task task : list) {
+            Map<String, Object> borrowContent = new HashMap<>();
+            Map<String, VariableInstance> variableMap = taskService.getVariableInstances(task.getId());
+//            variableMap.keySet().forEach(v-> System.out.println(v));
+//
+//            System.out.println();
+//            System.out.println();
+//            System.out.println();
+//            variableMap.values().forEach(v-> System.out.println(v));
+            borrowContent.put("taskId", task.getId());
+            borrowContent.put("title", variableMap.get("title").getValue());
+            borrowContent.put("reference", variableMap.get("reference").getValue());
+            borrowContent.put("approvalTime", variableMap.get("approvalTime").getValue());
+            borrowContent.put("status", variableMap.get("status").getValue());
+            borrowContent.put("days", variableMap.get("days").getValue());
+
+            borrowContents.add(borrowContent);
+        }
 
         resultMap.put("borrowContent", borrowContents);
         resultMap.put("total", total);
