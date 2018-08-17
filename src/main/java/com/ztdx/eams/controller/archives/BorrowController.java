@@ -141,7 +141,8 @@ public class BorrowController {
             //档号
             map.put("reference", reference);
             //借阅条目
-            map.put("id", (String) entryIndex.get("entryId"));
+            map.put("id", entryId);
+            map.put("catalogueId", catalogueId);
             //审批档案员
             map.put("filer", 22);
             workService.start("borrow", map);
