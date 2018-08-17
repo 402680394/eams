@@ -278,7 +278,8 @@ public class PermissionController {
         Map<String, Object> map = roleService.listUserPermission(LOGIN_USER.getUserId());
         List<UserPermission> userPermissions = permissionService.listUserPermission(LOGIN_USER.getUserId());
 
-        Map objectMap = (Map)map.get("object");
+        map.computeIfAbsent("object", k -> new HashMap<>());
+        Map<String, Object> objectMap = (Map<String, Object>)map.get("object");
 
         userPermissions.forEach(a -> {
             if (objectMap.get(a.getResourceUrl()) != null){
