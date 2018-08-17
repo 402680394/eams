@@ -16,8 +16,6 @@ import com.ztdx.eams.domain.work.model.WorkflowCompleteEvent;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,8 +42,7 @@ public class BorrowController {
     private final ArchivesService archivesService;
 
     @Autowired
-    public BorrowController(BorrowService borrowService, WorkService workService, EntryService entryService, DescriptionItemService descriptionItemService, PermissionService permissionService) {
-    public BorrowController(BorrowService borrowService, WorkService workService, EntryService entryService, DescriptionItemService descriptionItemService, ArchivesService archivesService) {
+    public BorrowController(BorrowService borrowService, WorkService workService, EntryService entryService, DescriptionItemService descriptionItemService, PermissionService permissionService, ArchivesService archivesService) {
         this.borrowService = borrowService;
         this.workService = workService;
         this.entryService = entryService;

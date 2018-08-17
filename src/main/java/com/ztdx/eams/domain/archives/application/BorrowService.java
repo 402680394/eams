@@ -33,10 +33,6 @@ public class BorrowService {
         borrowRepository.save(borrow);
     }
 
-    public Borrow get(Integer id) {
-        return borrowRepository.findById(id).get();
-    }
-
     @Transactional
     public void update(Borrow borrow) {
         borrowRepository.save(borrow);
