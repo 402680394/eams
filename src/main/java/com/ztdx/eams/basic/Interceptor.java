@@ -68,6 +68,7 @@ public class Interceptor implements HandlerInterceptor {
         response.append("\",\"data\":{}}");
 
         httpServletResponse.setStatus(200);
+        httpServletResponse.setContentType("application/json;charset=UTF-8");
         OutputStream os = httpServletResponse.getOutputStream();
         os.write(response.toString().getBytes());
         os.flush();
