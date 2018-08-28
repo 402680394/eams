@@ -106,25 +106,25 @@ public class EntryController {
      * @apiSuccess (Success 200) {int} items.age 年龄
      * @apiSuccessExample {json} Response-Example:
      * {
-     *     "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *     "catalogueId":1,
-     *     "catalogueType":1,
-     *     "archiveId":0,
-     *     "archiveType":0,
-     *     "archiveContentType":0,
-     *     "items":{
-     *         "birthday":"2018-05-16T14:44:56.328+0800",
-     *         "amount":73824039.1873,
-     *         "aihao":[
-     *             "电影",
-     *             "足球",
-     *             "汽车"
-     *         ],
-     *         "name":"里斯1",
-     *         "age":41
-     *     },
-     *     "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *     "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
      * }
      * @apiError (Error 404) message 1.条目不存在
      * @apiUse ErrorExample
@@ -152,17 +152,17 @@ public class EntryController {
      * @apiParam {String[]} items.interest 爱好
      * @apiParamExample {json} Request-Example:
      * {
-     *     "catalogueId":1,
-     *     "items":{
-     *         "name":"姓名",
-     *         "age":41,
-     *         "birthday":"2018-05-09T00:00:00",
-     *         "amount":73824039.1873,
-     *         "aihao":[
-     *             "电影",
-     *             "汽车"
-     *         ]
-     *     }
+     * "catalogueId":1,
+     * "items":{
+     * "name":"姓名",
+     * "age":41,
+     * "birthday":"2018-05-09T00:00:00",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "汽车"
+     * ]
+     * }
      * }
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
@@ -194,16 +194,16 @@ public class EntryController {
      * @apiParam {String[]} items.interest 爱好
      * @apiParamExample {json} Request-Example:
      * {
-     *     "items":{
-     *         "name":"姓名",
-     *         "age":41,
-     *         "birthday":"2018-05-09T00:00:00",
-     *         "amount":73824039.1873,
-     *         "aihao":[
-     *             "电影",
-     *             "汽车"
-     *         ]
-     *     }
+     * "items":{
+     * "name":"姓名",
+     * "age":41,
+     * "birthday":"2018-05-09T00:00:00",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "汽车"
+     * ]
+     * }
      * }
      * @apiError (Error 400) message 1.档案目录不存在 2.其他数据验证错误
      * @apiUse ErrorExample
@@ -223,10 +223,10 @@ public class EntryController {
      * @apiParam {String[]} deletes 要删除的条目id数组
      * @apiParamExample {json} Request-Example:
      * {
-     *     "cid": 1,
-     *     "deletes": [
-     *         "322c3c75-08a5-4a01-a60f-084b6a6f9be9"
-     *     ]
+     * "cid": 1,
+     * "deletes": [
+     * "322c3c75-08a5-4a01-a60f-084b6a6f9be9"
+     * ]
      * }
      * @apiError (Error 400) message 1.档案目录不存在
      * @apiUse ErrorExample
@@ -288,61 +288,61 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} innerCatalogueId 卷内目录id
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "birthday":"2018-05-16T14:44:56.328+0800",
-     *                     "amount":73824039.1873,
-     *                     "aihao":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "name":"里斯1",
-     *                     "age":41
-     *                 },
-     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
-     *             }
-     *         ],
-     *         "column":{
-     *             "name": {
-     *                 "metadataId":1,
-     *                 "metadataName":"name",
-     *                 "displayName":"姓名"
-     *             },
-     *             "birthday": {
-     *                 "metadataId":2,
-     *                 "metadataName":"birthday",
-     *                 "displayName":"生日"
-     *             },
-     *             "amount": {
-     *                 "metadataId":3,
-     *                 "metadataName":"amount",
-     *                 "displayName":"资产"
-     *             },
-     *             "aihao": {
-     *                 "metadataId":4,
-     *                 "metadataName":"aihao",
-     *                 "displayName":"爱好"
-     *             },
-     *             "age": {
-     *                 "metadataId":5,
-     *                 "metadataName":"age",
-     *                 "displayName":"年龄"
-     *             }
-     *         },
-     *         "totalElements": 14,
-     *         "totalPages": 1,
-     *         "innerCatalogueId":2
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * }
+     * ],
+     * "column":{
+     * "name": {
+     * "metadataId":1,
+     * "metadataName":"name",
+     * "displayName":"姓名"
+     * },
+     * "birthday": {
+     * "metadataId":2,
+     * "metadataName":"birthday",
+     * "displayName":"生日"
+     * },
+     * "amount": {
+     * "metadataId":3,
+     * "metadataName":"amount",
+     * "displayName":"资产"
+     * },
+     * "aihao": {
+     * "metadataId":4,
+     * "metadataName":"aihao",
+     * "displayName":"爱好"
+     * },
+     * "age": {
+     * "metadataId":5,
+     * "metadataName":"age",
+     * "displayName":"年龄"
+     * }
+     * },
+     * "totalElements": 14,
+     * "totalPages": 1,
+     * "innerCatalogueId":2
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
@@ -401,60 +401,60 @@ public class EntryController {
      * @apiSuccess (Success 200) {String} displayName 字段显示名称
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "birthday":"2018-05-16T14:44:56.328+0800",
-     *                     "amount":73824039.1873,
-     *                     "aihao":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "name":"里斯1",
-     *                     "age":41
-     *                 },
-     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
-     *             }
-     *         ],
-     *         "column":{
-     *             "name": {
-     *                 "metadataId":1,
-     *                 "metadataName":"name",
-     *                 "displayName":"姓名"
-     *             },
-     *             "birthday": {
-     *                 "metadataId":2,
-     *                 "metadataName":"birthday",
-     *                 "displayName":"生日"
-     *             },
-     *             "amount": {
-     *                 "metadataId":3,
-     *                 "metadataName":"amount",
-     *                 "displayName":"资产"
-     *             },
-     *             "aihao": {
-     *                 "metadataId":4,
-     *                 "metadataName":"aihao",
-     *                 "displayName":"爱好"
-     *             },
-     *             "age": {
-     *                 "metadataId":5,
-     *                 "metadataName":"age",
-     *                 "displayName":"年龄"
-     *             }
-     *         },
-     *         "totalElements": 14,
-     *         "totalPages": 1
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * }
+     * ],
+     * "column":{
+     * "name": {
+     * "metadataId":1,
+     * "metadataName":"name",
+     * "displayName":"姓名"
+     * },
+     * "birthday": {
+     * "metadataId":2,
+     * "metadataName":"birthday",
+     * "displayName":"生日"
+     * },
+     * "amount": {
+     * "metadataId":3,
+     * "metadataName":"amount",
+     * "displayName":"资产"
+     * },
+     * "aihao": {
+     * "metadataId":4,
+     * "metadataName":"aihao",
+     * "displayName":"爱好"
+     * },
+     * "age": {
+     * "metadataId":5,
+     * "metadataName":"age",
+     * "displayName":"年龄"
+     * }
+     * },
+     * "totalElements": 14,
+     * "totalPages": 1
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
@@ -516,36 +516,36 @@ public class EntryController {
      * @apiParam {String} value 查询的值，可嵌套一组新的条件。
      * @apiParamExample {json} Request-Example
      * {
-     * 	"cid": 5,
-     * 	"conditions": [
-     * 		{
-     * 			"column": "age",
-     * 			"operator": "greaterThanOrEqual",
-     * 			"value": 1
-     * 		},
-     * 		{
-     * 			"logical": "and",
-     * 			"column": "age",
-     * 			"operator": "lessThanOrEqual",
-     * 			"value": 100
-     * 		},
-     * 		{
-     * 			"logical": "and",
-     * 			"value": [
-     * 				{
-     * 					"column": "name",
-     * 					"operator": "equal",
-     * 					"value": "接收到卡"
-     * 				},
-     * 				{
-     * 					"logical": "or",
-     * 					"column": "name",
-     * 					"operator": "equal",
-     * 					"value": "5561"
-     * 				}
-     * 			]
-     * 		}
-     * 	]
+     * "cid": 5,
+     * "conditions": [
+     * {
+     * "column": "age",
+     * "operator": "greaterThanOrEqual",
+     * "value": 1
+     * },
+     * {
+     * "logical": "and",
+     * "column": "age",
+     * "operator": "lessThanOrEqual",
+     * "value": 100
+     * },
+     * {
+     * "logical": "and",
+     * "value": [
+     * {
+     * "column": "name",
+     * "operator": "equal",
+     * "value": "接收到卡"
+     * },
+     * {
+     * "logical": "or",
+     * "column": "name",
+     * "operator": "equal",
+     * "value": "5561"
+     * }
+     * ]
+     * }
+     * ]
      * }
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.id 条目id
@@ -566,59 +566,59 @@ public class EntryController {
      * @apiSuccess (Success 200) {Array} column.displayName 爱好
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "birthday":"2018-05-16T14:44:56.328+0800",
-     *                     "amount":73824039.1873,
-     *                     "aihao":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "name":"里斯1",
-     *                     "age":41
-     *                 },
-     *                 "gmtCreate":"2018-05-16T14:44:56.328+0800",
-     *                 "gmtModified":"2018-05-16T14:44:56.328+0800"
-     *             }
-     *         ],
-     *         "column":[
-     *             {
-     *                 "metadataId":1,
-     *                 "metadataName":"name",
-     *                 "displayName":"姓名"
-     *             },
-     *             {
-     *                 "metadataId":2,
-     *                 "metadataName":"birthday",
-     *                 "displayName":"生日"
-     *             },
-     *             {
-     *                 "metadataId":3,
-     *                 "metadataName":"amount",
-     *                 "displayName":"资产"
-     *             },
-     *             {
-     *                 "metadataId":4,
-     *                 "metadataName":"aihao",
-     *                 "displayName":"爱好"
-     *             },
-     *             {
-     *                 "metadataId":5,
-     *                 "metadataName":"age",
-     *                 "displayName":"年龄"
-     *             }
-     *         ],
-     *         "totalElements":14
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "birthday":"2018-05-16T14:44:56.328+0800",
+     * "amount":73824039.1873,
+     * "aihao":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "name":"里斯1",
+     * "age":41
+     * },
+     * "gmtCreate":"2018-05-16T14:44:56.328+0800",
+     * "gmtModified":"2018-05-16T14:44:56.328+0800"
+     * }
+     * ],
+     * "column":[
+     * {
+     * "metadataId":1,
+     * "metadataName":"name",
+     * "displayName":"姓名"
+     * },
+     * {
+     * "metadataId":2,
+     * "metadataName":"birthday",
+     * "displayName":"生日"
+     * },
+     * {
+     * "metadataId":3,
+     * "metadataName":"amount",
+     * "displayName":"资产"
+     * },
+     * {
+     * "metadataId":4,
+     * "metadataName":"aihao",
+     * "displayName":"爱好"
+     * },
+     * {
+     * "metadataId":5,
+     * "metadataName":"age",
+     * "displayName":"年龄"
+     * }
+     * ],
+     * "totalElements":14
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #entryCondition.catalogueId)")
@@ -647,16 +647,16 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} totalElements 总元素数
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "title":1,
-     *                 "danghao":1,
-     *             }
-     *         ],
-     *         "totalElements":14
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "title":1,
+     * "danghao":1,
+     * }
+     * ],
+     * "totalElements":14
+     * }
      * }
      */
     //@PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
@@ -766,94 +766,94 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} totalElements 总记录数
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
-     *                 "catalogueId":1,
-     *                 "catalogueType":1,
-     *                 "archiveId":0,
-     *                 "archiveName":"一文一件库",
-     *                 "fondsName":"测试全宗",
-     *                 "archiveType":0,
-     *                 "archiveContentType":0,
-     *                 "items":{
-     *                     "生日":"2018-05-16T14:44:56.328+0800",
-     *                     "金额":73824039.1873,
-     *                     "爱好":[
-     *                         "电影",
-     *                         "足球",
-     *                         "汽车"
-     *                     ],
-     *                     "姓名":"里斯1",
-     *                     "年龄":41
-     *                 },
-     *                 "file":{
-     *                     "fileId":"文件id",
-     *                     "title":"这是一个文件标题",
-     *                     "fileType":"word",
-     *                     "highLight":"这是高亮文本内容",
-     *                     "fileName": "文件名",
-     *                     "pdfConverStatus",
-     *                     "isView": true,
-     *                     "isDownload": true,
-     *                     "isPrint": true
-     *                 }
-     *             }
-     *         ],
-     *         "aggregations":[
-     *             {
-     *                 "id":"archiveContentType",
-     *                 "name": "档案类型",
-     *                 "count": 10,
-     *                 "children":[
-     *                     {
-     *                         "id": "1",
-     *                         "name":"文书档案",
-     *                         "count":10
-     *                     }
-     *                 ],
-     *             },
-     *             {
-     *                 "id":"fondsId",
-     *                 "name": "全宗",
-     *                 "count": 10,
-     *                 "children":[
-     *                     {
-     *                         "id":"1",
-     *                         "name":"全宗A",
-     *                         "count":10
-     *                     }
-     *                 ],
-     *             },
-     *             {
-     *                 "id":"archiveId",
-     *                 "name": "档案库",
-     *                 "count": 10,
-     *                 "children":[
-     *                     {
-     *                         "id":"1",
-     *                         "name":"一文一件库",
-     *                         "count":10
-     *                     }
-     *                 ],
-     *             },
-     *             {
-     *                 "id":"year",
-     *                 "name": "年度",
-     *                 "count": 10,
-     *                 "children":[
-     *                     {
-     *                         "id":"1",
-     *                         "name":"2018年",
-     *                         "count":10
-     *                     }
-     *                 ],
-     *             }
-     *         ],
-     *         "totalElements": 14,
-     *         "totalPages": 1
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id":"322c3c75-08a5-4a01-a60f-084b6a6f9be9",
+     * "catalogueId":1,
+     * "catalogueType":1,
+     * "archiveId":0,
+     * "archiveName":"一文一件库",
+     * "fondsName":"测试全宗",
+     * "archiveType":0,
+     * "archiveContentType":0,
+     * "items":{
+     * "生日":"2018-05-16T14:44:56.328+0800",
+     * "金额":73824039.1873,
+     * "爱好":[
+     * "电影",
+     * "足球",
+     * "汽车"
+     * ],
+     * "姓名":"里斯1",
+     * "年龄":41
+     * },
+     * "file":{
+     * "fileId":"文件id",
+     * "title":"这是一个文件标题",
+     * "fileType":"word",
+     * "highLight":"这是高亮文本内容",
+     * "fileName": "文件名",
+     * "pdfConverStatus",
+     * "isView": true,
+     * "isDownload": true,
+     * "isPrint": true
+     * }
+     * }
+     * ],
+     * "aggregations":[
+     * {
+     * "id":"archiveContentType",
+     * "name": "档案类型",
+     * "count": 10,
+     * "children":[
+     * {
+     * "id": "1",
+     * "name":"文书档案",
+     * "count":10
+     * }
+     * ],
+     * },
+     * {
+     * "id":"fondsId",
+     * "name": "全宗",
+     * "count": 10,
+     * "children":[
+     * {
+     * "id":"1",
+     * "name":"全宗A",
+     * "count":10
+     * }
+     * ],
+     * },
+     * {
+     * "id":"archiveId",
+     * "name": "档案库",
+     * "count": 10,
+     * "children":[
+     * {
+     * "id":"1",
+     * "name":"一文一件库",
+     * "count":10
+     * }
+     * ],
+     * },
+     * {
+     * "id":"year",
+     * "name": "年度",
+     * "count": 10,
+     * "children":[
+     * {
+     * "id":"1",
+     * "name":"2018年",
+     * "count":10
+     * }
+     * ],
+     * }
+     * ],
+     * "totalElements": 14,
+     * "totalPages": 1
+     * }
      * }
      */
     @RequestMapping(value = "/searchFulltext", method = RequestMethod.POST)
@@ -976,20 +976,20 @@ public class EntryController {
 
     private Collection<Integer> getHasPermissionCatalogueIds(int userId, Integer catalogueId) {
         Collection<Integer> catalogueIds = getHasPermissionCatalogueIds(userId);
-        if (catalogueId != null && catalogueIds != null){
+        if (catalogueId != null && catalogueIds != null) {
             if (catalogueIds.contains(catalogueId)) {
                 catalogueIds = Collections.singletonList(catalogueId);
-            }else {
+            } else {
                 catalogueIds = null;
             }
         }
         return catalogueIds;
     }
 
-    private Collection<Integer> getHasPermissionCatalogueIds(int userId){
+    private Collection<Integer> getHasPermissionCatalogueIds(int userId) {
         List<Catalogue> catalogues = catalogueService.list(2);
         List<Integer> ids = catalogues.stream().map(Catalogue::getId).collect(Collectors.toList());
-        if (permissionService.hasAnyAuthority("ROLE_ADMIN")){
+        if (permissionService.hasAnyAuthority("ROLE_ADMIN")) {
             return ids;
         }
 
@@ -1009,8 +1009,8 @@ public class EntryController {
         replaceMapKey(entryItems, "archiveContentType");
     }
 
-    private void replaceMapKey(Map<String, Object> map, String key){
-        if (map.containsKey(key)){
+    private void replaceMapKey(Map<String, Object> map, String key) {
+        if (map.containsKey(key)) {
             map.put("_".concat(key), map.get(key));
             map.remove(key);
         }
@@ -1063,12 +1063,11 @@ public class EntryController {
         String highLight;
         String title;
         String fileName;
-        if (isView){
+        if (isView) {
             highLight = a.getContentIndex();
             title = a.getTitle();
             fileName = a.getName();
-        }else
-        {
+        } else {
             highLight = "您没有原文查看权限";
             title = "您无权查看";
             fileName = "您无权查看";
@@ -1210,22 +1209,22 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} content.items.count 统计结果
      * @apiSuccessExample {json} Success-Response:
      * {
-     *     "data": {
-     *         "content": [
-     *             {
-     *                 "archiveId": 1,
-     *                 "archiveName": "一文一件库",
-     *                 "fondsName": "测试全宗",
-     *                 "items":[
-     *                     {
-     *                         "catalogueId": 1,
-     *                         "catalogueType": 1,
-     *                         "count": 1
-     *                     }
-     *                 ]
-     *             }
-     *         ]
-     *     }
+     * "data": {
+     * "content": [
+     * {
+     * "archiveId": 1,
+     * "archiveName": "一文一件库",
+     * "fondsName": "测试全宗",
+     * "items":[
+     * {
+     * "catalogueId": 1,
+     * "catalogueType": 1,
+     * "count": 1
+     * }
+     * ]
+     * }
+     * ]
+     * }
      * }
      */
     @RequestMapping(value = "/searchFullArchive", method = RequestMethod.POST)
@@ -1291,12 +1290,12 @@ public class EntryController {
      * @apiParam {Number} isLose 遗失鉴定(0 未遗失  1 已遗失).
      * @apiParamExample {json} Request-Example:
      * {
-     *   "entryIds":["ea5ebe11-a6c3-4db6-91e4-df783be235c3","26a5aa18-2606-46fc-bbd9-5f4d78e57956"],
-     *   "catalogueId":10,
-     *   "isOpen":2,
-     *   "isExpired":0,
-     *   "isEndangered":1,
-     *   "isLose":0
+     * "entryIds":["ea5ebe11-a6c3-4db6-91e4-df783be235c3","26a5aa18-2606-46fc-bbd9-5f4d78e57956"],
+     * "catalogueId":10,
+     * "isOpen":2,
+     * "isExpired":0,
+     * "isEndangered":1,
+     * "isLose":0
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #catalogueId)")
@@ -1316,12 +1315,12 @@ public class EntryController {
      * @apiSuccess (Success 200) {boolean=true,false} isLose 遗失鉴定(false:未遗失  true:已遗失).
      * @apiSuccessExample {json} Response-Example:
      * {
-     *   "data": {
-     *     "isOpen": 2,
-     *     "isLose": false,
-     *     "isEndangered": true,
-     *     "isExpired": false
-     *   }
+     * "data": {
+     * "isOpen": 2,
+     * "isLose": false,
+     * "isEndangered": true,
+     * "isExpired": false
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
@@ -1381,26 +1380,26 @@ public class EntryController {
      * @apiParam {String[]} mapping.srcData 归档的数据，如果为空则归档全部数据
      * @apiParamExample {json} Request-Example
      * {
-     *     "delSrc": true,
-     *     "originalType": [1,2],
-     *     "archivingAll": true,
-     *     "mapping":[
-     *         {
-     *             "srcId": 1,
-     *             "trgId": 2,
-     *             "srcFields":[
-     *                 "name",
-     *                 "age"
-     *             ],
-     *             "trgFields":[
-     *                 "name",
-     *                 "age"
-     *             ],
-     *             "srcData":[
-     *                 "xxxx-xxxx-xxxx"
-     *             ]
-     *         }
-     *     ]
+     * "delSrc": true,
+     * "originalType": [1,2],
+     * "archivingAll": true,
+     * "mapping":[
+     * {
+     * "srcId": 1,
+     * "trgId": 2,
+     * "srcFields":[
+     * "name",
+     * "age"
+     * ],
+     * "trgFields":[
+     * "name",
+     * "age"
+     * ],
+     * "srcData":[
+     * "xxxx-xxxx-xxxx"
+     * ]
+     * }
+     * ]
      * }
      * @apiSuccess {Object} success 成功记录数
      * @apiSuccess {Number} success.total 总成功数
@@ -1421,49 +1420,49 @@ public class EntryController {
      * @apiSuccess {Object[]} items.children 下级信息，结构同items
      * @apiSuccessExample {json} Response-Example
      * {
-     *     "success": {
-     *         "total": 110,
-     *         "main": 2,
-     *         "children": 8,
-     *         "file": 100
-     *     },
-     *     "failure": {
-     *          "total": 5,
-     *          "main": 1,
-     *          "children": 2,
-     *          "file": 2
-     *      },
-     *     "items": [
-     *         {
-     *             "id": "cef91008-e167-4fb6-ae99-d9961ad9f328",
-     *             "parentId": null,
-     *             "title": "测试归档4",
-     *             "errorMsg": "成功",
-     *             "type": 1,
-     *             "status": 1,
-     *             "children": [
-     *                 {
-     *                     "id": "d1fbabee-8ce2-4a1e-a6c0-23083c6f754e",
-     *                     "parentId": "cef91008-e167-4fb6-ae99-d9961ad9f328",
-     *                     "title": "测试卷内归档",
-     *                     "errorMsg": "成功",
-     *                     "type": 1,
-     *                     "status": 1,
-     *                     "children": [
-     *                         {
-     *                             "id": "bb375230-45f8-46d9-a9aa-12320e929f8e",
-     *                             "parentId": "d1fbabee-8ce2-4a1e-a6c0-23083c6f754e",
-     *                             "title": "测试原文归档",
-     *                             "errorMsg": "成功",
-     *                             "type": 2,
-     *                             "status": 1,
-     *                             "children": []
-     *                         }
-     *                     ]
-     *                 }
-     *             ]
-     *         }
-     *     ]
+     * "success": {
+     * "total": 110,
+     * "main": 2,
+     * "children": 8,
+     * "file": 100
+     * },
+     * "failure": {
+     * "total": 5,
+     * "main": 1,
+     * "children": 2,
+     * "file": 2
+     * },
+     * "items": [
+     * {
+     * "id": "cef91008-e167-4fb6-ae99-d9961ad9f328",
+     * "parentId": null,
+     * "title": "测试归档4",
+     * "errorMsg": "成功",
+     * "type": 1,
+     * "status": 1,
+     * "children": [
+     * {
+     * "id": "d1fbabee-8ce2-4a1e-a6c0-23083c6f754e",
+     * "parentId": "cef91008-e167-4fb6-ae99-d9961ad9f328",
+     * "title": "测试卷内归档",
+     * "errorMsg": "成功",
+     * "type": 1,
+     * "status": 1,
+     * "children": [
+     * {
+     * "id": "bb375230-45f8-46d9-a9aa-12320e929f8e",
+     * "parentId": "d1fbabee-8ce2-4a1e-a6c0-23083c6f754e",
+     * "title": "测试原文归档",
+     * "errorMsg": "成功",
+     * "type": 2,
+     * "status": 1,
+     * "children": []
+     * }
+     * ]
+     * }
+     * ]
+     * }
+     * ]
      * }
      * @apiError message 1.源目录id不存在 2.归档目录id不存在 3.字段映射错误
      */
@@ -1789,9 +1788,9 @@ public class EntryController {
      * @apiParam {String} boxCode 盒号
      * @apiParamExample {json} Request-Example
      * {
-     *     "catalogueId": 1,
-     *     "ids": ["xxxx-xxxx-xxxx"],
-     *     "boxCode": "box001"
+     * "catalogueId": 1,
+     * "ids": ["xxxx-xxxx-xxxx"],
+     * "boxCode": "box001"
      * }
      * @apiError message 1.没有盒号字段 2.盒不存在 3.目录不存在 4.条目不存在
      */
@@ -1822,8 +1821,8 @@ public class EntryController {
      * @apiParam {String[]} ids 条目id数组
      * @apiParamExample {json} Request-Example
      * {
-     *     "catalogueId": 1,
-     *     "ids": ["xxxx-xxxx-xxxx"]
+     * "catalogueId": 1,
+     * "ids": ["xxxx-xxxx-xxxx"]
      * }
      * @apiError message 1.没有盒号字段 2.条目不存在 3.目录不存在
      */
@@ -1839,6 +1838,41 @@ public class EntryController {
 
         applicationContext.publishEvent(new BoxInsideChangeEvent(this, catalogueId, catalogue.getArchivesId(), boxCodes));
     }
+
+    /**
+     * @api {get} /entry/statisticsTypeTerm 统计（按档案类型-保管期限）
+     * @apiName statisticsTypeTerm
+     * @apiGroup entry
+     * @apiParam {Number} fondsId 全宗号（url参数）
+     * @apiSuccess {String} name 档案类型
+     * @apiSuccessExample {json} Response-Example
+     * {
+     *         "items": [
+     *             {
+     *                 "永久": 1,
+     *                 "长期": 3,
+     *                 "合计": 122,
+     *                 "name": "文书档案",
+     *                 "其他": 116,
+     *                 "短期": 2
+     *             },
+     *             {
+     *                 "永久": 15,
+     *                 "长期": 30,
+     *                 "合计": 135,
+     *                 "name": "科研档案",
+     *                 "其他": 80,
+     *                 "短期": 10
+     *             }
+     *         ],
+     *         "fields":["永久","长期","合计","其他","短期"]
+     * }
+     */
+    @RequestMapping(value = "/statisticsTypeTerm", method = RequestMethod.GET)
+    public Map<String, Object> statisticsTypeTerm(@RequestParam("fondsId") int fondsId) {
+        return entryService.statisticsTypeTerm(fondsId);
+    }
+
 
     @Async
     @EventListener

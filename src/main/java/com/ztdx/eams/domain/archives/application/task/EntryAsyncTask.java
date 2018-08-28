@@ -132,14 +132,14 @@ public class EntryAsyncTask {
                 return;
             }
 
-            String methodName = String.format("set%s",StringUtils.toUpperCaseFirstOne(fieldName));
-            try {
-                Method method = Entry.class.getDeclaredMethod(methodName, String.class);
-                method.invoke(entry, value.toString());
-            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
-            }
+//            String methodName = String.format("set%s",StringUtils.toUpperCaseFirstOne(fieldName));
+//            try {
+//                Method method = Entry.class.getDeclaredMethod(methodName, String.class);
+//                method.invoke(entry, value.toString());
+//            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
+//            }
 
-            /*switch (propertyType){
+            switch (propertyType){
                 case Rank:
                     entry.setRank(value.toString());
                     break;
@@ -150,17 +150,20 @@ public class EntryAsyncTask {
                     entry.setClassificationNumber(value.toString());
                     break;
                 case department:
-
+                    entry.setDepartment(value.toString());
                     break;
                 case RecordType:
+                    entry.setRecordType(value.toString());
                     break;
                 case TimeLimitForStorage:
+                    entry.setTimeLimitForStorage(value.toString());
                     break;
                 case Year:
+                    entry.setYear(value.toString());
                     break;
                 default:
                     break;
-            }*/
+            }
         });
 
         entryMongoRepository.save(entry);
@@ -186,7 +189,7 @@ public class EntryAsyncTask {
             e.printStackTrace();
         }
     }
-    
+
     public void rebuild(){
         catalogueRepository.findAll().forEach(a -> rebuildById(a.getId()));
     }

@@ -155,45 +155,45 @@ public class Entry implements Serializable {
     @Field(type = FieldType.Boolean)
     private boolean isLose;
 
-//    /**
-//     * 年度
-//     */
-//    @Field(type = FieldType.keyword)
-//    private String year;
-//
-//    /**
-//     * 分类号
-//     */
-//    @Field(type = FieldType.keyword)
-//    private String classificationNumber;
-//
-//    /**
-//     * 保管期限
-//     */
-//    @Field(type = FieldType.keyword)
-//    private String timeLimitForStorage;
-//
-//    /**
-//     * 密级
-//     */
-//    @Field(type = FieldType.keyword)
-//    private String rank;
-//
-//    /**
-//     * 部门
-//     */
-//    @Field(type = FieldType.keyword)
-//    private String department;
-//
-//    /**
-//     * 载体类型
-//     */
-//    @Field(type = FieldType.keyword)
-//    private String carrierType;
-//
-//    /**
-//     * 文种
-//     */
-//    @Field(type = FieldType.keyword)
-//    private String RecordType;
+    /**
+     * 年度
+     */
+    @Field(type = FieldType.keyword)
+    private String year;
+
+    /**
+     * 分类号
+     */
+    @Field(type = FieldType.keyword)
+    private String classificationNumber;
+
+    /**
+     * 保管期限
+     */
+    @Field(type = FieldType.keyword, fielddata = true)
+    private String timeLimitForStorage;
+
+    /**
+     * 密级
+     */
+    @Field(type = FieldType.keyword)
+    private String rank;
+
+    /**
+     * 部门
+     */
+    @Field(type = FieldType.keyword)
+    private String department;
+
+    /**
+     * 载体类型
+     */
+    @Field(type = FieldType.keyword)
+    private String carrierType;
+
+    /**
+     * 文种
+     */
+    @Field(type = FieldType.keyword)
+    private String RecordType;
 }

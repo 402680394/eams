@@ -33,7 +33,7 @@ public class WorkService {
 
     //开启一个流程
     public void start(String processKey, Map<String, Object> map) {
-        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey(processKey, map);
+        runtimeService.startProcessInstanceByKey(processKey, map);
     }
 
     //同意

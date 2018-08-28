@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
+import java.util.Optional;
 
 /**
  * Created by li on 2018/4/18.
@@ -22,6 +23,8 @@ public interface DictionaryClassificationRepository extends JpaRepository<Dictio
     boolean existsByCode(String code);
 
     boolean existsByCodeAndId(String code, int id);
+
+    Optional<DictionaryClassification> findByCode(String code);
 
     //通过ID修改信息
     @Modifying

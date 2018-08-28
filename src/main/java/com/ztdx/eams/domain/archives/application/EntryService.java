@@ -5,19 +5,17 @@ import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.*;
+import com.ztdx.eams.domain.archives.model.Dictionary;
 import com.ztdx.eams.domain.archives.model.entryItem.EntryItemConverter;
 import com.ztdx.eams.domain.archives.model.event.EntryBoxNumberValidateEvent;
-import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
-import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
-import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
-import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
+import com.ztdx.eams.domain.archives.repository.*;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.EntryElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasticsearchRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorValue;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -27,7 +25,6 @@ import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
-import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.context.ApplicationContext;
@@ -88,7 +85,14 @@ public class EntryService {
 
     private ApplicationContext applicationContext;
 
-    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, MongoOperations mongoOperations, IdGeneratorRepository idGeneratorRepository, EntryAsyncTask entryAsyncTask, ApplicationContext applicationContext) {
+    private ContentTypeRepository contentTypeRepository;
+
+    private DictionaryRepository dictionaryRepository;
+
+    private DictionaryClassificationRepository dictionaryClassificationRepository;
+
+
+    public EntryService(EntryElasticsearchRepository entryElasticsearchRepository, EntryMongoRepository entryMongoRepository, DescriptionItemRepository descriptionItemRepository, CatalogueRepository catalogueRepository, ArchivesRepository archivesRepository, ArchivesGroupRepository archivesGroupRepository, ElasticsearchOperations elasticsearchOperations, OriginalTextElasticsearchRepository originalTextElasticsearchRepository, MongoOperations mongoOperations, IdGeneratorRepository idGeneratorRepository, EntryAsyncTask entryAsyncTask, ApplicationContext applicationContext, ContentTypeRepository contentTypeRepository, DictionaryRepository dictionaryRepository, DictionaryClassificationRepository dictionaryClassificationRepository) {
         this.entryElasticsearchRepository = entryElasticsearchRepository;
         this.entryMongoRepository = entryMongoRepository;
         this.descriptionItemRepository = descriptionItemRepository;
@@ -101,6 +105,9 @@ public class EntryService {
         this.idGeneratorRepository = idGeneratorRepository;
         this.entryAsyncTask = entryAsyncTask;
         this.applicationContext = applicationContext;
+        this.contentTypeRepository = contentTypeRepository;
+        this.dictionaryRepository = dictionaryRepository;
+        this.dictionaryClassificationRepository = dictionaryClassificationRepository;
     }
 
     public Entry save(Entry entry) {
@@ -444,14 +451,14 @@ public class EntryService {
         query.must(queryAgain);
     }
 
-    public List<TermsAggregationResult> convertAggregationToResult(Aggregations aggregations, List<TermsAggregationParam> params){
+    public List<TermsAggregationResult> convertAggregationToResult(Aggregations aggregations, List<TermsAggregationParam> params) {
         Map<String, TermsAggregationParam> map =
-                params.stream().collect(Collectors.toMap(TermsAggregationParam::getField, a-> a));
+                params.stream().collect(Collectors.toMap(TermsAggregationParam::getField, a -> a));
 
 
         List<TermsAggregationResult> result = new ArrayList<>();
 
-        if (aggregations == null){
+        if (aggregations == null) {
             return result;
         }
 
@@ -467,8 +474,8 @@ public class EntryService {
 
             result.add(termsAggregationResult);
 
-            if (Terms.class.isAssignableFrom(aggregation.getClass())){
-                Terms terms = (Terms)aggregation;
+            if (Terms.class.isAssignableFrom(aggregation.getClass())) {
+                Terms terms = (Terms) aggregation;
                 termsAggregationResult.getChildren().addAll(convertBucketsToResult(terms.getBuckets(), param.getChildren()));
             }
 
@@ -485,7 +492,7 @@ public class EntryService {
     private Collection<? extends TermsAggregationResult> convertBucketsToResult(List<? extends Terms.Bucket> buckets, List<TermsAggregationParam> params) {
         List<TermsAggregationResult> result = new ArrayList<>();
 
-        if (buckets == null){
+        if (buckets == null) {
             return result;
         }
 
@@ -494,7 +501,7 @@ public class EntryService {
             TermsAggregationResult termsAggregationResult = new TermsAggregationResult(
                     bucket.getKeyAsString()
                     , bucket.getKeyAsString()
-                    , (int)bucket.getDocCount()
+                    , (int) bucket.getDocCount()
             );
 
             result.add(termsAggregationResult);
@@ -505,8 +512,8 @@ public class EntryService {
         return result;
     }
 
-    private void addEntryQuery(BoolQueryBuilder entryQuery, Collection<Integer> catalogueIds, Map<String,Object> items) {
-        if (catalogueIds == null || catalogueIds.size() != 1 || items == null || items.size() ==0 ){
+    private void addEntryQuery(BoolQueryBuilder entryQuery, Collection<Integer> catalogueIds, Map<String, Object> items) {
+        if (catalogueIds == null || catalogueIds.size() != 1 || items == null || items.size() == 0) {
             return;
         }
 
@@ -520,13 +527,13 @@ public class EntryService {
 
         items.forEach((field, value) -> {
             String searchFieldName;
-            if (field.indexOf("_") == 0){
+            if (field.indexOf("_") == 0) {
                 searchFieldName = field.substring(1);
-            }else{
+            } else {
                 searchFieldName = String.format("items.%s", field);
             }
 
-            switch (map.get(field)){
+            switch (map.get(field)) {
                 case Array:
                 case Integer:
                 case Double:
@@ -534,9 +541,9 @@ public class EntryService {
                     entryQuery.must(QueryBuilders.termQuery(searchFieldName, value));
                     break;
                 case String:
-                    if (value.toString().contains("*") || value.toString().contains("?")){
+                    if (value.toString().contains("*") || value.toString().contains("?")) {
                         entryQuery.must(QueryBuilders.wildcardQuery(searchFieldName, value.toString()));
-                    }else{
+                    } else {
                         entryQuery.must(QueryBuilders.termQuery(searchFieldName, value));
                     }
                     break;
@@ -547,9 +554,9 @@ public class EntryService {
         });
     }
 
-    private void addAggs(List<TermsAggregationParam> aggs, SearchRequestBuilder builder){
+    private void addAggs(List<TermsAggregationParam> aggs, SearchRequestBuilder builder) {
 
-        if (aggs == null || aggs.size() == 0){
+        if (aggs == null || aggs.size() == 0) {
             return;
         }
 
@@ -559,9 +566,9 @@ public class EntryService {
         });
     }
 
-    private void addAggs(List<TermsAggregationParam> aggs, NativeSearchQueryBuilder builder){
+    private void addAggs(List<TermsAggregationParam> aggs, NativeSearchQueryBuilder builder) {
 
-        if (aggs == null || aggs.size() == 0){
+        if (aggs == null || aggs.size() == 0) {
             return;
         }
 
@@ -571,7 +578,7 @@ public class EntryService {
         });
     }
 
-    private AbstractAggregationBuilder addChildAggs(TermsAggregationParam termsAggregationParam){
+    private AbstractAggregationBuilder addChildAggs(TermsAggregationParam termsAggregationParam) {
         AbstractAggregationBuilder agg = AggregationBuilders
                 .terms(termsAggregationParam.getField())
                 .field(termsAggregationParam.getField())
@@ -583,7 +590,7 @@ public class EntryService {
     }
 
     private void addChildAggs(List<TermsAggregationParam> termsAggregationParams, AbstractAggregationBuilder agg) {
-        if (termsAggregationParams.size() > 0){
+        if (termsAggregationParams.size() > 0) {
             termsAggregationParams.forEach(child -> {
                 AggregationBuilder aggregationBuilder = addChildAggs(child);
                 if (aggregationBuilder != null) {
@@ -962,7 +969,7 @@ public class EntryService {
 
         List<Entry> searchResult = entryMongoRepository.findAll(
                 query(where(boxNumberColumnName).in(boxCodes))
-                ,getIndexName(catalogueId)
+                , getIndexName(catalogueId)
         );
 
         searchResult.forEach(entry -> entry.getItems().put(item.getMetadataName(), null));
@@ -971,7 +978,7 @@ public class EntryService {
         entryAsyncTask.indexAll(searchResult, catalogueId);
     }
 
-    public Page<Entry>  listInBox(int catalogueId, String boxCode, Pageable pageable) {
+    public Page<Entry> listInBox(int catalogueId, String boxCode, Pageable pageable) {
         DescriptionItem boxNumberItem = descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.BoxNumber);
         String prefix = "items.%s";
         String boxNumberColumnName = String.format(prefix, boxNumberItem.getMetadataName());
@@ -980,5 +987,122 @@ public class EntryService {
         long total = mongoOperations.count(query, getIndexName(catalogueId));
         List<Entry> list = entryMongoRepository.findAll(query, getIndexName(catalogueId));
         return PageableExecutionUtils.getPage(list, pageable, () -> total);
+    }
+
+    //统计（按档案类型-保管期限）
+    public Map<String, Object> statisticsTypeTerm(int fondsId) {
+        //查询全宗下归档库除去案卷所有目录
+        List<Integer> catalogueIds = catalogueRepository.findCatalogueIdByfondsId(fondsId);
+
+        Collection<String> indices = new ArrayList<>();
+        if (catalogueIds == null || catalogueIds.size() == 0) {
+            indices.add(INDEX_NAME_PREFIX + "*");
+        } else {
+            catalogueIds.forEach(a -> indices.add(getIndexName(a)));
+        }
+        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(indices.toArray(new String[0]));
+//        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch("archive_record_10");
+        srBuilder.setTypes("record").addAggregation(
+                AggregationBuilders
+                        .terms("archiveContentType")
+                        .field("archiveContentType")
+                        .subAggregation(AggregationBuilders
+                                .terms("timeLimitForStorage")
+                                .field("timeLimitForStorage.keyword"))).setSize(0);
+
+        BoolQueryBuilder query = QueryBuilders.boolQuery();
+        query.filter(QueryBuilders.termQuery("gmtDeleted", 0));
+        srBuilder.setQuery(query);
+
+        SearchResponse response = srBuilder.get();
+
+        List<ContentType> contentTypes = contentTypeRepository.findAll();
+
+        Optional<DictionaryClassification> optional = dictionaryClassificationRepository.findByCode("BGQX");
+        if (!optional.isPresent()) {
+            throw new BusinessException("保管期限词典分类不存在");
+        }
+        List<Dictionary> dictionaries = dictionaryRepository.findByClassificationId(optional.get().getId());
+
+//        List<String> timeLimitNames = dictionaryRepository.findByClassificationCode("BGQX");
+
+//        long totalOfAll = response.getHits().getTotalHits();
+        List<Terms.Bucket> typeBuckets = (List<Terms.Bucket>) ((Terms) response.getAggregations().get("archiveContentType")).getBuckets();
+
+        HashMap<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> items = new ArrayList<>();
+
+        //内容类型
+        for (Terms.Bucket typeBucket : typeBuckets) {
+            //档案内容类型总数
+            long otherTotal = typeBucket.getDocCount();
+
+            for (ContentType contentType : contentTypes) {
+                if (contentType.getId() == typeBucket.getKeyAsNumber().intValue()) {
+                    HashMap<String, Object> map = new HashMap<>();
+                    map.put("name", contentType.getName());
+
+                    //保管期限
+                    Terms terms = typeBucket.getAggregations().get("timeLimitForStorage");
+                    List<Terms.Bucket> timeLimitBuckets = (List<Terms.Bucket>) terms.getBuckets();
+                    for (Dictionary dictionary : dictionaries) {
+                        long timeLimitTotal = 0;
+                        for (Terms.Bucket timeLimitBucket : timeLimitBuckets) {
+
+                            if (dictionary.getName().equals(timeLimitBucket.getKey())
+                                    || dictionary.getCode().equals(timeLimitBucket.getKey())
+                                    || (dictionary.getCode() + " " + dictionary.getName()).equals(timeLimitBucket.getKey())
+                                    || (dictionary.getName() + " " + dictionary.getCode()).equals(timeLimitBucket.getKey())) {
+                                //减去使用的保管期限类型数量
+                                otherTotal -= timeLimitBucket.getDocCount();
+
+                                timeLimitTotal = timeLimitBucket.getDocCount();
+                            }
+                        }
+                        map.put(dictionary.getName(), timeLimitTotal);
+                    }
+                    map.put("其他", otherTotal);
+                    map.put("合计", typeBucket.getDocCount());
+                    items.add(map);
+                }
+            }
+        }
+        List<String> timeLimitNames = new ArrayList<>();
+        dictionaries.forEach(a -> timeLimitNames.add(a.getName()));
+
+        timeLimitNames.add("其他");
+        timeLimitNames.add("合计");
+        result.put("fields", timeLimitNames);
+        result.put("items", items);
+        return result;
+
+//        //保管期限
+//        for (Terms.Bucket timeLimitBucket : timeLimitBuckets) {
+//            for (String timeLimitName : timeLimitNames) {
+//                if (timeLimitName.equals(timeLimitBucket.getKey())) {
+//
+//                    HashMap<String, Object> map = new HashMap<>();
+//                    map.put("name", timeLimitName);
+//
+//                    //内容类型
+//                    List<Terms.Bucket> typeBuckets = (List<Terms.Bucket>) ((Terms) timeLimitBucket.getAggregations().get("archiveContentType")).getBuckets();
+//                    for (Terms.Bucket typeBucket : typeBuckets) {
+//                        for (ContentType contentType : contentTypes) {
+//                            if (contentType.getId() == typeBucket.getKeyAsNumber().intValue()) {
+//                                map.put(contentType.getName(), typeBucket.getDocCount());
+//                            }
+//                        }
+//                    }
+//                    map.put("合计", timeLimitBucket.getDocCount());
+//                    items.add(map);
+//                }
+//            }
+//        }
+
+//                .filter(QueryBuilders
+//                        .rangeQuery("year")
+//                        .gt(String.valueOf(beginYear))
+//                        .gte(String.valueOf(endYear)));
+
     }
 }
