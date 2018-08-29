@@ -1354,15 +1354,23 @@ public class EntryController {
      * @api {put} /entry/separateVolume 拆卷
      * @apiName separateVolume
      * @apiGroup entry
-     * @apiParam {Array} folderFileEntryIds 卷内条目id数组
-     * @apiParam {String} folderFileCatalogueId 卷内目录id
+     * @apiParam {String} folderEntryId 案卷条目id
+     * @apiParam {Number} folderCatalogueId 案卷目录id
+     * @apiParam {String[]} folderFileEntryIds 卷内条目id数组
+     * @apiParam {Number} folderFileCatalogueId 卷内目录id
      * @apiError (Error 400) message
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #folderFileCatalogueId)")
     @RequestMapping(value = "/separateVolume", method = RequestMethod.PUT)
-    public void separateVolume(@JsonParam List<String> folderFileEntryIds, @JsonParam int folderFileCatalogueId) {
-        entryService.separateVolume(folderFileEntryIds, folderFileCatalogueId);
+    public void separateVolume(@RequestBody Map<String, Object> map) {
+        String folderEntryId = (String) map.getOrDefault("folderEntryId", null);
+        Integer folderCatalogueId = (Integer) map.getOrDefault("folderCatalogueId", null);
+        if (folderCatalogueId == null || folderEntryId == null) {
+            entryService.separateVolume((List<String>) (map.get("folderFileEntryIds")), (Integer) (map.get("folderFileCatalogueId")));
+        } else {
+            entryService.separateVolumeForFolder(folderEntryId, folderCatalogueId);
+        }
     }
 
     /**
@@ -1847,25 +1855,25 @@ public class EntryController {
      * @apiSuccess {String} name 档案类型
      * @apiSuccessExample {json} Response-Example
      * {
-     *         "items": [
-     *             {
-     *                 "永久": 1,
-     *                 "长期": 3,
-     *                 "合计": 122,
-     *                 "name": "文书档案",
-     *                 "其他": 116,
-     *                 "短期": 2
-     *             },
-     *             {
-     *                 "永久": 15,
-     *                 "长期": 30,
-     *                 "合计": 135,
-     *                 "name": "科研档案",
-     *                 "其他": 80,
-     *                 "短期": 10
-     *             }
-     *         ],
-     *         "fields":["永久","长期","合计","其他","短期"]
+     * "items": [
+     * {
+     * "永久": 1,
+     * "长期": 3,
+     * "合计": 122,
+     * "name": "文书档案",
+     * "其他": 116,
+     * "短期": 2
+     * },
+     * {
+     * "永久": 15,
+     * "长期": 30,
+     * "合计": 135,
+     * "name": "科研档案",
+     * "其他": 80,
+     * "短期": 10
+     * }
+     * ],
+     * "fields":["永久","长期","合计","其他","短期"]
      * }
      */
     @RequestMapping(value = "/statisticsTypeTerm", method = RequestMethod.GET)

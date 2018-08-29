@@ -692,7 +692,7 @@ public class EntryService {
     }
 
     /**
-     * 拆卷
+     * 拆卷(通过卷内)
      *
      * @param folderFileEntryIds    卷内条目id集合
      * @param folderFileCatalogueId 卷内目录ID
@@ -710,6 +710,35 @@ public class EntryService {
         entryMongoRepository.saveAll(folderFileEntryList);
 
         entryAsyncTask.indexAll(folderFileEntryList, folderFileCatalogueId);
+    }
+
+    /**
+     * 拆卷(通过案卷)
+     *
+     * @param folderEntryId     案卷条目id
+     * @param folderCatalogueId 案卷目录ID
+     */
+    public void separateVolumeForFolder(String folderEntryId, int folderCatalogueId) {
+
+        //获取案卷目录
+        Catalogue folderCatalogue = catalogueRepository.findById(folderCatalogueId).orElse(null);
+        //通过档案库id和目录类型获得卷内目录
+        assert folderCatalogue != null;
+        Optional<Catalogue> folderFileCatalogue = catalogueRepository.findByArchivesIdAndCatalogueType(folderCatalogue.getArchivesId(), CatalogueType.FolderFile);
+
+        if (!folderFileCatalogue.isPresent()) {
+            throw new InvalidArgumentException("卷内目录不存在");
+        }
+
+        //获得卷内条目集合
+        Iterable<Entry> folderFileEntryList = entryMongoRepository.findAll(query(where("parentId").is(folderEntryId)), getIndexName(folderFileCatalogue.get().getId()));
+
+        //置空卷内条目中的上级id
+        folderFileEntryList.forEach(entry -> entry.setParentId(null));
+
+        entryMongoRepository.saveAll(folderFileEntryList);
+
+        entryAsyncTask.indexAll(folderFileEntryList, folderFileCatalogue.get().getId());
     }
 
 
@@ -1026,7 +1055,6 @@ public class EntryService {
 
 //        List<String> timeLimitNames = dictionaryRepository.findByClassificationCode("BGQX");
 
-//        long totalOfAll = response.getHits().getTotalHits();
         List<Terms.Bucket> typeBuckets = (List<Terms.Bucket>) ((Terms) response.getAggregations().get("archiveContentType")).getBuckets();
 
         HashMap<String, Object> result = new HashMap<>();
