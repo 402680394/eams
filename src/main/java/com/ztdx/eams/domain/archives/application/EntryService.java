@@ -1040,7 +1040,7 @@ public class EntryService {
     }
 
     //统计（按档案类型-保管期限）
-    public Map<String, Object> statisticsTypeTerm(int fondsId) {
+    public Map<String, Object> statisticsTypeTerm(int fondsId, int beginYear, int endYear) {
         //查询全宗下归档库除去案卷所有目录
         List<Integer> catalogueIds = catalogueRepository.findCatalogueIdByfondsId(fondsId);
 
@@ -1062,6 +1062,7 @@ public class EntryService {
 
         BoolQueryBuilder query = QueryBuilders.boolQuery();
         query.filter(QueryBuilders.termQuery("gmtDeleted", 0));
+        query.filter(QueryBuilders.rangeQuery("year").gte(beginYear).lte(endYear));
         srBuilder.setQuery(query);
 
         SearchResponse response = srBuilder.get();
@@ -1147,11 +1148,5 @@ public class EntryService {
 //                }
 //            }
 //        }
-
-//                .filter(QueryBuilders
-//                        .rangeQuery("year")
-//                        .gt(String.valueOf(beginYear))
-//                        .gte(String.valueOf(endYear)));
-
     }
 }

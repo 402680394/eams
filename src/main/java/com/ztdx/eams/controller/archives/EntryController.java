@@ -1882,7 +1882,8 @@ public class EntryController {
      * @apiName statisticsTypeTerm
      * @apiGroup entry
      * @apiParam {Number} fondsId 全宗号（url参数）
-     * @apiSuccess {String} name 档案类型
+     * @apiParam {Number} beginYear 起始年度（url参数）
+     * @apiParam {Number} endYear 截止年度（url参数）
      * @apiSuccessExample {json} Response-Example
      * {
      * "items": [
@@ -1907,8 +1908,10 @@ public class EntryController {
      * }
      */
     @RequestMapping(value = "/statisticsTypeTerm", method = RequestMethod.GET)
-    public Map<String, Object> statisticsTypeTerm(@RequestParam("fondsId") int fondsId) {
-        return entryService.statisticsTypeTerm(fondsId);
+    public Map<String, Object> statisticsTypeTerm(@RequestParam("fondsId") int fondsId
+            , @RequestParam(name = "beginYear", defaultValue = "0", required = false) int beginYear
+            , @RequestParam(name = "endYear", defaultValue = "3000", required = false) int endYear) {
+        return entryService.statisticsTypeTerm(fondsId, beginYear, endYear);
     }
 
 
