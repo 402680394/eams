@@ -238,17 +238,44 @@ public class EntryController {
         if (catalogue == null) {
             throw new InvalidArgumentException("档案目录不存在");
         }
-        entryService.delete(cid, deletes);
+        entryService.deleteOrReduction(cid, deletes, 1);
     }
 
     /**
-     * @api {get} /entry/search?cid={cid}&q={q}&page={page}&size={size} 按关键字搜索条目
+     * @api {put} /entry 从回收站恢复条目
+     * @apiName reduction_entry
+     * @apiGroup entry
+     * @apiParam {Number} cid 档案目录id
+     * @apiParam {String[]} ids 要恢复的条目id数组
+     * @apiParamExample {json} Request-Example:
+     * {
+     * "cid": 1,
+     * "ids": [
+     * "322c3c75-08a5-4a01-a60f-084b6a6f9be9"
+     * ]
+     * }
+     * @apiError (Error 400) message 1.档案目录不存在
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "/reduction", method = RequestMethod.PUT)
+    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #cid)")
+    public void reduction(@JsonParam() int cid, @JsonParam List<String> ids) {
+        Catalogue catalogue = catalogueService.get(cid);
+        if (catalogue == null) {
+            throw new InvalidArgumentException("档案目录不存在");
+        }
+        entryService.deleteOrReduction(cid, ids, 0);
+    }
+
+    /**
+     * @api {get} /entry/search?cid={cid}&q={q}&page={page}&size={size}&isDeleted={isDeleted} 按关键字搜索条目
      * @apiName search_simple
      * @apiGroup entry
      * @apiParam {Number} cid 目录id(QueryString)
      * @apiParam {String} [q] 关键字(QueryString)
      * @apiParam {Number} [page] 页码(QueryString)
      * @apiParam {Number} [size] 页行数(QueryString)
+     * @apiParam {Number} [isDeleted] 是否为回收站数据(默认为0，查询回收站数据传1)(QueryString)
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.id 条目id
      * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
@@ -350,14 +377,15 @@ public class EntryController {
     public Map<String, Object> search(@RequestParam("cid") int catalogueId
             , @RequestParam(value = "q", required = false, defaultValue = "") String queryString
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
-            , @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
-        Page<Entry> content = entryService.search(catalogueId, queryString, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+            , @RequestParam(value = "size", required = false, defaultValue = "20") int size
+            , @RequestParam(value = "isDeleted", required = false, defaultValue = "0") int isDeleted) {
+        Page<Entry> content = entryService.search(catalogueId, queryString, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")), isDeleted);
 
         return getSearchMap(catalogueId, content);
     }
 
     /**
-     * @api {get} /entry/searchInner?cid={cid}&pid={pid}&q={q}&page={page}&size={size} 按关键字搜索案卷卷内目录
+     * @api {get} /entry/searchInner?cid={cid}&pid={pid}&q={q}&page={page}&size={size}&isDeleted={isDeleted} 按关键字搜索案卷卷内目录
      * @apiName searchInner
      * @apiGroup entry
      * @apiParam {Number} cid 目录id(QueryString)
@@ -365,6 +393,7 @@ public class EntryController {
      * @apiParam {String} [q] 关键字(QueryString)
      * @apiParam {Number} [page] 页码(QueryString)
      * @apiParam {Number} [size] 页行数(QueryString)
+     * @apiParam {Number} [isDeleted] 是否为回收站数据(默认为0，查询回收站数据传1)(QueryString)
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.id 条目id
      * @apiSuccess (Success 200) {Number} content.catalogueId 目录id
@@ -463,7 +492,8 @@ public class EntryController {
             , @RequestParam(value = "pid", required = false, defaultValue = "") String parentId
             , @RequestParam(value = "q", required = false, defaultValue = "") String queryString
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
-            , @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+            , @RequestParam(value = "size", required = false, defaultValue = "20") int size
+            , @RequestParam(value = "isDeleted", required = false, defaultValue = "0") int isDeleted) {
         Catalogue folderFile = catalogueService.getFolderFileCatalogueByFolderCatalogueId(catalogueId);
         if (folderFile == null) {
             throw new InvalidArgumentException("卷内目录未找到");
@@ -474,7 +504,7 @@ public class EntryController {
                 , null
                 , parentId
                 , null
-                , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+                , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")), isDeleted);
 
         return getSearchMap(catalogueId, content);
     }
@@ -629,7 +659,7 @@ public class EntryController {
             , @RequestParam("page") int page
             , @RequestParam("size") int size) {
         QueryBuilder query = conditionService.convert2ElasticsearchQuery(entryCondition.getCatalogueId(), entryCondition.getConditions());
-        Page<Entry> content = entryService.search(entryCondition.getCatalogueId(), queryString, query, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")));
+        Page<Entry> content = entryService.search(entryCondition.getCatalogueId(), queryString, query, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")), 0);
         return getSearchMap(entryCondition.getCatalogueId(), content);
     }
 
@@ -1545,7 +1575,7 @@ public class EntryController {
             getDeleteIds(error, delEntryIds, delOriginalIds);
 
             delEntryIds.forEach((a, b) -> {
-                entryService.delete(a, b);
+                entryService.deleteOrReduction(a, b, 1);
             });
 
             delOriginalIds.forEach((a, b) -> {

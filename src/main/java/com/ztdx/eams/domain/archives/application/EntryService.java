@@ -173,8 +173,8 @@ public class EntryService {
         }
     }
 
-    public Page<Entry> search(int catalogueId, String queryString, QueryBuilder itemQuery, Pageable pageable) {
-        return search(catalogueId, queryString, itemQuery, null, null, pageable);
+    public Page<Entry> search(int catalogueId, String queryString, QueryBuilder itemQuery, Pageable pageable, int isDeleted) {
+        return search(catalogueId, queryString, itemQuery, null, null, pageable, isDeleted);
     }
 
     public Page<Entry> search(int catalogueId
@@ -182,7 +182,8 @@ public class EntryService {
             , QueryBuilder itemQuery
             , String parentId
             , Integer owner
-            , Pageable pageable) {
+            , Pageable pageable
+            , int isDeleted) {
         BoolQueryBuilder query = QueryBuilders.boolQuery();
         if (queryString != null && queryString.length() > 0) {
             query.must(queryStringQuery(queryString).defaultOperator(Operator.AND));
@@ -206,7 +207,7 @@ public class EntryService {
             query.filter(itemQuery);
         }
 
-        query.filter(termQuery("gmtDeleted", 0));
+        query.filter(termQuery("gmtDeleted", isDeleted));
 
         Page<Entry> searchResult = entryElasticsearchRepository.search(
                 query, pageable, new String[]{getIndexName(catalogueId)}
@@ -316,12 +317,32 @@ public class EntryService {
         return result;
     }
 
-    public void delete(int catalogueId, Iterable<String> deletes) {
-        if (deletes == null || !deletes.iterator().hasNext()) {
+    public void deleteOrReduction(int catalogueId, Collection<String> entryIds, int isDeleted) {
+        if (entryIds == null || !entryIds.iterator().hasNext()) {
             return;
         }
-        Iterable<Entry> list = entryMongoRepository.findAllById(deletes, getIndexName(catalogueId));
-        list.forEach(a -> a.setGmtDeleted(1));
+        Iterable<Entry> list = entryMongoRepository.findAllById(entryIds, getIndexName(catalogueId));
+        list.forEach(a -> a.setGmtDeleted(isDeleted));
+
+        //如果目录类型为案卷，将其卷内条目也删除
+        Catalogue folderCatalogue = catalogueRepository.findById(catalogueId).orElse(null);
+        assert folderCatalogue != null;
+        if (folderCatalogue.getCatalogueType().equals(CatalogueType.Folder)) {
+            //通过档案库id和目录类型获得卷内目录
+            Optional<Catalogue> folderFileCatalogue = catalogueRepository.findByArchivesIdAndCatalogueType(folderCatalogue.getArchivesId(), CatalogueType.FolderFile);
+
+            if (!folderFileCatalogue.isPresent()) {
+                throw new InvalidArgumentException("卷内目录不存在");
+            }
+
+            //获得卷内条目集合
+            Iterable<Entry> folderFileEntryList = entryMongoRepository.findAll(query(where("parentId").in(entryIds).and("gmtDeleted").is(0)), getIndexName(folderFileCatalogue.get().getId()));
+            folderFileEntryList.forEach(entry -> entry.setGmtDeleted(isDeleted));
+
+            entryMongoRepository.saveAll(folderFileEntryList);
+            entryAsyncTask.indexAll(folderFileEntryList, folderFileCatalogue.get().getId());
+        }
+
         entryMongoRepository.saveAll(list);
         entryAsyncTask.indexAll(list, catalogueId);
     }

@@ -306,7 +306,7 @@ public class OriginalTextController {
             originalText.setTitle(title[i]);
             originalText.setType(type[i]);
             originalText.setVersion(version[i]);
-            originalText.setRemark(remark[i]);
+            originalText.setRemark(remark[i].equals(" ") ? "" : remark[i]);
             originalTexts[i] = originalText;
         }
         originalTexts = originalTextService.saveMany(originalTexts, files);
