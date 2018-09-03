@@ -1909,9 +1909,46 @@ public class EntryController {
      */
     @RequestMapping(value = "/statisticsTypeTerm", method = RequestMethod.GET)
     public Map<String, Object> statisticsTypeTerm(@RequestParam("fondsId") int fondsId
-            , @RequestParam(name = "beginYear", defaultValue = "0", required = false) int beginYear
-            , @RequestParam(name = "endYear", defaultValue = "3000", required = false) int endYear) {
+            , @RequestParam(name = "beginYear", defaultValue = "2000", required = false) int beginYear
+            , @RequestParam(name = "endYear", defaultValue = "2050", required = false) int endYear) {
         return entryService.statisticsTypeTerm(fondsId, beginYear, endYear);
+    }
+
+    /**
+     * @api {get} /entry/statisticsTypeYear 统计（按档案类型-保管期限）
+     * @apiName statisticsTypeYear
+     * @apiGroup entry
+     * @apiParam {Number} fondsId 全宗号（url参数）
+     * @apiParam {Number} beginYear 起始年度（url参数）
+     * @apiParam {Number} endYear 截止年度（url参数）
+     * @apiSuccessExample {json} Response-Example
+     * {
+     * "items": [
+     * {
+     * "name": "2011",
+     * "文书档案": 1,
+     * "科研档案": 3,
+     * "合计": 122,
+     * "设备档案": 116,
+     * "产品档案": 2
+     * },
+     * {
+     * "name": "2012",
+     * "文书档案": 15,
+     * "科研档案": 30,
+     * "合计": 135,
+     * "设备档案": 80,
+     * "产品档案": 10
+     * }
+     * ],
+     * "fields":["文书档案","科研档案","合计","设备档案","产品档案"]
+     * }
+     */
+    @RequestMapping(value = "/statisticsTypeYear", method = RequestMethod.GET)
+    public Map<String, Object> statisticsTypeYear(@RequestParam("fondsId") int fondsId
+            , @RequestParam(name = "beginYear", defaultValue = "2000", required = false) int beginYear
+            , @RequestParam(name = "endYear", defaultValue = "2050", required = false) int endYear) {
+        return entryService.statisticsTypeYear(fondsId, beginYear, endYear);
     }
 
 

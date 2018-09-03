@@ -1075,8 +1075,6 @@ public class EntryService {
         }
         List<Dictionary> dictionaries = dictionaryRepository.findByClassificationId(optional.get().getId());
 
-//        List<String> timeLimitNames = dictionaryRepository.findByClassificationCode("BGQX");
-
         List<Terms.Bucket> typeBuckets = (List<Terms.Bucket>) ((Terms) response.getAggregations().get("archiveContentType")).getBuckets();
 
         HashMap<String, Object> result = new HashMap<>();
@@ -1125,28 +1123,86 @@ public class EntryService {
         result.put("fields", timeLimitNames);
         result.put("items", items);
         return result;
+    }
 
-//        //保管期限
-//        for (Terms.Bucket timeLimitBucket : timeLimitBuckets) {
-//            for (String timeLimitName : timeLimitNames) {
-//                if (timeLimitName.equals(timeLimitBucket.getKey())) {
-//
-//                    HashMap<String, Object> map = new HashMap<>();
-//                    map.put("name", timeLimitName);
-//
-//                    //内容类型
-//                    List<Terms.Bucket> typeBuckets = (List<Terms.Bucket>) ((Terms) timeLimitBucket.getAggregations().get("archiveContentType")).getBuckets();
-//                    for (Terms.Bucket typeBucket : typeBuckets) {
-//                        for (ContentType contentType : contentTypes) {
-//                            if (contentType.getId() == typeBucket.getKeyAsNumber().intValue()) {
-//                                map.put(contentType.getName(), typeBucket.getDocCount());
-//                            }
-//                        }
-//                    }
-//                    map.put("合计", timeLimitBucket.getDocCount());
-//                    items.add(map);
-//                }
-//            }
-//        }
+    //统计（按档案类型-年度）
+    public Map<String, Object> statisticsTypeYear(int fondsId, int beginYear, int endYear) {
+        //查询全宗下归档库除去案卷所有目录
+        List<Integer> catalogueIds = catalogueRepository.findCatalogueIdByfondsId(fondsId);
+
+        Collection<String> indices = new ArrayList<>();
+        if (catalogueIds == null || catalogueIds.size() == 0) {
+            indices.add(INDEX_NAME_PREFIX + "*");
+        } else {
+            catalogueIds.forEach(a -> indices.add(getIndexName(a)));
+        }
+//        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(indices.toArray(new String[0]));
+        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(INDEX_NAME_PREFIX + "10");
+        srBuilder.setTypes("record").addAggregation(
+                AggregationBuilders
+                        .terms("year")
+                        .field("year")
+                        .subAggregation(AggregationBuilders
+                                .terms("archiveContentType")
+                                .field("archiveContentType"))).setSize(0);
+
+        BoolQueryBuilder query = QueryBuilders.boolQuery();
+        query.filter(QueryBuilders.termQuery("gmtDeleted", 0));
+        query.filter(QueryBuilders.rangeQuery("year").gte(beginYear).lte(endYear));
+        srBuilder.setQuery(query);
+
+        SearchResponse response = srBuilder.get();
+
+        List<ContentType> contentTypes = contentTypeRepository.findAll();
+
+        List<Terms.Bucket> yearBuckets = (List<Terms.Bucket>) ((Terms) response.getAggregations().get("year")).getBuckets();
+
+        HashMap<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> items = new ArrayList<>();
+
+        //年度
+        for (int year = beginYear; year <= endYear; year++) {
+
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("name", year);
+            boolean flag = false;
+
+            for (Terms.Bucket yearBucket : yearBuckets) {
+                if (year == yearBucket.getKeyAsNumber().intValue()) {
+                    flag = true;
+
+                    //档案内容类型
+                    Terms terms = yearBucket.getAggregations().get("archiveContentType");
+                    List<Terms.Bucket> typeBuckets = (List<Terms.Bucket>) terms.getBuckets();
+                    for (ContentType contentType : contentTypes) {
+                        long typeTotal = 0;
+                        for (Terms.Bucket typeBucket : typeBuckets) {
+
+                            if (contentType.getId() == typeBucket.getKeyAsNumber().intValue()) {
+
+                                typeTotal = typeBucket.getDocCount();
+                            }
+                        }
+                        map.put(contentType.getName(), typeTotal);
+                    }
+                    map.put("合计", yearBucket.getDocCount());
+                }
+            }
+            if (!flag) {
+                contentTypes.forEach(a -> {
+                    map.put(a.getName(), 0);
+                });
+                map.put("合计", 0);
+            }
+            items.add(map);
+        }
+        List<String> contentTypeNames = new ArrayList<>();
+        contentTypes.forEach(a -> contentTypeNames.add(a.getName()));
+
+        contentTypeNames.add("合计");
+        result.put("fields", contentTypeNames);
+        result.put("items", items);
+        return result;
+
     }
 }
