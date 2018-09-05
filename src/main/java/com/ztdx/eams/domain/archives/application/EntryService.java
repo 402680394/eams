@@ -3,6 +3,7 @@ package com.ztdx.eams.domain.archives.application;
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
+import com.ztdx.eams.basic.utils.FileHandler;
 import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.model.Dictionary;
@@ -14,6 +15,8 @@ import com.ztdx.eams.domain.archives.repository.elasticsearch.OriginalTextElasti
 import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorRepository;
 import com.ztdx.eams.domain.archives.repository.mongo.IdGeneratorValue;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -42,6 +45,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -1136,8 +1140,8 @@ public class EntryService {
         } else {
             catalogueIds.forEach(a -> indices.add(getIndexName(a)));
         }
-//        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(indices.toArray(new String[0]));
-        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(INDEX_NAME_PREFIX + "10");
+        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(indices.toArray(new String[0]));
+//        SearchRequestBuilder srBuilder = elasticsearchOperations.getClient().prepareSearch(INDEX_NAME_PREFIX + "10");
         srBuilder.setTypes("record").addAggregation(
                 AggregationBuilders
                         .terms("year")
@@ -1204,5 +1208,107 @@ public class EntryService {
         result.put("items", items);
         return result;
 
+    }
+
+    /*
+     * 获取导入Excel模板
+     * */
+    public XSSFWorkbook excelTemplate(int catalogueId) {
+        //根据目录类型确定库结构
+        Catalogue catalogue = catalogueRepository.findById(catalogueId).orElse(null);
+        XSSFWorkbook wb = new XSSFWorkbook();
+        if (catalogue.getCatalogueType().equals(CatalogueType.Folder)) {
+            //传统立卷
+            List<DescriptionItem> folderItemList = descriptionItemRepository.findByCatalogueId(catalogueId);
+            List<String> folderItemNames = new ArrayList<>();
+            folderItemList.forEach(a -> folderItemNames.add(a.getDisplayName()));
+            FileHandler.buildXSSFWorkbook("案卷", folderItemNames.toArray(new String[0]), new String[0][0], wb);
+            //通过档案库id和目录类型获得卷内目录
+            Optional<Catalogue> folderFileCatalogue = catalogueRepository.findByArchivesIdAndCatalogueType(catalogue.getArchivesId(), CatalogueType.FolderFile);
+
+            if (!folderFileCatalogue.isPresent()) {
+                throw new InvalidArgumentException("卷内目录不存在");
+            }
+            List<DescriptionItem> folderFileItemList = descriptionItemRepository.findByCatalogueId(folderFileCatalogue.get().getId());
+            List<String> folderFileItemNames = new ArrayList<>();
+            folderFileItemList.forEach(a -> folderFileItemNames.add(a.getDisplayName()));
+            FileHandler.buildXSSFWorkbook("卷内", folderFileItemNames.toArray(new String[0]), new String[0][0], wb);
+        } else {
+            //项目
+            List<DescriptionItem> itemList = descriptionItemRepository.findByCatalogueId(catalogueId);
+            List<String> itemNames = new ArrayList<>();
+            itemList.forEach(a -> itemNames.add(a.getDisplayName()));
+            if (catalogue.getCatalogueType().equals(CatalogueType.File)) {
+                FileHandler.buildXSSFWorkbook("一文一件", itemNames.toArray(new String[0]), new String[0][0], wb);
+            } else {
+                FileHandler.buildXSSFWorkbook("项目", itemNames.toArray(new String[0]), new String[0][0], wb);
+
+            }
+        }
+        return wb;
+    }
+
+    //导入Excel文件条目数据
+    public void importEntry(int catalogueId, File tmpFile, int userId) {
+        Catalogue catalogue = catalogueRepository.findById(catalogueId).orElse(null);
+        if (catalogue == null) {
+            throw new InvalidArgumentException("目录不存在");
+        }
+        //读取数据
+        List<List<List<String>>> data = FileHandler.xlsxRead(tmpFile);
+
+        if (catalogue.getCatalogueType().equals(CatalogueType.Folder)) {
+            //传统立卷
+
+
+        } else {
+            //一文一件/项目
+            Archives archives = archivesRepository.findById(catalogue.getArchivesId()).orElse(null);
+            if (archives == null) {
+                throw new InvalidArgumentException("档案库不存在");
+            }
+
+            ArchivesGroup archivesGroup = archivesGroupRepository.findById(archives.getArchivesGroupId()).orElse(null);
+            if (archivesGroup == null) {
+                throw new InvalidArgumentException("档案库分组不存在");
+            }
+            List<DescriptionItem> itemList = descriptionItemRepository.findByCatalogueId(catalogueId);
+            List<String> displayNames = data.get(0).get(0);
+            data.get(0).remove(0);
+            List<String> metadataNames = new ArrayList<>();
+
+            for (String displayName : displayNames) {
+                itemList.forEach(item -> {
+                    if (item.getDisplayName().equals(displayName)) {
+                        metadataNames.add(item.getMetadataName());
+                    }
+                });
+            }
+            if (metadataNames.size() != displayNames.size()) {
+                throw new BusinessException("著录项校验失败");
+            }
+            List<Entry> entries = new ArrayList<>();
+            //校验并保存数据
+            for (List<String> rows : data.get(0)) {
+                Entry entry = new Entry();
+                entry.setOwner(userId);
+                entry.setArchiveId(catalogue.getArchivesId());
+                entry.setCatalogueType(catalogue.getCatalogueType());
+                entry.setArchiveContentType(archives.getContentTypeId());
+                entry.setArchiveType(archives.getType());
+                entry.setFondsId(archivesGroup.getFondsId());
+                entry.setId(UUID.randomUUID().toString());
+                entry.setGmtCreate(new Date());
+                entry.setGmtModified(new Date());
+                //遍历每行数据
+                for (int i = 0; i < metadataNames.size(); i++) {
+                    entry.getItems().put(metadataNames.get(i), rows.get(i));
+                }
+                this.convertEntryItems(entry, EntryItemConverter::from, true, true);
+                entries.add(entry);
+            }
+            entryMongoRepository.saveAll(entries);
+            entryAsyncTask.indexAll(entries, catalogueId);
+        }
     }
 }

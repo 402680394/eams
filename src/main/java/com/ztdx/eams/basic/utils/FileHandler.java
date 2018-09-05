@@ -6,22 +6,26 @@ import org.apache.poi.POIXMLProperties;
 import org.apache.poi.POIXMLTextExtractor;
 import org.apache.poi.hslf.extractor.PowerPointExtractor;
 import org.apache.poi.hssf.extractor.ExcelExtractor;
+import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.xslf.extractor.XSLFPowerPointExtractor;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xssf.extractor.XSSFExcelExtractor;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by li on 2018/6/6.
  */
-public class FileReader {
+public class FileHandler {
 
     /**
      * 读取txt文件的内容
@@ -355,5 +359,90 @@ public class FileReader {
             }
         }
         return metadataMap;
+    }
+
+
+    /**
+     * 导出Excel
+     *
+     * @param sheetName sheet名称
+     * @param title     标题
+     * @param values    内容
+     * @param wb        HSSFWorkbook对象
+     * @return
+     */
+    public static XSSFWorkbook buildXSSFWorkbook(String sheetName, String[] title, String[][] values, XSSFWorkbook wb) {
+
+        // 第一步，创建一个XSSFWorkbook，对应一个Excel文件
+        if (wb == null) {
+            wb = new XSSFWorkbook();
+        }
+
+        // 第二步，在workbook中添加一个sheet,对应Excel文件中的sheet
+        XSSFSheet sheet = wb.createSheet(sheetName);
+
+        // 第三步，在sheet中添加表头第0行,注意老版本poi对Excel的行数列数有限制
+        XSSFRow row = sheet.createRow(0);
+
+        // 第四步，创建单元格，并设置值表头 设置表头居中
+        XSSFCellStyle style = wb.createCellStyle();
+        style.setAlignment(HorizontalAlignment.CENTER); // 创建一个居中格式
+
+        //声明列对象
+        XSSFCell cell = null;
+
+        //创建标题
+        for (int i = 0; i < title.length; i++) {
+            cell = row.createCell(i);
+            cell.setCellValue(title[i]);
+            cell.setCellStyle(style);
+        }
+
+        //创建内容
+        for (int i = 0; i < values.length; i++) {
+            row = sheet.createRow(i + 1);
+            for (int j = 0; j < values[i].length; j++) {
+                //将内容按顺序赋给对应的列对象
+                row.createCell(j).setCellValue(values[i][j]);
+            }
+        }
+        return wb;
+    }
+
+    public static List<List<List<String>>> xlsxRead(File excelFile) {
+
+        //读取xlsx文件
+        XSSFWorkbook xssfWorkbook = null;
+        //寻找目录读取文件
+        try {
+            InputStream is = new FileInputStream(excelFile);
+            xssfWorkbook = new XSSFWorkbook(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        List<List<List<String>>> workBook = new ArrayList<>();
+        //遍历xlsx中的sheet
+        for (int numSheet = 0; numSheet < xssfWorkbook.getNumberOfSheets(); numSheet++) {
+            XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(numSheet);
+            if (xssfSheet == null) {
+                continue;
+            }
+            List<List<String>> sheet = new ArrayList<>();
+            // 对于每个sheet，读取其中的每一行
+            for (int rowNum = 0; rowNum <= xssfSheet.getLastRowNum(); rowNum++) {
+                XSSFRow xssfRow = xssfSheet.getRow(rowNum);
+                if (xssfRow == null) continue;
+                ArrayList<String> row = new ArrayList<>();
+                for (int cellNum = 0; cellNum < xssfRow.getLastCellNum(); cellNum++) {
+                    XSSFCell cell = xssfRow.getCell(cellNum);
+
+                    row.add(cell.getStringCellValue());
+                }
+                sheet.add(row);
+            }
+            workBook.add(sheet);
+        }
+        return workBook;
     }
 }

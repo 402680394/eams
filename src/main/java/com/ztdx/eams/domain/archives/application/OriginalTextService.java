@@ -1,9 +1,8 @@
 package com.ztdx.eams.domain.archives.application;
 
-import com.mongodb.QueryBuilder;
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.basic.utils.FileReader;
+import com.ztdx.eams.basic.utils.FileHandler;
 import com.ztdx.eams.basic.utils.FtpUtil;
 import com.ztdx.eams.basic.utils.PDFConverter;
 import com.ztdx.eams.domain.archives.model.ArchivingResult;
@@ -445,25 +444,25 @@ public class OriginalTextService {
             //读取内容
             //设置全文索引状态为已生成
             if (originalText.getName().endsWith(".txt")) {
-                originalText.setContentIndex(FileReader.txtContentRead(file));
+                originalText.setContentIndex(FileHandler.txtContentRead(file));
                 originalText.setContentIndexStatus(1);
             } else if (originalText.getName().endsWith(".doc")) {
-                originalText.setContentIndex(FileReader.docContentRead(file));
+                originalText.setContentIndex(FileHandler.docContentRead(file));
                 originalText.setContentIndexStatus(1);
             } else if (originalText.getName().endsWith(".docx")) {
-                originalText.setContentIndex(FileReader.docxContentRead(file));
+                originalText.setContentIndex(FileHandler.docxContentRead(file));
                 originalText.setContentIndexStatus(1);
             } else if (originalText.getName().endsWith(".ppt")) {
-                originalText.setContentIndex(FileReader.pptContentRead(file));
+                originalText.setContentIndex(FileHandler.pptContentRead(file));
                 originalText.setContentIndexStatus(1);
             } else if (originalText.getName().endsWith(".pptx")) {
-                originalText.setContentIndex(FileReader.pptxContentRead(file));
+                originalText.setContentIndex(FileHandler.pptxContentRead(file));
                 originalText.setContentIndexStatus(1);
             } else if (originalText.getName().endsWith(".xls")) {
-                originalText.setContentIndex(FileReader.xlsContentRead(file));
+                originalText.setContentIndex(FileHandler.xlsContentRead(file));
                 originalText.setContentIndexStatus(1);
             } else if (originalText.getName().endsWith(".xlsx") || originalText.getName().endsWith(".xlsm")) {
-                originalText.setContentIndex(FileReader.xlsxContentRead(file));
+                originalText.setContentIndex(FileHandler.xlsxContentRead(file));
                 originalText.setContentIndexStatus(1);
             } else {
                 //此类型无法生成全文索引
@@ -481,9 +480,9 @@ public class OriginalTextService {
      */
     private void getFileMetadata(OriginalText originalText, File file) {
         if (originalText.getName().endsWith(".doc") || originalText.getName().endsWith(".xls") || originalText.getName().endsWith(".ppt")) {
-            originalText.setFileAttributesMap(FileReader.office2003MetadataRead(file));
+            originalText.setFileAttributesMap(FileHandler.office2003MetadataRead(file));
         } else if (originalText.getName().endsWith(".docx") || originalText.getName().endsWith(".xlsx") || originalText.getName().endsWith(".xlsm") || originalText.getName().endsWith(".pptx")) {
-            originalText.setFileAttributesMap(FileReader.office2007MetadataRead(file));
+            originalText.setFileAttributesMap(FileHandler.office2007MetadataRead(file));
         } else {
             originalText.setFileAttributesMap(new HashMap<>());
         }

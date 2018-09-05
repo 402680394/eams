@@ -1,6 +1,7 @@
 package com.ztdx.eams.controller.archives;
 
 import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.EntryValueConverException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.NotFoundException;
@@ -21,6 +22,8 @@ import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Permission;
 import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
@@ -32,7 +35,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -1949,6 +1956,81 @@ public class EntryController {
             , @RequestParam(name = "beginYear", defaultValue = "2000", required = false) int beginYear
             , @RequestParam(name = "endYear", defaultValue = "2050", required = false) int endYear) {
         return entryService.statisticsTypeYear(fondsId, beginYear, endYear);
+    }
+
+    /**
+     * @api {get} /entry/excelTemplate 获取导入条目模板
+     * @apiName excelTemplate
+     * @apiGroup entry
+     * @apiParam {Number} catalogueId 目录ID（url参数）
+     * @apiSuccessExample {json} Response-Example
+     */
+//    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #entry.catalogueId)")
+    @RequestMapping(value = "/excelTemplate", method = RequestMethod.GET)
+    public void excelTemplate(@RequestParam("catalogueId") int catalogueId, HttpServletResponse response) {
+        XSSFWorkbook wb = entryService.excelTemplate(catalogueId);
+
+        String fileName = archivesService.findArchivesNameByCatalogue_CatalogueId(catalogueId);
+
+        try {
+            response.setContentType("application/octet-stream");
+            response.setHeader("content-type", "application/octet-stream");
+            response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
+
+            OutputStream os = response.getOutputStream();
+            wb.write(os);
+            os.flush();
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * @api {post} /entry/importEntry 批量导入条目
+     * @apiName importEntry
+     * @apiGroup entry
+     * @apiParam {File} file Excel文件
+     * @apiParamExample {json} Request-Example:
+     */
+//    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
+    @RequestMapping(value = "/importEntry", method = RequestMethod.POST)
+    public void importEntry(@RequestParam("catalogueId") int catalogueId, @RequestParam("file") MultipartFile file, @SessionAttribute UserCredential LOGIN_USER) {
+        //先存入本地
+        File tmpFile = new File(file.getOriginalFilename());
+        FileOutputStream fos = null;
+        BufferedOutputStream bos = null;
+        try {
+            byte[] bytes = file.getBytes();
+            fos = new FileOutputStream(tmpFile);
+            bos = new BufferedOutputStream(fos);
+            bos.write(bytes);
+            bos.flush();
+
+            entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BusinessException("文件上传失败");
+        } finally {
+            if (bos != null) {
+                try {
+                    bos.close();
+                } catch (IOException e) {
+                    throw new BusinessException("文件传输流未关闭");
+                }
+            }
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    throw new BusinessException("文件传输流未关闭");
+                }
+            }
+            //删除本地临时文件
+            if (tmpFile.exists()) {
+                tmpFile.delete();
+            }
+        }
     }
 
 
