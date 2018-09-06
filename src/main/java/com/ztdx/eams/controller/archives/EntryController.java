@@ -522,6 +522,7 @@ public class EntryController {
             result.put("metadataId", a.getMetadataId());
             result.put("metadataName", a.getMetadataName());
             result.put("displayName", a.getDisplayName());
+            result.put("dataType", a.getDataType());
             return result;
         });
 
