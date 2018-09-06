@@ -301,22 +301,27 @@ public class EntryController {
      * @apiSuccess (Success 200) {Number} column.birthday.metadataId 字段id
      * @apiSuccess (Success 200) {String} column.birthday.metadataName 字段名称
      * @apiSuccess (Success 200) {String} column.birthday.displayName 字段显示名称
+     * @apiSuccess (Success 200) {String} column.birthday.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
      * @apiSuccess (Success 200) {Object} column.[amount] 资产字段的属性
      * @apiSuccess (Success 200) {Number} column.amount.metadataId 字段id
      * @apiSuccess (Success 200) {String} column.amount.metadataName 字段名称
      * @apiSuccess (Success 200) {String} column.amount.displayName 字段显示名称
+     * @apiSuccess (Success 200) {String} column.amount.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
      * @apiSuccess (Success 200) {Object} column.[aihao] 爱好字段的属性
      * @apiSuccess (Success 200) {Number} column.aihao.metadataId 字段id
      * @apiSuccess (Success 200) {String} column.aihao.metadataName 字段名称
      * @apiSuccess (Success 200) {String} column.aihao.displayName 字段显示名称
+     * @apiSuccess (Success 200) {String} column.aihao.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
      * @apiSuccess (Success 200) {Object} column.[name] 姓名字段的属性
      * @apiSuccess (Success 200) {Number} column.name.metadataId 字段id
      * @apiSuccess (Success 200) {String} column.name.metadataName 字段名称
      * @apiSuccess (Success 200) {String} column.name.displayName 字段显示名称
+     * @apiSuccess (Success 200) {String} column.name.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
      * @apiSuccess (Success 200) {Object} column.[age] 年龄字段的属性
      * @apiSuccess (Success 200) {Number} column.age.metadataId 字段id
      * @apiSuccess (Success 200) {String} column.age.metadataName 字段名称
      * @apiSuccess (Success 200) {String} column.age.displayName 字段显示名称
+     * @apiSuccess (Success 200) {String} column.age.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
      * @apiSuccess (Success 200) {Number} totalElements 总行数
      * @apiSuccess (Success 200) {Number} totalPages 总页数
      * @apiSuccess (Success 200) {Number} innerCatalogueId 卷内目录id
@@ -350,27 +355,32 @@ public class EntryController {
      * "name": {
      * "metadataId":1,
      * "metadataName":"name",
-     * "displayName":"姓名"
+     * "displayName":"姓名",
+     * "dateType":2
      * },
      * "birthday": {
      * "metadataId":2,
      * "metadataName":"birthday",
      * "displayName":"生日"
+     * "dateType":3
      * },
      * "amount": {
      * "metadataId":3,
      * "metadataName":"amount",
      * "displayName":"资产"
+     * "dateType":4
      * },
      * "aihao": {
      * "metadataId":4,
      * "metadataName":"aihao",
      * "displayName":"爱好"
+     * "dateType":6
      * },
      * "age": {
      * "metadataId":5,
      * "metadataName":"age",
      * "displayName":"年龄"
+     * "dateType":1
      * }
      * },
      * "totalElements": 14,

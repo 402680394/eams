@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 1 数值 2 字符串 3 日期 4 浮点 5数组
+ * 1.数值 2.文本 3.日期 4.浮点 5.字符串 6.数组
  */
 public enum DescriptionItemDataType {
 
