@@ -23,6 +23,7 @@ import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Permission;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.context.ApplicationContext;
@@ -38,6 +39,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
@@ -2002,10 +2004,14 @@ public class EntryController {
      * @apiGroup entry
      * @apiParam {Number} catalogueId 目录ID
      * @apiParam {File} file Excel文件
+     * @apiSuccess {Number} errorTotal 错误记录数
      */
 //    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
     @RequestMapping(value = "/importEntry", method = RequestMethod.POST)
-    public void importEntry(@RequestParam("catalogueId") int catalogueId, @RequestParam("file") MultipartFile file, @SessionAttribute UserCredential LOGIN_USER) {
+    public Map<String, Integer> importEntry(@RequestParam("catalogueId") int catalogueId
+            , @RequestParam("file") MultipartFile file
+            , @SessionAttribute UserCredential LOGIN_USER
+            , HttpSession session) {
         //先存入本地
         File tmpFile = new File(file.getOriginalFilename());
         FileOutputStream fos = null;
@@ -2017,7 +2023,21 @@ public class EntryController {
             bos.write(bytes);
             bos.flush();
 
-            entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
+            XSSFWorkbook wb = entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
+
+            int errorTotal = 0;
+            if (wb != null) {
+                session.setAttribute("IMPORT_ERROR_DATA", wb);
+                Iterator<Sheet> iterator = wb.sheetIterator();
+                while (iterator.hasNext()) {
+                    errorTotal += iterator.next().getLastRowNum() - 1;
+                }
+            }
+
+            Map<String, Integer> resultMap = new HashMap<>();
+            resultMap.put("errorTotal", errorTotal);
+
+            return resultMap;
         } catch (Exception e) {
             e.printStackTrace();
             throw new BusinessException("文件上传失败");
@@ -2040,6 +2060,28 @@ public class EntryController {
             if (tmpFile.exists()) {
                 tmpFile.delete();
             }
+        }
+    }
+
+    /**
+     * @api {get} /entry/importErrorData 获取导入错误数据
+     * @apiName importErrorData
+     * @apiGroup entry
+     */
+    @RequestMapping(value = "/importErrorData", method = RequestMethod.GET)
+    public void importErrorData(@SessionAttribute XSSFWorkbook IMPORT_ERROR_DATA, HttpServletResponse response) {
+
+        try {
+            response.setContentType("application/octet-stream");
+            response.setHeader("content-type", "application/octet-stream");
+            response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode("错误数据", "UTF-8"));
+
+            OutputStream os = response.getOutputStream();
+            IMPORT_ERROR_DATA.write(os);
+            os.flush();
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

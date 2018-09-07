@@ -1219,8 +1219,10 @@ public class EntryService {
         XSSFWorkbook wb = new XSSFWorkbook();
 
         List<DescriptionItem> itemList = descriptionItemRepository.findByCatalogueId(catalogueId);
-        List<String> itemNames = new ArrayList<>();
-        itemList.forEach(a -> itemNames.add(a.getDisplayName()));
+        List<List<String>> content = new ArrayList<>();
+        List<String> title = new ArrayList<>();
+        itemList.forEach(a -> title.add(a.getDisplayName()));
+        content.add(title);
         if (catalogue.getCatalogueType().equals(CatalogueType.Folder)) {
             //传统立卷
             //通过档案库id和目录类型获得卷内目录
@@ -1229,17 +1231,19 @@ public class EntryService {
             if (!folderFileCatalogue.isPresent()) {
                 throw new InvalidArgumentException("卷内目录不存在");
             }
-            List<DescriptionItem> folderFileItemList = descriptionItemRepository.findByCatalogueId(folderFileCatalogue.get().getId());
-            List<String> folderFileItemNames = new ArrayList<>();
-            folderFileItemList.forEach(a -> folderFileItemNames.add(a.getDisplayName()));
-            FileHandler.buildXSSFWorkbook("案卷", itemNames.toArray(new String[0]), new String[0][0], wb);
-            FileHandler.buildXSSFWorkbook("卷内", folderFileItemNames.toArray(new String[0]), new String[0][0], wb);
+            List<DescriptionItem> folderFileItems = descriptionItemRepository.findByCatalogueId(folderFileCatalogue.get().getId());
+            List<List<String>> folderFileContent = new ArrayList<>();
+            List<String> folderFileTitle = new ArrayList<>();
+            folderFileItems.forEach(a -> folderFileTitle.add(a.getDisplayName()));
+            folderFileContent.add(folderFileTitle);
+            FileHandler.buildXSSFWorkbook("案卷", content, wb);
+            FileHandler.buildXSSFWorkbook("卷内", folderFileContent, wb);
         } else {
             //项目
             if (catalogue.getCatalogueType().equals(CatalogueType.File)) {
-                FileHandler.buildXSSFWorkbook("一文一件", itemNames.toArray(new String[0]), new String[0][0], wb);
+                FileHandler.buildXSSFWorkbook("一文一件", content, wb);
             } else {
-                FileHandler.buildXSSFWorkbook("项目", itemNames.toArray(new String[0]), new String[0][0], wb);
+                FileHandler.buildXSSFWorkbook("项目", content, wb);
 
             }
         }
@@ -1247,7 +1251,7 @@ public class EntryService {
     }
 
     //导入Excel文件条目数据
-    public void importEntry(int catalogueId, File tmpFile, int userId) {
+    public XSSFWorkbook importEntry(int catalogueId, File tmpFile, int userId) {
         Catalogue catalogue = catalogueRepository.findById(catalogueId).orElse(null);
         if (catalogue == null) {
             throw new InvalidArgumentException("目录不存在");
@@ -1263,31 +1267,78 @@ public class EntryService {
         }
         //读取数据
         List<List<List<String>>> data = FileHandler.xlsxRead(tmpFile);
+        //存储错误数据的Excel对象
+        XSSFWorkbook wb = null;
 
         //所有的著录项
-        List<DescriptionItem> items = descriptionItemRepository.findByCatalogueId(catalogueId);
+        List<DescriptionItem> descriptionItems = descriptionItemRepository.findByCatalogueId(catalogueId);
+
+        List<List<String>> errorData = this.importCatalogueEntry(archivesGroup, archives, catalogue, data.get(0), descriptionItems, userId);
+
+
+        //传统立卷
+        if (catalogue.getCatalogueType().equals(CatalogueType.Folder)) {
+            Optional<Catalogue> folderFileCatalogue = catalogueRepository.findByArchivesIdAndCatalogueType(catalogue.getArchivesId(), CatalogueType.FolderFile);
+            if (!folderFileCatalogue.isPresent()) {
+                throw new InvalidArgumentException("卷内目录不存在");
+            }
+            List<DescriptionItem> folderFileItems = descriptionItemRepository.findByCatalogueId(folderFileCatalogue.get().getId());
+
+            List<List<String>> folderFileErrorData = this.importCatalogueEntry(archivesGroup, archives, folderFileCatalogue.get(), data.get(1), folderFileItems, userId);
+            if (folderFileErrorData.size() != 1 || errorData.size() != 1) {
+                FileHandler.buildXSSFWorkbook("案卷", errorData, wb);
+                FileHandler.buildXSSFWorkbook("卷内", folderFileErrorData, wb);
+            }
+        } else {
+            //项目
+            if (errorData.size() != 1) {
+                if (catalogue.getCatalogueType().equals(CatalogueType.File)) {
+                    FileHandler.buildXSSFWorkbook("一文一件", errorData, wb);
+                } else {
+                    FileHandler.buildXSSFWorkbook("项目", errorData, wb);
+                }
+            }
+
+        }
+        return wb;
+    }
+
+    public List<List<String>> importCatalogueEntry(ArchivesGroup archivesGroup
+            , Archives archives
+            , Catalogue catalogue
+            , List<List<String>> data
+            , List<DescriptionItem> descriptionItems
+            , int userId) {
+
+        List<List<String>> errorData = new ArrayList<>();
         //导入文件的title
-        List<String> displayNames = data.get(0).get(0);
-        data.get(0).remove(0);
+        List<String> title = data.get(0);
+
+        List<String> errorTitle = title;
+        errorTitle.add("错误信息");
+        errorData.add(errorTitle);
         //将导入文件title与著录项对应
         List<DescriptionItem> importItems = new ArrayList<>();
 
         DescriptionItem del = null;
-        for (String displayName : displayNames) {
-            for (DescriptionItem item : items) {
-                if (item.getDisplayName().equals(displayName)) {
-                    importItems.add(item);
-                    del = item;
+        for (String displayName : title) {
+            for (DescriptionItem descriptionItem : descriptionItems) {
+                if (descriptionItem.getDisplayName().equals(displayName)) {
+                    importItems.add(descriptionItem);
+                    del = descriptionItem;
                 }
             }
-            items.remove(del);
+            descriptionItems.remove(del);
         }
-        if (importItems.size() != displayNames.size()) {
-            throw new BusinessException("著录项校验失败");
+        if (importItems.size() != title.size()) {
+            data.forEach(row -> row.add("著录项校验失败"));
+            errorData.addAll(data);
+            return errorData;
         }
         List<Entry> entries = new ArrayList<>();
         //校验并保存数据
-        for (List<String> rows : data.get(0)) {
+        data.remove(0);//去除标题行
+        for (List<String> row : data) {
             Entry entry = new Entry();
             entry.setOwner(userId);
             entry.setArchiveId(catalogue.getArchivesId());
@@ -1302,22 +1353,19 @@ public class EntryService {
             HashMap<String, Object> entryItems = new HashMap<>();
             //遍历每行数据
             for (int i = 0; i < importItems.size(); i++) {
-                entryItems.put(importItems.get(i).getMetadataName(), rows.get(i));
+                entryItems.put(importItems.get(i).getMetadataName(), row.get(i));
             }
             entry.setItems(entryItems);
-            this.convertEntryItems(entry, EntryItemConverter::from, true, true);
+            try {
+                this.convertEntryItems(entry, EntryItemConverter::from, true, true);
+            } catch (Exception e) {
+                row.add(e.getMessage());
+                errorData.add(row);
+            }
             entries.add(entry);
         }
         entryMongoRepository.saveAll(entries);
-        entryAsyncTask.indexAll(entries, catalogueId);
-        //传统立卷
-        if (catalogue.getCatalogueType().equals(CatalogueType.Folder)) {
-            Optional<Catalogue> folderFileCatalogue = catalogueRepository.findByArchivesIdAndCatalogueType(catalogue.getArchivesId(), CatalogueType.FolderFile);
-            if (!folderFileCatalogue.isPresent()) {
-                throw new InvalidArgumentException("卷内目录不存在");
-            }
-            List<DescriptionItem> folderFileItemList = descriptionItemRepository.findByCatalogueId(folderFileCatalogue.get().getId());
-
-        }
+        entryAsyncTask.indexAll(entries, catalogue.getId());
+        return errorData;
     }
 }
