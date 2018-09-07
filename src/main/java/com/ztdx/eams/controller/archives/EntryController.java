@@ -1963,7 +1963,6 @@ public class EntryController {
      * @apiName excelTemplate
      * @apiGroup entry
      * @apiParam {Number} catalogueId 目录ID（url参数）
-     * @apiSuccessExample {json} Response-Example
      */
 //    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #entry.catalogueId)")
     @RequestMapping(value = "/excelTemplate", method = RequestMethod.GET)
@@ -1990,8 +1989,8 @@ public class EntryController {
      * @api {post} /entry/importEntry 批量导入条目
      * @apiName importEntry
      * @apiGroup entry
+     * @apiParam {Number} catalogueId 目录ID
      * @apiParam {File} file Excel文件
-     * @apiParamExample {json} Request-Example:
      */
 //    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
     @RequestMapping(value = "/importEntry", method = RequestMethod.POST)

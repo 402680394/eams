@@ -9,6 +9,7 @@ import org.apache.poi.hssf.extractor.ExcelExtractor;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.xslf.extractor.XSLFPowerPointExtractor;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
@@ -436,7 +437,7 @@ public class FileHandler {
                 ArrayList<String> row = new ArrayList<>();
                 for (int cellNum = 0; cellNum < xssfRow.getLastCellNum(); cellNum++) {
                     XSSFCell cell = xssfRow.getCell(cellNum);
-
+                    cell.setCellType(CellType.STRING);
                     row.add(cell.getStringCellValue());
                 }
                 sheet.add(row);
