@@ -30,11 +30,6 @@ public class Catalogue {
     @Column(name = "archives_id")
     private int archivesId;
 
-    //物理表的名称
-    @Size(max = 100)
-    @Column(name = "table_name")
-    private String tableName;
-
     //元数据规范标识
     @Column(name = "metadata_standards_id")
     private Integer metadataStandardsId;

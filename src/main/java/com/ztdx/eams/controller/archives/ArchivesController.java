@@ -3,6 +3,7 @@ package com.ztdx.eams.controller.archives;
 import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.ArchivesService;
+import com.ztdx.eams.domain.archives.model.Archives;
 import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.query.ArchivesQuery;
@@ -58,13 +59,12 @@ public class ArchivesController {
      * @apiSuccess (Success 200) {Number} Catalogue:id 目录ID
      * @apiSuccess (Success 200) {Number} Catalogue:catalogueType 目录类型(1 一文一件/卷内 2 案卷 3 项目）
      * @apiSuccess (Success 200) {Number} Catalogue:archivesId 档案库ID
-     * @apiSuccess (Success 200) {Number} Catalogue:tableName 存储物理表名
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"children": [
      * {"childrenType": "ArchivesGroup","id": 档案库分组ID,"name": "档案库分组名称","fondsId": 所属全宗ID,"parentId": 上级档案库分组ID,"children": [
      * {"childrenType": "ArchivesGroup","id": 档案库分组ID,"name": "档案库分组名称","fondsId": 所属全宗ID,"parentId": 上级档案库分组ID},
      * {"childrenType": "Archives","id": 档案库ID,"structure": 档案库结构,"name": "档案库名称","archivesGroupId": 所属档案库分组ID,"type": 档案库类型,"children": [
-     * {"childrenType": "Catalogue","id": 目录ID,"catalogueType": 目录类型,"archivesId": 档案库ID,"tableName": "存储物理表名"}]}]},
+     * {"childrenType": "Catalogue","id": 目录ID,"catalogueType": 目录类型,"archivesId": 档案库ID}]}]},
      * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型}]}]}}.
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
@@ -97,11 +97,11 @@ public class ArchivesController {
     }
 
     /**
-     * @api {get} /archives/treeListBelowFonds?id={id} 通过目录ID获取同属全宗下归档库分组、归档库树
+     * @api {get} /archives/treeListBelowFonds?id={id} 通过目录ID获取同属全宗下库分组、库树
      * @apiName treeListBelowFonds
      * @apiGroup archives
      * @apiParam {Number} id 目录ID
-     * @apiParam {Number} archiveType 档案库类型 0 全部类型 1 登记库 2 归档库(默认值)
+     * @apiParam {Number} archiveType 库类型 0 全部类型 1 登记库 2 归档库(默认值)
      * @apiSuccess (Success 200) {String} childrenType 节点类型(ArchivesGroup-档案分组;Archives-档案库;Catalogue-目录).
      * @apiSuccess (Success 200) {Object[]} children 子节点信息
      * @apiSuccess (Success 200) {Number} ArchivesGroup:id 档案库分组ID.
@@ -141,7 +141,7 @@ public class ArchivesController {
     }
 
     /**
-     * @api {get} /archives/fondsToArchivesTree?archiveType={archiveType} 获取全宗、档案库分组、档案库树
+     * @api {get} /archives/fondsToArchivesTree?archiveType={archiveType} 获取全宗、库分组、库树
      * @apiName fondsToArchivesTree
      * @apiGroup archives
      * @apiParam {Number} archiveType 档案库类型 0 全部类型(默认值) 1 登记库 2 归档库
@@ -188,4 +188,95 @@ public class ArchivesController {
                 , a -> hasPermission(fondsIds, a)
                 , a -> hasPermission(catalogueIds, a));
     }
+
+
+    /**
+     * @api {post} /archives 新增档案库
+     * @apiName save
+     * @apiGroup archives
+     * @apiParam {String} name 档案库名称
+     * @apiParam {Number} structure 档案库结构(1 一文一件；2 传统立卷；3 项目)
+     * @apiParam {Number} archivesGroupId 档案库分组ID
+     * @apiParam {Number} contentTypeId 档案库内容类型ID
+     * @apiParam {Number} type 档案库类型(1 登记库； 2 归档库)
+     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiError (Error 400) message 档案库名称已存在.
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "", method = RequestMethod.POST)
+    public void save(@RequestBody Archives archives) {
+        archivesService.save(archives);
+    }
+
+    /**
+     * @api {delete} /archives/{id} 删除档案库
+     * @apiName delete
+     * @apiGroup archives
+     * @apiParam {Number} id 档案库ID（url占位符）
+     */
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    public void delete(@PathVariable("id") int id) {
+        archivesService.delete(id);
+    }
+
+    /**
+     * @api {put} /archives 修改档案库
+     * @apiName update
+     * @apiGroup archives
+     * @apiParam {Number} archivesId 档案库ID
+     * @apiParam {String{30}} name 档案库名称
+     * @apiParam {Number} archivesGroupId 档案库分组ID
+     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiError (Error 400) message 档案库名称已存在.
+     * @apiUse ErrorExample
+     */
+    @RequestMapping(value = "", method = RequestMethod.PUT)
+    public void update(@RequestBody Archives archives) {
+        archivesService.update(archives);
+    }
+
+    /**
+     * @api {get} /archives/{id} 获取档案库详情
+     * @apiName get
+     * @apiGroup archives
+     * @apiParam {Number} id 档案库ID（url占位符）
+     * @apiSuccess (Success 200) {Number} id 档案库ID.
+     * @apiSuccess (Success 200) {Number} name 档案库名称.
+     * @apiSuccess (Success 200) {Number} structure 档案库结构(1 一文一件；2 传统立卷；3 项目).
+     * @apiSuccess (Success 200) {Number} archivesGroupId 档案库分组ID.
+     * @apiSuccess (Success 200) {Number} contentTypeId 档案库内容类型ID.
+     * @apiSuccess (Success 200) {Number} type 档案库类型(1 登记库； 2 归档库).
+     * @apiSuccess (Success 200) {String} remark 备注.
+     * @apiSuccessExample {json} Success-Response:
+     * {"data":{"id": 2,"name": "档案库名称","structure": "1","archivesGroupId": 3,"contentTypeId": 6,"type": 2,"remark": "备注"}}.
+     */
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public Map<String, Object> get(@PathVariable("id") int id) {
+        return archivesQuery.getArchives(UInteger.valueOf(id));
+    }
+
+    /**
+     * @api {get} /archives/{archivesGroupId} 获取档案库分组下档案库、目录列表
+     * @apiName archivesToCatalogueTree
+     * @apiGroup archives
+     * @apiParam {Number} archivesGroupId 档案库分组ID（url占位符）
+     * @apiSuccess (Success 200) {String} childrenType 节点类型(Archives-档案库;Catalogue-目录).
+     * @apiSuccess (Success 200) {Number} Archives:id 档案库ID
+     * @apiSuccess (Success 200) {Number} Archives:structure 档案库结构(1 一文一件；2 案卷；3 项目)
+     * @apiSuccess (Success 200) {Number} Archives:name 档案库名称
+     * @apiSuccess (Success 200) {Number} Archives:archivesGroupId 所属档案库分组ID
+     * @apiSuccess (Success 200) {Number} Archives:contentTypeId 档案库内容类型ID
+     * @apiSuccess (Success 200) {Number} Archives:type 档案库类型(1 登记库； 2 归档库)
+     * @apiSuccess (Success 200) {Number} Catalogue:id 目录ID
+     * @apiSuccess (Success 200) {Number} Catalogue:catalogueType 目录类型(1 一文一件/卷内 2 案卷 3 项目）
+     * @apiSuccess (Success 200) {Number} Catalogue:archivesId 档案库ID
+     * @apiSuccessExample {json} Success-Response:
+     * {"data":{"items": {"childrenType": "Archives","id": 档案库ID,"structure": 档案库结构,"name": "档案库名称","archivesGroupId": 所属档案库分组ID,"type": 档案库类型,"children": [
+     * {"childrenType": "Catalogue","id": 目录ID,"catalogueType": 目录类型,"archivesId": 档案库ID}]}}}.
+     */
+    @RequestMapping(value = "/{archivesGroupId}", method = RequestMethod.GET)
+    public Map<String, Object> archivesToCatalogueTree(@PathVariable("archivesGroupId") int archivesGroupId) {
+        return archivesQuery.getArchivesToCatalogueTree(UInteger.valueOf(archivesGroupId));
+    }
+
 }

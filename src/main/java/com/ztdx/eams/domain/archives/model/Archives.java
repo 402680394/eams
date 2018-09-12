@@ -42,6 +42,11 @@ public class Archives {
     @Column(name = "type")
     private int type;
 
+    //备注
+    @Size(max = 100)
+    @Column(name = "remark")
+    private String remark;
+
     //创建时间
     @Column(name = "gmt_create")
     private Date gmtCreate;
@@ -49,4 +54,8 @@ public class Archives {
     //修改时间
     @Column(name = "gmt_modified")
     private Date gmtModified;
+
+    //是否删除（0-否 1-是）
+    @Column(name = "gmt_deleted")
+    private int gmtDeleted;
 }

@@ -4,8 +4,7 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
+import org.jooq.*;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -192,18 +191,20 @@ public class StoreQuery {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = null;
         int total = 0;
+        SelectJoinStep<Record9<UInteger, String, Integer, Integer, Integer, Integer, Integer, String, String>> selectJoinStep = dslContext
+                .select(storeBox.ID.as("id"),
+                        storeBox.CODE.as("code"),
+                        storeBox.FILES_TOTAL.as("filesTotal"),
+                        storeBox.PAGES_TOTAL.as("pagesTotal"),
+                        storeBox.MAX_PAGES_TOTAL.as("maxPagesTotal"),
+                        storeBox.WIDTH.as("width"),
+                        storeBox.ON_FRAME.as("onFrame"),
+                        storeBox.POINT.as("point"),
+                        storeBox.REMARK.as("remark")
+                ).from(storeBox);
         if (status == 1 && onFrame == 0) {
             //容纳状况已满
-            list = dslContext.select(storeBox.ID.as("id"),
-                    storeBox.CODE.as("code"),
-                    storeBox.FILES_TOTAL.as("filesTotal"),
-                    storeBox.PAGES_TOTAL.as("pagesTotal"),
-                    storeBox.MAX_PAGES_TOTAL.as("maxPagesTotal"),
-                    storeBox.WIDTH.as("width"),
-                    storeBox.ON_FRAME.as("onFrame"),
-                    storeBox.POINT.as("point"),
-                    storeBox.REMARK.as("remark")
-            ).from(storeBox)
+            list = selectJoinStep
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL))
@@ -218,16 +219,7 @@ public class StoreQuery {
                     .fetch().getValue(0, 0);
         } else if (status == 2 && onFrame == 0) {
             //容纳状况未满
-            list = dslContext.select(storeBox.ID.as("id"),
-                    storeBox.CODE.as("code"),
-                    storeBox.FILES_TOTAL.as("filesTotal"),
-                    storeBox.PAGES_TOTAL.as("pagesTotal"),
-                    storeBox.MAX_PAGES_TOTAL.as("maxPagesTotal"),
-                    storeBox.WIDTH.as("width"),
-                    storeBox.ON_FRAME.as("onFrame"),
-                    storeBox.POINT.as("point"),
-                    storeBox.REMARK.as("remark")
-            ).from(storeBox)
+            list = selectJoinStep
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL))
@@ -242,16 +234,7 @@ public class StoreQuery {
                     .fetch().getValue(0, 0);
         } else if (status == 0 && onFrame != 0) {
             //已上架或未上架
-            list = dslContext.select(storeBox.ID.as("id"),
-                    storeBox.CODE.as("code"),
-                    storeBox.FILES_TOTAL.as("filesTotal"),
-                    storeBox.PAGES_TOTAL.as("pagesTotal"),
-                    storeBox.MAX_PAGES_TOTAL.as("maxPagesTotal"),
-                    storeBox.WIDTH.as("width"),
-                    storeBox.ON_FRAME.as("onFrame"),
-                    storeBox.POINT.as("point"),
-                    storeBox.REMARK.as("remark")
-            ).from(storeBox)
+            list = selectJoinStep
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.ON_FRAME.equal(onFrame))
@@ -265,16 +248,7 @@ public class StoreQuery {
                             storeBox.ON_FRAME.equal(onFrame))
                     .fetch().getValue(0, 0);
         } else if (status == 1 && onFrame != 0) {
-            list = dslContext.select(storeBox.ID.as("id"),
-                    storeBox.CODE.as("code"),
-                    storeBox.FILES_TOTAL.as("filesTotal"),
-                    storeBox.PAGES_TOTAL.as("pagesTotal"),
-                    storeBox.MAX_PAGES_TOTAL.as("maxPagesTotal"),
-                    storeBox.WIDTH.as("width"),
-                    storeBox.ON_FRAME.as("onFrame"),
-                    storeBox.POINT.as("point"),
-                    storeBox.REMARK.as("remark")
-            ).from(storeBox)
+            list = selectJoinStep
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL),
@@ -290,16 +264,7 @@ public class StoreQuery {
                             storeBox.ON_FRAME.equal(onFrame))
                     .fetch().getValue(0, 0);
         } else if (status == 2 && onFrame != 0) {
-            list = dslContext.select(storeBox.ID.as("id"),
-                    storeBox.CODE.as("code"),
-                    storeBox.FILES_TOTAL.as("filesTotal"),
-                    storeBox.PAGES_TOTAL.as("pagesTotal"),
-                    storeBox.MAX_PAGES_TOTAL.as("maxPagesTotal"),
-                    storeBox.WIDTH.as("width"),
-                    storeBox.ON_FRAME.as("onFrame"),
-                    storeBox.POINT.as("point"),
-                    storeBox.REMARK.as("remark")
-            ).from(storeBox)
+            list = selectJoinStep
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"),
                             storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL),
@@ -316,16 +281,7 @@ public class StoreQuery {
                     .fetch().getValue(0, 0);
         } else {
             //全部
-            list = dslContext.select(storeBox.ID.as("id"),
-                    storeBox.CODE.as("code"),
-                    storeBox.FILES_TOTAL.as("filesTotal"),
-                    storeBox.PAGES_TOTAL.as("pagesTotal"),
-                    storeBox.MAX_PAGES_TOTAL.as("maxPagesTotal"),
-                    storeBox.WIDTH.as("width"),
-                    storeBox.ON_FRAME.as("onFrame"),
-                    storeBox.POINT.as("point"),
-                    storeBox.REMARK.as("remark")
-            ).from(storeBox)
+            list = selectJoinStep
                     .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
                             storeBox.CODE.like("%" + code + "%"))
                     .limit((pageNum - 1) * size, size)

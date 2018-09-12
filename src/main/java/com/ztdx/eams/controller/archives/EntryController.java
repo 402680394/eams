@@ -22,7 +22,6 @@ import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Permission;
 import org.apache.commons.lang.StringUtils;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -1935,7 +1934,7 @@ public class EntryController {
     }
 
     /**
-     * @api {get} /entry/statisticsTypeYear 统计（按档案类型-保管期限）
+     * @api {get} /entry/statisticsTypeYear 统计（按档案类型-年度）
      * @apiName statisticsTypeYear
      * @apiGroup entry
      * @apiParam {Number} fondsId 全宗号（url参数）

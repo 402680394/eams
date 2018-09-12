@@ -1,11 +1,13 @@
 package com.ztdx.eams.domain.system.application;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
+import com.ztdx.eams.domain.archives.application.event.ArchivesGroupDeleteEvent;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Organization;
 import com.ztdx.eams.domain.system.repository.FondsRepository;
 import com.ztdx.eams.domain.system.repository.OrganizationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +25,13 @@ public class FondsService {
 
     private final OrganizationRepository organizationRepository;
 
+    private final ApplicationContext applicationContext;
+
     @Autowired
-    public FondsService(FondsRepository fondsRepository, OrganizationRepository organizationRepository) {
+    public FondsService(FondsRepository fondsRepository, OrganizationRepository organizationRepository, ApplicationContext applicationContext) {
         this.fondsRepository = fondsRepository;
         this.organizationRepository = organizationRepository;
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -72,6 +77,8 @@ public class FondsService {
             organizationRepository.updatefondsIdByfondsId(id);
             //删除本全宗
             fondsRepository.updateGmtDeletedById(id, 1);
+
+            applicationContext.publishEvent(new ArchivesGroupDeleteEvent(this, id));
         }
     }
 

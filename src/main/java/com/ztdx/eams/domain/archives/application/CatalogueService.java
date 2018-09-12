@@ -21,27 +21,27 @@ public class CatalogueService {
         this.archivesRepository = archivesRepository;
     }
 
-    public List<Catalogue> findAllById(Collection<Integer> ids){
+    public List<Catalogue> findAllById(Collection<Integer> ids) {
         return catalogueRepository.findAllById(ids);
     }
 
-    public Catalogue get(int id){
+    public Catalogue get(int id) {
         return catalogueRepository.findById(id).orElse(null);
     }
 
-    public Catalogue getFolderFileCatalogueByFolderCatalogueId(int id){
+    public Catalogue getFolderFileCatalogueByFolderCatalogueId(int id) {
         Catalogue folder = catalogueRepository.findById(id).orElse(null);
-        if (folder == null){
+        if (folder == null) {
             return null;
         }
         Catalogue folderFile = catalogueRepository.findByArchivesIdAndCatalogueType(folder.getArchivesId(), CatalogueType.FolderFile).orElse(null);
-        if (folderFile == null){
+        if (folderFile == null) {
             return null;
         }
         return folderFile;
     }
 
-    public boolean exists(int id){
+    public boolean exists(int id) {
         return catalogueRepository.existsById(id);
     }
 
@@ -51,15 +51,15 @@ public class CatalogueService {
 
 
     public List<Catalogue> list(Integer archiveType) {
-        List<Archives> archives = archivesRepository.findByType(archiveType);
-        if (archives == null || archives.size() == 0){
+        List<Archives> archives = archivesRepository.findByTypeAndGmtDeleted(archiveType, 0);
+        if (archives == null || archives.size() == 0) {
             return null;
         }
         List<Integer> ids = archives.stream().map(Archives::getId).collect(Collectors.toList());
         return catalogueRepository.findAllByArchivesIdIn(ids);
     }
 
-    public List<Catalogue> getRelationCatalogueIds(List<Integer> mainCatalogueIds){
+    public List<Catalogue> getRelationCatalogueIds(List<Integer> mainCatalogueIds) {
         List<Integer> archiveIds = catalogueRepository.findAllById(mainCatalogueIds).stream().map(Catalogue::getArchivesId).collect(Collectors.toList());
         return catalogueRepository.findAllByArchivesIdInAndCatalogueType(archiveIds, CatalogueType.FolderFile);
     }
