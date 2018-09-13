@@ -1,7 +1,6 @@
 package com.ztdx.eams.query;
 
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.*;
@@ -34,6 +33,8 @@ public class StoreQuery {
     private final StoreShelf storeShelf = Tables.STORE_SHELF;
 
     private final StoreShelfCell storeShelfCell = Tables.STORE_SHELF_CELL;
+
+    private final ArchivesCatalogue archivesCatalogue = Tables.ARCHIVES_CATALOGUE;
 
     @Autowired
     public StoreQuery(DSLContext dslContext) {
@@ -314,49 +315,34 @@ public class StoreQuery {
     }
 
     /**
-     * 根据档案库id获取档案盒号规则应用信息
+     * 根据档案库id获取档案盒号规则信息
      */
-    public Map<String, Object> ruleApply(String fondsCode, UInteger archivesId, List<Map<String, Object>> descriptionItems, Entry entry) {
-        List<Map<String, Object>> rules = dslContext.select(storeBoxCodeRule.TYPE.as("type"),
-                storeBoxCodeRule.NAME.as("name"),
+    public List<Map<String, Object>> getBoxCodeRulesByArchivesId(UInteger archivesId) {
+        return dslContext.select(storeBoxCodeRule.TYPE.as("type"),
                 storeBoxCodeRule.VALUE.as("value"),
                 storeBoxCodeRule.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
                 storeBoxCodeRule.INTERCEPTION_LENGTH.as("interceptionLength"),
                 storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"),
-                storeBoxCodeRule.ORDER_NUMBER.as("orderNumber"))
+                storeBoxCodeRule.ORDER_NUMBER.as("orderNumber"),
+                storeBoxCodeRule.REMARK.as("remark"))
                 .from(storeBoxCodeRule)
                 .where(storeBoxCodeRule.ARCHIVES_ID.equal(archivesId))
                 .orderBy(storeBoxCodeRule.ORDER_NUMBER)
                 .fetch().intoMaps();
+    }
 
-        for (Map rule : rules) {
-            byte type = (byte) rule.get("type");
-            //1-著录项值
-            if (type == 1) {
-                UInteger descriptionItemId = (UInteger) rule.get("descriptionItemId");
-                for (Map descriptionItem : descriptionItems) {
-                    if (descriptionItemId.equals(descriptionItem.get("id"))) {
-                        rule.put("isDictionary", descriptionItem.get("isDictionary"));
-                        rule.put("dictionaryType", descriptionItem.get("dictionaryType"));
-                        rule.put("dictionaryNodeId", descriptionItem.get("dictionaryNodeId"));
-                        rule.put("dictionaryValueType", descriptionItem.get("dictionaryValueType"));
-                        rule.put("dictionaryRootSelect", descriptionItem.get("dictionaryRootSelect"));
-                        if (null != entry) {
-                            String metadataName = (String) descriptionItem.get("metadataName");
-                            rule.put("value", entry.getItems().get(metadataName));
-                        } else {
-                            rule.put("value", "");
-                        }
-                    }
-                }
-                //3-档案库所属全宗号
-            } else if (type == 2) {
-                rule.put("value", fondsCode);
-            }
-        }
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("items", rules);
-        return resultMap;
+    public List<Map<String, Object>> getBoxCodeRulesByCatalogueId(UInteger catalogueId) {
+        return dslContext.select(storeBoxCodeRule.TYPE.as("type"),
+                storeBoxCodeRule.VALUE.as("value"),
+                storeBoxCodeRule.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
+                storeBoxCodeRule.INTERCEPTION_LENGTH.as("interceptionLength"),
+                storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"),
+                storeBoxCodeRule.ORDER_NUMBER.as("orderNumber"),
+                storeBoxCodeRule.REMARK.as("remark"))
+                .from(storeBoxCodeRule, archivesCatalogue)
+                .where(storeBoxCodeRule.ARCHIVES_ID.equal(archivesCatalogue.ARCHIVES_ID), archivesCatalogue.ID.equal(catalogueId))
+                .orderBy(storeBoxCodeRule.ORDER_NUMBER)
+                .fetch().intoMaps();
     }
 
     public Map<String, Object> listShelf(String key, int storageId, Pageable pageable) {
@@ -448,5 +434,17 @@ public class StoreQuery {
                 .from(storeShelfCell)
                 .where(storeShelfCell.SHELF_ID.in(shelfIds))
                 .fetch().intoSet(storeShelfCell.POINT_CODE);
+    }
+
+    public Map<String, Object> getBoxCodeRule(UInteger id) {
+        return dslContext.select(storeBoxCodeRule.ID.as("id"),
+                storeBoxCodeRule.TYPE.as("type"),
+                storeBoxCodeRule.VALUE.as("value"),
+                storeBoxCodeRule.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
+                storeBoxCodeRule.INTERCEPTION_LENGTH.as("interceptionLength"),
+                storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"),
+                storeBoxCodeRule.ARCHIVES_ID.as("archivesId"),
+                storeBoxCodeRule.REMARK.as("remark"))
+                .from(storeBoxCodeRule).where(storeBoxCodeRule.ID.equal(id)).fetch().intoMaps().get(0);
     }
 }

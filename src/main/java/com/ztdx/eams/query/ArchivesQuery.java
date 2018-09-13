@@ -47,6 +47,8 @@ public class ArchivesQuery {
 
     private BusinessMetadata businessMetadata = Tables.BUSINESS_METADATA;
 
+    private ArchivesArchivalcodeRuler archivesArchivalcodeRuler = Tables.ARCHIVES_ARCHIVALCODE_RULER;
+
     @Autowired
     public ArchivesQuery(DSLContext dslContext) {
         this.dslContext = dslContext;
@@ -1265,5 +1267,27 @@ public class ArchivesQuery {
                 .from(archives)
                 .where(archives.ARCHIVES_GROUP_ID.equal(archivesGroupId), archives.GMT_DELETED.equal(0))
                 .fetch().intoMaps();
+    }
+
+    public List<Map<String, Object>> getArchivalCodeRules(UInteger id) {
+        return dslContext.select(archivesArchivalcodeRuler.ID.as("id"),
+                archivesArchivalcodeRuler.TYPE.as("type"),
+                archivesArchivalcodeRuler.VALUE.as("value"),
+                archivesArchivalcodeRuler.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
+                archivesArchivalcodeRuler.INTERCEPTION_LENGTH.as("interceptionLength"),
+                archivesArchivalcodeRuler.CATALOGUE_ID.as("catalogueId"),
+                archivesArchivalcodeRuler.REMARK.as("remark"))
+                .from(archivesArchivalcodeRuler).where(archivesArchivalcodeRuler.ID.equal(id)).fetch().intoMaps();
+    }
+
+    public Map<String, Object> getArchivalCodeRuler(UInteger id) {
+        return dslContext.select(archivesArchivalcodeRuler.ID.as("id"),
+                archivesArchivalcodeRuler.TYPE.as("type"),
+                archivesArchivalcodeRuler.VALUE.as("value"),
+                archivesArchivalcodeRuler.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
+                archivesArchivalcodeRuler.INTERCEPTION_LENGTH.as("interceptionLength"),
+                archivesArchivalcodeRuler.CATALOGUE_ID.as("catalogueId"),
+                archivesArchivalcodeRuler.REMARK.as("remark"))
+                .from(archivesArchivalcodeRuler).where(archivesArchivalcodeRuler.ID.equal(id)).fetch().intoMaps().get(0);
     }
 }

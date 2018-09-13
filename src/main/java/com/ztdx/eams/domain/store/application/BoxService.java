@@ -90,11 +90,13 @@ public class BoxService {
             , int total
             , int maxPagesTotal
             , String remark) {
+        //流水号项
+        BoxCodeRule boxCodeRule = boxCodeRuleRepository.findByArchivesIdAndType(archivesId, 4).orElse(null);
 
-        BoxCodeRule boxCodeRule = boxCodeRuleRepository.findByArchivesIdAndType(archivesId, 4);
+        int flowNumberLength = boxCodeRule == null ? 4 : boxCodeRule.getFlowNumberLength();
 
         NumberFormat formatter = NumberFormat.getNumberInstance();
-        formatter.setMinimumIntegerDigits(boxCodeRule.getFlowNumberLength());
+        formatter.setMinimumIntegerDigits(flowNumberLength);
         formatter.setGroupingUsed(false);
 
         List<Box> list = new ArrayList<>();
@@ -119,7 +121,7 @@ public class BoxService {
                     tmp = tmp / 10;
                     bit++;
                 }
-                if (bit > boxCodeRule.getFlowNumberLength()) {
+                if (bit > flowNumberLength) {
                     throw new InvalidArgumentException("流水号超出最大限制");
                 }
                 flowNumber = formatter.format(number);
