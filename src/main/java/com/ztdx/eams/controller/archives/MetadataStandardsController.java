@@ -19,10 +19,28 @@ public class MetadataStandardsController {
     private final MetadataStandardsService metadataStandardsService;
 
     private final ArchivesQuery archivesQuery;
+
     @Autowired
     public MetadataStandardsController(MetadataStandardsService metadataStandardsService, ArchivesQuery archivesQuery) {
         this.metadataStandardsService = metadataStandardsService;
         this.archivesQuery = archivesQuery;
+    }
+
+    /**
+     * @api {get} /metadataStandards/relationListForCatalogue 获取目录可关联的元数据规范
+     * @apiName relationListForCatalogue
+     * @apiGroup metadataStandards
+     * @apiParam {String{30}} catalogueId 名称(未输入传""值)(url参数)
+     * @apiSuccess (Success 200) {Number} id ID.
+     * @apiSuccess (Success 200) {String} code 编号.
+     * @apiSuccess (Success 200) {String} name 名称.
+     * @apiSuccess (Success 200) {String} remark 备注.
+     * @apiSuccessExample {json} Success-Response:
+     * {"data": {"items": [{"id": 1,"code": "编号","name": "名称","remark": "备注"}]}}.
+     */
+    @RequestMapping(value = "/relationListForCatalogue", method = RequestMethod.GET)
+    public Map<String, Object> relationListForCatalogue(@RequestParam("catalogueId") int catalogueId) {
+        return archivesQuery.getMetadataStandardsRelationList(UInteger.valueOf(catalogueId));
     }
 
     /**
@@ -38,13 +56,13 @@ public class MetadataStandardsController {
      * @apiSuccess (Success 200) {String} descriptionFile 描述文件.
      * @apiSuccess (Success 200) {String} edition 版本.
      * @apiSuccess (Success 200) {Number} orderNumber 排序号.
-     * @apiSuccess (Success 200) {Number} flag 是否启用(0-启用,2-禁用).
+     * @apiSuccess (Success 200) {Number} flag 是否启用(0-启用,1-禁用).
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccessExample {json} Success-Response:
      * {"data": {"items": [{"id": ID,"code": "编号","name": "名称","characterSet": 字符集,"releaseOrganization": "发布机构","descriptionFile": "描述文件","edition": "版本","orderNumber": 排序号,"flag": 是否启用,"remark": "备注"}]}}.
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list(@RequestParam(value = "name",defaultValue = "") String name) {
+    public Map<String, Object> list(@RequestParam(value = "name", defaultValue = "") String name) {
         return archivesQuery.getMetadataStandardsList(name);
     }
 

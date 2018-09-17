@@ -122,7 +122,7 @@ public class ClassificationController {
      * @api {delete} /classification/{id} 删除档案分类
      * @apiName delete
      * @apiGroup classification
-     * @apiParam {Number} id 全宗ID（url占位符）
+     * @apiParam {Number} id 档案分类ID（url占位符）
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {

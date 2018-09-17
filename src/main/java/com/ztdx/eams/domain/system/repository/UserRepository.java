@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
+import java.util.Collection;
 
 @Repository
 @Table(name = "sys_user")
@@ -61,4 +62,6 @@ public interface UserRepository
      * 通过用户名查询总数
      */
     boolean existsByUsernameAndId(String username, int id);
+
+    void deleteByIdIn(Collection<Integer> id);
 }

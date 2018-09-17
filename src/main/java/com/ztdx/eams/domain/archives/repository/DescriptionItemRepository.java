@@ -26,4 +26,6 @@ public interface DescriptionItemRepository extends JpaRepository<DescriptionItem
     DescriptionItem findByCatalogueIdAndPropertyType(int catalogueId, PropertyType propertyType);
 
     List<DescriptionItem> findByCatalogueIdIn(Collection<Integer> catalogueId);
+
+    void deleteByIdIn(Collection<Integer> id);
 }

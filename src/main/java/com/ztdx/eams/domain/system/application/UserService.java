@@ -59,7 +59,7 @@ public class UserService {
      */
     @Transactional
     public void delete(int id) {
-        if (userRepository.existsById(id)){
+        if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
         }
     }
@@ -68,12 +68,8 @@ public class UserService {
      * 通过id批量删除用户
      */
     @Transactional
-    public void listDelete(List<Integer> list) {
-        for (int id : list) {
-            if (userRepository.existsById(id)){
-                userRepository.deleteById(id);
-            }
-        }
+    public void listDelete(List<Integer> ids) {
+        userRepository.deleteByIdIn(ids);
     }
 
     /**
@@ -82,7 +78,7 @@ public class UserService {
     @Transactional
     public void listPassReset(List<Integer> list) {
         for (int id : list) {
-            if (userRepository.existsById(id)){
+            if (userRepository.existsById(id)) {
                 userRepository.updatePwdById(id, passwordEncoder.encode(initPassword));
             }
         }
@@ -93,7 +89,7 @@ public class UserService {
      */
     @Transactional
     public void changeFlag(int id, int flag) {
-        if (userRepository.existsById(id)){
+        if (userRepository.existsById(id)) {
             userRepository.updateFlagById(id, flag);
         }
     }
@@ -136,9 +132,9 @@ public class UserService {
     /**
      * 密码加密，不经常使用
      */
-    public void resetPwd(){
+    public void resetPwd() {
         List<User> list = userRepository.findAll();
-        for(User u : list){
+        for (User u : list) {
             String pwd = u.getPassword();
             pwd = passwordEncoder.encode(pwd);
             u.setPassword(pwd);
@@ -146,7 +142,7 @@ public class UserService {
         userRepository.saveAll(list);
     }
 
-    public User getByUserName(String userName){
+    public User getByUserName(String userName) {
         return userRepository.findByUsername(userName);
     }
 

@@ -1,13 +1,13 @@
 package com.ztdx.eams.controller.archives;
 
+import com.ztdx.eams.domain.archives.application.DescriptionItemService;
+import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,9 +19,12 @@ public class DescriptionItemController {
 
     private final ArchivesQuery archivesQuery;
 
+    private final DescriptionItemService descriptionItemService;
+
     @Autowired
-    public DescriptionItemController(ArchivesQuery archivesQuery) {
+    public DescriptionItemController(ArchivesQuery archivesQuery, DescriptionItemService descriptionItemService) {
         this.archivesQuery = archivesQuery;
+        this.descriptionItemService = descriptionItemService;
     }
 
     /**
@@ -171,5 +174,77 @@ public class DescriptionItemController {
     @RequestMapping(value = "/listForPlaceOnFile", method = RequestMethod.GET)
     public Map<String, Object> listForPlaceOnFile(@RequestParam("archivesId") int archivesId) {
         return archivesQuery.getDescriptionItemListForPlaceOnFile(UInteger.valueOf(archivesId));
+    }
+
+    /**
+     * @api {post} /descriptionItem 新增著录项
+     * @apiName save
+     * @apiGroup descriptionItem
+     * @apiParam {Number} parentId 上级档案分类ID（根节点传1）
+     * @apiError (Error 400) message 档案分类编码已存在.
+     * @apiUse ErrorExample
+     */
+//    @RequestMapping(value = "", method = RequestMethod.POST)
+//    public void save(@RequestBody List<Integer> metadataIds) {
+//        descriptionItemService.save(metadataIds);
+//    }
+
+    /**
+     * @api {delete} /descriptionItem/ 删除著录项
+     * @apiName delete
+     * @apiGroup descriptionItem
+     * @apiParam {Number[]} ids 著录项ID（url占位符）
+     */
+    @RequestMapping(value = "/", method = RequestMethod.DELETE)
+    public void delete(@RequestBody List<Integer> ids) {
+        descriptionItemService.delete(ids);
+    }
+
+    /**
+     * @api {put} /descriptionItem 修改著录项信息
+     * @apiName update
+     * @apiGroup descriptionItem
+     * @apiParam {Number} id 档案分类ID
+     * @apiParam {Number} parentId 上级档案分类ID（根节点传0）
+     * @apiParam {String{30}} code 档案分类编码
+     * @apiParam {String{30}} name 档案分类名称
+     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{20}} retentionPeriod 保管期限
+     * @apiError (Error 400) message 档案分类编码已存在.
+     * @apiUse ErrorExample
+     */
+//    @RequestMapping(value = "", method = RequestMethod.PUT)
+//    public void update(@RequestBody DescriptionItem descriptionItem) {
+//        descriptionItemService.update(descriptionItem);
+//    }
+
+    /**
+     * @api {get} /descriptionItem/{id} 获取著录项详情
+     * @apiName get
+     * @apiGroup descriptionItem
+     * @apiParam {Number} id 档案分类ID（url占位符）
+     * @apiSuccess (Success 200) {Number} id 著录项ID.
+     * @apiSuccess (Success 200) {String} metadataName 元数据名称.
+     * @apiSuccess (Success 200) {String} displayName 显示名称.
+     * @apiSuccess (Success 200) {Number} propertyType 属性类型标识.
+     * @apiSuccess (Success 200) {String} defaultValue 默认值.
+     * @apiSuccess (Success 200) {Number} dataType 数据类型(1 数值 2 字符串 3 日期 4 浮点).
+     * @apiSuccess (Success 200) {Number} fieldWidth 字典宽度.
+     * @apiSuccess (Success 200) {Number} fieldPrecision 字段精度.
+     * @apiSuccess (Success 200) {Number} displayWidth 显示宽度.
+     * @apiSuccess (Success 200) {Number} isIncrement 是否自增(0 否 1 是).
+     * @apiSuccess (Success 200) {Number} isRead 是否只读(0 否 1 是).
+     * @apiSuccess (Success 200) {Number} isNull 是否可空(0 否 1 是).
+     * @apiSuccess (Success 200) {Number} isDictionary 是否使用字典(0 否 1 是).
+     * @apiSuccess (Success 200) {Number} dictionaryType 字典类型(1 目录字典 2 档案分类 3 组织机构）.
+     * @apiSuccess (Success 200) {Number} dictionaryNodeId 字典节点标识（字典类型为目录字典时为字典分类ID，字典类型为档案分类时为上级档案分类节点ID，字典类型为目录字典时为上级组织机构节点ID）.
+     * @apiSuccess (Success 200) {Number} dictionaryValueType 字典获取值的方式(1 编码 2 名称 3 编码与名称 4 名称与编码）.
+     * @apiSuccess (Success 200) {Number} dictionaryRootSelect 字典中，是否根节点可选(0 不可选 1 可选)(当字典类型为“档案分类”、“组织结构”时有效).
+     * @apiSuccessExample {json} Success-Response:
+     * {"data":{"id": 档案分类ID,"code": "档案分类编码","name": "档案分类名称","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"remark": "备注"}}.
+     */
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public Map<String, Object> get(@PathVariable("id") int id) {
+        return archivesQuery.getDescriptionItem(UInteger.valueOf(id));
     }
 }

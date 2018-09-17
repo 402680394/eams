@@ -35,7 +35,7 @@ public class ArchivesController {
     }
 
     /**
-     * @api {get} /archives/treeList?archiveType={archiveType} 获取全宗、档案库分组、档案库、目录树
+     * @api {get} /archives/treeList?archiveType={archiveType} 获取全宗、库分组、库、目录树
      * @apiName treeList
      * @apiGroup archives
      * @apiParam {Number} archiveType 档案库类型 0 全部类型 1 登记库(默认值) 2 归档库
@@ -187,6 +187,43 @@ public class ArchivesController {
                 archiveType
                 , a -> hasPermission(fondsIds, a)
                 , a -> hasPermission(catalogueIds, a));
+    }
+
+    /**
+     * @api {get} /archives/fondsToArchivesGroupTree 获取全宗、库分组树
+     * @apiName fondsToArchivesGroupTree
+     * @apiGroup archives
+     * @apiSuccess (Success 200) {String} childrenType 节点类型(Fonds-全宗;ArchivesGroup-档案分组).
+     * @apiSuccess (Success 200) {Object[]} children 子节点信息
+     * @apiSuccess (Success 200) {Number} Fonds:id 全宗ID.
+     * @apiSuccess (Success 200) {String} Fonds:code 全宗号.
+     * @apiSuccess (Success 200) {String} Fonds:name 全宗名称.
+     * @apiSuccess (Success 200) {Number} Fonds:parentId 上级全宗ID.
+     * @apiSuccess (Success 200) {Number} Fonds:orderNumber 排序号.
+     * @apiSuccess (Success 200) {Number} Fonds:type 全宗类型
+     * @apiSuccess (Success 200) {Number} ArchivesGroup:id 档案库分组ID.
+     * @apiSuccess (Success 200) {String} ArchivesGroup:name 档案库分组名称.
+     * @apiSuccess (Success 200) {Number} ArchivesGroup:parentId 上级档案库分组ID.
+     * @apiSuccess (Success 200) {Number} ArchivesGroup:fondsId 所属全宗ID
+     * @apiSuccessExample {json} Success-Response:
+     * {"data": {"items": [{"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"children": [
+     * {"childrenType": "ArchivesGroup","id": 档案库分组ID,"name": "档案库分组名称","fondsId": 所属全宗ID,"parentId": 上级档案库分组ID,"children": [
+     * {"childrenType": "ArchivesGroup","id": 档案库分组ID,"name": "档案库分组名称","fondsId": 所属全宗ID,"parentId": 上级档案库分组ID}]},
+     * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型}]}]}}.
+     */
+    @RequestMapping(value = "/fondsToArchivesGroupTree", method = RequestMethod.GET)
+    public Map<String, Object> fondsToArchivesGroupTree(
+            @SessionAttribute(required = false) UserCredential LOGIN_USER) {
+        int userId;
+        if (LOGIN_USER != null) {
+            userId = LOGIN_USER.getUserId();
+        } else {
+            throw new ForbiddenException("拒绝访问");
+        }
+        //可以管理的全宗
+        Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
+
+        return archivesQuery.getFondsToArchivesGroupTree(a -> hasPermission(fondsIds, a));
     }
 
 
