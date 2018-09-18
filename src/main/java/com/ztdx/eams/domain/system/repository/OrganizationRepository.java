@@ -22,9 +22,6 @@ public interface OrganizationRepository extends JpaRepository<Organization, Inte
     //查询机构编码是否存在
     boolean existsByCode(String code);
 
-    //通过ID查询机构
-    Organization findById(int id);
-
     //通过ID查询机构是否存在
     boolean existsById(int id);
 

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -33,6 +34,8 @@ public class FileTypeController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list() {
-        return archivesQuery.getFileTypeList();
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("items", archivesQuery.getFileTypeList());
+        return resultMap;
     }
 }

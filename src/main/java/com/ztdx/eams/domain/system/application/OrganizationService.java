@@ -88,8 +88,8 @@ public class OrganizationService {
      */
     @Transactional
     public void priority(int upId, int downId) {
-        Organization up = organizationRepository.findById(upId);
-        Organization down = organizationRepository.findById(downId);
+        Organization up = organizationRepository.findById(upId).orElse(null);
+        Organization down = organizationRepository.findById(downId).orElse(null);
         if (up == null || down == null) {
             throw new InvalidArgumentException("机构不存在或已被删除");
         }
@@ -111,7 +111,7 @@ public class OrganizationService {
                 throw new InvalidArgumentException("根节点无法创建部门与科室");
             }
         } else {
-            Organization parent = organizationRepository.findById((int) organization.getParentId());
+            Organization parent = organizationRepository.findById(organization.getParentId()).orElse(null);
             if (organization.getType() == 1 && parent.getType() == 2) {
                 throw new InvalidArgumentException("部门下无法创建公司");
             }
@@ -122,12 +122,12 @@ public class OrganizationService {
     }
 
     public Organization get(int id) {
-        return organizationRepository.findById(id);
+        return organizationRepository.findById(id).orElse(null);
     }
 
-    public Map<Integer, List<String>> listDepartmentAndCompany(Collection<Integer> ids){
+    public Map<Integer, List<String>> listDepartmentAndCompany(Collection<Integer> ids) {
         List<Organization> organizations = organizationRepository.findAll();
-        Map<Integer, Organization> map = organizations.stream().collect(Collectors.toMap(Organization::getId, a->a));
+        Map<Integer, Organization> map = organizations.stream().collect(Collectors.toMap(Organization::getId, a -> a));
         Map<Integer, List<String>> result = new HashMap<>();
         ids.forEach(a -> {
             List<String> find = Arrays.asList("", "");
@@ -137,24 +137,24 @@ public class OrganizationService {
         return result;
     }
 
-    private List<String> findCompany(Map<Integer, Organization> map, Integer id, List<String> result){
+    private List<String> findCompany(Map<Integer, Organization> map, Integer id, List<String> result) {
         Organization organization = map.get(id);
-        if (organization == null){
+        if (organization == null) {
             return result;
         }
 
         List<String> find;
 
-        if (organization.getType() == 2){
+        if (organization.getType() == 2) {
             find = Arrays.asList(organization.getName(), "");
-        }else if (organization.getType() == 1){
+        } else if (organization.getType() == 1) {
             find = Arrays.asList(result.get(0), organization.getName());
             return find;
-        }else{
+        } else {
             find = result;
         }
 
-        if (organization.getParentId() != null){
+        if (organization.getParentId() != null) {
             return findCompany(map, organization.getParentId(), find);
         }
 

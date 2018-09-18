@@ -25,9 +25,6 @@ public interface ClassificationRepository extends JpaRepository<Classification, 
     // 通过父ID查询子档案分类是否存在
     boolean existsByParentId(int id);
 
-    //通过ID查询
-    Classification findById(int id);
-
     //通过ID修改
     @Modifying
     @Query("update Classification c set c.parentId=:#{#classification.parentId},c.code=:#{#classification.code},c.name=:#{#classification.name},c.remark=:#{#classification.remark},c.retentionPeriod=:#{#classification.retentionPeriod} where c.id=:#{#classification.id}")

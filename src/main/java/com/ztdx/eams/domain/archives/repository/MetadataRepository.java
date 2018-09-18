@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by li on 2018/4/22.
@@ -21,6 +23,8 @@ public interface MetadataRepository extends JpaRepository<Metadata, Integer> {
     void deleteByMetadataStandardsId(int metadataStandardsId);
 
     Metadata findById(int id);
+
+    List<Metadata> findByIdIn(Collection<Integer> ids);
 
     boolean existsByName(String name);
 

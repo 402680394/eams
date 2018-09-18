@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -35,6 +36,8 @@ public class ContentTypeController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list() {
-        return archivesQuery.getContentTypeList();
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("items", archivesQuery.getContentTypeList());
+        return resultMap;
     }
 }

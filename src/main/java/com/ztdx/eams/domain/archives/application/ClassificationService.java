@@ -28,9 +28,9 @@ public class ClassificationService {
 
         //设置同级机构排序号
         Integer orderNumber = classificationRepository.findMaxOrderNumber(classification.getParentId());
-        if (orderNumber!=null){
+        if (orderNumber != null) {
             classification.setOrderNumber(orderNumber + 1);
-        }else{
+        } else {
             classification.setOrderNumber(1);
         }
         //存储数据
@@ -42,7 +42,7 @@ public class ClassificationService {
      */
     @Transactional
     public void delete(int id) {
-        if(classificationRepository.existsById(id)){
+        if (classificationRepository.existsById(id)) {
             //是否存在子档案分类
             if (classificationRepository.existsByParentId(id)) {
                 throw new InvalidArgumentException("该档案分类下存在子档案分类");
@@ -66,15 +66,19 @@ public class ClassificationService {
      */
     @Transactional
     public void priority(int upId, int downId) {
-        Classification up=classificationRepository.findById(upId);
-        Classification down=classificationRepository.findById(downId);
-        if(up==null||down==null){
+        Classification up = classificationRepository.findById(upId).orElse(null);
+        Classification down = classificationRepository.findById(downId).orElse(null);
+        if (up == null || down == null) {
             throw new InvalidArgumentException("档案分类不存在或已被删除");
         }
-        if(up.getParentId()!=down.getParentId()){
+        if (up.getParentId() != down.getParentId()) {
             throw new InvalidArgumentException("档案分类类型或上级档案分类不一致");
         }
-        classificationRepository.updateOrderNumberById(upId,down.getOrderNumber());
-        classificationRepository.updateOrderNumberById(downId,up.getOrderNumber());
+        classificationRepository.updateOrderNumberById(upId, down.getOrderNumber());
+        classificationRepository.updateOrderNumberById(downId, up.getOrderNumber());
+    }
+
+    public Classification get(int id) {
+        return classificationRepository.findById(id).orElse(null);
     }
 }

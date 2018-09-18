@@ -1,28 +1,25 @@
 package com.ztdx.eams.domain.archives.application;
 
-import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.basic.utils.DateUtils;
+import com.ztdx.eams.domain.archives.model.Catalogue;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
-import com.ztdx.eams.domain.archives.model.DescriptionItemDataType;
-import com.ztdx.eams.domain.archives.model.Entry;
+import com.ztdx.eams.domain.archives.model.Metadata;
 import com.ztdx.eams.domain.archives.model.PropertyType;
+import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.metrics.max.Max;
+import com.ztdx.eams.domain.archives.repository.MetadataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static jdk.nashorn.internal.objects.Global.Infinity;
 
 @Service
 public class DescriptionItemService {
@@ -31,10 +28,16 @@ public class DescriptionItemService {
 
     private final ElasticsearchOperations elasticsearchOperations;
 
+    private final MetadataRepository metadataRepository;
+
+    private final CatalogueRepository catalogueRepository;
+
     @Autowired
-    public DescriptionItemService(DescriptionItemRepository descriptionItemRepository, ElasticsearchOperations elasticsearchOperations) {
+    public DescriptionItemService(DescriptionItemRepository descriptionItemRepository, ElasticsearchOperations elasticsearchOperations, MetadataRepository metadataRepository, CatalogueRepository catalogueRepository) {
         this.descriptionItemRepository = descriptionItemRepository;
         this.elasticsearchOperations = elasticsearchOperations;
+        this.metadataRepository = metadataRepository;
+        this.catalogueRepository = catalogueRepository;
     }
 
     public <R> Map<String, R> list(int catalogueId, Function<DescriptionItem, R> map) {
@@ -56,6 +59,48 @@ public class DescriptionItemService {
 
     public List<DescriptionItem> findByCatalogueId(int catalogueId) {
         return descriptionItemRepository.findByCatalogueId(catalogueId);
+    }
+
+
+    public DescriptionItem findByCatalogueIdAndPropertyType(int catalogueId, PropertyType boxNumber) {
+        return descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, boxNumber);
+    }
+
+    @Transactional
+    public void delete(List<Integer> ids) {
+        descriptionItemRepository.deleteByIdIn(ids);
+    }
+
+    @Transactional
+    public void save(int catalogueId, List<Integer> metadataIds) {
+        Catalogue catalogue = catalogueRepository.findById(catalogueId).orElse(null);
+        if (null == catalogue) {
+            throw new BusinessException("目录不存在");
+        }
+        List<Metadata> metadatas = metadataRepository.findByIdIn(metadataIds);
+        List<DescriptionItem> descriptionItems = new ArrayList<>();
+        for (Metadata metadata : metadatas) {
+            if (metadata.getMetadataStandardsId() != catalogue.getMetadataStandardsId()) {
+                throw new InvalidArgumentException("元数据不在目录绑定的元数据规范中");
+            }
+            DescriptionItem descriptionItem = new DescriptionItem();
+            descriptionItem.setCatalogueId(catalogueId);
+            descriptionItem.setMetadataId(metadata.getId());
+            descriptionItem.setMetadataName(metadata.getName());
+            descriptionItem.setDisplayName(metadata.getDisplayName());
+            descriptionItem.setPropertyType(metadata.getFieldProperties());
+            descriptionItem.setDefaultValue(metadata.getDefaultValue());
+            descriptionItem.setDataType(metadata.getDataType());
+            descriptionItem.setFieldWidth(metadata.getFieldWidth());
+            descriptionItem.setFieldPrecision(metadata.getFieldPrecision());
+
+            descriptionItems.add(descriptionItem);
+        }
+        descriptionItemRepository.saveAll(descriptionItems);
+    }
+    @Transactional
+    public void update(DescriptionItem descriptionItem) {
+        descriptionItemRepository.updateById(descriptionItem);
     }
 
 //    //新增条目数据验证
@@ -234,12 +279,4 @@ public class DescriptionItemService {
 //        return string.matches(pattern);
 //    }
 
-    public DescriptionItem findByCatalogueIdAndPropertyType(int catalogueId, PropertyType boxNumber) {
-        return descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, boxNumber);
-    }
-
-    @Transactional
-    public void delete(List<Integer> ids) {
-        descriptionItemRepository.deleteByIdIn(ids);
-    }
 }

@@ -49,16 +49,14 @@ public class DescriptionItem {
     @Column(name = "default_value")
     private DefaultValue defaultValue;
 
-    //数据类型(1 数值 2 字符串 3 日期 4 浮点)
+    //数据类型
     @Convert(converter = DescriptionItemDataType.EnumConverter.class)
-    @Min(value = 1)
-    @Max(value = 4)
     @Column(name = "data_type")
     private DescriptionItemDataType dataType;
 
     //显示宽度
-    @Column(name = "display_width")
-    private Integer displayWidth;
+//    @Column(name = "display_width")
+//    private Integer displayWidth;
 
     //字段宽度
     @Column(name = "field_width")
@@ -109,17 +107,18 @@ public class DescriptionItem {
     private int isDictionary;
 
     //字典类型(1 目录字典 2 档案分类 3 组织机构）
-    @Min(value = 1)
+    @Min(value = 0)
     @Max(value = 3)
     @Column(name = "dictionary_type")
     private int dictionaryType;
 
     //字典节点标识
+    @Min(value = 0)
     @Column(name = "dictionary_node_id")
     private int dictionaryNodeId;
 
     //字典获取值的方式(1 编码 2 名称 3 编码与名称 4 名称与编码）
-    @Min(value = 1)
+    @Min(value = 0)
     @Max(value = 4)
     @Column(name = "dictionary_value_type")
     private int dictionaryValueType;

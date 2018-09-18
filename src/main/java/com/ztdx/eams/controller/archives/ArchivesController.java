@@ -293,16 +293,16 @@ public class ArchivesController {
     }
 
     /**
-     * @api {get} /archives/{archivesGroupId} 获取档案库分组下档案库、目录列表
+     * @api {get} /archives/archivesToCatalogueTree 获取档案库分组下档案库、目录列表
      * @apiName archivesToCatalogueTree
      * @apiGroup archives
-     * @apiParam {Number} archivesGroupId 档案库分组ID（url占位符）
+     * @apiParam {Number} archivesGroupId 档案库分组ID
      * @apiSuccess (Success 200) {String} childrenType 节点类型(Archives-档案库;Catalogue-目录).
      * @apiSuccess (Success 200) {Number} Archives:id 档案库ID
      * @apiSuccess (Success 200) {Number} Archives:structure 档案库结构(1 一文一件；2 案卷；3 项目)
      * @apiSuccess (Success 200) {Number} Archives:name 档案库名称
      * @apiSuccess (Success 200) {Number} Archives:archivesGroupId 所属档案库分组ID
-     * @apiSuccess (Success 200) {Number} Archives:contentTypeId 档案库内容类型ID
+     * @apiSuccess (Success 200) {Number} Archives:contentType 档案库内容类型
      * @apiSuccess (Success 200) {Number} Archives:type 档案库类型(1 登记库； 2 归档库)
      * @apiSuccess (Success 200) {Number} Catalogue:id 目录ID
      * @apiSuccess (Success 200) {Number} Catalogue:catalogueType 目录类型(1 一文一件/卷内 2 案卷 3 项目）
@@ -311,8 +311,8 @@ public class ArchivesController {
      * {"data":{"items": {"childrenType": "Archives","id": 档案库ID,"structure": 档案库结构,"name": "档案库名称","archivesGroupId": 所属档案库分组ID,"type": 档案库类型,"children": [
      * {"childrenType": "Catalogue","id": 目录ID,"catalogueType": 目录类型,"archivesId": 档案库ID}]}}}.
      */
-    @RequestMapping(value = "/{archivesGroupId}", method = RequestMethod.GET)
-    public Map<String, Object> archivesToCatalogueTree(@PathVariable("archivesGroupId") int archivesGroupId) {
+    @RequestMapping(value = "/archivesToCatalogueTree", method = RequestMethod.GET)
+    public Map<String, Object> archivesToCatalogueTree(@RequestParam("archivesGroupId") int archivesGroupId) {
         return archivesQuery.getArchivesToCatalogueTree(UInteger.valueOf(archivesGroupId));
     }
 

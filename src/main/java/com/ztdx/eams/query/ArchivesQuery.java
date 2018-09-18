@@ -973,27 +973,21 @@ public class ArchivesQuery {
     /**
      * 查询库内容类型列表
      */
-    public Map<String, Object> getContentTypeList() {
-        Map<String, Object> resultMap = new HashMap<>();
-        List<Map<String, Object>> list = dslContext.select(archivesContentType.ID.as("id"),
+    public List<Map<String, Object>> getContentTypeList() {
+        return dslContext.select(archivesContentType.ID.as("id"),
                 archivesContentType.NAME.as("name"))
                 .from(archivesContentType)
                 .fetch().intoMaps();
-        resultMap.put("items", list);
-        return resultMap;
     }
 
     /**
      * 查询文件类型列表
      */
-    public Map<String, Object> getFileTypeList() {
-        Map<String, Object> resultMap = new HashMap<>();
-        List<Map<String, Object>> list = dslContext.select(archivesFileType.ID.as("id"),
+    public List<Map<String, Object>> getFileTypeList() {
+        return dslContext.select(archivesFileType.ID.as("id"),
                 archivesFileType.NAME.as("name"))
                 .from(archivesFileType)
                 .fetch().intoMaps();
-        resultMap.put("items", list);
-        return resultMap;
     }
 
     /**
@@ -1018,8 +1012,7 @@ public class ArchivesQuery {
                 archivesDescriptionItem.DICTIONARY_TYPE.as("dictionaryType"),
                 archivesDescriptionItem.DICTIONARY_NODE_ID.as("dictionaryNodeId"),
                 archivesDescriptionItem.DICTIONARY_VALUE_TYPE.as("dictionaryValueType"),
-                archivesDescriptionItem.DICTIONARY_ROOT_SELECT.as("dictionaryRootSelect"),
-                archivesDescriptionItem.DISPLAY_WIDTH.as("displayWidth"))
+                archivesDescriptionItem.DICTIONARY_ROOT_SELECT.as("dictionaryRootSelect"))
                 .from(archivesDescriptionItem)
                 .where(archivesDescriptionItem.CATALOGUE_ID.equal(catalogueId))
                 .fetch().intoMaps();
@@ -1267,10 +1260,10 @@ public class ArchivesQuery {
                 archives.STRUCTURE.as("structure"),
                 archives.NAME.as("name"),
                 archives.ARCHIVES_GROUP_ID.as("archivesGroupId"),
-                archives.CONTENT_TYPE_ID.as("contentTypeId"),
+                archivesContentType.NAME.as("contentType"),
                 archives.TYPE.as("type"))
-                .from(archives)
-                .where(archives.ARCHIVES_GROUP_ID.equal(archivesGroupId), archives.GMT_DELETED.equal(0))
+                .from(archives, archivesContentType)
+                .where(archives.ARCHIVES_GROUP_ID.equal(archivesGroupId), archives.GMT_DELETED.equal(0), archivesContentType.ID.equal(archives.CONTENT_TYPE_ID))
                 .fetch().intoMaps();
     }
 
@@ -1433,8 +1426,7 @@ public class ArchivesQuery {
                 archivesDescriptionItem.DICTIONARY_TYPE.as("dictionaryType"),
                 archivesDescriptionItem.DICTIONARY_NODE_ID.as("dictionaryNodeId"),
                 archivesDescriptionItem.DICTIONARY_VALUE_TYPE.as("dictionaryValueType"),
-                archivesDescriptionItem.DICTIONARY_ROOT_SELECT.as("dictionaryRootSelect"),
-                archivesDescriptionItem.DISPLAY_WIDTH.as("displayWidth"))
+                archivesDescriptionItem.DICTIONARY_ROOT_SELECT.as("dictionaryRootSelect"))
                 .from(archivesDescriptionItem)
                 .where(archivesDescriptionItem.ID.equal(id))
                 .fetch().intoMaps().get(0);

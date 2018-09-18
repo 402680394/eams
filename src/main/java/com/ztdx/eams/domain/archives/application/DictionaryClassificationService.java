@@ -23,6 +23,7 @@ public class DictionaryClassificationService {
         this.dictionaryClassificationRepository = dictionaryClassificationRepository;
         this.dictionaryRepository = dictionaryRepository;
     }
+
     /**
      * 新增词典分类
      */
@@ -34,6 +35,7 @@ public class DictionaryClassificationService {
         //存储数据
         dictionaryClassificationRepository.save(dictionaryClassification);
     }
+
     /**
      * 删除词典分类
      */
@@ -46,6 +48,7 @@ public class DictionaryClassificationService {
             dictionaryClassificationRepository.deleteById(id);
         }
     }
+
     /**
      * 修改词典分类
      */
@@ -60,5 +63,9 @@ public class DictionaryClassificationService {
         if (dictionaryClassificationRepository.existsById(dictionaryClassification.getId())) {
             dictionaryClassificationRepository.updateById(dictionaryClassification);
         }
+    }
+
+    public DictionaryClassification get(int id) {
+        return dictionaryClassificationRepository.findById(id).orElse(null);
     }
 }
