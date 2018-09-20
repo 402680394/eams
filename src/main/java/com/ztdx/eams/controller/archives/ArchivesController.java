@@ -260,7 +260,7 @@ public class ArchivesController {
      * @api {put} /archives 修改档案库
      * @apiName update
      * @apiGroup archives
-     * @apiParam {Number} archivesId 档案库ID
+     * @apiParam {Number} id 档案库ID
      * @apiParam {String{30}} name 档案库名称
      * @apiParam {Number} archivesGroupId 档案库分组ID
      * @apiParam {String{100}} remark 备注（未输入传""值）

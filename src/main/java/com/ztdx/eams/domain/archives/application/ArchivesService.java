@@ -7,6 +7,7 @@ import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +34,7 @@ public class ArchivesService {
     /**
      * 创建档案库
      */
+    @Transactional
     public void save(Archives archives) {
         archives = archivesRepository.save(archives);
         switch (archives.getStructure()) {
@@ -76,10 +78,12 @@ public class ArchivesService {
         return archivesRepository.findArchivesNameByCatalogue_CatalogueId(catalogueId);
     }
 
+    @Transactional
     public void delete(int id) {
         archivesRepository.setDeleteById(id, 1);
     }
 
+    @Transactional
     public void update(Archives archives) {
         archivesRepository.update(archives);
     }
