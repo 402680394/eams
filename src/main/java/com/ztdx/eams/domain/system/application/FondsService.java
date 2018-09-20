@@ -55,7 +55,7 @@ public class FondsService {
 
         //关联机构
         for (int orgId : associationList) {
-            Organization organization = organizationRepository.findById(orgId);
+            Organization organization = organizationRepository.findById(orgId).orElse(null);
             if (null != organization.getFondsId()) {
                 throw new InvalidArgumentException("机构已被其它全宗关联");
             }
@@ -98,7 +98,7 @@ public class FondsService {
         organizationRepository.updatefondsIdByfondsId(fonds.getId());
         //关联新机构
         for (int orgId : associationList) {
-            Organization organization = organizationRepository.findById(orgId);
+            Organization organization = organizationRepository.findById(orgId).orElse(null);
             if (null != organization.getFondsId()) {
                 throw new InvalidArgumentException("机构已被其它全宗关联");
             }

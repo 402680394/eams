@@ -1198,7 +1198,7 @@ public class ArchivesQuery {
                 archivesGroup.REMARK.as("remark"),
                 archivesGroup.PARENT_ID.as("parentId"))
                 .from(archivesGroup)
-                .where(archivesGroup.FONDS_ID.equal(fondsId))
+                .where(archivesGroup.FONDS_ID.equal(fondsId), archivesGroup.GMT_DELETED.equal(0))
                 .fetch().intoMaps();
     }
 

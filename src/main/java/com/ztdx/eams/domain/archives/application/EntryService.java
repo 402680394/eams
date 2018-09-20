@@ -169,7 +169,7 @@ public class EntryService {
         return update;
     }
 
-    private void initIndex(int catalogueId) {
+    public void initIndex(int catalogueId) {
         try {
             entryElasticsearchRepository.createIndex(this.getIndexName(catalogueId));
         } catch (IOException e) {

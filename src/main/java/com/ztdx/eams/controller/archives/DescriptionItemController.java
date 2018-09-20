@@ -4,6 +4,7 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.application.ClassificationService;
 import com.ztdx.eams.domain.archives.application.DescriptionItemService;
 import com.ztdx.eams.domain.archives.application.DictionaryClassificationService;
+import com.ztdx.eams.domain.archives.application.EntryService;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import com.ztdx.eams.domain.system.application.OrganizationService;
 import com.ztdx.eams.query.ArchivesQuery;
@@ -31,13 +32,16 @@ public class DescriptionItemController {
 
     private final OrganizationService organizationService;
 
+    private final EntryService entryService;
+
     @Autowired
-    public DescriptionItemController(ArchivesQuery archivesQuery, DescriptionItemService descriptionItemService, ClassificationService classificationService, DictionaryClassificationService dictionaryClassificationService, OrganizationService organizationService) {
+    public DescriptionItemController(ArchivesQuery archivesQuery, DescriptionItemService descriptionItemService, ClassificationService classificationService, DictionaryClassificationService dictionaryClassificationService, OrganizationService organizationService, EntryService entryService) {
         this.archivesQuery = archivesQuery;
         this.descriptionItemService = descriptionItemService;
         this.classificationService = classificationService;
         this.dictionaryClassificationService = dictionaryClassificationService;
         this.organizationService = organizationService;
+        this.entryService = entryService;
     }
 
     /**
@@ -203,6 +207,7 @@ public class DescriptionItemController {
         int catalogueId = (int) map.get("catalogueId");
         List<Integer> metadataIds = (List<Integer>) map.get("metadataIds");
         descriptionItemService.save(catalogueId, metadataIds);
+        entryService.initIndex(catalogueId);
     }
 
     /**

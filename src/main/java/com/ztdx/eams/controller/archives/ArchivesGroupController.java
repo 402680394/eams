@@ -58,7 +58,7 @@ public class ArchivesGroupController {
      * @api {put} /archivesGroup 修改档案库分组
      * @apiName update
      * @apiGroup archivesGroup
-     * @apiParam {Number} archivesGroup 档案库分组ID
+     * @apiParam {Number} id 档案库分组ID
      * @apiParam {Number} parentId 上级档案库分组ID（根节点传0）
      * @apiParam {String{30}} name 档案库分组名称
      * @apiParam {String{100}} remark 备注（未输入传""值）
