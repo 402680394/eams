@@ -90,7 +90,7 @@ public class ArchivalCodeRulerController {
      * @apiName list
      * @apiGroup archivalCode
      * @apiParam {Number} catalogueId 目录ID(url参数)
-     * @apiSuccess (Success 200) {Number} type 规则类型（1-著录项值 2-全宗号 3-固定值 4-流水号）.
+     * @apiSuccess (Success 200) {Number} type 规则类型(1-著录项值 2-著录项所对应的参照编码 3-档案库所属单位全宗号 4-固定值).
      * @apiSuccess (Success 200) {String} value 值.
      * @apiSuccess (Success 200) {Number} interceptionLength 截取长度.
      * @apiSuccess (Success 200) {Number} remark 备注.
@@ -111,7 +111,7 @@ public class ArchivalCodeRulerController {
      * @api {post} /archivalCode 新增档号规则
      * @apiName save
      * @apiGroup archivalCode
-     * @apiParam {Number} type 类型 (1-著入项值 2-著录项所对应的参照编码 3-档案库所属单位全宗号 4-固定值)
+     * @apiParam {Number} type 类型 (1-著录项值 2-著录项所对应的参照编码 3-档案库所属单位全宗号 4-固定值)
      * @apiParam {String{10}} value 值(类型为固定值时传递)
      * @apiParam {Number} descriptionItemId 著录项id(类型为著录项值时传递)
      * @apiParam {Number} interceptionLength 截取长度(类型为著录项值时传递)

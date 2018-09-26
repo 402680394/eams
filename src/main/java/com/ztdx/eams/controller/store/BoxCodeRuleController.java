@@ -54,7 +54,7 @@ public class BoxCodeRuleController {
      * @apiGroup boxCodeRule
      * @apiParam {Number} archivesId 所属库ID(url参数)
      * @apiParam {String} entryId 条目ID(url参数)(非必须)
-     * @apiSuccess (Success 200) {Number} type 规则类型（1-著录项值 2-全宗号 3-固定值 4-流水号）.
+     * @apiSuccess (Success 200) {Number} type 规则类型（1-著录项值 2-档案库所属单位全宗号 3-固定值 4-流水号）.
      * @apiSuccess (Success 200) {String} name 名称.
      * @apiSuccess (Success 200) {String} value 值.
      * @apiSuccess (Success 200) {Number} isDictionary 是否使用字典(0 否 1 是).
@@ -121,11 +121,12 @@ public class BoxCodeRuleController {
     }
 
     /**
-     * @api {get} /boxCodeRule/list 通过目录id查询盒号规则列表
+     * @api {get} /boxCodeRule/list 通过档案库id查询盒号规则列表
      * @apiName list
      * @apiGroup boxCodeRule
      * @apiParam {Number} archivesId 所属档案库ID(url参数)
-     * @apiSuccess (Success 200) {Number} type 规则类型（1-著录项值 2-全宗号 3-固定值 4-流水号）.
+     * @apiSuccess (Success 200) {Number} id ID.
+     * @apiSuccess (Success 200) {Number} type 规则类型（1-著录项值 2-档案库所属单位全宗号 3-固定值 4-流水号）.
      * @apiSuccess (Success 200) {String} value 值.
      * @apiSuccess (Success 200) {Number} interceptionLength 截取长度.
      * @apiSuccess (Success 200) {Number} flowNumberLength 流水号长度.
@@ -147,7 +148,7 @@ public class BoxCodeRuleController {
      * @api {post} /boxCodeRule 新增盒号规则
      * @apiName save
      * @apiGroup boxCodeRule
-     * @apiParam {Number} type 类型 （1-著录项值 2-全宗号 3-固定值 4-流水号）
+     * @apiParam {Number} type 类型 （1-著录项值 2-档案库所属单位全宗号 3-固定值 4-流水号）
      * @apiParam {String{10}} value 值(类型为固定值时传递)
      * @apiParam {Number} descriptionItemId 著录项id(类型为著录项值时传递)
      * @apiParam {Number} interceptionLength 截取长度(类型为著录项值时传递)
@@ -180,7 +181,7 @@ public class BoxCodeRuleController {
      * @apiName update
      * @apiGroup boxCodeRule
      * @apiParam {Number} id ID
-     * @apiParam {Number} type 类型 （1-著录项值 2-全宗号 3-固定值 4-流水号）
+     * @apiParam {Number} type 类型 （1-著录项值 2-档案库所属单位全宗号 3-固定值 4-流水号）
      * @apiParam {String{10}} value 值(类型为固定值时传递)
      * @apiParam {Number} descriptionItemId 著录项id(类型为著录项值时传递)
      * @apiParam {Number} interceptionLength 截取长度(类型为著录项值时传递)
@@ -203,7 +204,7 @@ public class BoxCodeRuleController {
      * @apiGroup boxCodeRule
      * @apiParam {Number} id 档案库ID（url占位符）
      * @apiSuccess (Success 200) {Number} id 档案库ID.
-     * @apiSuccess (Success 200) {Number} type 类型 （1-著录项值 2-全宗号 3-固定值 4-流水号）.
+     * @apiSuccess (Success 200) {Number} type 类型 （1-著录项值 2-档案库所属单位全宗号 3-固定值 4-流水号）.
      * @apiSuccess (Success 200) {String} value 值.
      * @apiSuccess (Success 200) {Number} descriptionItemId 著录项id.
      * @apiSuccess (Success 200) {Number} interceptionLength 截取长度.

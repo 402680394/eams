@@ -14,7 +14,7 @@ public enum RulerType {
     /**
      * 著入项值
      */
-    EntryValue(1,"著入项值"),
+    EntryValue(1,"著录项值"),
 
     /**
      * 著录项所对应的参照编码

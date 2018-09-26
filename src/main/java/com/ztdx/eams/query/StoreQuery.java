@@ -318,7 +318,8 @@ public class StoreQuery {
      * 根据档案库id获取档案盒号规则信息
      */
     public List<Map<String, Object>> getBoxCodeRulesByArchivesId(UInteger archivesId) {
-        return dslContext.select(storeBoxCodeRule.TYPE.as("type"),
+        return dslContext.select(storeBoxCodeRule.ID.as("id"),
+                storeBoxCodeRule.TYPE.as("type"),
                 storeBoxCodeRule.VALUE.as("value"),
                 storeBoxCodeRule.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
                 storeBoxCodeRule.INTERCEPTION_LENGTH.as("interceptionLength"),

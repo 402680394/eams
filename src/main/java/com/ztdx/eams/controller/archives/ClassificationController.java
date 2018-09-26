@@ -1,13 +1,18 @@
 package com.ztdx.eams.controller.archives;
 
+import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.ClassificationService;
 import com.ztdx.eams.domain.archives.model.Classification;
+import com.ztdx.eams.domain.system.application.PermissionService;
+import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by li on 2018/4/18.
@@ -20,10 +25,17 @@ public class ClassificationController {
 
     private final ArchivesQuery archivesQuery;
 
+
+    private final RoleService roleService;
+
+    private final PermissionService permissionService;
+
     @Autowired
-    public ClassificationController(ClassificationService classificationService, ArchivesQuery archivesQuery) {
+    public ClassificationController(ClassificationService classificationService, ArchivesQuery archivesQuery, RoleService roleService, PermissionService permissionService) {
         this.classificationService = classificationService;
         this.archivesQuery = archivesQuery;
+        this.roleService = roleService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -51,7 +63,7 @@ public class ClassificationController {
 
     /**
      * @api {get} /classification/fondsAndClassificationTreeList 著录项设置档案分类下拉树
-     * @apiName treeList
+     * @apiName fondsAndClassificationTreeList
      * @apiGroup classification
      * @apiSuccess (Success 200) {String} childrenType 节点类型(1.Classification-档案分类;2.Fonds-全宗).
      * @apiSuccess (Success 200) {Object[]} children 子节点信息
@@ -67,16 +79,31 @@ public class ClassificationController {
      * @apiSuccess (Success 200) {Number} Classification:parentId 上级档案分类ID.
      * @apiSuccess (Success 200) {Number} Classification:orderNumber 同级排序编号.
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"item": [{"id": 档案分类ID,"code": "档案分类编码","name": "档案分类名称","parentId": 上级档案分类ID,"orderNumber": 同级排序编号},
-     * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型,"children": [
-     * {"id": 档案分类ID,"code": "档案分类编码","name": "档案分类名称","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"children": [
-     * {"id": 档案分类ID,"code": "档案分类编码","name": "档案分类名称","parentId": 上级档案分类ID,"orderNumber": 同级排序编号}]}]}]}}
+     * {"data": {"item": [{"id": 11,"code": "档案分类编码","name": "档案分类名称","parentId": 1,"orderNumber": 同级排序编号},
+     * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 2,"orderNumber": 排序号,"type": 全宗类型,"children": [
+     * {"id": 12,"code": "档案分类编码","name": "档案分类名称","parentId": 3,"orderNumber": 同级排序编号,"children": [
+     * {"id": 14,"code": "档案分类编码","name": "档案分类名称","parentId": 4,"orderNumber": 同级排序编号}]}]}]}}
      */
     @RequestMapping(value = "/fondsAndClassificationTreeList", method = RequestMethod.GET)
-    public Map<String, Object> treeList() {
-        return archivesQuery.getFondsAndClassificationTreeMap();
+    public Map<String, Object> treeList(@SessionAttribute(required = false) UserCredential LOGIN_USER) {
+        int userId;
+        if (LOGIN_USER != null) {
+            userId = LOGIN_USER.getUserId();
+        } else {
+            throw new ForbiddenException("拒绝访问");
+        }
+        Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
+        return archivesQuery.getFondsAndClassificationTreeMap(a -> hasPermission(fondsIds, a));
     }
 
+    private boolean hasPermission(Set<Integer> ids, int id) {
+        if (permissionService.hasAnyAuthority("ROLE_ADMIN")) {
+            return true;
+        } else {
+            return ids.contains(id);
+        }
+
+    }
     /**
      * @api {get} /classification/treeListByParentId 通过上级档案分类节点获取档案分类下拉树
      * @apiName treeListByParentId
@@ -91,9 +118,9 @@ public class ClassificationController {
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccess (Success 200) {Object[]} children 子节点信息
      * @apiSuccessExample {json} Success-Response:
-     * {"data": {"items": [{"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类0","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"},
-     * {"id": 档案分类ID,"code": "档案分类编码","name": "父档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注","children": [
-     * {"id": 档案分类ID,"code": "档案分类编码","name": "子档案分类1","retentionPeriod": "保管期限","parentId": 上级档案分类ID,"orderNumber": 同级排序编号,"remark": "备注"}]}]}}.
+     * {"data": {"items": [{"id": 2,"code": "档案分类编码","name": "父档案分类0","retentionPeriod": "保管期限","parentId": 1,"orderNumber": 1,"remark": "备注"},
+     * {"id": 3,"code": "档案分类编码","name": "父档案分类1","retentionPeriod": "保管期限","parentId": 1,"orderNumber": 2,"remark": "备注","children": [
+     * {"id": 4,"code": "档案分类编码","name": "子档案分类1","retentionPeriod": "保管期限","parentId": 1,"orderNumber": 3,"remark": "备注"}]}]}}.
      */
     @RequestMapping(value = "/treeListByParentId", method = RequestMethod.GET)
     public Map<String, Object> treeListByParentId(@RequestParam("parentId") int parentId) {
@@ -167,7 +194,7 @@ public class ClassificationController {
     }
 
     /**
-     * @api {patch} /classification/{upId},{downId}/priority 修改档案分类排序优先级
+     * @api {patch} /classification/{upId},{downId}/priority 档案分类排序
      * @apiName priority
      * @apiGroup classification
      * @apiParam {Number} upId 上移档案分类ID（url占位符）

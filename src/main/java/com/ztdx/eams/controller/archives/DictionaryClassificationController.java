@@ -1,13 +1,18 @@
 package com.ztdx.eams.controller.archives;
 
+import com.ztdx.eams.basic.UserCredential;
+import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.DictionaryClassificationService;
 import com.ztdx.eams.domain.archives.model.DictionaryClassification;
+import com.ztdx.eams.domain.system.application.PermissionService;
+import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by li on 2018/4/19.
@@ -20,10 +25,16 @@ public class DictionaryClassificationController {
 
     private final ArchivesQuery archivesQuery;
 
+    private final RoleService roleService;
+
+    private final PermissionService permissionService;
+
     @Autowired
-    public DictionaryClassificationController(DictionaryClassificationService dictionaryClassificationService, ArchivesQuery archivesQuery) {
+    public DictionaryClassificationController(DictionaryClassificationService dictionaryClassificationService, ArchivesQuery archivesQuery, RoleService roleService, PermissionService permissionService) {
         this.dictionaryClassificationService = dictionaryClassificationService;
         this.archivesQuery = archivesQuery;
+        this.roleService = roleService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -50,8 +61,24 @@ public class DictionaryClassificationController {
      * {"childrenType": "Fonds","id": 全宗ID,"code": "全宗号","name": "全宗名称","parentId": 上级全宗ID,"orderNumber": 排序号,"type": 全宗类型}]}]}}
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
-    public Map<String, Object> treeList() {
-        return archivesQuery.getDictionaryClassificationTreeMap();
+    public Map<String, Object> treeList(@SessionAttribute(required = false) UserCredential LOGIN_USER) {
+        int userId;
+        if (LOGIN_USER != null) {
+            userId = LOGIN_USER.getUserId();
+        } else {
+            throw new ForbiddenException("拒绝访问");
+        }
+        Set<Integer> fondsIds = roleService.findUserManageFonds(userId);
+        return archivesQuery.getDictionaryClassificationTreeMap(a -> hasPermission(fondsIds, a));
+    }
+
+    private boolean hasPermission(Set<Integer> ids, int id) {
+        if (permissionService.hasAnyAuthority("ROLE_ADMIN")) {
+            return true;
+        } else {
+            return ids.contains(id);
+        }
+
     }
 
     /**

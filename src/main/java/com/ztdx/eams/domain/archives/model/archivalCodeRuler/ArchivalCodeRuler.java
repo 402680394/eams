@@ -19,9 +19,6 @@ public class ArchivalCodeRuler {
     @Column(name = "id")
     private int id;
 
-    //选择类型(1 著入项值；2 著录项所对应的参照编码；3 档案库所属单位全宗号 4 固定值)
-    @Min(value = 1)
-    @Max(value = 4)
     @Convert(converter = RulerType.EnumConverter.class)
     private RulerType type;
 
