@@ -993,9 +993,8 @@ public class ArchivesQuery {
     /**
      * 查询目录所属著录项
      */
-    public Map<String, Object> getDescriptionItemList(UInteger catalogueId) {
-        Map<String, Object> resultMap = new HashMap<>();
-        List<Map<String, Object>> list = dslContext.select(
+    public List<Map<String, Object>> getDescriptionItemList(UInteger catalogueId) {
+        return dslContext.select(
                 archivesDescriptionItem.ID.as("id"),
                 archivesDescriptionItem.METADATA_NAME.as("metadataName"),
                 archivesDescriptionItem.DISPLAY_NAME.as("displayName"),
@@ -1016,8 +1015,6 @@ public class ArchivesQuery {
                 .from(archivesDescriptionItem)
                 .where(archivesDescriptionItem.CATALOGUE_ID.equal(catalogueId))
                 .fetch().intoMaps();
-        resultMap.put("items", list);
-        return resultMap;
     }
 
     /**

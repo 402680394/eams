@@ -160,7 +160,7 @@
             <artifactId>jodconverter</artifactId>
             <scope>system</scope>
             <version>2.2.2</version>
-            <systemPath>${pom.basedir}\src\main\resources\lib\jodconverter-2.2.2.jar</systemPath>
+            <systemPath>${pom.basedir}/src/main/resources/lib/jodconverter-2.2.2.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -168,7 +168,7 @@
             <artifactId>commons-io</artifactId>
             <scope>system</scope>
             <version>1.4</version>
-            <systemPath>${pom.basedir}\src\main\resources\lib\commons-io-1.4.jar</systemPath>
+            <systemPath>${pom.basedir}/src/main/resources/lib/commons-io-1.4.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -176,7 +176,7 @@
             <artifactId>juh</artifactId>
             <scope>system</scope>
             <version>3.0.1</version>
-            <systemPath>${pom.basedir}\src\main\resources\lib\juh-3.0.1.jar</systemPath>
+            <systemPath>${pom.basedir}/src/main/resources/lib/juh-3.0.1.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -184,7 +184,7 @@
             <artifactId>jurt</artifactId>
             <scope>system</scope>
             <version>3.0.1</version>
-            <systemPath>${pom.basedir}\src\main\resources\lib\jurt-3.0.1.jar</systemPath>
+            <systemPath>${pom.basedir}/src/main/resources/lib/jurt-3.0.1.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -192,7 +192,7 @@
             <artifactId>ridl</artifactId>
             <scope>system</scope>
             <version>3.0.1</version>
-            <systemPath>${pom.basedir}\src\main\resources\lib\ridl-3.0.1.jar</systemPath>
+            <systemPath>${pom.basedir}/src/main/resources/lib/ridl-3.0.1.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -200,7 +200,7 @@
             <artifactId>unoil</artifactId>
             <scope>system</scope>
             <version>3.0.1</version>
-            <systemPath>${pom.basedir}\src\main\resources\lib\unoil-3.0.1.jar</systemPath>
+            <systemPath>${pom.basedir}/src/main/resources/lib/unoil-3.0.1.jar</systemPath>
         </dependency>
 
         <dependency>

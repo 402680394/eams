@@ -77,11 +77,21 @@ public class DescriptionItemService {
         if (null == catalogue) {
             throw new BusinessException("目录不存在");
         }
+
         List<Metadata> metadatas = metadataRepository.findByIdIn(metadataIds);
         List<DescriptionItem> descriptionItems = new ArrayList<>();
+        int metadataStandardsId = metadatas.get(0).getMetadataStandardsId();
+
+        if (null == catalogue.getMetadataStandardsId()) {
+            catalogue.setMetadataStandardsId(metadataStandardsId);
+            catalogueRepository.save(catalogue);
+        } else {
+            metadataStandardsId = catalogue.getMetadataStandardsId();
+        }
+
         for (Metadata metadata : metadatas) {
-            if (metadata.getMetadataStandardsId() != catalogue.getMetadataStandardsId()) {
-                throw new InvalidArgumentException("元数据不在目录绑定的元数据规范中");
+            if (metadataStandardsId != metadata.getMetadataStandardsId()) {
+                throw new InvalidArgumentException("元数据不在同一个元数据规范中");
             }
             DescriptionItem descriptionItem = new DescriptionItem();
             descriptionItem.setCatalogueId(catalogueId);
@@ -98,6 +108,7 @@ public class DescriptionItemService {
         }
         descriptionItemRepository.saveAll(descriptionItems);
     }
+
     @Transactional
     public void update(DescriptionItem descriptionItem) {
         descriptionItemRepository.updateById(descriptionItem);

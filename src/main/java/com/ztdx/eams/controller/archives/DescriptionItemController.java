@@ -6,12 +6,14 @@ import com.ztdx.eams.domain.archives.application.DescriptionItemService;
 import com.ztdx.eams.domain.archives.application.DictionaryClassificationService;
 import com.ztdx.eams.domain.archives.application.EntryService;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import com.ztdx.eams.domain.archives.model.PropertyType;
 import com.ztdx.eams.domain.system.application.OrganizationService;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,7 +71,10 @@ public class DescriptionItemController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam("catalogueId") int catalogueId) {
-        return archivesQuery.getDescriptionItemList(UInteger.valueOf(catalogueId));
+        Map<String, Object> resultMap = new HashMap<>();
+        List<Map<String, Object>> list = archivesQuery.getDescriptionItemList(UInteger.valueOf(catalogueId));
+        resultMap.put("items", list);
+        return resultMap;
     }
 
     /**
@@ -199,7 +204,7 @@ public class DescriptionItemController {
      * @apiGroup descriptionItem
      * @apiParam {Number} catalogueId 目录ID
      * @apiParam {Number[]} metadataIds 元数据ID
-     * @apiError (Error 400) message 要添加的元数据不在.
+     * @apiError (Error 400) message 1.目录不存在 2.元数据不在同一个元数据规范中.
      * @apiUse ErrorExample
      */
     @RequestMapping(value = "", method = RequestMethod.POST)
