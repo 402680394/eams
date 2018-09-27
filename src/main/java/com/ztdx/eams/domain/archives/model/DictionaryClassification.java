@@ -36,7 +36,7 @@ public class DictionaryClassification {
 
     //所属全宗id
     @Column(name = "fonds_id")
-    private int fondsId;
+    private Integer fondsId;
 
     //创建时间
     @Column(name = "gmt_create")

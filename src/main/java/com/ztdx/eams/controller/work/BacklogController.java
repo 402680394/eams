@@ -74,30 +74,30 @@ public class BacklogController {
      * @apiSuccess {Number} createTime 申请时间
      * @apiSuccessExample {json} Response-Example:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id": "xxxxx-xxxx-xxx",
-     *                 "taskId": "xxxxx-xxxx-xxx",
-     *                 "type": "borrow",
-     *                 "title": "论持久战",
-     *                 "orderCode": "xxxxx-xxxx-xxx",
-     *                 "orderId": 1,
-     *                 "applicant": "",
-     *                 "company": "",
-     *                 "department": "",
-     *                 "createTime":1534214071
-     *             }
-     *         ],
-     *         "totalElements": 14
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id": "xxxxx-xxxx-xxx",
+     * "taskId": "xxxxx-xxxx-xxx",
+     * "type": "borrow",
+     * "title": "论持久战",
+     * "orderCode": "xxxxx-xxxx-xxx",
+     * "orderId": 1,
+     * "applicant": "",
+     * "company": "",
+     * "department": "",
+     * "createTime":1534214071
+     * }
+     * ],
+     * "totalElements": 14
+     * }
      * }
      */
     @RequestMapping(path = "/todoList", method = RequestMethod.GET)
     public Map<String, Object> todoList(
             @RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value = "size", required = false, defaultValue = "20") int size
-            , @SessionAttribute UserCredential LOGIN_USER){
+            , @SessionAttribute UserCredential LOGIN_USER) {
         Integer userId = LOGIN_USER.getUserId();
 
         long count = taskService.createTaskQuery().taskAssignee(userId.toString()).count();
@@ -128,35 +128,38 @@ public class BacklogController {
             Map<String, VariableInstance> vars = taskService.getVariableInstances(a.getId());
 
             Map<String, Object> item = new HashMap<>();
-            item.put("taskId", a.getId());
-            item.put("id", vars.get("id").getValue());
-            item.put("type", vars.get("type").getValue());
-            item.put("title", vars.get("title").getValue());
-            item.put("orderCode", vars.get("orderCode").getValue());
-            item.put("orderId", vars.get("orderId").getValue());
+            if (vars.size() != 0) {
+                item.put("taskId", a.getId());
+                item.put("id", vars.get("id").getValue());
+                item.put("type", vars.get("type").getValue());
+                item.put("title", vars.get("title").getValue());
+                item.put("orderCode", vars.get("orderCode").getValue());
+                item.put("orderId", vars.get("orderId").getValue());
 
-            String applicantId = null;
-            if (vars.get("applicantId") != null){
-                applicantId = vars.get("applicantId").getValue().toString();
-            }
-            String name = null;
-            String department = null;
-            String company = null;
-            if (StringUtils.isNumeric(applicantId) && userMap.get(Integer.parseInt(applicantId)) != null){
-                User user = userMap.get(Integer.parseInt(applicantId));
-                name = user.getName();
-                List<String> pair = companies.get(user.getOrganizationId());
-                if (pair != null) {
-                    department = pair.get(0);
-                    company = pair.get(1);
+                String applicantId = null;
+                if (vars.get("applicantId") != null) {
+                    applicantId = vars.get("applicantId").getValue().toString();
                 }
+
+                String name = null;
+                String department = null;
+                String company = null;
+                if (StringUtils.isNumeric(applicantId) && userMap.get(Integer.parseInt(applicantId)) != null) {
+                    User user = userMap.get(Integer.parseInt(applicantId));
+                    name = user.getName();
+                    List<String> pair = companies.get(user.getOrganizationId());
+                    if (pair != null) {
+                        department = pair.get(0);
+                        company = pair.get(1);
+                    }
+                }
+
+                item.put("applicant", name);
+                item.put("company", company);
+                item.put("department", department);
+                item.put("createTime", a.getCreateTime());
+
             }
-
-            item.put("applicant", name);
-            item.put("company", company);
-            item.put("department", department);
-            item.put("createTime", a.getCreateTime());
-
             return item;
         }).collect(Collectors.toList()));
         result.put("totalElements", count);
@@ -179,27 +182,27 @@ public class BacklogController {
      * @apiSuccess {String="pending", "refuse", "agree"} result 结果
      * @apiSuccessExample {json} Response-Example:
      * {
-     *     "data":{
-     *         "content":[
-     *             {
-     *                 "id": "xxxxx-xxxx-xxx",
-     *                 "type": "borrow",
-     *                 "title": "论持久战",
-     *                 "orderCode": "xxxxx-xxxx-xxx",
-     *                 "orderId": 1,
-     *                 "createTime":1534214071,
-     *                 "endTime": null,
-     *                 "result": "pending"
-     *             }
-     *         ],
-     *         "totalElements": 14
-     *     }
+     * "data":{
+     * "content":[
+     * {
+     * "id": "xxxxx-xxxx-xxx",
+     * "type": "borrow",
+     * "title": "论持久战",
+     * "orderCode": "xxxxx-xxxx-xxx",
+     * "orderId": 1,
+     * "createTime":1534214071,
+     * "endTime": null,
+     * "result": "pending"
+     * }
+     * ],
+     * "totalElements": 14
+     * }
      * }
      */
     @RequestMapping(path = "/applyList", method = RequestMethod.GET)
     public Map<String, Object> applyList(@RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value = "size", required = false, defaultValue = "20") int size
-            , @SessionAttribute UserCredential LOGIN_USER){
+            , @SessionAttribute UserCredential LOGIN_USER) {
         Integer userId = LOGIN_USER.getUserId();
 
         long count = historyService.createHistoricProcessInstanceQuery().variableValueEquals("applicantId", userId).count();
@@ -228,7 +231,7 @@ public class BacklogController {
             item.put("orderId", vars.get("orderId"));
 
             String resultStr = "pending";
-            if (vars.get("result") != null){
+            if (vars.get("result") != null) {
                 resultStr = vars.get("result").toString();
             }
             item.put("createTime", a.getStartTime());
@@ -257,20 +260,20 @@ public class BacklogController {
      * @apiSuccess {String="pending", "refuse", "agree"} result 结果
      * @apiSuccessExample {json} Response-Example:
      * {
-     *     "type": "borrow",
-     *     "title": "论持久战",
-     *     "orderNo": "xxxxx-xxxx-xxx",
-     *     "applicant": {
-     *         "name": "",
-     *         "company": "",
-     *         "department": ""
-     *     },
-     *     "createTime":1534214071,
-     *     "endTime": 1534214071,
-     *     "result": "agree"
+     * "type": "borrow",
+     * "title": "论持久战",
+     * "orderNo": "xxxxx-xxxx-xxx",
+     * "applicant": {
+     * "name": "",
+     * "company": "",
+     * "department": ""
+     * },
+     * "createTime":1534214071,
+     * "endTime": 1534214071,
+     * "result": "agree"
      * }
      */
-    public void list(){
+    public void list() {
 
     }
 }

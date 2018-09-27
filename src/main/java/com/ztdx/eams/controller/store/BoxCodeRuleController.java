@@ -88,9 +88,9 @@ public class BoxCodeRuleController {
             byte type = (byte) rule.get("type");
             //1-著录项值
             if (type == 1) {
-                UInteger descriptionItemId = (UInteger) rule.get("descriptionItemId");
+                int descriptionItemId = ((UInteger) rule.get("descriptionItemId")).intValue();
                 for (DescriptionItem descriptionItem : descriptionItems) {
-                    if (descriptionItemId.equals(descriptionItem.getId())) {
+                    if (descriptionItemId == descriptionItem.getId()) {
                         rule.put("isDictionary", descriptionItem.getIsDictionary());
                         rule.put("dictionaryType", descriptionItem.getDictionaryType());
                         rule.put("dictionaryNodeId", descriptionItem.getDictionaryNodeId());
@@ -107,7 +107,7 @@ public class BoxCodeRuleController {
                 }
                 //3-档案库所属全宗号
             } else if (type == 2) {
-                rule.put("name", "全宗号");
+                rule.put("name", "档案库所属全宗号");
                 rule.put("value", fondsCode);
             } else if (type == 3) {
                 rule.put("name", "固定值");
