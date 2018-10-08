@@ -151,8 +151,8 @@ public class BoxCodeRuleController {
      * @apiParam {Number} type 类型 （1-著录项值 2-档案库所属单位全宗号 3-固定值 4-流水号）
      * @apiParam {String{10}} value 值(类型为固定值时传递)
      * @apiParam {Number} descriptionItemId 著录项id(类型为著录项值时传递)
-     * @apiParam {Number} interceptionLength 截取长度(类型为著录项值时传递)
-     * @apiParam {Number} flowNumberLength 流水号长度(类型为流水号时传递)
+     * @apiParam {Number{20}} interceptionLength 截取长度(类型为著录项值时传递)
+     * @apiParam {Number{20}} flowNumberLength 流水号长度(类型为流水号时传递)
      * @apiParam {Number} archivesId 档案库ID
      * @apiParam {String{50}} remark 备注（未输入传""值）
      * @apiError (Error 400) message 著录项校验错误.

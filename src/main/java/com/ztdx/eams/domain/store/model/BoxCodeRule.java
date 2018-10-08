@@ -34,10 +34,12 @@ public class BoxCodeRule {
     private Integer descriptionItemId;
     //截取长度
     @Min(value = 0)
+    @Max(value = 20)
     @Column(name = "interception_length")
     private byte interceptionLength;
     //流水号长度
     @Min(value = 0)
+    @Max(value = 20)
     @Column(name = "flow_number_length")
     private byte flowNumberLength;
     //备注

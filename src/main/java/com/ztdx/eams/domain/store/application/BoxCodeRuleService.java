@@ -42,22 +42,23 @@ public class BoxCodeRuleService {
     public void save(BoxCodeRule boxCodeRule) {
         BoxCodeRule b = boxCodeRuleRepository.findByArchivesIdAndType(boxCodeRule.getArchivesId(), 4).orElse(null);
         //只能有一个流水号
-        if (null == b) {
+        if (null != b && boxCodeRule.getType() == 4) {
             throw new BusinessException("只能有一个流水号");
         }
-
         //设置排序号
         Integer orderNumber = boxCodeRuleRepository.findMaxOrderNumber(boxCodeRule.getArchivesId());
         if (orderNumber != null) {
-            boxCodeRule.setOrderNumber(orderNumber + 1);
+            orderNumber++;
         } else {
-            boxCodeRule.setOrderNumber(1);
+            orderNumber = 1;
         }
+        boxCodeRule.setOrderNumber(orderNumber);
         boxCodeRuleRepository.save(boxCodeRule);
         //流水号只能位于最后
-        b.setOrderNumber(boxCodeRule.getOrderNumber() + 1);
-        boxCodeRuleRepository.save(b);
-
+        if (null != b) {
+            b.setOrderNumber(orderNumber++);
+            boxCodeRuleRepository.save(b);
+        }
     }
 
     @Transactional
