@@ -231,8 +231,8 @@ public class BacklogController {
             item.put("orderId", vars.get("orderId"));
 
             String resultStr = "pending";
-            if (vars.get("result") != null) {
-                resultStr = vars.get("result").toString();
+            if (vars.get("status") != null) {
+                resultStr = vars.get("status").toString();
             }
             item.put("createTime", a.getStartTime());
             item.put("endTime", a.getEndTime());
