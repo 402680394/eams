@@ -1280,7 +1280,7 @@ public class ArchivesQuery {
                 archivesArchivalcodeRuler.INTERCEPTION_LENGTH.as("interceptionLength"),
                 archivesArchivalcodeRuler.CATALOGUE_ID.as("catalogueId"),
                 archivesArchivalcodeRuler.REMARK.as("remark"))
-                .from(archivesArchivalcodeRuler).where(archivesArchivalcodeRuler.ID.equal(id)).fetch().intoMaps();
+                .from(archivesArchivalcodeRuler).where(archivesArchivalcodeRuler.CATALOGUE_ID.equal(id)).fetch().intoMaps();
     }
 
     public Map<String, Object> getArchivalCodeRuler(UInteger id) {
@@ -1435,5 +1435,42 @@ public class ArchivesQuery {
                 .from(archivesDescriptionItem)
                 .where(archivesDescriptionItem.ID.equal(id))
                 .fetch().intoMaps().get(0);
+    }
+
+    /**
+     * 获取所属全宗的库分组树.
+     */
+    public Map<String, Object> getArchivesGroupTreeMapForUpdate(UInteger fondsId, UInteger archivesGroupId) {
+        Map<String, Object> resultMap = new HashMap<>();
+        //伪造根节点，便于递归查询子档案库分组
+        resultMap.put("id", UInteger.valueOf(1));
+        resultMap.put("fondsId", fondsId);
+        //查询
+        resultMap = getSubArchivesGroupTreeMap(getArchivesGroupsByFondsIdAndId(fondsId, archivesGroupId), resultMap);
+        //拼装返回数据信息
+        if (null != resultMap.get("children")) {
+            resultMap.put("items", resultMap.get("children"));
+        } else {
+            resultMap.put("items", new ArrayList<Map<String, Object>>());
+        }
+        //去除根节点数据
+        resultMap.remove("id");
+        resultMap.remove("children");
+        return resultMap;
+    }
+
+    /**
+     * 获取全宗下全部档案分类.
+     */
+    private List<Map<String, Object>> getArchivesGroupsByFondsIdAndId(UInteger fondsId, UInteger archivesGroupId) {
+        return dslContext.select(
+                archivesGroup.ID.as("id"),
+                archivesGroup.FONDS_ID.as("fondsId"),
+                archivesGroup.NAME.as("name"),
+                archivesGroup.REMARK.as("remark"),
+                archivesGroup.PARENT_ID.as("parentId"))
+                .from(archivesGroup)
+                .where(archivesGroup.FONDS_ID.equal(fondsId), archivesGroup.GMT_DELETED.equal(0), archivesGroup.ID.notEqual(archivesGroupId))
+                .fetch().intoMaps();
     }
 }

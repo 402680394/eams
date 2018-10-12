@@ -238,7 +238,7 @@ public class EntryService {
 
         descriptionItemMap.forEach((key, item) -> {
             Object val;
-            if (isGenerator && item.getIsIncrement() == 1 && item.getIncrement() > 1) {
+            if (isGenerator && item.getIsIncrement() == 1 && item.getIncrement() > 0) {
                 String idKey = String.format(IdGeneratorValue.ENTRY_ITEM_INCREMENT_FORMAT, entry.getCatalogueId(), item.getMetadataName());
                 val = idGeneratorRepository.get(idKey, item.getIncrement());
             } else {

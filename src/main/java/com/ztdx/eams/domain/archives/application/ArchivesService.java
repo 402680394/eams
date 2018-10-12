@@ -43,6 +43,7 @@ public class ArchivesService {
                 file.setArchivesId(archives.getId());
                 file.setCatalogueType(CatalogueType.File);
                 catalogueRepository.save(file);
+                break;
             }
             case TraditionalArchives: {
                 Catalogue folder = new Catalogue();
@@ -54,12 +55,14 @@ public class ArchivesService {
                 folderFile.setArchivesId(archives.getId());
                 folderFile.setCatalogueType(CatalogueType.FolderFile);
                 catalogueRepository.save(folderFile);
+                break;
             }
             case Project: {
                 Catalogue project = new Catalogue();
                 project.setArchivesId(archives.getId());
                 project.setCatalogueType(CatalogueType.Subject);
                 catalogueRepository.save(project);
+                break;
             }
         }
     }
