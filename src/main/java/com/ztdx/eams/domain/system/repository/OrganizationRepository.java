@@ -34,7 +34,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, Inte
 
     //通过ID修改信息
     @Modifying
-    @Query("update Organization o set o.parentId=:#{#organization.parentId},o.code=:#{#organization.code},o.name=:#{#organization.name},o.describe=:#{#organization.describe},o.remark=:#{#organization.remark},o.type=:#{#organization.type} where o.id=:#{#organization.id}")
+    @Query("update Organization o set o.parentId=:#{#organization.parentId},o.code=:#{#organization.code},o.name=:#{#organization.name},o.remark=:#{#organization.remark},o.type=:#{#organization.type} where o.id=:#{#organization.id}")
     void updateById(@Param("organization") Organization organization);
 
     //设置机构优先级
