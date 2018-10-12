@@ -83,7 +83,6 @@ public class OrganizationController {
      * @apiParam {Number} parentId 上级机构ID（根机构传1）
      * @apiParam {String{20}} code 机构编码
      * @apiParam {String{50}} name 机构名称
-     * @apiParam {String{50}} describe 机构描述（未输入传""值）
      * @apiParam {String{100}} remark 备注（未输入传""值）
      * @apiParam {Number} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室；4.科室下无法创建部门.
@@ -117,7 +116,6 @@ public class OrganizationController {
      * @apiParam {Number} parentId 上级机构ID（根机构传1）
      * @apiParam {String{20}} code 机构编码
      * @apiParam {String{50}} name 机构名称
-     * @apiParam {String{50}} describe 机构描述（未输入传""值）
      * @apiParam {String{100}} remark 备注（未输入传""值）
      * @apiParam {Number} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室 4.机构不存在或已被删除.
@@ -138,11 +136,10 @@ public class OrganizationController {
      * @apiSuccess (Success 200) {String} code 机构编码.
      * @apiSuccess (Success 200) {String} name 机构名称.
      * @apiSuccess (Success 200) {Number} parentId 上级机构ID.
-     * @apiSuccess (Success 200) {String} describe 机构描述.
      * @apiSuccess (Success 200) {String} remark 备注.
      * @apiSuccess (Success 200) {Number} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiSuccessExample {json} Success-Response:
-     * {"data":{"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"type": 机构类型,"describe": "机构描述","remark": "备注"}}.
+     * {"data":{"id": 机构ID,"code": "机构编码","name": "机构名称","parentId": 上级机构ID,"type": 机构类型,"remark": "备注"}}.
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Map<String, Object> get(@PathVariable("id") int id) {

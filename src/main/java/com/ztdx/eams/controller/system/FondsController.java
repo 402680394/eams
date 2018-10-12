@@ -59,9 +59,9 @@ public class FondsController {
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList(@SessionAttribute(required = false) UserCredential LOGIN_USER) {
         int userId;
-        if (LOGIN_USER != null){
+        if (LOGIN_USER != null) {
             userId = LOGIN_USER.getUserId();
-        }else{
+        } else {
             throw new ForbiddenException("拒绝访问");
         }
         //可以管理的全宗
@@ -69,9 +69,9 @@ public class FondsController {
 
         //全宗树
         return systemQuery.getFondsTreeMap(a -> {
-            if (permissionService.hasAnyAuthority("ROLE_ADMIN")){
+            if (permissionService.hasAnyAuthority("ROLE_ADMIN")) {
                 return true;
-            }else{
+            } else {
                 return fondsIds.contains(a);
             }
         });
@@ -93,12 +93,12 @@ public class FondsController {
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody HashMap<String, Object> map) {
         Fonds fonds = new Fonds();
-        fonds.setParentId((int) map.get("parentId"));
+        fonds.setParentId(1);
         fonds.setCode((String) map.get("code"));
         fonds.setName((String) map.get("name"));
         fonds.setRemark((String) map.get("remark"));
-        ArrayList<Integer> associationList= (ArrayList<Integer>) map.get("association");
-        fondsService.save(fonds,associationList);
+        ArrayList<Integer> associationList = (ArrayList<Integer>) map.get("association");
+        fondsService.save(fonds, associationList);
     }
 
     /**
@@ -137,8 +137,8 @@ public class FondsController {
         fonds.setCode((String) map.get("code"));
         fonds.setName((String) map.get("name"));
         fonds.setRemark((String) map.get("remark"));
-        ArrayList<Integer> associationList= (ArrayList<Integer>) map.get("association");
-        fondsService.update(fonds,associationList);
+        ArrayList<Integer> associationList = (ArrayList<Integer>) map.get("association");
+        fondsService.update(fonds, associationList);
     }
 
     /**

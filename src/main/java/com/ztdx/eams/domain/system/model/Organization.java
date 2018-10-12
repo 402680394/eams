@@ -50,11 +50,6 @@ public class Organization {
     @Column(name = "fonds_id")
     private Integer fondsId;
 
-    //机构描述
-    @Size(max = 50)
-    @Column(name = "org_describe")
-    private String describe;
-
     //备注
     @Size(max = 100)
     @Column(name = "remark")

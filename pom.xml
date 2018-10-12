@@ -278,6 +278,7 @@
                     <fork>true</fork>
                     <mainClass>com.ztdx.eams.Application</mainClass>
                     <includeSystemScope>true</includeSystemScope>
+                    <executable>true</executable>
                 </configuration>
                 <executions>
                     <execution>

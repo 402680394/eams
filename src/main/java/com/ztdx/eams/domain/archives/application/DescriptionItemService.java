@@ -2,10 +2,7 @@ package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
-import com.ztdx.eams.domain.archives.model.Catalogue;
-import com.ztdx.eams.domain.archives.model.DescriptionItem;
-import com.ztdx.eams.domain.archives.model.Metadata;
-import com.ztdx.eams.domain.archives.model.PropertyType;
+import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
 import com.ztdx.eams.domain.archives.repository.MetadataRepository;
@@ -111,6 +108,9 @@ public class DescriptionItemService {
 
     @Transactional
     public void update(DescriptionItem descriptionItem) {
+        if (DescriptionItemDataType.Integer != descriptionItem.getDataType() && 1 == descriptionItem.getIsIncrement()) {
+            throw new BusinessException("设置自增时，数据类型必须为数值 ");
+        }
         descriptionItemRepository.updateById(descriptionItem);
     }
 

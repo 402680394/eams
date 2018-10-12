@@ -89,4 +89,25 @@ public class ArchivesGroupController {
     public Map<String, Object> treeList(@RequestParam("fondsId") int fondsId) {
         return archivesQuery.getArchivesGroupTreeMap(UInteger.valueOf(fondsId));
     }
+
+    /**
+     * @api {get} /archivesGroup/treeListForUpdate 获取全宗所属档案库分组树（编辑时下拉树）
+     * @apiName treeListForUpdate
+     * @apiGroup archivesGroup
+     * @apiParam {Number} fondsId 所属全宗ID(url参数)
+     * @apiParam {Number} archivesGroupId 当前档案库分组ID(url参数)
+     * @apiSuccess (Success 200) {Number} id 档案库分组ID.
+     * @apiSuccess (Success 200) {String} name 案库分组名称.
+     * @apiSuccess (Success 200) {Number} parentId 上级档案库分组ID.
+     * @apiSuccess (Success 200) {String} remark 备注.
+     * @apiSuccess (Success 200) {Object[]} children 子节点信息
+     * @apiSuccessExample {json} Success-Response:
+     * {"data": {"items": [{"id": 2,"name": "文书档案","parentId": 1,"remark": "备注"},
+     * {"id": 3,"name": "金石档案","parentId": 1,"remark": "备注""children": [
+     * {"id": 4,"name": "石碑档案","parentId": 3,"remark": "备注"}]}]}}.
+     */
+    @RequestMapping(value = "/treeListForUpdate", method = RequestMethod.GET)
+    public Map<String, Object> treeListForUpdate(@RequestParam("fondsId") int fondsId, @RequestParam("archivesGroupId") int archivesGroupId) {
+        return archivesQuery.getArchivesGroupTreeMapForUpdate(UInteger.valueOf(fondsId), UInteger.valueOf(archivesGroupId));
+    }
 }

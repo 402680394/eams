@@ -165,7 +165,6 @@ public class SystemQuery {
                 sysOrganization.ORG_CODE.as("code"),
                 sysOrganization.ORG_NAME.as("name"),
                 sysOrganization.PARENT_ID.as("parentId"),
-                sysOrganization.ORG_DESCRIBE.as("describe"),
                 sysOrganization.REMARK.as("remark"),
                 sysOrganization.ORG_TYPE.as("type"))
                 .from(sysOrganization).where(sysOrganization.ID.equal(id)).fetch().intoMaps().get(0);

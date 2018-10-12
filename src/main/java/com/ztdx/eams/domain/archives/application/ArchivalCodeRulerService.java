@@ -143,5 +143,6 @@ public class ArchivalCodeRulerService {
         } else {
             archivalCodeRuler.setOrderNumber(1);
         }
+        archivalCodeRulerRepository.save(archivalCodeRuler);
     }
 }
