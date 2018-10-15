@@ -269,21 +269,22 @@ public class OriginalTextService {
         }
         Optional<OriginalText> find = originalTextMongoRepository.findById(id, "archive_record_originalText_" + catalogueId);
         if (find.isPresent()) {
+            File file;
             String fileName = find.get().getName();
-            File file = new File(fileName);
+            String md5;
             if (type == 1) {
-                //下载原文件
-                String[] path = new String[]{String.valueOf(fondsId), find.get().getMd5().substring(0, 2), find.get().getMd5().substring(2, 4)};
-                ftpUtil.downloadFile(path, find.get().getMd5(), file);
+                md5 = find.get().getMd5();
             } else {
                 //下载PDF格式文件
                 if (find.get().getPdfConverStatus() != 1) {
                     throw new BusinessException("没有PDF格式提供下载");
                 }
-                String[] path = new String[]{String.valueOf(fondsId), find.get().getPdfMd5().substring(0, 2), find.get().getPdfMd5().substring(2, 4)};
-                ftpUtil.downloadFile(path, find.get().getPdfMd5(), file);
-                fileName = file.getName().substring(0, file.getName().lastIndexOf(".")) + ".pdf";
+                md5 = find.get().getPdfMd5();
+                fileName = fileName.substring(0, fileName.lastIndexOf(".")) + ".pdf";
             }
+            file = new File(fileName);
+            String[] path = new String[]{String.valueOf(fondsId), md5.substring(0, 2), md5.substring(2, 4)};
+            ftpUtil.downloadFile(path, md5, file);
 
             byte[] buff = new byte[1024];
             FileInputStream fis = null;
@@ -516,6 +517,7 @@ public class OriginalTextService {
                 originalText.setPdfConverStatus(3);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             //设置转换状态失败
             originalText.setPdfConverStatus(2);
         } finally {

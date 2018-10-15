@@ -170,7 +170,7 @@ public class Entry implements Serializable {
     /**
      * 保管期限
      */
-    @Field(type = FieldType.keyword, fielddata = true)
+    @Field(type = FieldType.keyword)
     private String timeLimitForStorage;
 
     /**

@@ -16,6 +16,9 @@ import java.util.List;
 @Table(name = "archives")
 @Qualifier("archivesRepository")
 public interface ArchivesRepository extends JpaRepository<Archives, Integer> {
+
+    List<Archives> findByArchivesGroupIdAndGmtDeleted(int archivesGroupId, int gmtDeleted);
+
     List<Archives> findByTypeAndGmtDeleted(int type, int gmtDeleted);
 
     @Query("select a.name from Archives a,Catalogue c where c.id=:catalogueId and a.id=c.archivesId")

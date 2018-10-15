@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Table;
+import java.util.List;
 
 /**
  * Created by li on 2018/5/3.
@@ -18,6 +19,8 @@ import javax.persistence.Table;
 @Table(name = "archives_group")
 @Qualifier("archivesGroupRepository")
 public interface ArchivesGroupRepository extends JpaRepository<ArchivesGroup, Integer> {
+
+    List<ArchivesGroup> findByParentIdAndGmtDeleted(int parentId,int gmtDeleted);
 
     @Query("select ag.fondsId from ArchivesGroup ag,Archives a,Catalogue c where c.id=:catalogueId and a.id=c.archivesId and ag.id=a.archivesGroupId")
     Integer findFondsIdByCatalogue_CatalogueId(@Param(value = "catalogueId") int catalogueId);

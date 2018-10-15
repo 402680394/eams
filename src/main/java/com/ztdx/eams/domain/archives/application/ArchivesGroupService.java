@@ -1,6 +1,8 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.domain.archives.application.event.ArchivesGroupDeleteEvent;
+import com.ztdx.eams.domain.archives.model.Archives;
 import com.ztdx.eams.domain.archives.model.ArchivesGroup;
 import com.ztdx.eams.domain.archives.repository.ArchivesGroupRepository;
 import com.ztdx.eams.domain.archives.repository.ArchivesRepository;
@@ -42,8 +44,13 @@ public class ArchivesGroupService {
 
     @Transactional
     public void delete(int id) {
+        List<Archives> archives = archivesRepository.findByArchivesGroupIdAndGmtDeleted(id, 0);
+        List<ArchivesGroup> archivesGroups = archivesGroupRepository.findByParentIdAndGmtDeleted(id, 0);
+        if (archives.size() != 0 && archivesGroups.size() != 0) {
+            throw new BusinessException("该分组下存在子分组或档案库");
+        }
         archivesGroupRepository.setDeleteById(id, 1);
-        archivesRepository.setDeleteByArchivesGroupId(id, 1);
+//        archivesRepository.setDeleteByArchivesGroupId(id, 1);
     }
 
     @Transactional

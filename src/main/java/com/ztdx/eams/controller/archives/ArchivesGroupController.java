@@ -107,7 +107,7 @@ public class ArchivesGroupController {
      * {"id": 4,"name": "石碑档案","parentId": 3,"remark": "备注"}]}]}}.
      */
     @RequestMapping(value = "/treeListForUpdate", method = RequestMethod.GET)
-    public Map<String, Object> treeListForUpdate(@RequestParam("fondsId") int fondsId, @RequestParam("archivesGroupId") int archivesGroupId) {
+    public Map<String, Object> treeListForUpdate(@RequestParam("archivesGroupId") int archivesGroupId, @RequestParam("fondsId") int fondsId) {
         return archivesQuery.getArchivesGroupTreeMapForUpdate(UInteger.valueOf(fondsId), UInteger.valueOf(archivesGroupId));
     }
 }
