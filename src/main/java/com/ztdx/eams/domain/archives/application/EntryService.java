@@ -165,7 +165,7 @@ public class EntryService {
         this.convertEntryItems(update, EntryItemConverter::from, false, true);
         update = entryMongoRepository.save(update);
 
-        entryAsyncTask.copyItemsFieldToSystemField(entry);
+        entryAsyncTask.copyItemsFieldToSystemField(update);
         return update;
     }
 
