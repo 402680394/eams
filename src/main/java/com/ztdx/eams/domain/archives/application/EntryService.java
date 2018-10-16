@@ -282,7 +282,7 @@ public class EntryService {
         return descriptionItemRepository.findByCatalogueId(catalogueId).stream().collect(Collectors.toMap(DescriptionItem::getMetadataName, (d) -> d, (d1, d2) -> d2));
     }
 
-    public Map<Integer, Long> aggsCatalogueCount(List<Integer> catalogueIds, List<Integer> archiveContentType, String keyWord) {
+    public Map<Integer, Long> aggsCatalogueCount(List<Integer> catalogueIds, List<Integer> archiveContentType, String keyWord, Integer archiveType) {
         Collection<String> indices = new ArrayList<>();
         if (catalogueIds == null || catalogueIds.size() == 0) {
             indices.add(INDEX_NAME_PREFIX + "*");
@@ -309,6 +309,10 @@ public class EntryService {
 
         if (keyWord != null && !"".equals(keyWord)) {
             query.must(QueryBuilders.queryStringQuery(keyWord).defaultOperator(Operator.AND));
+        }
+
+        if (archiveType != null && Arrays.asList(1, 2).indexOf(archiveType) > -1){
+            query.must(QueryBuilders.termQuery("archiveType", archiveType));
         }
 
         query.filter(QueryBuilders.termQuery("gmtDeleted", 0));

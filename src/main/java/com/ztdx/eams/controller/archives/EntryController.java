@@ -1248,6 +1248,7 @@ public class EntryController {
      * @apiParam {Array} [archiveContentType] 档案内容类型
      * @apiParam {String="3year","6year","8year"} [dateRange] 时间
      * @apiParam {String} [keyWord] 关键字
+     * @apiParam {Number=1, 2} [archiveType] 档案库类型 1:登记库 2:归档库
      * @apiSuccess (Success 200) {Array} content 列表内容
      * @apiSuccess (Success 200) {Number} content.archiveId 档案库id
      * @apiSuccess (Success 200) {String} content.archiveName 档案库名称
@@ -1281,13 +1282,14 @@ public class EntryController {
             @JsonParam List<Integer> catalogueIds
             , @JsonParam List<Integer> archiveContentType
             , @JsonParam String keyWord
+            , @JsonParam Integer archiveType
             , @SessionAttribute UserCredential LOGIN_USER
     ) {
         //TODO @lijie 权限需要换成条目的
         /*Collection<Integer> hasPermissionCatalogueIds = getHasPermissionCatalogueIds(LOGIN_USER.getUserId());
         catalogueIds.retainAll(hasPermissionCatalogueIds);*/
 
-        Map<Integer, Long> aggs = entryService.aggsCatalogueCount(catalogueIds, archiveContentType, keyWord);
+        Map<Integer, Long> aggs = entryService.aggsCatalogueCount(catalogueIds, archiveContentType, keyWord, archiveType);
 
         List<Catalogue> catalogues = new ArrayList<>();
         Map<Integer, Archives> archivesMap = new HashMap<>();
