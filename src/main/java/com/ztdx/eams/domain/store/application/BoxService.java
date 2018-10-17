@@ -83,7 +83,7 @@ public class BoxService {
      *新增盒
      */
     @Transactional
-    public void save(int archivesId
+    public Box save(int archivesId
             , String codeRule
             , String flowNumber
             , int width
@@ -138,6 +138,11 @@ public class BoxService {
             list.add(box);
         }
         boxRepository.saveAll(list);
+        if (list.size() == 1) {
+            return list.get(0);
+        } else {
+            return null;
+        }
     }
 
     public Box getByCode(int archiveId, String code) {

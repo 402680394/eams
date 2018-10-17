@@ -16,6 +16,7 @@ import com.ztdx.eams.domain.store.application.BoxService;
 import com.ztdx.eams.domain.store.model.Box;
 import com.ztdx.eams.domain.store.model.event.BoxDeleteEvent;
 import com.ztdx.eams.domain.store.model.event.BoxInsideChangeEvent;
+import com.ztdx.eams.domain.store.model.event.BoxInsideEvent;
 import com.ztdx.eams.domain.system.application.FondsService;
 import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.system.application.RoleService;
@@ -2113,6 +2114,25 @@ public class EntryController {
             }
             boxService.updateTotal(a, archiveId, pages, files);
         });
+    }
+
+    @EventListener
+    @Transactional
+    public void boxInside(BoxInsideEvent boxInsideEvent) {
+        int catalogueId = boxInsideEvent.getCatalogueId();
+        String boxCode = boxInsideEvent.getBoxCode();
+        Collection<String> ids = boxInsideEvent.getIds();
+        Catalogue catalogue = catalogueService.get(catalogueId);
+        if (catalogue == null) {
+            throw new InvalidArgumentException("目录不存在");
+        }
+        Box box = boxService.getByCode(catalogue.getArchivesId(), boxCode);
+        if (box == null) {
+            throw new InvalidArgumentException("盒不存在");
+        }
+
+        entryService.inBox(catalogueId, ids, boxCode);
+        applicationContext.publishEvent(new BoxInsideChangeEvent(this, catalogueId, catalogue.getArchivesId(), Collections.singletonList(boxCode)));
     }
 
     @EventListener

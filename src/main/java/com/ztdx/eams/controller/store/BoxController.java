@@ -8,6 +8,7 @@ import com.ztdx.eams.domain.archives.model.Catalogue;
 import com.ztdx.eams.domain.store.model.event.BoxDeleteEvent;
 import com.ztdx.eams.domain.store.application.BoxService;
 import com.ztdx.eams.domain.store.model.Box;
+import com.ztdx.eams.domain.store.model.event.BoxInsideEvent;
 import com.ztdx.eams.query.ArchivesQuery;
 import com.ztdx.eams.query.StoreQuery;
 import org.jooq.types.UInteger;
@@ -16,6 +17,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -82,7 +85,7 @@ public class BoxController {
     }
 
     /**
-     * @api {post} /box/ 新增档案盒
+     * @api {post} /box/ 新增档案盒（若有条目信息则装盒）
      * @apiName save
      * @apiGroup box
      * @apiParam {Number} archivesId 档案库ID
@@ -92,20 +95,28 @@ public class BoxController {
      * @apiParam {Number} total 新增个数
      * @apiParam {Number} maxPagesTotal 最大容量（页）
      * @apiParam {String} remark 备注（未输入传""值）
+     * @apiParam {Number} catalogueId 备注（非必传）
+     * @apiParam {String[]} ids 备注（非必传）
      * @apiError (Error 400) message 盒号已存在.
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "/", method = RequestMethod.POST)
-    public void save(@JsonParam int archivesId
-            , @JsonParam String codeRule
-            , @JsonParam String flowNumber
-            , @JsonParam int width
-            , @JsonParam int total
-            , @JsonParam int maxPagesTotal
-            , @JsonParam String remark) {
+    public void save(@RequestBody Map<String, Object> map) {
+        int archivesId = (int) map.get("archivesId");
+        String codeRule = (String) map.get("codeRule");
+        String flowNumber = (String) map.get("flowNumber");
+        int width = (int) map.get("width");
+        int total = (int) map.get("total");
+        int maxPagesTotal = (int) map.get("maxPagesTotal");
+        String remark = (String) map.get("remark");
+        Box box = boxService.save(archivesId, codeRule, flowNumber, width, total, maxPagesTotal, remark);
 
-        boxService.save(archivesId, codeRule, flowNumber, width, total, maxPagesTotal, remark);
+        Collection<String> ids = (Collection<String>) map.getOrDefault("ids", null);
+        Integer catalogueId = (Integer) map.getOrDefault("catalogueId", null);
+        if (total == 1 && ids != null && catalogueId != null) {
+            applicationContext.publishEvent(new BoxInsideEvent(this, catalogueId, box.getCode(), ids));
+        }
     }
 
     /**
@@ -220,19 +231,18 @@ public class BoxController {
      * @apiParam {Number[]} ids 盒id数组
      * @apiParamExample {json} Request-Example
      * {
-     *     "archiveId": 1,
-     *     "ids": [1,2]
+     * "archiveId": 1,
+     * "ids": [1,2]
      * }
      * @apiError message 目录不存在
-     *
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "/unBox", method = RequestMethod.POST)
-    public void unBox(@JsonParam List<Integer> ids,@JsonParam int archiveId){
+    public void unBox(@JsonParam List<Integer> ids, @JsonParam int archiveId) {
         catalogueService.getMainCatalogue(archiveId);
         Catalogue catalogue = catalogueService.getMainCatalogue(archiveId);
 
-        if (catalogue == null){
+        if (catalogue == null) {
             throw new InvalidArgumentException("目录不存在");
         }
 
