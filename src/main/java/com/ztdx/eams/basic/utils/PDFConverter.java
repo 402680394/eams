@@ -4,6 +4,7 @@ import com.artofsolving.jodconverter.DocumentConverter;
 import com.artofsolving.jodconverter.openoffice.connection.OpenOfficeConnection;
 import com.artofsolving.jodconverter.openoffice.connection.SocketOpenOfficeConnection;
 import com.artofsolving.jodconverter.openoffice.converter.OpenOfficeDocumentConverter;
+import com.artofsolving.jodconverter.openoffice.converter.StreamOpenOfficeDocumentConverter;
 import com.ztdx.eams.basic.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -30,7 +31,7 @@ public class PDFConverter {
             throw new BusinessException("未连接到openoffice服务");
         }
 
-        DocumentConverter converter = new OpenOfficeDocumentConverter(connection);
+        DocumentConverter converter = new StreamOpenOfficeDocumentConverter(connection);
         converter.convert(inputFile, outputFile);
 
         connection.disconnect();
