@@ -103,7 +103,7 @@ public class BorrowController {
         map.put("applicantId", borrow.getApplicantId());
         map.put("applicationDate", borrow.getApplicationDate());
         //审批部门领导
-        map.put("departmentLeader", 23);
+        map.put("departmentLeader", 46);
         //流程类型
         map.put("type", "borrow");
         //审批时间
@@ -143,7 +143,7 @@ public class BorrowController {
             map.put("id", entryId);
             map.put("catalogueId", catalogueId);
             //审批档案员
-            map.put("filer", 22);
+            map.put("filer", 27);
             workService.start("borrow", map);
         }
     }
