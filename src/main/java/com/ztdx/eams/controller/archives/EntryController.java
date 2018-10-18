@@ -1108,7 +1108,7 @@ public class EntryController {
         file.put("fileType", a.getType());
         file.put("pdfConvertStatus", a.getPdfConverStatus());
 
-        boolean isView = permissionService.hasAnyAuthority("ROLE_ADMIN", "object_original_text_view_" + a.getId());
+        boolean isView = permissionService.hasAnyAuthority("ROLE_ADMIN", "archive_entry_read_" + a.getCatalogueId(), "object_original_text_view_" + a.getId());
 
         String highLight;
         String title;
