@@ -25,6 +25,6 @@ public interface CatalogueRepository extends JpaRepository<Catalogue, Integer> {
     List<Catalogue> findAllByArchivesIdIn(List<Integer> archivesId);
 
     //查询全宗下归档库除去案卷所有目录
-    @Query("select c.id from Fonds f,ArchivesGroup ag,Archives a,Catalogue c where f.id=:fondsId and ag.fondsId=f.id and a.archivesGroupId=ag.id and a.type=2 and c.archivesId=a.id and c.catalogueType<>2")
+    @Query("select c.id from Fonds f,ArchivesGroup ag,Archives a,Catalogue c where f.id=:fondsId and ag.fondsId=f.id and a.archivesGroupId=ag.id and a.type=2 and a.gmtDeleted=0 and c.archivesId=a.id and c.catalogueType<>2")
     List<Integer> findCatalogueIdByfondsId(@Param(value = "fondsId") int fondsId);
 }

@@ -1694,7 +1694,8 @@ public class EntryController {
         if (ids != null && ids.size() > 0 && srcId != null) {
             List<Map<String, Object>> batch = ids.stream().map(a -> {
                 Map<String, Object> map = new HashMap<>();
-                map.put(a, srcId);
+                map.put("catalogueId", srcId);
+                map.put("id", a);
                 return map;
             }).collect(Collectors.toList());
             originalTextService.deleteBatch(batch);
