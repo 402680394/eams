@@ -10,6 +10,7 @@ import com.ztdx.eams.domain.archives.repository.mongo.EntryMongoRepository;
 import com.ztdx.eams.domain.system.repository.FondsRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,6 +19,7 @@ import java.util.stream.StreamSupport;
 /**
  * 档号生成与清除
  */
+@Service
 public class GeneratingBusiness {
 
     private final ArchivalCodeRulerRepository archivalcodeRulerRepository;
@@ -109,8 +111,8 @@ public class GeneratingBusiness {
             throw new BusinessException("错误的接口");
         }
 
-        archivalCodeNameOfFolderFile = getArchivalCodeMetadataName(archivalCodeNameOfFolderFile, catalogueId);
-        serialNumberNameOfFolderFile = getSerialNumberName(serialNumberNameOfFolderFile, catalogueId);
+        archivalCodeNameOfFolderFile = getArchivalCodeMetadataName(catalogueId);
+        serialNumberNameOfFolderFile = getSerialNumberName(catalogueId);
         if (archivalCodeNameOfFolderFile == null) {
             throw new BusinessException(catalogueType.getDescription() + "没有档号列");
         } else if (serialNumberNameOfFolderFile == null) {
@@ -221,7 +223,7 @@ public class GeneratingBusiness {
         String messageOfErrors = "档号已存在";
         Map<String, String> errorsMapOfFolderFile = new HashMap<>();
 
-        archivalCodeName = getArchivalCodeMetadataName(archivalCodeName, catalogueId);
+        archivalCodeName = getArchivalCodeMetadataName(catalogueId);
         if (archivalCodeName == null) {
             throw new BusinessException(getCatalogueType(catalogueId) + "没有档号列");
         }
@@ -235,7 +237,7 @@ public class GeneratingBusiness {
         //取出规则集合的序号
         serialNumberName = StreamSupport.stream(archivalCodeRulers.spliterator(), false).filter(archivalCodeRuler -> archivalCodeRuler.getType().equals(RulerType.SerialNumber)).toString();
         if (serialNumberName != null) {
-            serialNumberName = getSerialNumberName(serialNumberName, catalogueId);
+            serialNumberName = getSerialNumberName(catalogueId);
             if (serialNumberName == null) {
                 throw new BusinessException(getCatalogueType(catalogueId) + "没有序号列");
             } else {
@@ -322,8 +324,8 @@ public class GeneratingBusiness {
                 }
                 if (folderFileEntryList.size() > 0) {
                     //生成档号
-                    archivalCodeNameOfFolderFile = getArchivalCodeMetadataName(archivalCodeNameOfFolderFile, folderFileCatalogueId);
-                    serialNumberNameOfFolderFile = getSerialNumberName(serialNumberNameOfFolderFile, folderFileCatalogueId);
+                    archivalCodeNameOfFolderFile = getArchivalCodeMetadataName(folderFileCatalogueId);
+                    serialNumberNameOfFolderFile = getSerialNumberName(folderFileCatalogueId);
                     if (archivalCodeNameOfFolderFile == null) {
                         errorsMapOfFolderFile.put(getCatalogueType(folderFileCatalogueId), "没有档号列");
                     } else if (serialNumberNameOfFolderFile == null) {
@@ -399,7 +401,7 @@ public class GeneratingBusiness {
         switch (archivalCodeRuler.getType()) {
             case EntryValue:
                 String metadataName = "";
-                for (DescriptionItem descriptionItem : descriptionItems){
+                for (DescriptionItem descriptionItem : descriptionItems) {
                     if (descriptionItem.getId() == archivalCodeRuler.getDescriptionItemId()) {
                         metadataName = descriptionItem.getMetadataName();
                     }
@@ -412,7 +414,7 @@ public class GeneratingBusiness {
                 break;
             case ReferenceCode:
                 String metadataName1 = "";
-                for (DescriptionItem descriptionItem : descriptionItems){
+                for (DescriptionItem descriptionItem : descriptionItems) {
                     if (descriptionItem.getId() == archivalCodeRuler.getDescriptionItemId()) {
                         metadataName1 = descriptionItem.getMetadataName();
                     }
@@ -472,15 +474,13 @@ public class GeneratingBusiness {
     /**
      * 得到元数据名称
      *
-     * @param archivalCodeName 名称
      * @param catalogueId      目录id
      * @return
      */
-    public String getArchivalCodeMetadataName(String archivalCodeName, int catalogueId) {
+    public String getArchivalCodeMetadataName(int catalogueId) {
         DescriptionItem descriptionItem = descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.Reference);
         if (descriptionItem != null) {
-            archivalCodeName = descriptionItem.getMetadataName();
-            return archivalCodeName;
+            return descriptionItem.getMetadataName();
         }
         return null;
     }
@@ -488,15 +488,13 @@ public class GeneratingBusiness {
     /**
      * 得到元数据名称
      *
-     * @param serialNumberName 名称
      * @param catalogueId      目录id
      * @return
      */
-    public String getSerialNumberName(String serialNumberName, int catalogueId) {
+    public String getSerialNumberName(int catalogueId) {
         DescriptionItem descriptionItem = descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, PropertyType.SerialNumber);
         if (descriptionItem != null) {
-            serialNumberName = descriptionItem.getMetadataName();
-            return serialNumberName;
+            return descriptionItem.getMetadataName();
         }
         return null;
     }

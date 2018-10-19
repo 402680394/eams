@@ -34,10 +34,10 @@ public class ArchivalCodeRulerService {
      * 构造函数
      */
     @Autowired
-    public ArchivalCodeRulerService(ArchivalCodeRulerRepository archivalcodeRulerRepository, EntryMongoRepository entryMongoRepository, CatalogueRepository catalogueRepository, FondsRepository fondsRepository, DescriptionItemRepository descriptionItemRepository, EntryAsyncTask entryAsyncTask, ArchivalCodeRulerRepository archivalCodeRulerRepository) {
+    public ArchivalCodeRulerService(GeneratingBusiness generatingBusiness, EntryMongoRepository entryMongoRepository, EntryAsyncTask entryAsyncTask, ArchivalCodeRulerRepository archivalCodeRulerRepository) {
         this.entryAsyncTask = entryAsyncTask;
         this.archivalCodeRulerRepository = archivalCodeRulerRepository;
-        this.generatingBusiness = new GeneratingBusiness(archivalcodeRulerRepository, entryMongoRepository, catalogueRepository, fondsRepository, descriptionItemRepository, entryAsyncTask);
+        this.generatingBusiness = generatingBusiness;
         this.entryMongoRepository = entryMongoRepository;
     }
 
@@ -81,8 +81,7 @@ public class ArchivalCodeRulerService {
         Iterable<Entry> entries = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
         //创建新条目集合存入MongoDB
         List<Entry> newEntries = new ArrayList<>();
-        String name = "";
-        name = generatingBusiness.getArchivalCodeMetadataName(name, catalogueId);
+        String name = generatingBusiness.getArchivalCodeMetadataName(catalogueId);
 
         if (name == null) {
             throw new BusinessException(generatingBusiness.getCatalogueType(catalogueId) + "找不到档号列");

@@ -35,13 +35,13 @@ public class ShelfService {
     }
 
     @Transactional
-    public Shelf save(Shelf shelf){
+    public Shelf save(Shelf shelf) {
 
-        if (existsByName(shelf.getStorageId(), shelf.getName())){
+        if (existsByName(shelf.getStorageId(), shelf.getName())) {
             throw new InvalidArgumentException("密集架名称已存在");
         }
 
-        if (existsByCode(shelf.getStorageId(), shelf.getCode())){
+        if (existsByCode(shelf.getStorageId(), shelf.getCode())) {
             throw new InvalidArgumentException("密集架编码已存在");
         }
 
@@ -56,7 +56,7 @@ public class ShelfService {
     }
 
     @Transactional
-    public void createSection(Shelf shelf){
+    public void createSection(Shelf shelf) {
 
         List<ShelfSection> sectionList = shelfSectionRepository.createSection(shelf);
 
@@ -64,39 +64,39 @@ public class ShelfService {
 
         int sectionCount = shelfSectionRepository.countByShelfIdAndGmtDeleted(shelf.getId(), 0);
 
-        if(sectionCount != shelf.getSectionNum()){
+        if (sectionCount != shelf.getSectionNum()) {
             shelf.setSectionNum(sectionCount);
             shelfRepository.save(shelf);
         }
     }
 
-    public boolean existsByName(int storageId, String name){
+    public boolean existsByName(int storageId, String name) {
         return shelfRepository.existsByStorageIdAndNameAndGmtDeleted(storageId, name, 0);
     }
 
-    public boolean existsByCode(int storageId, String code){
+    public boolean existsByCode(int storageId, String code) {
         return shelfRepository.existsByStorageIdAndCodeAndGmtDeleted(storageId, code, 0);
     }
 
-    public boolean existsByName(int storageId, int shelfId, String name){
+    public boolean existsByName(int storageId, int shelfId, String name) {
         return shelfRepository.existsByStorageIdAndIdNotAndNameAndGmtDeleted(storageId, shelfId, name, 0);
     }
 
-    public boolean existsByCode(int storageId, int shelfId, String code){
+    public boolean existsByCode(int storageId, int shelfId, String code) {
         return shelfRepository.existsByStorageIdAndIdNotAndCodeAndGmtDeleted(storageId, shelfId, code, 0);
     }
 
-    public void update(Shelf shelf){
+    public void update(Shelf shelf) {
         Shelf old = shelfRepository.findById(shelf.getId()).orElse(null);
-        if (old == null){
+        if (old == null) {
             throw new NotFoundException("密集架不存在");
         }
 
-        if (existsByName(old.getStorageId(), shelf.getId(), shelf.getName())){
+        if (existsByName(old.getStorageId(), shelf.getId(), shelf.getName())) {
             throw new InvalidArgumentException("密集架名称已存在");
         }
 
-        if (existsByCode(old.getStorageId(), shelf.getId(), shelf.getCode())){
+        if (existsByCode(old.getStorageId(), shelf.getId(), shelf.getCode())) {
             throw new InvalidArgumentException("密集架编码已存在");
         }
 
@@ -135,7 +135,7 @@ public class ShelfService {
             map.put("sectionNum", a.getSectionNum());
 
             List<ShelfSection> sectionList = sectionGroups.getOrDefault(a.getId(), null);
-            if (sectionList != null){
+            if (sectionList != null) {
                 map.put("children", sectionList);
             }
 
@@ -144,7 +144,7 @@ public class ShelfService {
     }
 
     public List<Map<String, Object>> listByFondsId(int fondsIds) {
-        List<Storage> storages = storageRepository.findAllByFondsId(fondsIds);
+        List<Storage> storages = storageRepository.findAllByFondsIdAndGmtDeleted(fondsIds, 0);
         List<Integer> storageIds = storages.stream().map(Storage::getId).collect(Collectors.toList());
 
         List<Shelf> shelves = shelfRepository.findByStorageIdInAndGmtDeleted(storageIds, 0);
@@ -162,7 +162,7 @@ public class ShelfService {
             map.put("name", a.getName());
             map.put("nodeType", "storage");
 
-            List<Shelf> tmpShelfList =  shelfGroups.getOrDefault(a.getId(), null);
+            List<Shelf> tmpShelfList = shelfGroups.getOrDefault(a.getId(), null);
             List<Map<String, Object>> shelfList = new ArrayList<>();
             if (tmpShelfList != null) {
 
@@ -195,7 +195,7 @@ public class ShelfService {
                 }).collect(Collectors.toList());
             }
 
-            if (shelfList != null){
+            if (shelfList != null) {
                 map.put("children", shelfList);
             }
 

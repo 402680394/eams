@@ -4,13 +4,13 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.application.ClassificationService;
 import com.ztdx.eams.domain.archives.application.DescriptionItemService;
 import com.ztdx.eams.domain.archives.application.DictionaryClassificationService;
-import com.ztdx.eams.domain.archives.application.EntryService;
+import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
-import com.ztdx.eams.domain.archives.model.PropertyType;
 import com.ztdx.eams.domain.system.application.OrganizationService;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -34,16 +34,16 @@ public class DescriptionItemController {
 
     private final OrganizationService organizationService;
 
-    private final EntryService entryService;
+    private final EntryAsyncTask entryAsyncTask;
 
     @Autowired
-    public DescriptionItemController(ArchivesQuery archivesQuery, DescriptionItemService descriptionItemService, ClassificationService classificationService, DictionaryClassificationService dictionaryClassificationService, OrganizationService organizationService, EntryService entryService) {
+    public DescriptionItemController(ArchivesQuery archivesQuery, DescriptionItemService descriptionItemService, ClassificationService classificationService, DictionaryClassificationService dictionaryClassificationService, OrganizationService organizationService, EntryAsyncTask entryAsyncTask) {
         this.archivesQuery = archivesQuery;
         this.descriptionItemService = descriptionItemService;
         this.classificationService = classificationService;
         this.dictionaryClassificationService = dictionaryClassificationService;
         this.organizationService = organizationService;
-        this.entryService = entryService;
+        this.entryAsyncTask = entryAsyncTask;
     }
 
     /**
@@ -207,12 +207,13 @@ public class DescriptionItemController {
      * @apiError (Error 400) message 1.目录不存在 2.元数据不在同一个元数据规范中.
      * @apiUse ErrorExample
      */
+    @Transactional
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody Map map) {
         int catalogueId = (int) map.get("catalogueId");
         List<Integer> metadataIds = (List<Integer>) map.get("metadataIds");
-        descriptionItemService.save(catalogueId, metadataIds);
-        entryService.initIndex(catalogueId);
+        List<DescriptionItem> descriptionItems = descriptionItemService.save(catalogueId, metadataIds);
+        entryAsyncTask.putMapping(descriptionItems);
     }
 
     /**

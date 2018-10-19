@@ -1,9 +1,7 @@
 package com.ztdx.eams.domain.archives.application.task;
 
-import com.google.common.collect.Iterables;
 import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.task.Job;
-import com.ztdx.eams.basic.utils.StringUtils;
 import com.ztdx.eams.domain.archives.model.*;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
@@ -25,8 +23,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -71,14 +67,14 @@ public class EntryAsyncTask {
     }
 
     @Job
-    public void indexAll(Iterable<Entry> entries, int catalogueId){
+    public void indexAll(Iterable<Entry> entries, int catalogueId) {
         indexAllJob(entries, catalogueId);
     }
 
-    public void indexAllJob(Iterable<Entry> entries, int catalogueId){
+    public void indexAllJob(Iterable<Entry> entries, int catalogueId) {
         System.out.println("进入到indexAll");
         System.out.println("线程名称：" + Thread.currentThread().getName());
-        if (entries == null || !entries.iterator().hasNext()){
+        if (entries == null || !entries.iterator().hasNext()) {
             return;
         }
         initIndex(catalogueId);
@@ -91,7 +87,7 @@ public class EntryAsyncTask {
                 , this.getIndexName(catalogueId));
     }
 
-    public void index(Entry entry){
+    public void index(Entry entry) {
         System.out.println("线程名称：" + Thread.currentThread().getName());
         initIndex(entry.getCatalogueId());
         entryElasticsearchRepository.save(entry);
@@ -110,7 +106,7 @@ public class EntryAsyncTask {
     @Async
     public void copyItemsFieldToSystemField(Entry entry) {
         List<PropertyType> propertyTypes = Arrays.asList(
-                  PropertyType.Rank
+                PropertyType.Rank
                 , PropertyType.CarrierType
                 , PropertyType.ClassificationNumber
                 , PropertyType.department
@@ -128,7 +124,7 @@ public class EntryAsyncTask {
             }
 
             Object value = entry.getItems().getOrDefault(fieldName, null);
-            if (value == null){
+            if (value == null) {
                 return;
             }
 
@@ -139,7 +135,7 @@ public class EntryAsyncTask {
 //            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
 //            }
 
-            switch (propertyType){
+            switch (propertyType) {
                 case Rank:
                     entry.setRank(value.toString());
                     break;
@@ -170,6 +166,17 @@ public class EntryAsyncTask {
         index(entry);
     }
 
+    public void createCatalogueInit(int id) {
+        try {
+            originalTextElasticsearchRepository.createIndex(this.getIndexName(id));
+            initIndex(id);
+            putMapping(id);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void test(String uuid) {
         rebuild();
         //rebuildById(Integer.parseInt(uuid));
@@ -190,31 +197,31 @@ public class EntryAsyncTask {
         }
     }
 
-    public void rebuild(){
+    public void rebuild() {
         catalogueRepository.findAll().forEach(a -> rebuildById(a.getId()));
     }
 
-    private void rebuildCatalogueEntry(int catalogueId){
+    private void rebuildCatalogueEntry(int catalogueId) {
         long total = entryMongoRepository.count(getIndexName(catalogueId));
         long pageCount = total / 100 + 1;
-        for (long i=0;i < pageCount; i++){
-            Page<Entry> list = entryMongoRepository.findAll(PageRequest.of((int)i,100, Sort.by(Sort.Direction.ASC, "gmtCreate")), getIndexName(catalogueId));
-            if (list.getContent().size() == 0){
+        for (long i = 0; i < pageCount; i++) {
+            Page<Entry> list = entryMongoRepository.findAll(PageRequest.of((int) i, 100, Sort.by(Sort.Direction.ASC, "gmtCreate")), getIndexName(catalogueId));
+            if (list.getContent().size() == 0) {
                 return;
             }
             entryElasticsearchRepository.saveAll(list);
         }
     }
 
-    private void rebuildCatalogueOriginalText(int catalogueId){
+    private void rebuildCatalogueOriginalText(int catalogueId) {
         long total = originalTextMongoRepository.count("archive_record_originalText_" + catalogueId);
         long pageCount = total / 100 + 1;
-        for (long i=0;i < pageCount; i++){
+        for (long i = 0; i < pageCount; i++) {
             Page<OriginalText> list = originalTextMongoRepository.findAll(
                     PageRequest.of(
-                            (int)i,100, Sort.by(Sort.Direction.ASC, "gmtCreate"))
+                            (int) i, 100, Sort.by(Sort.Direction.ASC, "gmtCreate"))
                     , "archive_record_originalText_" + catalogueId);
-            if (list.getContent().size() == 0){
+            if (list.getContent().size() == 0) {
                 return;
             }
 
@@ -226,7 +233,7 @@ public class EntryAsyncTask {
 
             list.forEach(a -> {
                 Entry entry = map.getOrDefault(a.getEntryId(), null);
-                if (entry == null){
+                if (entry == null) {
                     return;
                 }
                 a.setArchiveContentType(entry.getArchiveContentType());
@@ -238,7 +245,6 @@ public class EntryAsyncTask {
     }
 
     private void putMapping(int catalogueId) throws IOException {
-        initIndex(catalogueId);
 
         List<DescriptionItem> list = descriptionItemRepository.findByCatalogueId(catalogueId);
         XContentBuilder contentBuilder;
@@ -262,8 +268,36 @@ public class EntryAsyncTask {
         entryElasticsearchRepository.putMapping(this.getIndexName(catalogueId), contentBuilder);
     }
 
-    private FieldType convertDescriptionItemDateType(DescriptionItemDataType dataType){
-        switch (dataType){
+    public void putMapping(List<DescriptionItem> descriptionItems) {
+        try {
+
+            XContentBuilder contentBuilder;
+            contentBuilder = XContentFactory.jsonBuilder().startObject()
+                    .startObject(getIndexType(Entry.class))
+                    .startObject("properties");
+
+            contentBuilder
+                    .startObject("full_content")
+                    .field("type", FieldType.text.name().toLowerCase())
+                    .endObject();
+
+            contentBuilder.startObject("items")
+                    .startObject("properties");
+            for (DescriptionItem descriptionItem : descriptionItems) {
+                addSingleFieldMapping(contentBuilder, descriptionItem);
+            }
+
+            contentBuilder.endObject().endObject().endObject().endObject().endObject();
+
+            entryElasticsearchRepository.putMapping(this.getIndexName(descriptionItems.get(0).getCatalogueId()), contentBuilder);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private FieldType convertDescriptionItemDateType(DescriptionItemDataType dataType) {
+        switch (dataType) {
             case Date:
                 return FieldType.Date;
             case Double:
@@ -295,7 +329,7 @@ public class EntryAsyncTask {
             }
         }
 
-        if (descriptionItem.getIsIndex() == 1){
+        if (descriptionItem.getIsIndex() == 1) {
             xContentBuilder.field("copy_to", FULL_CONTENT);
         }
 
@@ -307,10 +341,10 @@ public class EntryAsyncTask {
         xContentBuilder.endObject();
     }
 
-    private <T> String getIndexType(Class<T> clazz){
+    private <T> String getIndexType(Class<T> clazz) {
         if (clazz.isAnnotationPresent(Document.class)) {
             Document document = clazz.getAnnotation(Document.class);
-            return document.type().isEmpty()?clazz.getSimpleName():document.type();
+            return document.type().isEmpty() ? clazz.getSimpleName() : document.type();
         }
         return clazz.getSimpleName();
     }
@@ -323,10 +357,10 @@ public class EntryAsyncTask {
         }
     }
 
-    private String getIndexName(Integer catalogueId){
+    private String getIndexName(Integer catalogueId) {
         if (catalogueId == null) {
             return INDEX_NAME_PREFIX + "*";
-        }else{
+        } else {
             return String.format(INDEX_NAME_PREFIX + "%d", catalogueId);
         }
     }

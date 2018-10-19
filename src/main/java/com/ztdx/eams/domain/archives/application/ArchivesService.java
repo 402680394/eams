@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.archives.application;
 
+import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.Archives;
 import com.ztdx.eams.domain.archives.model.Catalogue;
 import com.ztdx.eams.domain.archives.model.CatalogueType;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,49 +24,58 @@ public class ArchivesService {
 
     private final CatalogueRepository catalogueRepository;
 
+    private final EntryAsyncTask entryAsyncTask;
+
     /**
      * 构造函数
      */
     @Autowired
-    public ArchivesService(ArchivesRepository archivesRepository, CatalogueRepository catalogueRepository) {
+    public ArchivesService(ArchivesRepository archivesRepository, CatalogueRepository catalogueRepository, EntryAsyncTask entryAsyncTask) {
         this.archivesRepository = archivesRepository;
         this.catalogueRepository = catalogueRepository;
+        this.entryAsyncTask = entryAsyncTask;
     }
 
     /**
      * 创建档案库
      */
     @Transactional
-    public void save(Archives archives) {
+    public List<Integer> save(Archives archives) {
         archives = archivesRepository.save(archives);
+        List<Integer> catalogueIds = new ArrayList<>();
         switch (archives.getStructure()) {
             case ArticleOne: {
                 Catalogue file = new Catalogue();
                 file.setArchivesId(archives.getId());
                 file.setCatalogueType(CatalogueType.File);
-                catalogueRepository.save(file);
+                file = catalogueRepository.save(file);
+                catalogueIds.add(file.getId());
                 break;
             }
             case TraditionalArchives: {
                 Catalogue folder = new Catalogue();
                 folder.setArchivesId(archives.getId());
                 folder.setCatalogueType(CatalogueType.Folder);
-                catalogueRepository.save(folder);
+                folder = catalogueRepository.save(folder);
+                catalogueIds.add(folder.getId());
 
                 Catalogue folderFile = new Catalogue();
                 folderFile.setArchivesId(archives.getId());
                 folderFile.setCatalogueType(CatalogueType.FolderFile);
-                catalogueRepository.save(folderFile);
+                folderFile = catalogueRepository.save(folderFile);
+                catalogueIds.add(folderFile.getId());
                 break;
             }
             case Project: {
                 Catalogue project = new Catalogue();
                 project.setArchivesId(archives.getId());
                 project.setCatalogueType(CatalogueType.Subject);
-                catalogueRepository.save(project);
+                project = catalogueRepository.save(project);
+                catalogueIds.add(project.getId());
                 break;
             }
         }
+        return catalogueIds;
     }
 
     public Archives get(Integer id) {

@@ -24,5 +24,5 @@ public interface StorageRepository extends JpaRepository<Storage, Integer> {
     @Query("update Storage s set s.name=:#{#storage.name},s.number=:#{#storage.number},s.description=:#{#storage.description} where s.id=:#{#storage.id}")
     void updateById(@Param(value = "storage") Storage storage);
 
-    List<Storage> findAllByFondsId(int fondsIds);
+    List<Storage> findAllByFondsIdAndGmtDeleted(int fondsIds,int gmtDeleted);
 }

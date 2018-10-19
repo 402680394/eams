@@ -3,14 +3,17 @@ package com.ztdx.eams.controller.archives;
 import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.basic.exception.ForbiddenException;
 import com.ztdx.eams.domain.archives.application.ArchivesService;
+import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.Archives;
 import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.system.application.RoleService;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,12 +29,15 @@ public class ArchivesController {
 
     private final PermissionService permissionService;
 
+    private final EntryAsyncTask entryAsyncTask;
+
     @Autowired
-    public ArchivesController(ArchivesService archivesService, ArchivesQuery archivesQuery, RoleService roleService, PermissionService permissionService) {
+    public ArchivesController(ArchivesService archivesService, ArchivesQuery archivesQuery, RoleService roleService, PermissionService permissionService, EntryAsyncTask entryAsyncTask) {
         this.archivesService = archivesService;
         this.archivesQuery = archivesQuery;
         this.roleService = roleService;
         this.permissionService = permissionService;
+        this.entryAsyncTask = entryAsyncTask;
     }
 
     /**
@@ -240,9 +246,11 @@ public class ArchivesController {
      * @apiError (Error 400) message 档案库名称已存在.
      * @apiUse ErrorExample
      */
+    @Transactional
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody Archives archives) {
-        archivesService.save(archives);
+        List<Integer> catalogueIds = archivesService.save(archives);
+        catalogueIds.forEach(id -> entryAsyncTask.createCatalogueInit(id));
     }
 
     /**

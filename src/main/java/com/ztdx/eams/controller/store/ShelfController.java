@@ -323,7 +323,7 @@ public class ShelfController {
 
         ArchivesGroup group = archivesGroupService.get(archives.getArchivesGroupId());
         if (group == null){
-            throw new NotFoundException("档案库不存在");
+            throw new NotFoundException("档案库分组不存在");
         }
 
         return shelfService.listByFondsId(group.getFondsId());
