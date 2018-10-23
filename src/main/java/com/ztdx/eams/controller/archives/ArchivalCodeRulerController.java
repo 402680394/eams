@@ -218,8 +218,8 @@ public class ArchivalCodeRulerController {
         if (null == archivalCodeRuler.getValue()) {
             archivalCodeRuler.setValue("");
         }
-        if (archivalCodeRuler.getFlowNumberLength() <= 0) {
-            archivalCodeRuler.setFlowNumberLength((byte) 0);
+        if (archivalCodeRuler.getFlowNumberLength() <= 4) {
+            archivalCodeRuler.setFlowNumberLength(4);
         }
     }
 }
