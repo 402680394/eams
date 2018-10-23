@@ -1278,6 +1278,7 @@ public class ArchivesQuery {
                 archivesArchivalcodeRuler.VALUE.as("value"),
                 archivesArchivalcodeRuler.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
                 archivesArchivalcodeRuler.INTERCEPTION_LENGTH.as("interceptionLength"),
+                archivesArchivalcodeRuler.FLOW_NUMBER_LENGTH.as("flowNumberLength"),
                 archivesArchivalcodeRuler.CATALOGUE_ID.as("catalogueId"),
                 archivesArchivalcodeRuler.REMARK.as("remark"))
                 .from(archivesArchivalcodeRuler)
