@@ -26,7 +26,7 @@ public interface ArchivalCodeRulerRepository extends JpaRepository<ArchivalCodeR
     Integer findMaxOrderNumber(@Param(value = "catalogueId") int catalogueId);
 
     @Modifying
-    @Query("update ArchivalCodeRuler a set a.type=:#{#archivalCodeRuler.type},a.value=:#{#archivalCodeRuler.value},a.descriptionItemId=:#{#archivalCodeRuler.descriptionItemId},a.interceptionLength=:#{#archivalCodeRuler.interceptionLength},a.remark=:#{#archivalCodeRuler.remark} where a.id=:#{#archivalCodeRuler.id}")
+    @Query("update ArchivalCodeRuler a set a.type=:#{#archivalCodeRuler.type},a.value=:#{#archivalCodeRuler.value},a.descriptionItemId=:#{#archivalCodeRuler.descriptionItemId},a.interceptionLength=:#{#archivalCodeRuler.interceptionLength},a.flowNumberLength=:#{#archivalCodeRuler.flowNumberLength},a.remark=:#{#archivalCodeRuler.remark} where a.id=:#{#archivalCodeRuler.id}")
     void updateById(@Param("archivalCodeRuler") ArchivalCodeRuler archivalCodeRuler);
 
     Optional<ArchivalCodeRuler> findByCatalogueIdAndType(int catalogueId, RulerType rulerType);
