@@ -377,8 +377,6 @@ public class GeneratingBusiness {
         if (condition.equals(maxSerialNumber)) {
             serialNumber = 1;
         } else {//如果有则执行以下的
-            //得到序号
-            //serialNumber = Integer.parseInt(maxSerialNumber);
             serialNumber = maxSerialNumber;
             serialNumber++;
         }
@@ -390,7 +388,6 @@ public class GeneratingBusiness {
 
         //返回序号
         return newSerialNumber;
-
     }
 
     /**
@@ -404,9 +401,7 @@ public class GeneratingBusiness {
      */
     private String archivalCodeRuler(List<DescriptionItem> descriptionItems, ArchivalCodeRuler archivalCodeRuler, Map<String, Object> items, List<Map<String, String>> errorsList, Entry entry, String serialNumberName) {
 
-        //拼接内容
         String str = "";
-        String valueOfErrors = "不能为空";
         Map<String, String> errorsMap = new HashMap<>();
 
         switch (archivalCodeRuler.getType()) {
@@ -418,9 +413,13 @@ public class GeneratingBusiness {
                     }
                 }
                 String entryValue = items.get(metadataName).toString();
-                str = entryValue.substring(0, archivalCodeRuler.getInterceptionLength());
+                if (entryValue.length() <= archivalCodeRuler.getInterceptionLength()) {
+                    str = entryValue;
+                } else {
+                    str = entryValue.substring(0, archivalCodeRuler.getInterceptionLength());
+                }
                 if (str.equals("")) {
-                    errorsMap.put(entry.getId(), metadataName + valueOfErrors);
+                    errorsMap.put(entry.getId(), metadataName + "不能为空");
                 }
                 break;
             case ReferenceCode:
@@ -437,29 +436,28 @@ public class GeneratingBusiness {
                     str = referenceCode.substring(0, archivalCodeRuler.getInterceptionLength());
                 }
                 if (str.equals("")) {
-                    errorsMap.put(entry.getId(), entryValue1 + valueOfErrors);
+                    errorsMap.put(entry.getId(), entryValue1 + "不能为空");
                 }
                 break;
             case FondsCode:
                 str = fondsRepository.findById(entry.getFondsId()).getCode();
                 if (str.equals("")) {
-                    errorsMap.put(entry.getId(), "全宗号" + valueOfErrors);
+                    errorsMap.put(entry.getId(), "全宗号不能为空");
                 }
                 break;
             case FixValue:
                 str = archivalCodeRuler.getValue();
                 if (str.equals("")) {
-                    errorsMap.put(entry.getId(), "固定值" + valueOfErrors);
+                    errorsMap.put(entry.getId(), "固定值不能为空");
                 }
                 break;
             case SerialNumber:
                 str = entryMongoRepository.findById(entry.getId(), "archive_record_" + entry.getCatalogueId()).get().getItems().get(serialNumberName) + "";
                 if (str.equals("")) {
-                    errorsMap.put(entry.getId(), "序号" + valueOfErrors);
+                    errorsMap.put(entry.getId(), "序号不能为空");
                 }
                 break;
         }
-
         if (errorsMap.size() > 0) {
             errorsList.add(errorsMap);
         }
@@ -517,5 +515,4 @@ public class GeneratingBusiness {
     public String getCatalogueType(Integer catalogueId) {
         return catalogueRepository.findById(catalogueId).orElse(null).getCatalogueType().getDescription();
     }
-
 }
