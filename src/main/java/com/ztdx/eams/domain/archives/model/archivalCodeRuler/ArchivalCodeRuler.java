@@ -41,6 +41,11 @@ public class ArchivalCodeRuler {
     @Column(name = "interception_length")
     private int interceptionLength;
 
+    @Min(value = 0)
+    @Max(value = 20)
+    @Column(name = "flow_number_length")
+    private int flowNumberLength;
+
     //备注
     @Size(max = 50)
     @Column(name = "remark")

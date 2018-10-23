@@ -102,21 +102,34 @@ public class GeneratingBusiness {
         String folderArchivalCode = "";
         String archivalCodeNameOfFolderFile = "";
         String serialNumberNameOfFolderFile = "";
+        ArchivalCodeRuler serialNumberRuler = null;
 
         //得到目录类型
-        Catalogue catalogue = catalogueRepository.findById(catalogueId).orElse(null);
-        CatalogueType catalogueType = catalogue.getCatalogueType();
+        Catalogue folderFile = catalogueRepository.findById(catalogueId).orElse(null);
+        CatalogueType catalogueType = folderFile.getCatalogueType();
 
         if (catalogueType != CatalogueType.FolderFile) {
             throw new BusinessException("错误的接口");
         }
 
+        Catalogue folder = catalogueRepository.findByArchivesIdAndCatalogueType(folderFile.getArchivesId(), CatalogueType.Folder).orElse(null);
+
+        List<ArchivalCodeRuler> archivalCodeRulers = archivalcodeRulerRepository.findByCatalogueIdOrderByOrderNumber(folder.getId());
+        //如果规则集合为空，则抛异常
+        if (archivalCodeRulers.size() == 0) {
+            throw new BusinessException("未设置档号生成规则");
+        }
+        for (ArchivalCodeRuler archivalCodeRuler : archivalCodeRulers) {
+            if (archivalCodeRuler.getType().equals(RulerType.SerialNumber)) {
+                serialNumberRuler = archivalCodeRuler;
+            }
+        }
+
+
         archivalCodeNameOfFolderFile = getArchivalCodeMetadataName(catalogueId);
         serialNumberNameOfFolderFile = getSerialNumberName(catalogueId);
         if (archivalCodeNameOfFolderFile == null) {
             throw new BusinessException(catalogueType.getDescription() + "没有档号列");
-        } else if (serialNumberNameOfFolderFile == null) {
-            throw new BusinessException(catalogueType.getDescription() + "没有序号列");
         }
 
         //通过卷内目录id获得所有卷内条目集合
@@ -137,12 +150,11 @@ public class GeneratingBusiness {
         Optional<Entry> folderEntry = entryMongoRepository.findById(folderId, "archive_record_" + folderCatalogueList.get().getId());
         //得到案卷档号
         if (folderEntry.isPresent()) {
-            Entry find = folderEntry.get();
-            folderArchivalCode = (String) find.getItems().get(archivalCodeNameOfFolderFile);
+            folderArchivalCode = (String) folderEntry.get().getItems().get(archivalCodeNameOfFolderFile);
         }
 
         //生成档号
-        generatingFolderFileArchivalCode(folderFileList, entriesForSave, errorsList, folderArchivalCode, archivalCodeNameOfFolderFile, serialNumberNameOfFolderFile);
+        generatingFolderFileArchivalCode(serialNumberRuler, folderFileList, entriesForSave, errorsList, folderArchivalCode, archivalCodeNameOfFolderFile, serialNumberNameOfFolderFile);
 
         //把条目集合存入MongoDB
         if (entriesForSave.size() > 0) {
@@ -161,13 +173,18 @@ public class GeneratingBusiness {
     /**
      * 生成卷内档号
      */
-    public void generatingFolderFileArchivalCode(List<Entry> folderFileList, List<Entry> entriesForSave, List<Map<String, String>> errorsList, String folderArchivalCode, String archivalCodeNameOfFolderFile, String serialNumberNameOfFolderFile) {
+    public void generatingFolderFileArchivalCode(ArchivalCodeRuler serialNumberRuler, List<Entry> folderFileList, List<Entry> entriesForSave, List<Map<String, String>> errorsList, String folderArchivalCode, String archivalCodeNameOfFolderFile, String serialNumberNameOfFolderFile) {
 
         //定义档号
         String archivalCode = "";
         //定义卷内顺序号
         Integer serialNumber = 0;
         String newSerialNumber = "";
+        int serialLength = 4;
+
+        if (serialNumberRuler != null) {
+            serialLength = serialNumberRuler.getFlowNumberLength();
+        }
 
         //循环卷内
         for (Entry entry : folderFileList) {
@@ -184,7 +201,7 @@ public class GeneratingBusiness {
 
             serialNumber++;
             //得到顺序号
-            newSerialNumber = generatingAllTypeSerialNumber(serialNumber, entry.getCatalogueId());
+            newSerialNumber = generatingAllTypeSerialNumber(serialNumber, serialLength);
             //生成档号
             archivalCode = folderArchivalCode + newSerialNumber;
 
@@ -219,8 +236,9 @@ public class GeneratingBusiness {
         String serialNumberNameOfFolderFile = "";
         Integer folderFileCatalogueId = -1;
         String maxSerialNumber = "";
-        Integer numberOfMaxSerialNumber = -1;
+        Integer numberOfMaxSerialNumber = 1;
         String messageOfErrors = "档号已存在";
+        ArchivalCodeRuler serialNumberRuler = null;
         Map<String, String> errorsMapOfFolderFile = new HashMap<>();
 
         archivalCodeName = getArchivalCodeMetadataName(catalogueId);
@@ -232,31 +250,29 @@ public class GeneratingBusiness {
         List<ArchivalCodeRuler> archivalCodeRulers = archivalcodeRulerRepository.findByCatalogueIdOrderByOrderNumber(catalogueId);
         //如果规则集合为空，则抛异常
         if (archivalCodeRulers.size() == 0) {
-            throw new BusinessException("该目录未设置档号生成规则");
+            throw new BusinessException("未设置档号生成规则");
         }
-        //取出规则集合的序号
-        serialNumberName = StreamSupport.stream(archivalCodeRulers.spliterator(), false).filter(archivalCodeRuler -> archivalCodeRuler.getType().equals(RulerType.SerialNumber)).toString();
-        if (serialNumberName != null) {
-            serialNumberName = getSerialNumberName(catalogueId);
-            if (serialNumberName == null) {
-                throw new BusinessException(getCatalogueType(catalogueId) + "没有序号列");
-            } else {
-                //调用仓储层得到最大序号
-                Query query = new Query();
-                query.with(Sort.by(Sort.Direction.DESC, "items.sn")).limit(1);
-                List<Entry> list = entryMongoRepository.findAll(query, "archive_record_" + catalogueId);
-
-                if (list.size() > 0) {
-                    maxSerialNumber = list.get(0).getItems().getOrDefault(serialNumberName, "") + "";
-                    if (!"".equals(maxSerialNumber)) {
-                        numberOfMaxSerialNumber = Integer.parseInt(maxSerialNumber);
-                    } else {
-                        numberOfMaxSerialNumber = 1;
-                    }
-                }
+        for (ArchivalCodeRuler archivalCodeRuler : archivalCodeRulers) {
+            if (archivalCodeRuler.getType().equals(RulerType.SerialNumber)) {
+                serialNumberRuler = archivalCodeRuler;
             }
         }
 
+        //取出规则集合的序号
+        if (serialNumberRuler != null) {
+            serialNumberName = getSerialNumberName(catalogueId);
+            //调用仓储层得到最大序号
+            Query query = new Query();
+            query.with(Sort.by(Sort.Direction.DESC, "items.sn")).limit(1);
+            List<Entry> list = entryMongoRepository.findAll(query, "archive_record_" + catalogueId);
+
+            if (list.size() > 0) {
+                maxSerialNumber = list.get(0).getItems().getOrDefault(serialNumberName, "") + "";
+                if (!"".equals(maxSerialNumber)) {
+                    numberOfMaxSerialNumber = Integer.parseInt(maxSerialNumber);
+                }
+            }
+        }
 
         //查找条目，要传入条目id和目录id
         Iterable<Entry> entryList = entryMongoRepository.findAllById(entryIds, "archive_record_" + catalogueId);
@@ -283,12 +299,10 @@ public class GeneratingBusiness {
 
         //遍历条目集合
         for (Entry entry : entryList) {
-
             //取条目中的著录项集合
             Map<String, Object> items = entry.getItems();
             //如果档号已经存在，则返回错误信息
             if (null != items.get(archivalCodeName) && !"".equals(items.get(archivalCodeName))) {
-                //errors.add(getCatalogueType(entry.getCatalogueId())+"档号已存在");
                 Map<String, String> errorsMap = new HashMap<>();
                 errorsMap.put(entry.getId(), messageOfErrors);
                 errorsList.add(errorsMap);
@@ -297,22 +311,19 @@ public class GeneratingBusiness {
 
             //遍历规则集合
             for (ArchivalCodeRuler archivalCodeRuler : archivalCodeRulers) {
-
                 //如果规则集合有序号
                 if (archivalCodeRuler.getType() == RulerType.SerialNumber) {
                     //如果条目中没有序号
                     if (items.get(serialNumberName) == null || items.get(serialNumberName).equals("")) {
                         //生成序号
-                        splicingContent = generatingSerialNumber(items, entry.getCatalogueId(), serialNumberName, numberOfMaxSerialNumber);
+                        splicingContent = generatingSerialNumber(items, archivalCodeRuler.getFlowNumberLength(), serialNumberName, numberOfMaxSerialNumber);
                     } else {
                         splicingContent = archivalCodeRuler(descriptionItems, archivalCodeRuler, items, errorsList, entry, serialNumberName);
                     }
                 } else {
                     splicingContent = archivalCodeRuler(descriptionItems, archivalCodeRuler, items, errorsList, entry, serialNumberName);
                 }
-
                 archivalCodeVal.append(splicingContent);
-
             }
 
             //生成卷内档号
@@ -332,7 +343,7 @@ public class GeneratingBusiness {
                         errorsMapOfFolderFile = new HashMap<>();
                         errorsMapOfFolderFile.put(getCatalogueType(folderFileCatalogueId), "没有序号列");
                     } else {
-                        generatingFolderFileArchivalCode(folderFileEntryList, folderFileEntriesForSave, errorsList, archivalCodeVal.toString(), archivalCodeNameOfFolderFile, serialNumberNameOfFolderFile);
+                        generatingFolderFileArchivalCode(serialNumberRuler, folderFileEntryList, folderFileEntriesForSave, errorsList, archivalCodeVal.toString(), archivalCodeNameOfFolderFile, serialNumberNameOfFolderFile);
                     }
                 }
             }
@@ -356,7 +367,7 @@ public class GeneratingBusiness {
      * @param items 条目
      * @return 返回序号
      */
-    private String generatingSerialNumber(Map<String, Object> items, Integer catalogueId, String nameOfFolderFile, Integer maxSerialNumber) {
+    private String generatingSerialNumber(Map<String, Object> items, int serialLength, String nameOfFolderFile, Integer maxSerialNumber) {
 
         //序号
         Integer serialNumber = -1;
@@ -372,7 +383,7 @@ public class GeneratingBusiness {
             serialNumber++;
         }
 
-        String newSerialNumber = generatingAllTypeSerialNumber(serialNumber, catalogueId);
+        String newSerialNumber = generatingAllTypeSerialNumber(serialNumber, serialLength);
 
         //放入条目
         items.put(nameOfFolderFile, newSerialNumber);
@@ -461,12 +472,10 @@ public class GeneratingBusiness {
      * @param serialNumber 序号
      * @return 补零后的序号
      */
-    private String generatingAllTypeSerialNumber(Integer serialNumber, Integer catalogueId) {
+    private String generatingAllTypeSerialNumber(Integer serialNumber, int serialLength) {
 
-        //调用仓储层得到序号长度
-        Integer i = catalogueRepository.findById(catalogueId).get().getSerialLength();
         //补零  (%表示结果为字面值 0 代表前面补充0 4 代表长度为4 d 代表参数为正数型)
-        String newSerialNumber = String.format("%0" + i + "d", serialNumber);
+        String newSerialNumber = String.format("%0" + serialLength + "d", serialNumber);
 
         return newSerialNumber;
     }
@@ -474,7 +483,7 @@ public class GeneratingBusiness {
     /**
      * 得到元数据名称
      *
-     * @param catalogueId      目录id
+     * @param catalogueId 目录id
      * @return
      */
     public String getArchivalCodeMetadataName(int catalogueId) {
@@ -488,7 +497,7 @@ public class GeneratingBusiness {
     /**
      * 得到元数据名称
      *
-     * @param catalogueId      目录id
+     * @param catalogueId 目录id
      * @return
      */
     public String getSerialNumberName(int catalogueId) {

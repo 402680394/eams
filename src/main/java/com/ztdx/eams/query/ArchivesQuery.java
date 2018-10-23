@@ -1280,7 +1280,10 @@ public class ArchivesQuery {
                 archivesArchivalcodeRuler.INTERCEPTION_LENGTH.as("interceptionLength"),
                 archivesArchivalcodeRuler.CATALOGUE_ID.as("catalogueId"),
                 archivesArchivalcodeRuler.REMARK.as("remark"))
-                .from(archivesArchivalcodeRuler).where(archivesArchivalcodeRuler.CATALOGUE_ID.equal(id)).fetch().intoMaps();
+                .from(archivesArchivalcodeRuler)
+                .where(archivesArchivalcodeRuler.CATALOGUE_ID.equal(id))
+                .orderBy(archivesArchivalcodeRuler.ORDER_NUMBER)
+                .fetch().intoMaps();
     }
 
     public Map<String, Object> getArchivalCodeRuler(UInteger id) {

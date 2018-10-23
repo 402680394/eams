@@ -6,6 +6,7 @@ import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.Entry;
 import com.ztdx.eams.domain.archives.model.archivalCodeRuler.ArchivalCodeRuler;
 import com.ztdx.eams.domain.archives.model.archivalCodeRuler.GeneratingBusiness;
+import com.ztdx.eams.domain.archives.model.archivalCodeRuler.RulerType;
 import com.ztdx.eams.domain.archives.repository.ArchivalCodeRulerRepository;
 import com.ztdx.eams.domain.archives.repository.CatalogueRepository;
 import com.ztdx.eams.domain.archives.repository.DescriptionItemRepository;
@@ -135,6 +136,12 @@ public class ArchivalCodeRulerService {
 
     @Transactional
     public void save(ArchivalCodeRuler archivalCodeRuler) {
+
+        ArchivalCodeRuler a = archivalCodeRulerRepository.findByCatalogueIdAndType(archivalCodeRuler.getCatalogueId(), RulerType.SerialNumber).orElse(null);
+        //只能有一个流水号
+        if (null != a && archivalCodeRuler.getType().equals(RulerType.SerialNumber)) {
+            throw new BusinessException("只能有一个流水号");
+        }
         //设置排序号
         Integer orderNumber = archivalCodeRulerRepository.findMaxOrderNumber(archivalCodeRuler.getCatalogueId());
         if (orderNumber != null) {
@@ -143,5 +150,11 @@ public class ArchivalCodeRulerService {
             archivalCodeRuler.setOrderNumber(1);
         }
         archivalCodeRulerRepository.save(archivalCodeRuler);
+
+        //流水号只能位于最后
+        if (null != a) {
+            a.setOrderNumber(orderNumber++);
+            archivalCodeRulerRepository.save(a);
+        }
     }
 }

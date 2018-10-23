@@ -90,9 +90,10 @@ public class ArchivalCodeRulerController {
      * @apiName list
      * @apiGroup archivalCode
      * @apiParam {Number} catalogueId 目录ID(url参数)
-     * @apiSuccess (Success 200) {Number} type 规则类型(1-著录项值 2-著录项所对应的参照编码 3-档案库所属单位全宗号 4-固定值).
+     * @apiSuccess (Success 200) {Number} type 规则类型(1-著录项值 2-著录项所对应的参照编码 3-档案库所属单位全宗号 4-固定值 5-流水号).
      * @apiSuccess (Success 200) {String} value 值.
      * @apiSuccess (Success 200) {Number} interceptionLength 截取长度.
+     * @apiSuccess (Success 200) Number} flowNumberLength 流水号长度.
      * @apiSuccess (Success 200) {Number} remark 备注.
      * @apiSuccess (Success 200) {Number} orderNumber 排序号.
      * @apiSuccessExample {json} Success-Response:
@@ -111,10 +112,11 @@ public class ArchivalCodeRulerController {
      * @api {post} /archivalCode 新增档号规则
      * @apiName save
      * @apiGroup archivalCode
-     * @apiParam {Number} type 类型 (1-著录项值 2-著录项所对应的参照编码 3-档案库所属单位全宗号 4-固定值)
+     * @apiParam {Number} type 类型 (1-著录项值 2-著录项所对应的参照编码 3-档案库所属单位全宗号 4-固定值 5-流水号)
      * @apiParam {String{10}} value 值(类型为固定值时传递)
      * @apiParam {Number} descriptionItemId 著录项id(类型为著录项值时传递)
      * @apiParam {Number} interceptionLength 截取长度(类型为著录项值时传递)
+     * @apiParam {Number} flowNumberLength 流水号长度(类型为流水号时传递)
      * @apiParam {Number} catalogueId 目录ID
      * @apiParam {String{50}} remark 备注（未输入传""值）
      * @apiError (Error 400) message .
@@ -142,10 +144,11 @@ public class ArchivalCodeRulerController {
      * @apiName update
      * @apiGroup archivalCode
      * @apiParam {Number} id ID
-     * @apiParam {Number} type 类型 (1-著入项值 2-著录项所对应的参照编码 3-档案库所属单位全宗号 4-固定值)
+     * @apiParam {Number} type 类型 (1-著入项值 2-著录项所对应的参照编码 3-档案库所属单位全宗号 4-固定值 5-流水号)
      * @apiParam {String{10}} value 值(类型为固定值时传递)
      * @apiParam {Number} descriptionItemId 著录项id(类型为著录项值时传递)
      * @apiParam {Number} interceptionLength 截取长度(类型为著录项值时传递)
+     * @apiParam {Number} flowNumberLength 流水号长度(类型为流水号时传递)
      * @apiParam {Number} catalogueId 目录ID
      * @apiParam {String} remark 备注（未输入传""值）
      * @apiError (Error 400) message .
@@ -206,12 +209,17 @@ public class ArchivalCodeRulerController {
             if (!b) {
                 throw new InvalidArgumentException("著录项校验错误");
             }
+        } else if (archivalCodeRuler.getType().equals(RulerType.FondsCode)) {
+            archivalCodeRuler.setValue("全宗号");
         }
         if (null == archivalCodeRuler.getRemark()) {
             archivalCodeRuler.setRemark("");
         }
         if (null == archivalCodeRuler.getValue()) {
             archivalCodeRuler.setValue("");
+        }
+        if (archivalCodeRuler.getFlowNumberLength() <= 0) {
+            archivalCodeRuler.setFlowNumberLength((byte) 0);
         }
     }
 }
