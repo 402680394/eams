@@ -133,7 +133,7 @@ public class FondsController {
     public void update(@RequestBody HashMap<String, Object> map) {
         Fonds fonds = new Fonds();
         fonds.setId((int) map.get("id"));
-        fonds.setParentId((int) map.get("parentId"));
+//        fonds.setParentId((int) map.get("parentId"));
         fonds.setCode((String) map.get("code"));
         fonds.setName((String) map.get("name"));
         fonds.setRemark((String) map.get("remark"));
