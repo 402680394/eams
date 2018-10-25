@@ -43,7 +43,7 @@ public interface FondsRepository extends JpaRepository<Fonds, Integer> {
 
     //通过ID修改
     @Modifying
-    @Query("update Fonds f set f.parentId=:#{#fonds.parentId},f.code=:#{#fonds.code},f.name=:#{#fonds.name},f.remark=:#{#fonds.remark} where f.id=:#{#fonds.id}")
+    @Query("update Fonds f set f.code=:#{#fonds.code},f.name=:#{#fonds.name},f.remark=:#{#fonds.remark} where f.id=:#{#fonds.id}")
     void updateById(@Param(value = "fonds") Fonds fonds);
 
     //设置优先级
