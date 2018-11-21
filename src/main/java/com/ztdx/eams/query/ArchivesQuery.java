@@ -1,6 +1,7 @@
 package com.ztdx.eams.query;
 
 import com.ztdx.eams.domain.archives.model.CatalogueType;
+import com.ztdx.eams.domain.archives.model.Structure;
 import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.DSLContext;
@@ -865,6 +866,26 @@ public class ArchivesQuery {
                 if (!(childrenMapChildren instanceof List)
                         || ((List) childrenMapChildren).size() == 0) {
                     continue;
+                }
+                CatalogueType catalogueType = null;
+                switch (Structure.create((byte) childrenMap.get("structure"))) {
+                    case ArticleOne: {
+                        catalogueType = CatalogueType.File;
+                        break;
+                    }
+                    case TraditionalArchives: {
+                        catalogueType = CatalogueType.Folder;
+                        break;
+                    }
+                    case Project: {
+                        catalogueType = CatalogueType.Subject;
+                        break;
+                    }
+                }
+                for (Map<String, Object> m : (List<Map<String, Object>>) childrenMapChildren) {
+                    if (CatalogueType.create((byte) m.get("catalogueType")).equals(catalogueType)) {
+                        childrenMap.put("catalogueId", m.get("id"));
+                    }
                 }
                 childrenList.add(childrenMap);
             }
