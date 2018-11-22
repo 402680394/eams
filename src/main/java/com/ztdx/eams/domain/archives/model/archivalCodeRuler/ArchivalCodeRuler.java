@@ -44,7 +44,7 @@ public class ArchivalCodeRuler {
     @Min(value = 0)
     @Max(value = 20)
     @Column(name = "flow_number_length")
-    private int flowNumberLength;
+    private Integer flowNumberLength;
 
     //备注
     @Size(max = 50)
