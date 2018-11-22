@@ -218,7 +218,7 @@ public class ArchivalCodeRulerController {
         if (null == archivalCodeRuler.getValue()) {
             archivalCodeRuler.setValue("");
         }
-        if (archivalCodeRuler.getFlowNumberLength() <= 4) {
+        if (archivalCodeRuler.getType().equals(RulerType.SerialNumber) && archivalCodeRuler.getFlowNumberLength() <= 4) {
             archivalCodeRuler.setFlowNumberLength(4);
         }
     }
