@@ -92,7 +92,9 @@ public class BoxService {
             , String remark) {
         //流水号项
         BoxCodeRule boxCodeRule = boxCodeRuleRepository.findByArchivesIdAndType(archivesId, 4).orElse(null);
-
+        if (null==boxCodeRule) {
+            throw new InvalidArgumentException("未配置流水号");
+        }
         int flowNumberLength = boxCodeRule == null ? 4 : boxCodeRule.getFlowNumberLength();
 
         NumberFormat formatter = NumberFormat.getNumberInstance();
