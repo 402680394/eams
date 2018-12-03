@@ -173,7 +173,7 @@ public class SystemQuery {
     /**
      * 根据条件查询机构下属用户.
      */
-    public Map<String, Object> getUserListByOrg(int organizationId, String key, int pageNum) {
+    public Map<String, Object> getUserListByOrg(int organizationId, String key, int pageNum,int pageSize) {
 
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
@@ -199,7 +199,7 @@ public class SystemQuery {
                                     .or(sysUser.PHONE.like("%" + key + "%"))
                                     .or(sysUser.EMAIL.like("%" + key + "%"))
                                     .or(sysUser.JOB.like("%" + key + "%")))
-                    .limit((pageNum - 1) * 10, 10)
+                    .limit((pageNum - 1) * pageSize, pageSize)
                     .fetch().intoMaps();
         }
 
@@ -225,14 +225,14 @@ public class SystemQuery {
     /**
      * 根据条件查询所有用户.
      */
-    public Map<String, Object> getUserList(String key, int pageNum) {
+    public Map<String, Object> getUserList(String key, int pageNum,int pageSize) {
 
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
 
         int total = getUserListTotal(key);
         if (total != 0) {
-            int index = (pageNum - 1) * 10;
+            int index = (pageNum - 1) * pageSize;
 
             list = dslContext.select(
                     sysUser.ID.as("id"),
@@ -252,7 +252,7 @@ public class SystemQuery {
                             .or(sysUser.PHONE.like("%" + key + "%"))
                             .or(sysUser.EMAIL.like("%" + key + "%"))
                             .or(sysUser.JOB.like("%" + key + "%")))
-                    .limit(index, 10)
+                    .limit(index, pageSize)
                     .fetch().intoMaps();
         }
 

@@ -142,7 +142,8 @@ public class UserController {
      * @api {get} /user/list 获取用户列表
      * @apiName list
      * @apiGroup user
-     * @apiParam {Number} pageNum 页码（默认为1）（url参数）
+     * @apiParam {Number} pageNum 每页条数（默认为15）（url参数）
+     * @apiParam {Number} pageSize 页码（默认为1）（url参数）
      * @apiParam {Number} organizationId 机构ID（url参数）
      * @apiParam {String} key 搜索值（搜索全部不传本值）（url参数）
      * @apiSuccess (Success 200) {Number} id 用户ID.
@@ -166,7 +167,10 @@ public class UserController {
      * }.
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list(@RequestParam("organizationId") int organizationId, @RequestParam(name = "key", required = false, defaultValue = "") String key, @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
+    public Map<String, Object> list(@RequestParam("organizationId") int organizationId
+            , @RequestParam(name = "key", required = false, defaultValue = "") String key
+            , @RequestParam(name = "pageSize", required = false, defaultValue = "15") int pageSize
+            , @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
         Organization organization = organizationService.get(organizationId);
         if (organization == null) {
             throw new InvalidArgumentException("组织机构不存在");
@@ -181,9 +185,9 @@ public class UserController {
 
         //判断是否查询所有用户
         if (organizationId == 1) {
-            return systemQuery.getUserList(key, pageNum);
+            return systemQuery.getUserList(key, pageNum, pageSize);
         }
-        return systemQuery.getUserListByOrg(organizationId, key, pageNum);
+        return systemQuery.getUserListByOrg(organizationId, key, pageNum, pageSize);
     }
 
     /**
