@@ -78,7 +78,6 @@
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
 
-        <!--lomok-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -86,7 +85,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!--jooq-->
         <dependency>
             <groupId>org.jooq</groupId>
             <artifactId>jooq</artifactId>
@@ -103,21 +101,18 @@
             <version>3.10.6</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-web -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
             <version>5.0.4.RELEASE</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-config -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
             <version>5.0.4.RELEASE</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-elasticsearch -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
@@ -154,7 +149,7 @@
             <artifactId>poi-ooxml</artifactId>
             <version>3.17</version>
         </dependency>
-        <!-- jodconverter-office2PDF -->
+        <!-- openoffice转换PDF -->
         <dependency>
             <groupId>officeconverter</groupId>
             <artifactId>jodconverter</artifactId>
@@ -219,7 +214,26 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <filtering>true</filtering>
+                <!--<includes>
+                    <include>*.properties</include>
+                </includes>-->
+            </resource>
+        </resources>
         <plugins>
+            <!-- 动态配置环境插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.0.1</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                    <useDefaultDelimiters>true</useDefaultDelimiters>
+                </configuration>
+            </plugin>
             <plugin>
 
                 <groupId>org.jooq</groupId>
@@ -249,9 +263,9 @@
                     <!-- Configure the database connection here -->
                     <jdbc>
                         <driver>com.mysql.jdbc.Driver</driver>
-                        <url>jdbc:mysql://192.168.1.210:3306/eams</url>
-                        <user>root</user>
-                        <password>123456</password>
+                        <url>${db.url}</url>
+                        <user>${db.user}</user>
+                        <password>${db.password}</password>
                     </jdbc>
 
                     <!-- Generator parameters -->
@@ -262,7 +276,7 @@
                             <!-- In case your database supports catalogs, e.g. SQL Server:
                             <inputCatalog>public</inputCatalog>
                               -->
-                            <inputSchema>eams</inputSchema>
+                            <inputSchema>${db.name}</inputSchema>
                         </database>
                         <target>
                             <packageName>com.ztdx.eams.query.jooq</packageName>
@@ -314,5 +328,78 @@
             </plugin>
         </plugins>
     </build>
+    
+<!--动态环境配置-->
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <db.name>
+                    eams
+                </db.name>
+                <db.url>
+                    jdbc:mysql://192.168.1.210:3306/eams
+                </db.url>
+                <db.user>
+                    root
+                </db.user>
+                <db.password>
+                    123456
+                </db.password>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <filters>
+                    <filter>${project.basedir}/src/main/resources/application.properties</filter>
+                </filters>
+            </build>
+        </profile>
+        <profile>
+            <id>beta</id>
+            <properties>
+                <db.name>
+                    eams_test
+                </db.name>
+                <db.url>
+                    jdbc:mysql://192.168.1.210:3306/eams_test
+                </db.url>
+                <db.user>
+                    root
+                </db.user>
+                <db.password>
+                    123456
+                </db.password>
+            </properties>
+            <build>
+                <filters>
+                    <filter>${project.basedir}/src/main/resources/application.properties</filter>
+                </filters>
+            </build>
+        </profile>
+        <profile>
+            <id>pro</id>
+            <properties>
+                <db.name>
+                    eams
+                </db.name>
+                <db.url>
+                    jdbc:mysql://localhost:3306/eams
+                </db.url>
+                <db.user>
+                    root
+                </db.user>
+                <db.password>
+                    ztdx@2018
+                </db.password>
+            </properties>
+            <build>
+                <filters>
+                    <filter>${project.basedir}/src/main/resources/application.properties</filter>
+                </filters>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
