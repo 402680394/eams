@@ -338,7 +338,7 @@
                     eams
                 </db.name>
                 <db.url>
-                    jdbc:mysql://192.168.1.210:3306/eams
+                    jdbc:mysql://192.168.1.210:3306/eams?characterEncoding=utf-8
                 </db.url>
                 <db.user>
                     root
@@ -363,7 +363,7 @@
                     eams_test
                 </db.name>
                 <db.url>
-                    jdbc:mysql://192.168.1.210:3306/eams_test
+                    jdbc:mysql://192.168.1.210:3306/eams_test?characterEncoding=utf-8
                 </db.url>
                 <db.user>
                     root
@@ -385,7 +385,7 @@
                     eams
                 </db.name>
                 <db.url>
-                    jdbc:mysql://localhost:3306/eams
+                    jdbc:mysql://localhost:3306/eams?characterEncoding=utf-8
                 </db.url>
                 <db.user>
                     root
