@@ -4,7 +4,6 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.system.model.Organization;
 import com.ztdx.eams.domain.system.repository.OrganizationRepository;
 import com.ztdx.eams.domain.system.repository.UserRepository;
-import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -2,25 +2,17 @@ package com.ztdx.eams.controller.work;
 
 import com.ztdx.eams.basic.UserCredential;
 import com.ztdx.eams.domain.system.application.OrganizationService;
-import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.system.application.UserService;
 import com.ztdx.eams.domain.system.model.User;
-import com.ztdx.eams.domain.work.model.Workflow;
-import com.ztdx.eams.domain.work.model.WorkflowCompleteEvent;
-import javafx.util.Pair;
 import org.apache.commons.lang.StringUtils;
-import org.flowable.common.engine.api.delegate.event.FlowableEntityEvent;
-import org.flowable.common.engine.api.delegate.event.FlowableEvent;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.TaskService;
 import org.flowable.engine.history.HistoricProcessInstance;
-import org.flowable.engine.runtime.ProcessInstance;
 import org.flowable.task.api.Task;
 import org.flowable.variable.api.history.HistoricVariableInstance;
 import org.flowable.variable.api.persistence.entity.VariableInstance;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.event.EventListener;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -28,8 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.flowable.common.engine.api.delegate.event.FlowableEngineEventType.PROCESS_COMPLETED;
 
 @RestController
 @RequestMapping(value = "/backlog")
