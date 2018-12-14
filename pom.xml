@@ -463,7 +463,7 @@
                     ztdx-docker-cluster
                 </es.name>
                 <es.nodes>
-                    elasticsearch1:9300
+                    localhost:9300
                 </es.nodes>
                 <es.user>
                     elastic:changeme
