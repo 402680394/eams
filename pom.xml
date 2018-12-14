@@ -346,6 +346,39 @@
                 <db.password>
                     123456
                 </db.password>
+                <es.name>
+                    development
+                </es.name>
+                <es.nodes>
+                    192.168.1.211:9300
+                </es.nodes>
+                <es.user>
+                    elastic:changeme
+                </es.user>
+                <mgd.host>
+                    192.168.1.210
+                </mgd.host>
+                <mgd.dbname>
+                    demo
+                </mgd.dbname>
+                <mgd.user>
+                    demo
+                </mgd.user>
+                <mgd.password>
+                    123456
+                </mgd.password>
+                <ftp.address>
+                    192.168.1.200
+                </ftp.address>
+                <ftp.user>
+                    ftp
+                </ftp.user>
+                <ftp.password>
+                    123456
+                </ftp.password>
+                <ftp.path>
+                    /home/ftp/
+                </ftp.path>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -371,6 +404,39 @@
                 <db.password>
                     123456
                 </db.password>
+                <es.name>
+                    development
+                </es.name>
+                <es.nodes>
+                    192.168.1.211:9300
+                </es.nodes>
+                <es.user>
+                    elastic:changeme
+                </es.user>
+                <mgd.host>
+                    192.168.1.210
+                </mgd.host>
+                <mgd.dbname>
+                    demo
+                </mgd.dbname>
+                <mgd.user>
+                    demo
+                </mgd.user>
+                <mgd.password>
+                    123456
+                </mgd.password>
+                <ftp.address>
+                    192.168.1.200
+                </ftp.address>
+                <ftp.user>
+                    ftp
+                </ftp.user>
+                <ftp.password>
+                    123456
+                </ftp.password>
+                <ftp.path>
+                    /home/ftp/
+                </ftp.path>
             </properties>
             <build>
                 <filters>
@@ -393,6 +459,39 @@
                 <db.password>
                     ztdx@2018
                 </db.password>
+                <es.name>
+                    development
+                </es.name>
+                <es.nodes>
+                    192.168.1.211:9300
+                </es.nodes>
+                <es.user>
+                    elastic:changeme
+                </es.user>
+                <mgd.host>
+                    localhost
+                </mgd.host>
+                <mgd.dbname>
+                    ztdx-mongo
+                </mgd.dbname>
+                <mgd.user>
+                    mongoadmin
+                </mgd.user>
+                <mgd.password>
+                    ztdx@2018
+                </mgd.password>
+                <ftp.address>
+                    localhost
+                </ftp.address>
+                <ftp.user>
+                    eams
+                </ftp.user>
+                <ftp.password>
+                    ztdx@2018
+                </ftp.password>
+                <ftp.path>
+                    /home/ftp/
+                </ftp.path>
             </properties>
             <build>
                 <filters>
