@@ -380,7 +380,9 @@
                     /home/ftp/
                 </ftp.path>
             </properties>
-
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <filters>
                     <filter>${project.basedir}/src/main/resources/application.properties</filter>
@@ -491,9 +493,6 @@
                     /home/ftp/
                 </ftp.path>
             </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <build>
                 <filters>
                     <filter>${project.basedir}/src/main/resources/application.properties</filter>
