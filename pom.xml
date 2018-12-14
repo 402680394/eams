@@ -460,10 +460,10 @@
                     ztdx@2018
                 </db.password>
                 <es.name>
-                    development
+                    ztdx-docker-cluster
                 </es.name>
                 <es.nodes>
-                    192.168.1.211:9300
+                    elasticsearch1:9300
                 </es.nodes>
                 <es.user>
                     elastic:changeme
