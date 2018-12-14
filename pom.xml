@@ -451,7 +451,7 @@
                     eams
                 </db.name>
                 <db.url>
-                    jdbc:mysql://localhost:3306/eams?characterEncoding=utf-8
+                    jdbc:mysql://221.217.58.198:3306/eams?characterEncoding=utf-8
                 </db.url>
                 <db.user>
                     root
