@@ -469,7 +469,7 @@
                     elastic:changeme
                 </es.user>
                 <mgd.host>
-                    ztdx-mongo
+                    localhost
                 </mgd.host>
                 <mgd.dbname>
                     eams
