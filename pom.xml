@@ -380,9 +380,7 @@
                     /home/ftp/
                 </ftp.path>
             </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+
             <build>
                 <filters>
                     <filter>${project.basedir}/src/main/resources/application.properties</filter>
@@ -469,10 +467,10 @@
                     elastic:changeme
                 </es.user>
                 <mgd.host>
-                    localhost
+                    ztdx-mongo
                 </mgd.host>
                 <mgd.dbname>
-                    ztdx-mongo
+                    eams
                 </mgd.dbname>
                 <mgd.user>
                     mongoadmin
@@ -493,6 +491,9 @@
                     /home/ftp/
                 </ftp.path>
             </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <filters>
                     <filter>${project.basedir}/src/main/resources/application.properties</filter>
