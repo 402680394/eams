@@ -12,6 +12,9 @@ import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Permission;
 import com.ztdx.eams.domain.system.model.Resource;
 import com.ztdx.eams.domain.system.model.Role;
+import com.ztdx.eams.query.SystemQuery;
+import org.jooq.types.UInteger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,23 +27,20 @@ public class RoleController {
 
     private RoleService roleService;
 
-    private UserService userService;
-
-    private OrganizationService organizationService;
-
     private FondsService fondsService;
 
     private PermissionService permissionService;
 
     private ResourceService resourceService;
 
-    public RoleController(RoleService roleService, UserService userService, OrganizationService organizationService, FondsService fondsService, PermissionService permissionService, ResourceService resourceService) {
+    private SystemQuery systemQuery;
+    @Autowired
+    public RoleController(SystemQuery systemQuery,RoleService roleService, FondsService fondsService, PermissionService permissionService, ResourceService resourceService) {
         this.roleService = roleService;
-        this.userService = userService;
-        this.organizationService = organizationService;
         this.fondsService = fondsService;
         this.permissionService = permissionService;
         this.resourceService = resourceService;
+        this.systemQuery=systemQuery;
     }
 
     /**
@@ -502,5 +502,33 @@ public class RoleController {
     @RequestMapping(value = "/{id}/users", method = RequestMethod.GET)
     public List<Map<String, Object>> roleUsers(@PathVariable("id") long id){
         return roleService.roleUsers(id);
+    }
+    /**
+     * @api {get} /role/listByFonds 查询全宗下角色列表
+     * @apiName listByFonds
+     * @apiGroup role
+     * @apiParam {Number} id 全宗id (不传默认全局)
+     * @apiSuccess (Success 200) {NUmber} id 角色id
+     * @apiSuccess (Success 200) {String} name 角色名称
+     * @apiSuccess (Success 200) {String} remark 备注
+     * @apiSuccessExample {json} Success-Response:
+     * {
+     *     "data": [
+     *                  {
+     *                       "id":4,
+     *                       "name":"角色D",
+     *                       "remark": "备注"
+     *                   },
+     *                   {
+     *                       "id":5,
+     *                       "name":"角色E",
+     *                       "remark": "备注"
+     *                   }
+     *               ]
+     * }
+     */
+    @RequestMapping(value = "/listByFonds", method = RequestMethod.GET)
+    public List<Map<String, Object>> listByFonds(@RequestParam(name = "id",required = false) Integer fondsId){
+        return systemQuery.getRoleListByFonds(null==fondsId ? null : UInteger.valueOf(fondsId));
     }
 }

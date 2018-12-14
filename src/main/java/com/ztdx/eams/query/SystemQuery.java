@@ -3,7 +3,9 @@ package com.ztdx.eams.query;
 import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.SysFonds;
 import com.ztdx.eams.query.jooq.tables.SysOrganization;
+import com.ztdx.eams.query.jooq.tables.SysRole;
 import com.ztdx.eams.query.jooq.tables.SysUser;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,7 @@ public class SystemQuery {
 
     private SysFonds sysFonds = Tables.SYS_FONDS;
 
+    private SysRole sysRole = Tables.SYS_ROLE;
     @Autowired
     public SystemQuery(DSLContext dslContext) {
         this.dslContext = dslContext;
@@ -389,5 +392,15 @@ public class SystemQuery {
         List<Map<String, Object>> list = getAssociationId(id);
         resultMap.put("association", list);
         return resultMap;
+    }
+    /**
+     * 通过全宗ID获取获取全宗下角色.
+     */
+    public List<Map<String, Object>> getRoleListByFonds(UInteger fondsId) {
+        Condition condition=sysRole.FONDS_ID.eq(fondsId);
+        if(null==fondsId){
+            condition=sysRole.FONDS_ID.isNull();
+        }
+        return dslContext.select(sysRole.ID, sysRole.ROLE_NAME, sysRole.REMARK).from(sysRole).where(condition).fetch().intoMaps();
     }
 }
