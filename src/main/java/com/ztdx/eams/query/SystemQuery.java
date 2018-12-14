@@ -401,6 +401,6 @@ public class SystemQuery {
         if(null==fondsId){
             condition=sysRole.FONDS_ID.isNull();
         }
-        return dslContext.select(sysRole.ID, sysRole.ROLE_NAME, sysRole.REMARK).from(sysRole).where(condition).fetch().intoMaps();
+        return dslContext.select(sysRole.ID, sysRole.ROLE_NAME.as("name"), sysRole.REMARK).from(sysRole).where(condition).fetch().intoMaps();
     }
 }
