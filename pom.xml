@@ -408,13 +408,13 @@
                     ztdx-docker-cluster
                 </es.name>
                 <es.nodes>
-                    localhost:9300
+                    elasticsearch1:9300
                 </es.nodes>
                 <es.user>
                     elastic:changeme
                 </es.user>
                 <mgd.host>
-                    localhost
+                    mongodb
                 </mgd.host>
                 <mgd.dbname>
                     eams
