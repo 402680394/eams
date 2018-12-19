@@ -2029,7 +2029,7 @@ public class EntryController {
 //            XSSFWorkbook wb = entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
             List<List<String>> errorData  = entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
 
-//            int errorTotal = 0;
+            int errorTotal = 0;
 //            if (wb != null) {
 //                session.setAttribute("IMPORT_ERROR_DATA", wb);
 //                Iterator<Sheet> iterator = wb.sheetIterator();
@@ -2039,7 +2039,7 @@ public class EntryController {
 //            }
 
             Map<String, Object> resultMap = new HashMap<>();
-//            resultMap.put("errorTotal", errorTotal);
+            resultMap.put("errorTotal", errorTotal);
             resultMap.put("errorData", errorData);
 
             return resultMap;
