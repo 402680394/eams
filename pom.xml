@@ -353,14 +353,20 @@
                     192.168.1.211:9300
                 </es.nodes>
                 <es.user>
-                    elastic:changeme
+                    elastic
                 </es.user>
+                <es.password>
+                    changeme
+                </es.password>
                 <mgd.host>
                     192.168.1.210
                 </mgd.host>
                 <mgd.dbname>
                     demo
                 </mgd.dbname>
+                <mgd.authdb>
+                    demo
+                </mgd.authdb>
                 <mgd.user>
                     demo
                 </mgd.user>
@@ -411,14 +417,20 @@
                     elasticsearch1:9300
                 </es.nodes>
                 <es.user>
-                    elastic:changeme
+                    elastic
                 </es.user>
+                <es.password>
+                    changeme
+                </es.password>
                 <mgd.host>
                     mongodb
                 </mgd.host>
                 <mgd.dbname>
                     eams
                 </mgd.dbname>
+                <mgd.authdb>
+                    admin
+                </mgd.authdb>
                 <mgd.user>
                     mongoadmin
                 </mgd.user>
@@ -466,14 +478,20 @@
                     localhost:9300
                 </es.nodes>
                 <es.user>
-                    elastic:changeme
+                    elastic
                 </es.user>
+                <es.password>
+                    changeme
+                </es.password>
                 <mgd.host>
                     localhost
                 </mgd.host>
                 <mgd.dbname>
                     eams
                 </mgd.dbname>
+                <mgd.authdb>
+                    admin
+                </mgd.authdb>
                 <mgd.user>
                     mongoadmin
                 </mgd.user>
