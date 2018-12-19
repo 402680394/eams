@@ -9,6 +9,7 @@ import com.ztdx.eams.domain.work.model.Workflow;
 import com.ztdx.eams.domain.work.model.WorkflowCompleteEvent;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,12 @@ public class BorrowController {
     private final ArchivesService archivesService;
 
     private final OriginalTextService originalTextService;
+
+    @Value("${borrow.departmentLeader}")
+    private Integer departmentLeader;
+
+    @Value("${borrow.archiveManager}")
+    private Integer archiveManager;
 
     @Autowired
     public BorrowController(BorrowService borrowService, WorkService workService, EntryService entryService, DescriptionItemService descriptionItemService, PermissionService permissionService, ArchivesService archivesService, OriginalTextService originalTextService) {
@@ -103,7 +110,7 @@ public class BorrowController {
         map.put("applicantId", borrow.getApplicantId());
         map.put("applicationDate", borrow.getApplicationDate());
         //审批部门领导
-        map.put("departmentLeader", 46);
+        map.put("departmentLeader", departmentLeader);
         //流程类型
         map.put("type", "borrow");
         //审批时间
@@ -143,7 +150,7 @@ public class BorrowController {
             map.put("id", entryId);
             map.put("catalogueId", catalogueId);
             //审批档案员
-            map.put("filer", 27);
+            map.put("filer", archiveManager);
             workService.start("borrow", map);
         }
     }

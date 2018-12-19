@@ -353,14 +353,20 @@
                     192.168.1.211:9300
                 </es.nodes>
                 <es.user>
-                    elastic:changeme
+                    elastic
                 </es.user>
+                <es.password>
+                    changeme
+                </es.password>
                 <mgd.host>
                     192.168.1.210
                 </mgd.host>
                 <mgd.dbname>
                     demo
                 </mgd.dbname>
+                <mgd.authdb>
+                    demo
+                </mgd.authdb>
                 <mgd.user>
                     demo
                 </mgd.user>
@@ -379,6 +385,12 @@
                 <ftp.path>
                     /home/ftp/
                 </ftp.path>
+                <borrow.departmentLeader>
+                    1
+                </borrow.departmentLeader>
+                <borrow.archiveManager>
+                    1
+                </borrow.archiveManager>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -393,37 +405,43 @@
             <id>beta</id>
             <properties>
                 <db.name>
-                    eams_test
+                    eams
                 </db.name>
                 <db.url>
-                    jdbc:mysql://192.168.1.210:3306/eams_test?characterEncoding=utf-8
+                    jdbc:mysql://192.168.1.204:3306/eams?characterEncoding=utf-8
                 </db.url>
                 <db.user>
-                    root
+                    mariaadmin
                 </db.user>
                 <db.password>
-                    123456
+                    ztdx@2018
                 </db.password>
                 <es.name>
-                    development
+                    ztdx-docker-cluster
                 </es.name>
                 <es.nodes>
-                    192.168.1.211:9300
+                    elasticsearch1:9300
                 </es.nodes>
                 <es.user>
-                    elastic:changeme
+                    elastic
                 </es.user>
+                <es.password>
+                    changeme
+                </es.password>
                 <mgd.host>
-                    192.168.1.210
+                    mongodb
                 </mgd.host>
                 <mgd.dbname>
-                    demo
+                    eams
                 </mgd.dbname>
+                <mgd.authdb>
+                    admin
+                </mgd.authdb>
                 <mgd.user>
-                    demo
+                    mongoadmin
                 </mgd.user>
                 <mgd.password>
-                    123456
+                    ztdx@2018
                 </mgd.password>
                 <ftp.address>
                     192.168.1.200
@@ -437,6 +455,12 @@
                 <ftp.path>
                     /home/ftp/
                 </ftp.path>
+                <borrow.departmentLeader>
+                    1
+                </borrow.departmentLeader>
+                <borrow.archiveManager>
+                    1
+                </borrow.archiveManager>
             </properties>
             <build>
                 <filters>
@@ -451,7 +475,7 @@
                     eams
                 </db.name>
                 <db.url>
-                    jdbc:mysql://221.217.58.198:3306/eams?characterEncoding=utf-8
+                    jdbc:mysql://localhost:3306/eams?characterEncoding=utf-8
                 </db.url>
                 <db.user>
                     root
@@ -466,14 +490,20 @@
                     localhost:9300
                 </es.nodes>
                 <es.user>
-                    elastic:changeme
+                    elastic
                 </es.user>
+                <es.password>
+                    changeme
+                </es.password>
                 <mgd.host>
                     localhost
                 </mgd.host>
                 <mgd.dbname>
                     eams
                 </mgd.dbname>
+                <mgd.authdb>
+                    admin
+                </mgd.authdb>
                 <mgd.user>
                     mongoadmin
                 </mgd.user>
@@ -492,6 +522,12 @@
                 <ftp.path>
                     /home/ftp/
                 </ftp.path>
+                <borrow.departmentLeader>
+                    65
+                </borrow.departmentLeader>
+                <borrow.archiveManager>
+                    66
+                </borrow.archiveManager>
             </properties>
             <build>
                 <filters>
