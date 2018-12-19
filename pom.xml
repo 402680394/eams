@@ -399,16 +399,16 @@
             <id>beta</id>
             <properties>
                 <db.name>
-                    eams_test
+                    eams
                 </db.name>
                 <db.url>
-                    jdbc:mysql://192.168.1.210:3306/eams_test?characterEncoding=utf-8
+                    jdbc:mysql://mongodb:3306/eams?characterEncoding=utf-8
                 </db.url>
                 <db.user>
-                    root
+                    mariaadmin
                 </db.user>
                 <db.password>
-                    123456
+                    ztdx@2018
                 </db.password>
                 <es.name>
                     ztdx-docker-cluster
