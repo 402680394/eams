@@ -1195,7 +1195,7 @@ public class EntryController {
     }
 
     private Map<String, String> mapFondsList(Collection<Integer> ids) {
-        return fondsService.findAllById(ids).stream().collect(Collectors.toMap(a -> String.format("%s", a.getId()), Fonds::getName));
+        return fondsService.findAllByIdInAndGmtDeleted(ids).stream().collect(Collectors.toMap(a -> String.format("%s", a.getId()), Fonds::getName));
     }
 
     private Map<String, String> mapArchiveContentTypeList() {
