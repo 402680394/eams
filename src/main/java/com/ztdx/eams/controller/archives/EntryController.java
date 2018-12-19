@@ -2011,7 +2011,7 @@ public class EntryController {
      */
 //    @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_write_' + #entry.catalogueId)")
     @RequestMapping(value = "/importEntry", method = RequestMethod.POST)
-    public Map<String, Integer> importEntry(@RequestParam("catalogueId") int catalogueId
+    public Map<String, Object> importEntry(@RequestParam("catalogueId") int catalogueId
             , @RequestParam("file") MultipartFile file
             , @SessionAttribute UserCredential LOGIN_USER
             , HttpSession session) {
@@ -2026,19 +2026,21 @@ public class EntryController {
             bos.write(bytes);
             bos.flush();
 
-            XSSFWorkbook wb = entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
+//            XSSFWorkbook wb = entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
+            List<List<String>> errorData  = entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
 
-            int errorTotal = 0;
-            if (wb != null) {
-                session.setAttribute("IMPORT_ERROR_DATA", wb);
-                Iterator<Sheet> iterator = wb.sheetIterator();
-                while (iterator.hasNext()) {
-                    errorTotal += iterator.next().getLastRowNum() - 1;
-                }
-            }
+//            int errorTotal = 0;
+//            if (wb != null) {
+//                session.setAttribute("IMPORT_ERROR_DATA", wb);
+//                Iterator<Sheet> iterator = wb.sheetIterator();
+//                while (iterator.hasNext()) {
+//                    errorTotal += iterator.next().getLastRowNum() - 1;
+//                }
+//            }
 
-            Map<String, Integer> resultMap = new HashMap<>();
-            resultMap.put("errorTotal", errorTotal);
+            Map<String, Object> resultMap = new HashMap<>();
+//            resultMap.put("errorTotal", errorTotal);
+            resultMap.put("errorData", errorData);
 
             return resultMap;
         } catch (Exception e) {

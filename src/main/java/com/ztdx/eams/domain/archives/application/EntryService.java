@@ -1255,7 +1255,7 @@ public class EntryService {
     }
 
     //导入Excel文件条目数据
-    public XSSFWorkbook importEntry(int catalogueId, File tmpFile, int userId) {
+    public List<List<String>> importEntry(int catalogueId, File tmpFile, int userId) {
         Catalogue catalogue = catalogueRepository.findById(catalogueId).orElse(null);
         if (catalogue == null) {
             throw new InvalidArgumentException("目录不存在");
@@ -1290,21 +1290,22 @@ public class EntryService {
 
             List<List<String>> folderFileErrorData = this.importCatalogueEntry(archivesGroup, archives, folderFileCatalogue.get(), data.get(1), folderFileItems, userId);
             if (folderFileErrorData.size() != 1 || errorData.size() != 1) {
-                FileHandler.buildXSSFWorkbook("案卷", errorData, wb);
-                FileHandler.buildXSSFWorkbook("卷内", folderFileErrorData, wb);
+                wb = FileHandler.buildXSSFWorkbook("案卷", errorData, wb);
+                wb = FileHandler.buildXSSFWorkbook("卷内", folderFileErrorData, wb);
             }
         } else {
             //项目
             if (errorData.size() != 1) {
                 if (catalogue.getCatalogueType().equals(CatalogueType.File)) {
-                    FileHandler.buildXSSFWorkbook("一文一件", errorData, wb);
+                    wb = FileHandler.buildXSSFWorkbook("一文一件", errorData, wb);
                 } else {
-                    FileHandler.buildXSSFWorkbook("项目", errorData, wb);
+                    wb = FileHandler.buildXSSFWorkbook("项目", errorData, wb);
                 }
             }
 
         }
-        return wb;
+//        return wb;
+        return errorData;
     }
 
     public List<List<String>> importCatalogueEntry(ArchivesGroup archivesGroup
@@ -1318,7 +1319,8 @@ public class EntryService {
         //导入文件的title
         List<String> title = data.get(0);
 
-        List<String> errorTitle = title;
+        List<String> errorTitle = new ArrayList<>();
+        errorTitle.addAll(title);
         errorTitle.add("错误信息");
         errorData.add(errorTitle);
         //将导入文件title与著录项对应
