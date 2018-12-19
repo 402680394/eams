@@ -1,0 +1,121 @@
+version: '2.2'
+services:
+  web:
+    build: .
+    ports:
+      - "8092:8092"
+    networks: 
+      - esnet
+    volumes: 
+      - /home/www/eams:/code
+    depends_on: 
+      - elasticsearch1
+      - mongodb
+      - mariadb
+    restart: always
+  elasticsearch1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.14
+    container_name: elasticsearch1
+    environment:
+      - cluster.name=ztdx-docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    cpu_count: 1
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - esnet
+    restart: always
+  elasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.14
+    environment:
+      - cluster.name=ztdx-docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch1"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    cpu_count: 1
+    volumes:
+      - esdata2:/usr/share/elasticsearch/data
+    networks:
+      - esnet
+    restart: always
+  kibana:
+    image: docker.elastic.co/kibana/kibana:5.6.14
+    ports:
+      - 5601:5601
+    environment:
+      SERVER_NAME: kibana
+      ELASTICSEARCH_URL: http://elasticsearch1:9200
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: changeme
+  mongodb:
+    image: mongo:3.4.14
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongoadmin
+      - MONGO_INITDB_ROOT_PASSWORD=ztdx@2018
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - mogodata:/data/db
+    ports:
+      - 27017:27017 
+    networks:
+      - esnet
+    restart: always
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    links: 
+      - mongodb:mongo
+    environment:
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+      ME_CONFIG_MONGODB_ADMINUSERNAME: mongoadmin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ztdx@2018
+      ME_CONFIG_BASICAUTH_USERNAME: mongoadmin
+      ME_CONFIG_BASICAUTH_PASSWORD: ztdx@2018
+  mariadb:
+    image: mariadb:10.3.11
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ztdx@2018
+      MYSQL_DATABASE: eams
+      MYSQL_USER: mariaadmin
+      MYSQL_PASSWORD: ztdx@2018
+    volumes:
+      - mariadata:/var/lib/mysql
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+volumes:
+  esdata1:
+    driver: local
+  esdata2:
+    driver: local
+  mogodata:
+    driver: local
+  mariadata:
+    driver: local
+
+networks:
+  esnet:
