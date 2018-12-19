@@ -385,6 +385,12 @@
                 <ftp.path>
                     /home/ftp/
                 </ftp.path>
+                <borrow.departmentLeader>
+                    1
+                </borrow.departmentLeader>
+                <borrow.archiveManager>
+                    1
+                </borrow.archiveManager>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -402,7 +408,7 @@
                     eams
                 </db.name>
                 <db.url>
-                    jdbc:mysql://mongodb:3306/eams?characterEncoding=utf-8
+                    jdbc:mysql://192.168.1.204:3306/eams?characterEncoding=utf-8
                 </db.url>
                 <db.user>
                     mariaadmin
@@ -449,6 +455,12 @@
                 <ftp.path>
                     /home/ftp/
                 </ftp.path>
+                <borrow.departmentLeader>
+                    1
+                </borrow.departmentLeader>
+                <borrow.archiveManager>
+                    1
+                </borrow.archiveManager>
             </properties>
             <build>
                 <filters>
@@ -463,7 +475,7 @@
                     eams
                 </db.name>
                 <db.url>
-                    jdbc:mysql://221.217.58.198:3306/eams?characterEncoding=utf-8
+                    jdbc:mysql://localhost:3306/eams?characterEncoding=utf-8
                 </db.url>
                 <db.user>
                     root
@@ -510,6 +522,12 @@
                 <ftp.path>
                     /home/ftp/
                 </ftp.path>
+                <borrow.departmentLeader>
+                    65
+                </borrow.departmentLeader>
+                <borrow.archiveManager>
+                    66
+                </borrow.archiveManager>
             </properties>
             <build>
                 <filters>
