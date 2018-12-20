@@ -263,9 +263,9 @@
                     <!-- Configure the database connection here -->
                     <jdbc>
                         <driver>com.mysql.jdbc.Driver</driver>
-                        <url>${db.url}</url>
-                        <user>${db.user}</user>
-                        <password>${db.password}</password>
+                        <url>jdbc:mysql://192.168.1.210:3306/eams_test?characterEncoding=utf-8</url>
+                        <user>root</user>
+                        <password>123456</password>
                     </jdbc>
 
                     <!-- Generator parameters -->
@@ -276,7 +276,7 @@
                             <!-- In case your database supports catalogs, e.g. SQL Server:
                             <inputCatalog>public</inputCatalog>
                               -->
-                            <inputSchema>${db.name}</inputSchema>
+                            <inputSchema>eams_test</inputSchema>
                         </database>
                         <target>
                             <packageName>com.ztdx.eams.query.jooq</packageName>
