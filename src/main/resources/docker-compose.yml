@@ -3,7 +3,7 @@ services:
   web:
     build: .
     ports:
-      - "8092:8092"
+      - 8092:8092
     networks: 
       - esnet
     volumes: 
@@ -13,6 +13,15 @@ services:
       - mongodb
       - mariadb
     restart: always
+  front-web:
+    image: nginx:mainline-alpine
+    restart: always
+    volumes:
+      - /home/www/eams/front:/usr/share/nginx/html:ro
+    ports:
+      - 8091:80
+    depends_on:
+      - web
   elasticsearch1:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.6.14
     container_name: elasticsearch1
@@ -88,7 +97,7 @@ services:
     links: 
       - mongodb:mongo
     environment:
-      - ME_CONFIG_MONGODB_ENABLE_ADMIN="true"
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
       - ME_CONFIG_MONGODB_ADMINUSERNAME=mongoadmin
       - ME_CONFIG_MONGODB_ADMINPASSWORD=ztdx@2018
       - ME_CONFIG_BASICAUTH_USERNAME=mongoadmin
@@ -99,6 +108,8 @@ services:
     image: mariadb:10.3.11
     container_name: mariadb
     restart: always
+    ports:
+      - 3306:3306
     environment:
       - MYSQL_ROOT_PASSWORD=ztdx@2018
       - MYSQL_DATABASE=eams
@@ -113,6 +124,16 @@ services:
     restart: always
     ports:
       - 8080:8080
+    networks:
+      - esnet
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:6.5.4
+    container_name: apm-server
+    restart: always
+    ports:
+      - 8200:8200
+    volumes:
+      - ./apm-server.yml:/usr/share/apm-server/apm-server.yml
     networks:
       - esnet
 volumes:
