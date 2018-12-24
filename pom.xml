@@ -444,16 +444,16 @@
                     ztdx@2018
                 </mgd.password>
                 <ftp.address>
-                    192.168.1.200
+                    ftp
                 </ftp.address>
                 <ftp.user>
                     ftp
                 </ftp.user>
                 <ftp.password>
-                    123456
+                    ztdx@2018
                 </ftp.password>
                 <ftp.path>
-                    /home/ftp/
+                    /home/vsftpd/
                 </ftp.path>
                 <borrow.departmentLeader>
                     1

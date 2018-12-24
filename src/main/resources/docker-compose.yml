@@ -136,6 +136,18 @@ services:
       - ./apm-server.yml:/usr/share/apm-server/apm-server.yml
     networks:
       - esnet
+  vsftpd:
+    image: fauria/vsftpd
+    container_name: ftp
+    restart: always
+    ports:
+      - 20:20
+      - 21:21
+    environment:
+      - FTP_USER=ftp
+      - FTP_PASS=ztdx@2018
+    volumes:
+      - ftpdata:/home/vsftpd
 volumes:
   esdata1:
     driver: local
@@ -144,6 +156,8 @@ volumes:
   mogodata:
     driver: local
   mariadata:
+    driver: local
+  ftpdata:
     driver: local
 
 networks:

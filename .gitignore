@@ -10,6 +10,9 @@
 .springBeans
 .sts4-cache
 
+### vs code ###
+.vscode
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
