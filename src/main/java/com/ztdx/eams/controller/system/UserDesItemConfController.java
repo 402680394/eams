@@ -93,7 +93,7 @@ public class UserDesItemConfController {
         userDesItemConfs.forEach(userDesItemConf -> {
             param.forEach(p -> {
                 if (userDesItemConf.getId() == p.get("id")) {
-                    userDesItemConf.setWidth(p.get("width"));
+                    userDesItemConf.setWidth(p.getOrDefault("width",0));
                 }
             });
         });
@@ -114,6 +114,7 @@ public class UserDesItemConfController {
                 userDesItemConf.setUserId(userAddEvent.getUserId());
                 userDesItemConf.setCatalogueId(catalogue.getId());
                 userDesItemConf.setDescriptionItemId(descriptionItem.getId());
+                userDesItemConf.setWidth(200);
                 userDesItemConf.setOrderNumber(order);
                 userDesItemConfs.add(userDesItemConf);
                 order++;
@@ -140,6 +141,7 @@ public class UserDesItemConfController {
                 userDesItemConf.setUserId(user.getId());
                 userDesItemConf.setCatalogueId(catalogueId);
                 userDesItemConf.setDescriptionItemId(descriptionItem.getId());
+                userDesItemConf.setWidth(200);
                 userDesItemConf.setOrderNumber(order);
                 userDesItemConfs.add(userDesItemConf);
                 order++;

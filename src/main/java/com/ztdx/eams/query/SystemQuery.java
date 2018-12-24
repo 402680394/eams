@@ -4,6 +4,7 @@ import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.Name;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -176,14 +177,28 @@ public class SystemQuery {
     }
 
     /**
-     * 根据条件查询机构下属用户.
+     * 根据条件查询用户.
      */
-    public Map<String, Object> getUserListByOrg(int organizationId, String key, int pageNum, int pageSize) {
+    public Map<String, Object> getUserList(int organizationId,String key, int pageNum, int pageSize) {
 
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
 
-        int total = getUserListTotalByOrg(organizationId, key);
+        List<Condition> conditions=new ArrayList<>();
+        key = key.trim();
+        conditions.add(sysUser.USERNAME.notEqual("admin"));
+        conditions.add(sysUser.REAL_NAME.like("%" + key + "%")
+                .or(sysUser.WORKERS.like("%" + key + "%"))
+                .or(sysUser.USERNAME.like("%" + key + "%"))
+                .or(sysUser.PHONE.like("%" + key + "%"))
+                .or(sysUser.EMAIL.like("%" + key + "%"))
+                .or(sysUser.JOB.like("%" + key + "%")));
+        if (organizationId != 1) {
+            conditions.add(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(organizationId)));
+        }
+        int total = (int) dslContext.select(sysUser.ID.count()).from(sysUser)
+                .where(conditions).fetch().getValue(0, 0);
+
         if (total != 0) {
             list = dslContext.select(
                     sysUser.ID.as("id"),
@@ -197,13 +212,7 @@ public class SystemQuery {
                     sysUser.REMARK.as("remark"),
                     sysUser.FLAG.as("flag"))
                     .from(sysUser)
-                    .where(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(organizationId)),
-                            sysUser.REAL_NAME.like("%" + key + "%")
-                                    .or(sysUser.WORKERS.like("%" + key + "%"))
-                                    .or(sysUser.USERNAME.like("%" + key + "%"))
-                                    .or(sysUser.PHONE.like("%" + key + "%"))
-                                    .or(sysUser.EMAIL.like("%" + key + "%"))
-                                    .or(sysUser.JOB.like("%" + key + "%")))
+                    .where(conditions)
                     .limit((pageNum - 1) * pageSize, pageSize)
                     .fetch().intoMaps();
         }
@@ -211,72 +220,6 @@ public class SystemQuery {
         resultMap.put("items", list);
         resultMap.put("total", total);
         return resultMap;
-    }
-
-    /**
-     * 根据条件查询机构下属用户总数.
-     */
-    public int getUserListTotalByOrg(int organizationId, String key) {
-        return (int) dslContext.select(sysUser.ID.count()).from(sysUser)
-                .where(sysUser.ORGANIZATION_ID.equal(UInteger.valueOf(organizationId)),
-                        sysUser.REAL_NAME.like("%" + key + "%")
-                                .or(sysUser.WORKERS.like("%" + key + "%"))
-                                .or(sysUser.USERNAME.like("%" + key + "%"))
-                                .or(sysUser.PHONE.like("%" + key + "%"))
-                                .or(sysUser.EMAIL.like("%" + key + "%"))
-                                .or(sysUser.JOB.like("%" + key + "%"))).fetch().getValue(0, 0);
-    }
-
-    /**
-     * 根据条件查询所有用户.
-     */
-    public Map<String, Object> getUserList(String key, int pageNum, int pageSize) {
-
-        Map<String, Object> resultMap = new HashMap<>();
-        List<Map<String, Object>> list = new ArrayList<>();
-
-        int total = getUserListTotal(key);
-        if (total != 0) {
-            int index = (pageNum - 1) * pageSize;
-
-            list = dslContext.select(
-                    sysUser.ID.as("id"),
-                    sysUser.REAL_NAME.as("name"),
-                    sysUser.WORKERS.as("workers"),
-                    sysUser.ORGANIZATION_ID.as("organiztionId"),
-                    sysUser.USERNAME.as("username"),
-                    sysUser.PHONE.as("phone"),
-                    sysUser.EMAIL.as("email"),
-                    sysUser.JOB.as("job"),
-                    sysUser.REMARK.as("remark"),
-                    sysUser.FLAG.as("flag"))
-                    .from(sysUser)
-                    .where(sysUser.REAL_NAME.like("%" + key + "%")
-                            .or(sysUser.WORKERS.like("%" + key + "%"))
-                            .or(sysUser.USERNAME.like("%" + key + "%"))
-                            .or(sysUser.PHONE.like("%" + key + "%"))
-                            .or(sysUser.EMAIL.like("%" + key + "%"))
-                            .or(sysUser.JOB.like("%" + key + "%")))
-                    .limit(index, pageSize)
-                    .fetch().intoMaps();
-        }
-
-        resultMap.put("items", list);
-        resultMap.put("total", total);
-        return resultMap;
-    }
-
-    /**
-     * 根据条件查询所有用户总数.
-     */
-    public int getUserListTotal(String key) {
-        return (int) dslContext.select(sysUser.ID.count()).from(sysUser)
-                .where(sysUser.REAL_NAME.like("%" + key + "%")
-                        .or(sysUser.WORKERS.like("%" + key + "%"))
-                        .or(sysUser.USERNAME.like("%" + key + "%"))
-                        .or(sysUser.PHONE.like("%" + key + "%"))
-                        .or(sysUser.EMAIL.like("%" + key + "%"))
-                        .or(sysUser.JOB.like("%" + key + "%"))).fetch().getValue(0, 0);
     }
 
     /**

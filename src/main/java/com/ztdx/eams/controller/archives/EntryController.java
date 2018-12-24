@@ -83,7 +83,11 @@ public class EntryController {
 
     private SystemQuery systemQuery;
 
-    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask, BoxService boxService, ApplicationContext applicationContext, ContentTypeService contentTypeService, PermissionService permissionService, RoleService roleService, SystemQuery systemQuery) {
+    private UserService userService;
+
+    private UserDesItemConfService userDesItemConfService;
+
+    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask, BoxService boxService, ApplicationContext applicationContext, ContentTypeService contentTypeService, PermissionService permissionService, RoleService roleService, SystemQuery systemQuery,UserService userService,UserDesItemConfService userDesItemConfService) {
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
         this.catalogueService = catalogueService;
@@ -99,6 +103,8 @@ public class EntryController {
         this.permissionService = permissionService;
         this.roleService = roleService;
         this.systemQuery = systemQuery;
+        this.userService = userService;
+        this.userDesItemConfService = userDesItemConfService;
     }
 
     /**

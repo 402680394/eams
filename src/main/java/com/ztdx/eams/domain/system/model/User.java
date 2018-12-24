@@ -65,6 +65,10 @@ public class User {
     @Column(name = "remark")
     private String remark;
 
+    //是否删除
+    @Column(name = "gmt_deleted")
+    private int gmtDeleted;
+
     //状态
     @Min(value = 0)
     @Max(value = 1)
