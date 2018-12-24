@@ -3,7 +3,7 @@ services:
   web:
     build: .
     ports:
-      - "8092:8092"
+      - 8092:8092
     networks: 
       - esnet
     volumes: 
@@ -13,6 +13,15 @@ services:
       - mongodb
       - mariadb
     restart: always
+  front-web:
+    image: nginx:mainline-alpine
+    restart: always
+    volumes:
+      - /home/www/eams/front:/usr/share/nginx/html:ro
+    ports:
+      - 8091:80
+    depends_on:
+      - web
   elasticsearch1:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.6.14
     container_name: elasticsearch1
@@ -57,10 +66,12 @@ services:
     ports:
       - 5601:5601
     environment:
-      SERVER_NAME: kibana
-      ELASTICSEARCH_URL: http://elasticsearch1:9200
-      ELASTICSEARCH_USERNAME: elastic
-      ELASTICSEARCH_PASSWORD: changeme
+      - SERVER_NAME=kibana
+      - ELASTICSEARCH_URL=http://elasticsearch1:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=changeme
+    networks:
+      - esnet
   mongodb:
     image: mongo:3.4.14
     container_name: mongodb
@@ -86,27 +97,45 @@ services:
     links: 
       - mongodb:mongo
     environment:
-      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
-      ME_CONFIG_MONGODB_ADMINUSERNAME: mongoadmin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ztdx@2018
-      ME_CONFIG_BASICAUTH_USERNAME: mongoadmin
-      ME_CONFIG_BASICAUTH_PASSWORD: ztdx@2018
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=mongoadmin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=ztdx@2018
+      - ME_CONFIG_BASICAUTH_USERNAME=mongoadmin
+      - ME_CONFIG_BASICAUTH_PASSWORD=ztdx@2018
+    networks:
+      - esnet
   mariadb:
     image: mariadb:10.3.11
     container_name: mariadb
     restart: always
+    ports:
+      - 3306:3306
     environment:
-      MYSQL_ROOT_PASSWORD: ztdx@2018
-      MYSQL_DATABASE: eams
-      MYSQL_USER: mariaadmin
-      MYSQL_PASSWORD: ztdx@2018
+      - MYSQL_ROOT_PASSWORD=ztdx@2018
+      - MYSQL_DATABASE=eams
+      - MYSQL_USER=mariaadmin
+      - MYSQL_PASSWORD=ztdx@2018
     volumes:
       - mariadata:/var/lib/mysql
+    networks:
+      - esnet
   adminer:
     image: adminer
     restart: always
     ports:
       - 8080:8080
+    networks:
+      - esnet
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:6.5.4
+    container_name: apm-server
+    restart: always
+    ports:
+      - 8200:8200
+    volumes:
+      - ./apm-server.yml:/usr/share/apm-server/apm-server.yml
+    networks:
+      - esnet
 volumes:
   esdata1:
     driver: local
