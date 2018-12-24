@@ -188,11 +188,7 @@ public class UserController {
             throw new ForbiddenException("没有此组织机构的权限");
         }
 
-        //判断是否查询所有用户
-        if (organizationId == 1) {
-            return systemQuery.getUserList(key, pageNum, pageSize);
-        }
-        return systemQuery.getUserListByOrg(organizationId, key, pageNum, pageSize);
+        return systemQuery.getUserList(organizationId, key, pageNum, pageSize);
     }
 
     /**
@@ -213,7 +209,7 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_user_admin')")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody User user) {
-        user=userService.save(user);
+        user = userService.save(user);
         applicationContext.publishEvent(new UserAddEvent(this, user.getId()));
     }
 

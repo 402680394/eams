@@ -43,9 +43,8 @@ public class UserService {
 
         User user = userRepository.findByUsername(username);
         //验证
-        if (user == null) {
+        if (user == null|| user.getGmtDeleted()!=0) {
             throw new UnauthorizedException("用户不存在");
-            //} else if (!password.equals(user.getPassword())) {
         } else if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new UnauthorizedException("密码错误");
         } else if (0 != (user.getFlag())) {
@@ -60,7 +59,7 @@ public class UserService {
     @Transactional
     public void delete(int id) {
         if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
+            userRepository.updateGmtDeletedById(id,1);
         }
     }
 
@@ -69,7 +68,11 @@ public class UserService {
      */
     @Transactional
     public void listDelete(List<Integer> ids) {
-        userRepository.deleteByIdIn(ids);
+        ids.forEach(id->{
+            if (userRepository.existsById(id)) {
+                userRepository.updateGmtDeletedById(id,1);
+            }
+        });
     }
 
     /**

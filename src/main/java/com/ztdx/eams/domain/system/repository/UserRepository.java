@@ -52,6 +52,13 @@ public interface UserRepository
     void updateFlagById(@Param("id") int id, @Param("flag") int flag);
 
     /**
+     * 通过id修改状态
+     */
+    @Modifying
+    @Query("update User u set u.gmtDeleted=:gmtDeleted where u.id=:id")
+    void updateGmtDeletedById(@Param("id") int id, @Param("gmtDeleted") int gmtDeleted);
+
+    /**
      * 通过id修改信息
      */
     @Modifying
