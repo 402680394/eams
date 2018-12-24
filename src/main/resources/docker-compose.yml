@@ -137,15 +137,15 @@ services:
     networks:
       - esnet
   vsftpd:
-    image: fauria/vsftpd
+    image: panubo/vsftpd
     container_name: ftp
     restart: always
     ports:
-      - 20:20
-      - 21:21
+      - "21:21"
     environment:
       - FTP_USER=ftp
-      - FTP_PASS=ztdx@2018
+      - FTP_PASSWORD=ztdx@2018
+      - FTP_CHOWN_ROOT=chown
     volumes:
       - ftpdata:/home/vsftpd
 volumes:

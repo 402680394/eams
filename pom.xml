@@ -453,7 +453,7 @@
                     ztdx@2018
                 </ftp.password>
                 <ftp.path>
-                    /home/vsftpd/
+                    /
                 </ftp.path>
                 <borrow.departmentLeader>
                     1
