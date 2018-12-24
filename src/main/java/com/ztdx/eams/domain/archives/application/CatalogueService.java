@@ -63,4 +63,8 @@ public class CatalogueService {
         List<Integer> archiveIds = catalogueRepository.findAllById(mainCatalogueIds).stream().map(Catalogue::getArchivesId).collect(Collectors.toList());
         return catalogueRepository.findAllByArchivesIdInAndCatalogueType(archiveIds, CatalogueType.FolderFile);
     }
+
+    public List<Catalogue> getAll(){
+        return catalogueRepository.findAll();
+    }
 }

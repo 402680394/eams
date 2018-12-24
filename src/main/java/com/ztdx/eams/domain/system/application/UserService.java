@@ -98,7 +98,7 @@ public class UserService {
      * 添加用户
      */
     @Transactional
-    public void save(User user) {
+    public User save(User user) {
         //验证
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new InvalidArgumentException("用户名已存在");
@@ -108,7 +108,7 @@ public class UserService {
         }
         //设置初始密码
         user.setPassword(passwordEncoder.encode(initPassword));
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     /**
@@ -148,5 +148,9 @@ public class UserService {
 
     public List<User> findAllById(Collection<Integer> ids) {
         return userRepository.findAllById(ids);
+    }
+
+    public List<User> findAll(){
+        return userRepository.findAll();
     }
 }

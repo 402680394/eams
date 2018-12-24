@@ -1255,7 +1255,7 @@ public class EntryService {
     }
 
     //导入Excel文件条目数据
-    public List<List<String>> importEntry(int catalogueId, File tmpFile, int userId) {
+    public XSSFWorkbook importEntry(int catalogueId, File tmpFile, int userId) {
         Catalogue catalogue = catalogueRepository.findById(catalogueId).orElse(null);
         if (catalogue == null) {
             throw new InvalidArgumentException("目录不存在");
@@ -1304,8 +1304,8 @@ public class EntryService {
             }
 
         }
-//        return wb;
-        return errorData;
+        return wb;
+//        return errorData;
     }
 
     public List<List<String>> importCatalogueEntry(ArchivesGroup archivesGroup

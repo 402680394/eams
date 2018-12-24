@@ -61,7 +61,6 @@ public class DescriptionItemService {
         return descriptionItemRepository.findByCatalogueIdAndPropertyType(catalogueId, boxNumber);
     }
 
-    @Transactional
     public void delete(List<Integer> ids) {
         descriptionItemRepository.deleteByIdIn(ids);
     }

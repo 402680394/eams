@@ -17,15 +17,17 @@ import com.ztdx.eams.domain.store.model.Box;
 import com.ztdx.eams.domain.store.model.event.BoxDeleteEvent;
 import com.ztdx.eams.domain.store.model.event.BoxInsideChangeEvent;
 import com.ztdx.eams.domain.store.model.event.BoxInsideEvent;
-import com.ztdx.eams.domain.system.application.FondsService;
-import com.ztdx.eams.domain.system.application.PermissionService;
-import com.ztdx.eams.domain.system.application.RoleService;
+import com.ztdx.eams.domain.system.application.*;
 import com.ztdx.eams.domain.system.model.Fonds;
 import com.ztdx.eams.domain.system.model.Permission;
+import com.ztdx.eams.domain.system.model.User;
+import com.ztdx.eams.domain.system.model.UserDesItemConf;
+import com.ztdx.eams.query.SystemQuery;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.jooq.types.UInteger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
@@ -79,7 +81,9 @@ public class EntryController {
 
     private RoleService roleService;
 
-    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask, BoxService boxService, ApplicationContext applicationContext, ContentTypeService contentTypeService, PermissionService permissionService, RoleService roleService) {
+    private SystemQuery systemQuery;
+
+    public EntryController(EntryService entryService, DescriptionItemService descriptionItemService, CatalogueService catalogueService, ArchivesService archivesService, ArchivesGroupService archivesGroupService, FondsService fondsService, ConditionService conditionService, OriginalTextService originalTextService, EntryAsyncTask entryAsyncTask, BoxService boxService, ApplicationContext applicationContext, ContentTypeService contentTypeService, PermissionService permissionService, RoleService roleService, SystemQuery systemQuery) {
         this.entryService = entryService;
         this.descriptionItemService = descriptionItemService;
         this.catalogueService = catalogueService;
@@ -94,6 +98,7 @@ public class EntryController {
         this.contentTypeService = contentTypeService;
         this.permissionService = permissionService;
         this.roleService = roleService;
+        this.systemQuery = systemQuery;
     }
 
     /**
@@ -298,32 +303,12 @@ public class EntryController {
      * @apiSuccess (Success 200) {Array} content.items.aihao 爱好
      * @apiSuccess (Success 200) {String} content.items.name 姓名
      * @apiSuccess (Success 200) {int} content.items.age 年龄
-     * @apiSuccess (Success 200) {Object} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
-     * @apiSuccess (Success 200) {Object} column.[birthday] 生日字段的属性
-     * @apiSuccess (Success 200) {Number} column.birthday.metadataId 字段id
-     * @apiSuccess (Success 200) {String} column.birthday.metadataName 字段名称
-     * @apiSuccess (Success 200) {String} column.birthday.displayName 字段显示名称
-     * @apiSuccess (Success 200) {String} column.birthday.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
-     * @apiSuccess (Success 200) {Object} column.[amount] 资产字段的属性
-     * @apiSuccess (Success 200) {Number} column.amount.metadataId 字段id
-     * @apiSuccess (Success 200) {String} column.amount.metadataName 字段名称
-     * @apiSuccess (Success 200) {String} column.amount.displayName 字段显示名称
-     * @apiSuccess (Success 200) {String} column.amount.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
-     * @apiSuccess (Success 200) {Object} column.[aihao] 爱好字段的属性
-     * @apiSuccess (Success 200) {Number} column.aihao.metadataId 字段id
-     * @apiSuccess (Success 200) {String} column.aihao.metadataName 字段名称
-     * @apiSuccess (Success 200) {String} column.aihao.displayName 字段显示名称
-     * @apiSuccess (Success 200) {String} column.aihao.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
-     * @apiSuccess (Success 200) {Object} column.[name] 姓名字段的属性
-     * @apiSuccess (Success 200) {Number} column.name.metadataId 字段id
-     * @apiSuccess (Success 200) {String} column.name.metadataName 字段名称
-     * @apiSuccess (Success 200) {String} column.name.displayName 字段显示名称
-     * @apiSuccess (Success 200) {String} column.name.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
-     * @apiSuccess (Success 200) {Object} column.[age] 年龄字段的属性
-     * @apiSuccess (Success 200) {Number} column.age.metadataId 字段id
-     * @apiSuccess (Success 200) {String} column.age.metadataName 字段名称
-     * @apiSuccess (Success 200) {String} column.age.displayName 字段显示名称
-     * @apiSuccess (Success 200) {String} column.age.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
+     * @apiSuccess (Success 200) {Array} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
+     * @apiSuccess (Success 200) {Number} column.metadataId 字段id
+     * @apiSuccess (Success 200) {String} column.metadataName 字段名称
+     * @apiSuccess (Success 200) {String} column.displayName 字段显示名称
+     * @apiSuccess (Success 200) {String} column.dateType 数据类型 1 数值 2 文本 3 日期 4 浮点 5 字符串 6 数组
+     * @apiSuccess (Success 200) {Number} column.width 字段列表宽度
      * @apiSuccess (Success 200) {Number} totalElements 总行数
      * @apiSuccess (Success 200) {Number} totalPages 总页数
      * @apiSuccess (Success 200) {Number} innerCatalogueId 卷内目录id
@@ -353,38 +338,29 @@ public class EntryController {
      * "gmtModified":"2018-05-16T14:44:56.328+0800"
      * }
      * ],
-     * "column":{
-     * "name": {
+     * "column":[
+     * {
      * "metadataId":1,
      * "metadataName":"name",
      * "displayName":"姓名",
-     * "dateType":2
+     * "dateType":2,
+     * "width":80
      * },
-     * "birthday": {
+     * {
      * "metadataId":2,
      * "metadataName":"birthday",
      * "displayName":"生日"
-     * "dateType":3
+     * "dateType":3,
+     * "width":80
      * },
-     * "amount": {
+     *  {
      * "metadataId":3,
      * "metadataName":"amount",
      * "displayName":"资产"
-     * "dateType":4
-     * },
-     * "aihao": {
-     * "metadataId":4,
-     * "metadataName":"aihao",
-     * "displayName":"爱好"
-     * "dateType":6
-     * },
-     * "age": {
-     * "metadataId":5,
-     * "metadataName":"age",
-     * "displayName":"年龄"
-     * "dateType":1
+     * "dateType":4,
+     * "width":80
      * }
-     * },
+     * ],
      * "totalElements": 14,
      * "totalPages": 1,
      * "innerCatalogueId":2
@@ -393,14 +369,15 @@ public class EntryController {
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
     @RequestMapping(value = "/search", method = RequestMethod.GET)
-    public Map<String, Object> search(@RequestParam("cid") int catalogueId
+    public Map<String, Object> search(@SessionAttribute UserCredential LOGIN_USER
+            , @RequestParam("cid") int catalogueId
             , @RequestParam(value = "q", required = false, defaultValue = "") String queryString
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
             , @RequestParam(value = "size", required = false, defaultValue = "20") int size
             , @RequestParam(value = "isDeleted", required = false, defaultValue = "0") int isDeleted) {
         Page<Entry> content = entryService.search(catalogueId, queryString, null, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")), isDeleted);
 
-        return getSearchMap(catalogueId, content);
+        return getSearchMap(LOGIN_USER.getUserId(), catalogueId, content);
     }
 
     /**
@@ -426,27 +403,11 @@ public class EntryController {
      * @apiSuccess (Success 200) {Array} content.items.aihao 爱好
      * @apiSuccess (Success 200) {String} content.items.name 姓名
      * @apiSuccess (Success 200) {int} content.items.age 年龄
-     * @apiSuccess (Success 200) {Object} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
-     * @apiSuccess (Success 200) {Object} [birthday] 生日字段的属性
-     * @apiSuccess (Success 200) {int} metadataId 字段id
-     * @apiSuccess (Success 200) {String} metadataName 字段名称
-     * @apiSuccess (Success 200) {String} displayName 字段显示名称
-     * @apiSuccess (Success 200) {Object} [amount] 资产字段的属性
-     * @apiSuccess (Success 200) {int} metadataId 字段id
-     * @apiSuccess (Success 200) {String} metadataName 字段名称
-     * @apiSuccess (Success 200) {String} displayName 字段显示名称
-     * @apiSuccess (Success 200) {Object} [aihao] 爱好字段的属性
-     * @apiSuccess (Success 200) {int} metadataId 字段id
-     * @apiSuccess (Success 200) {String} metadataName 字段名称
-     * @apiSuccess (Success 200) {String} displayName 字段显示名称
-     * @apiSuccess (Success 200) {Object} [name] 姓名字段的属性
-     * @apiSuccess (Success 200) {int} metadataId 字段id
-     * @apiSuccess (Success 200) {String} metadataName 字段名称
-     * @apiSuccess (Success 200) {String} displayName 字段显示名称
-     * @apiSuccess (Success 200) {Object} [age] 年龄字段的属性
-     * @apiSuccess (Success 200) {int} metadataId 字段id
-     * @apiSuccess (Success 200) {String} metadataName 字段名称
-     * @apiSuccess (Success 200) {String} displayName 字段显示名称
+     * @apiSuccess (Success 200) {Array} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
+     * @apiSuccess (Success 200) {int} column.metadataId 字段id
+     * @apiSuccess (Success 200) {String} column.metadataName 字段名称
+     * @apiSuccess (Success 200) {String} column.displayName 字段显示名称
+     * @apiSuccess (Success 200) {Number} column.width 字段列表宽度
      * @apiSuccessExample {json} Success-Response:
      * {
      * "data":{
@@ -473,33 +434,26 @@ public class EntryController {
      * "gmtModified":"2018-05-16T14:44:56.328+0800"
      * }
      * ],
-     * "column":{
-     * "name": {
+     * "column":[
+     * {
      * "metadataId":1,
      * "metadataName":"name",
-     * "displayName":"姓名"
+     * "displayName":"姓名",
+     * "width":80
      * },
-     * "birthday": {
+     * {
      * "metadataId":2,
      * "metadataName":"birthday",
-     * "displayName":"生日"
+     * "displayName":"生日",
+     * "width":80
      * },
-     * "amount": {
+     * {
      * "metadataId":3,
      * "metadataName":"amount",
-     * "displayName":"资产"
-     * },
-     * "aihao": {
-     * "metadataId":4,
-     * "metadataName":"aihao",
-     * "displayName":"爱好"
-     * },
-     * "age": {
-     * "metadataId":5,
-     * "metadataName":"age",
-     * "displayName":"年龄"
+     * "displayName":"资产",
+     * "width":80
      * }
-     * },
+     * ],
      * "totalElements": 14,
      * "totalPages": 1
      * }
@@ -507,7 +461,8 @@ public class EntryController {
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #catalogueId)")
     @RequestMapping(value = "/searchInner", method = RequestMethod.GET)
-    public Map<String, Object> searchInner(@RequestParam("cid") int catalogueId
+    public Map<String, Object> searchInner(@SessionAttribute UserCredential LOGIN_USER
+            , @RequestParam("cid") int catalogueId
             , @RequestParam(value = "pid", required = false, defaultValue = "") String parentId
             , @RequestParam(value = "q", required = false, defaultValue = "") String queryString
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
@@ -525,18 +480,30 @@ public class EntryController {
                 , null
                 , PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")), isDeleted);
 
-        return getSearchMap(catalogueId, content);
+        return getSearchMap(LOGIN_USER.getUserId(), catalogueId, content);
     }
 
-    private Map<String, Object> getSearchMap(int catalogueId, Page<Entry> content) {
-        Map<String, Object> list = descriptionItemService.list(catalogueId, a -> {
-            Map<String, Object> result = new HashMap<>();
-            result.put("metadataId", a.getMetadataId());
-            result.put("metadataName", a.getMetadataName());
-            result.put("displayName", a.getDisplayName());
-            result.put("dataType", a.getDataType());
-            return result;
-        });
+    private Map<String, Object> getSearchMap(int userId, int catalogueId, Page<Entry> content) {
+//        Map<String, Map<String, Object>> list = descriptionItemService.list(catalogueId, a -> {
+//            Map<String, Object> result = new HashMap<>();
+//            result.put("metadataId", a.getMetadataId());
+//            result.put("metadataName", a.getMetadataName());
+//            result.put("displayName", a.getDisplayName());
+//            result.put("dataType", a.getDataType());
+//            result.put("width", null);
+//            return result;
+//        });
+//        List<DescriptionItem> descriptionItems = descriptionItemService.findByCatalogueId(catalogueId);
+//        List<UserDesItemConf> userDesItemConfs = userDesItemConfService.getByUserIdAndCatalogueId(userId, catalogueId);
+//        descriptionItems.forEach(d -> {
+//            userDesItemConfs.forEach(u -> {
+//                if(u.getDescriptionItemId()==d.getId()){
+//                    list.get(d.getMetadataName()).put("width",u.getWidth());
+//                }
+//            });
+//        });
+        List<Map<String, Object>> list = systemQuery.getUserDesItemConfByCatalogueId(UInteger.valueOf(catalogueId), UInteger.valueOf(userId));
+
 
         Catalogue folderFileCatalogue = catalogueService.getFolderFileCatalogueByFolderCatalogueId(catalogueId);
 
@@ -613,7 +580,8 @@ public class EntryController {
      * @apiSuccess (Success 200) {Array} column 条目字段定义(以下内容每个档案库目录都不同，用来描述content.items中字段的定义)
      * @apiSuccess (Success 200) {Number} column.metadataId 元数据id
      * @apiSuccess (Success 200) {String} column.metadataName
-     * @apiSuccess (Success 200) {Array} column.displayName 爱好
+     * @apiSuccess (Success 200) {String} column.displayName 爱好
+     * @apiSuccess (Success 200) {Number} column.width 字段列表宽度
      * @apiSuccessExample {json} Success-Response:
      * {
      * "data":{
@@ -644,27 +612,32 @@ public class EntryController {
      * {
      * "metadataId":1,
      * "metadataName":"name",
-     * "displayName":"姓名"
+     * "displayName":"姓名",
+     * "width":80
      * },
      * {
      * "metadataId":2,
      * "metadataName":"birthday",
-     * "displayName":"生日"
+     * "displayName":"生日",
+     * "width":80
      * },
      * {
      * "metadataId":3,
      * "metadataName":"amount",
-     * "displayName":"资产"
+     * "displayName":"资产",
+     * "width":80
      * },
      * {
      * "metadataId":4,
      * "metadataName":"aihao",
-     * "displayName":"爱好"
+     * "displayName":"爱好",
+     * "width":80
      * },
      * {
      * "metadataId":5,
      * "metadataName":"age",
-     * "displayName":"年龄"
+     * "displayName":"年龄",
+     * "width":80
      * }
      * ],
      * "totalElements":14
@@ -674,13 +647,14 @@ public class EntryController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('archive_entry_read_' + #entryCondition.catalogueId)")
     @RequestMapping(value = "/search", method = RequestMethod.POST)
     public Map<String, Object> searchAdv(
-            @RequestBody EntryCondition entryCondition
+            @SessionAttribute UserCredential LOGIN_USER
+            , @RequestBody EntryCondition entryCondition
             , @RequestParam("q") String queryString
             , @RequestParam("page") int page
             , @RequestParam("size") int size) {
         QueryBuilder query = conditionService.convert2ElasticsearchQuery(entryCondition.getCatalogueId(), entryCondition.getConditions());
         Page<Entry> content = entryService.search(entryCondition.getCatalogueId(), queryString, query, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "gmtCreate")), 0);
-        return getSearchMap(entryCondition.getCatalogueId(), content);
+        return getSearchMap(LOGIN_USER.getUserId(), entryCondition.getCatalogueId(), content);
     }
 
     /**
@@ -2026,21 +2000,21 @@ public class EntryController {
             bos.write(bytes);
             bos.flush();
 
-//            XSSFWorkbook wb = entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
-            List<List<String>> errorData  = entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
+            XSSFWorkbook wb = entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
+//            List<List<String>> errorData  = entryService.importEntry(catalogueId, tmpFile, LOGIN_USER.getUserId());
 
             int errorTotal = 0;
-//            if (wb != null) {
-//                session.setAttribute("IMPORT_ERROR_DATA", wb);
-//                Iterator<Sheet> iterator = wb.sheetIterator();
-//                while (iterator.hasNext()) {
-//                    errorTotal += iterator.next().getLastRowNum() - 1;
-//                }
-//            }
+            if (wb != null) {
+                session.setAttribute("IMPORT_ERROR_DATA", wb);
+                Iterator<Sheet> iterator = wb.sheetIterator();
+                while (iterator.hasNext()) {
+                    errorTotal += iterator.next().getLastRowNum() - 1;
+                }
+            }
 
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("errorTotal", errorTotal);
-            resultMap.put("errorData", errorData);
+//            resultMap.put("errorData", errorData);
 
             return resultMap;
         } catch (Exception e) {
@@ -2160,4 +2134,29 @@ public class EntryController {
 
         entryService.unBoxByBoxCode(catalogueId, boxCodes);
     }
+//    插入用户表头配置信息
+//        @RequestMapping(value = "/test123", method = RequestMethod.GET)
+//    public void test(){
+//        List<User> users=userService.findAll();
+//
+//        List<Catalogue> catalogues=catalogueService.getAll();
+//
+//        List<UserDesItemConf> userDesItemConfs=new ArrayList<>();
+//        for(User user:users){
+//            for(Catalogue catalogue:catalogues){
+//                int order=1;
+//                List<DescriptionItem> descriptionItems=descriptionItemService.findByCatalogueId(catalogue.getId());
+//                for (DescriptionItem descriptionItem:descriptionItems){
+//                    UserDesItemConf userDesItemConf=new UserDesItemConf();
+//                    userDesItemConf.setUserId(user.getId());
+//                    userDesItemConf.setCatalogueId(catalogue.getId());
+//                    userDesItemConf.setDescriptionItemId(descriptionItem.getId());
+//                    userDesItemConf.setOrderNumber(order);
+//                    userDesItemConfs.add(userDesItemConf);
+//                    order++;
+//                }
+//            }
+//        }
+//        userDesItemConfService.saveAll(userDesItemConfs);
+//    }
 }

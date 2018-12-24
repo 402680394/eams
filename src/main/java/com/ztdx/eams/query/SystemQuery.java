@@ -1,10 +1,7 @@
 package com.ztdx.eams.query;
 
 import com.ztdx.eams.query.jooq.Tables;
-import com.ztdx.eams.query.jooq.tables.SysFonds;
-import com.ztdx.eams.query.jooq.tables.SysOrganization;
-import com.ztdx.eams.query.jooq.tables.SysRole;
-import com.ztdx.eams.query.jooq.tables.SysUser;
+import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.types.UInteger;
@@ -32,6 +29,11 @@ public class SystemQuery {
     private SysFonds sysFonds = Tables.SYS_FONDS;
 
     private SysRole sysRole = Tables.SYS_ROLE;
+
+    private SysUserDesItemConf sysUserDesItemConf = Tables.SYS_USER_DES_ITEM_CONF;
+
+    private ArchivesDescriptionItem archivesDescriptionItem = Tables.ARCHIVES_DESCRIPTION_ITEM;
+
     @Autowired
     public SystemQuery(DSLContext dslContext) {
         this.dslContext = dslContext;
@@ -176,7 +178,7 @@ public class SystemQuery {
     /**
      * 根据条件查询机构下属用户.
      */
-    public Map<String, Object> getUserListByOrg(int organizationId, String key, int pageNum,int pageSize) {
+    public Map<String, Object> getUserListByOrg(int organizationId, String key, int pageNum, int pageSize) {
 
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
@@ -228,7 +230,7 @@ public class SystemQuery {
     /**
      * 根据条件查询所有用户.
      */
-    public Map<String, Object> getUserList(String key, int pageNum,int pageSize) {
+    public Map<String, Object> getUserList(String key, int pageNum, int pageSize) {
 
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
@@ -291,7 +293,7 @@ public class SystemQuery {
                 sysUser.EMAIL.as("email"),
                 sysUser.JOB.as("job"),
                 sysUser.REMARK.as("remark"))
-                .from(sysUser,sysOrganization)
+                .from(sysUser, sysOrganization)
                 .where(sysUser.ID.equal(id), sysUser.ORGANIZATION_ID.equal(sysOrganization.ID))
                 .fetch().intoMaps().get(0);
     }
@@ -393,14 +395,34 @@ public class SystemQuery {
         resultMap.put("association", list);
         return resultMap;
     }
+
     /**
      * 通过全宗ID获取获取全宗下角色.
      */
     public List<Map<String, Object>> getRoleListByFonds(UInteger fondsId) {
-        Condition condition=sysRole.FONDS_ID.eq(fondsId);
-        if(null==fondsId){
-            condition=sysRole.FONDS_ID.isNull();
+        Condition condition = sysRole.FONDS_ID.eq(fondsId);
+        if (null == fondsId) {
+            condition = sysRole.FONDS_ID.isNull();
         }
         return dslContext.select(sysRole.ID, sysRole.ROLE_NAME.as("name"), sysRole.REMARK).from(sysRole).where(condition).fetch().intoMaps();
+    }
+
+    /**
+     * 通过目录ID与用户Id获取用户目录的著录项配置.
+     */
+    public List<Map<String, Object>> getUserDesItemConfByCatalogueId(UInteger catalogueId, UInteger userId) {
+        return dslContext.select(sysUserDesItemConf.ID
+                , archivesDescriptionItem.METADATA_ID.as("metadataId")
+                , archivesDescriptionItem.METADATA_NAME.as("metadataName")
+                , archivesDescriptionItem.DISPLAY_NAME.as("displayName")
+                , archivesDescriptionItem.DATA_TYPE.as("dataType")
+                , sysUserDesItemConf.ORDER_NUMBER.as("orderNumber")
+                , sysUserDesItemConf.WIDTH)
+                .from(sysUserDesItemConf, archivesDescriptionItem)
+                .where(archivesDescriptionItem.CATALOGUE_ID.eq(catalogueId)
+                        , archivesDescriptionItem.ID.eq(sysUserDesItemConf.DESCRIPTION_ITEM_ID)
+                        , sysUserDesItemConf.USER_ID.eq(userId))
+                .orderBy(sysUserDesItemConf.ORDER_NUMBER.asc())
+                .fetch().intoMaps();
     }
 }

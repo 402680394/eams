@@ -7,11 +7,13 @@ import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.system.application.OrganizationService;
 import com.ztdx.eams.domain.system.application.PermissionService;
 import com.ztdx.eams.domain.system.application.UserService;
+import com.ztdx.eams.domain.system.application.event.UserAddEvent;
 import com.ztdx.eams.domain.system.model.Organization;
 import com.ztdx.eams.domain.system.model.User;
 import com.ztdx.eams.query.SystemQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,13 +44,16 @@ public class UserController {
 
     private final OrganizationService organizationService;
 
+    private final ApplicationContext applicationContext;
+
     @Autowired
-    public UserController(UserService userService, SystemQuery systemQuery, AuthenticationManager authenticationManager, PermissionService permissionService, OrganizationService organizationService) {
+    public UserController(UserService userService, SystemQuery systemQuery, AuthenticationManager authenticationManager, PermissionService permissionService, OrganizationService organizationService, ApplicationContext applicationContext) {
         this.userService = userService;
         this.systemQuery = systemQuery;
         this.authenticationManager = authenticationManager;
         this.permissionService = permissionService;
         this.organizationService = organizationService;
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -208,7 +213,8 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_user_admin')")
     @RequestMapping(value = "", method = RequestMethod.POST)
     public void save(@RequestBody User user) {
-        userService.save(user);
+        user=userService.save(user);
+        applicationContext.publishEvent(new UserAddEvent(this, user.getId()));
     }
 
     /**

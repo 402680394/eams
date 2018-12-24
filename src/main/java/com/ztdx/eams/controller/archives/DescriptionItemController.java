@@ -4,12 +4,16 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.application.ClassificationService;
 import com.ztdx.eams.domain.archives.application.DescriptionItemService;
 import com.ztdx.eams.domain.archives.application.DictionaryClassificationService;
+import com.ztdx.eams.domain.archives.application.event.DescriptionItemAddEvent;
+import com.ztdx.eams.domain.archives.application.event.DescriptionItemDeleteEvent;
 import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import com.ztdx.eams.domain.system.application.OrganizationService;
+import com.ztdx.eams.domain.system.application.UserDesItemConfService;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,14 +40,18 @@ public class DescriptionItemController {
 
     private final EntryAsyncTask entryAsyncTask;
 
+    private final ApplicationContext applicationContext;
+
+
     @Autowired
-    public DescriptionItemController(ArchivesQuery archivesQuery, DescriptionItemService descriptionItemService, ClassificationService classificationService, DictionaryClassificationService dictionaryClassificationService, OrganizationService organizationService, EntryAsyncTask entryAsyncTask) {
+    public DescriptionItemController(ArchivesQuery archivesQuery, DescriptionItemService descriptionItemService, ClassificationService classificationService, DictionaryClassificationService dictionaryClassificationService, OrganizationService organizationService, EntryAsyncTask entryAsyncTask, ApplicationContext applicationContext) {
         this.archivesQuery = archivesQuery;
         this.descriptionItemService = descriptionItemService;
         this.classificationService = classificationService;
         this.dictionaryClassificationService = dictionaryClassificationService;
         this.organizationService = organizationService;
         this.entryAsyncTask = entryAsyncTask;
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -214,6 +222,8 @@ public class DescriptionItemController {
         List<Integer> metadataIds = (List<Integer>) map.get("metadataIds");
         List<DescriptionItem> descriptionItems = descriptionItemService.save(catalogueId, metadataIds);
         entryAsyncTask.putMapping(descriptionItems);
+
+        applicationContext.publishEvent(new DescriptionItemAddEvent(this, descriptionItems));
     }
 
     /**
@@ -224,8 +234,10 @@ public class DescriptionItemController {
      * @apiParamExample {json} Request-Example:
      * [1,2,3]
      */
+    @Transactional
     @RequestMapping(value = "/", method = RequestMethod.DELETE)
     public void delete(@RequestBody List<Integer> ids) {
+        applicationContext.publishEvent(new DescriptionItemDeleteEvent(this, ids));
         descriptionItemService.delete(ids);
     }
 
