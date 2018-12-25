@@ -187,7 +187,7 @@ public class SystemQuery {
         List<Condition> conditions=new ArrayList<>();
         key = key.trim();
         conditions.add(sysUser.USERNAME.notEqual("admin"));
-        conditions.add(sysUser.GMT_DELETED.eq(0)); 
+        conditions.add(sysUser.GMT_DELETED.eq(0));
         conditions.add(sysUser.REAL_NAME.like("%" + key + "%")
                 .or(sysUser.WORKERS.like("%" + key + "%"))
                 .or(sysUser.USERNAME.like("%" + key + "%"))
