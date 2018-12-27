@@ -54,7 +54,7 @@ public class StoreQuery {
         conditions.add(storage.FONDS_ID.equal(sysFonds.ID));
         conditions.add(storage.GMT_DELETED.equal(0));
         conditions.add(sysFonds.GMT_DELETED.equal(0));
-        if (null != keyWord && keyWord.trim().equals("")) {
+        if (null != keyWord && !keyWord.trim().equals("")) {
             conditions.add(storage.NAME.like("%" + keyWord.trim() + "%")
                     .or(storage.NUMBER.like("%" + keyWord.trim() + "%"))
                     .or(storage.DESCRIPTION.like("%" + keyWord.trim() + "%")));
@@ -108,7 +108,7 @@ public class StoreQuery {
                     monitoringPoint.REMARK.as("remark"),
                     storage.NAME.as("name"))
                     .from(monitoringPoint, storage)
-                    .where(conditions)
+                    .where(conditions).orderBy(monitoringPoint.GMT_CREATE.desc())
                     .limit((pageNum - 1) * pageSize, pageSize)
                     .fetch().intoMaps();
         }

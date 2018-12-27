@@ -39,6 +39,7 @@ public class StorageController {
      * @api {get} /store/storageList 库房表单列表
      * @apiName storageList
      * @apiGroup store
+     * @apiParam {Number} storageId 所属库房id(url参数)
      * @apiParam {String} keyWord 检索框输入的内容(非必须)(url参数)
      * @apiParam {Number} pageNum 每页条数（默认为15）（url参数）
      * @apiParam {Number} pageSize 页码（默认为1）（url参数）
