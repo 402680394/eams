@@ -148,6 +148,8 @@ services:
       - FTP_CHOWN_ROOT=chown
     volumes:
       - ftpdata:/home/vsftpd
+    networks:
+      - esnet
 volumes:
   esdata1:
     driver: local
