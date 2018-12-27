@@ -47,13 +47,19 @@ public class StorageController {
      * @apiSuccess (Success 200) {String} number 库房编号.
      * @apiSuccess (Success 200) {String} description 库房描述.
      * @apiSuccess (Success 200) {Number} fondsId 所属全宗id.
+     * @apiSuccess (Success 200) {Number} total 数据总数
      * @apiSuccessExample {json} Success-Response:
      * {
-     *      "id": 2,
-     *      "name": "mm",
-     *      "number": "BJ_01",
-     *      "description": "聪聪最漂亮",
-     *      "fonds_id": "2"
+     * "data":{
+     * "items":[{
+     *            "id": 2,
+     *            "name": "mm",
+     *            "number": "BJ_01",
+     *            "description": "傻大葱",
+     *            "fonds_id": "2"
+     *       }]
+     * "total":1
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
@@ -177,15 +183,23 @@ public class StorageController {
      * @apiSuccess (Success 200) {Number} status 监测点状态(0表示否，1表示是).
      * @apiSuccess (Success 200) {String{100}} remark 备注.
      * @apiSuccess (Success 200) {Number} fondsId 所属全宗id.
+     * @apiSuccess (Success 200) {Number} total 数据总数
      * @apiSuccessExample {json} Success-Response:
+     * {
+     * "data":{
+     * "items":[
      * {
      *         "id": 1,
      *         "storage_id": 1,
      *         "number": "BH001",
      *         "type": 1,
      *         "status": 0,
-     *         "remark": null,
+     *         "remark": "beizhu",
      *         "name": "cc"
+     * }
+     *       ]
+     * "total":1
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")

@@ -48,6 +48,8 @@ public class StoreQuery {
      */
     public Map<String, Object> getStorageList(String keyWord, int pageNum, int pageSize) {
         Map<String, Object> resultMap = new HashMap<>();
+        List<Map<String, Object>> list = new ArrayList<>();
+
         List<Condition> conditions = new ArrayList<>();
         conditions.add(storage.FONDS_ID.equal(sysFonds.ID));
         conditions.add(storage.GMT_DELETED.equal(0));
@@ -57,17 +59,23 @@ public class StoreQuery {
                     .or(storage.NUMBER.like("%" + keyWord.trim() + "%"))
                     .or(storage.DESCRIPTION.like("%" + keyWord.trim() + "%")));
         }
-        List<Map<String, Object>> list = dslContext.select(storage.ID.as("id"),
-                storage.NAME.as("name"),
-                storage.NUMBER.as("number"),
-                storage.DESCRIPTION.as("description"),
-                storage.FONDS_ID.as("fonds_id"),
-                sysFonds.FONDS_NAME.as("fonds_name"))
-                .from(storage, sysFonds)
-                .where(conditions).orderBy(storage.GMT_CREATE.desc())
-                .limit((pageNum - 1) * pageSize, pageSize)
-                .fetch().intoMaps();
+        int total = (int) dslContext.select(storage.ID.count()).from(storage)
+                .where(conditions).fetch().getValue(0, 0);
+
+        if (total != 0) {
+             list = dslContext.select(storage.ID.as("id"),
+                    storage.NAME.as("name"),
+                    storage.NUMBER.as("number"),
+                    storage.DESCRIPTION.as("description"),
+                    storage.FONDS_ID.as("fonds_id"),
+                    sysFonds.FONDS_NAME.as("fonds_name"))
+                    .from(storage, sysFonds)
+                    .where(conditions).orderBy(storage.GMT_CREATE.desc())
+                    .limit((pageNum - 1) * pageSize, pageSize)
+                    .fetch().intoMaps();
+        }
         resultMap.put("items", list);
+        resultMap.put("total", total);
         return resultMap;
     }
 
@@ -86,19 +94,27 @@ public class StoreQuery {
         }
 
         Map<String, Object> resultMap = new HashMap<>();
-        List<Map<String, Object>> list = dslContext.select(monitoringPoint.ID.as("id"),
-                monitoringPoint.STORAGE_ID.as("storage_id"),
-                monitoringPoint.NUMBER.as("number"),
-                monitoringPoint.TYPE.as("type"),
-                monitoringPoint.STATUS.as("status"),
-                monitoringPoint.REMARK.as("remark"),
-                storage.NAME.as("name"))
-                .from(monitoringPoint, storage)
-                .where(conditions)
-                .limit((pageNum - 1) * pageSize, pageSize)
-                .fetch().intoMaps();
-        resultMap.put("items", list);
+        List<Map<String, Object>> list = new ArrayList<>();
 
+        int total = (int) dslContext.select(monitoringPoint.ID.count()).from(monitoringPoint)
+                .where(conditions).fetch().getValue(0, 0);
+
+        if (total != 0) {
+            list = dslContext.select(monitoringPoint.ID.as("id"),
+                    monitoringPoint.STORAGE_ID.as("storage_id"),
+                    monitoringPoint.NUMBER.as("number"),
+                    monitoringPoint.TYPE.as("type"),
+                    monitoringPoint.STATUS.as("status"),
+                    monitoringPoint.REMARK.as("remark"),
+                    storage.NAME.as("name"))
+                    .from(monitoringPoint, storage)
+                    .where(conditions)
+                    .limit((pageNum - 1) * pageSize, pageSize)
+                    .fetch().intoMaps();
+        }
+
+        resultMap.put("items", list);
+        resultMap.put("total", total);
         return resultMap;
     }
 

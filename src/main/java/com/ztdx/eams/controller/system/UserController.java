@@ -167,7 +167,7 @@ public class UserController {
      * "data":{
      * "items":[{"id": 用户ID,"name": "姓名","organiztionId": 所属机构ID,"workers": "工号","username": "用户名","phone": "电话","email": "邮箱","job": "职位","remark": "备注","flag": 状态}
      * {"id": 用户ID,"name": "姓名","workers": "工号","username": "用户名","phone": "电话","email": "邮箱","job": "职位","remark": "备注","flag": 状态}]
-     * "total":数据总数
+     * "total":2
      * }
      * }.
      */
