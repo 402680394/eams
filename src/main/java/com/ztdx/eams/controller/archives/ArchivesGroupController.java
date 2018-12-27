@@ -34,7 +34,7 @@ public class ArchivesGroupController {
      * @apiParam {Number} parentId 上级档案库分组ID（根节点传1）
      * @apiParam {String} name 档案库分组名称
      * @apiParam {String} fondsId 所属全宗ID
-     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiParam {String} remark 备注（非必须）
      * @apiError (Error 400) message 档案库分组名称已存在.
      * @apiUse ErrorExample
      */
@@ -61,7 +61,7 @@ public class ArchivesGroupController {
      * @apiParam {Number} id 档案库分组ID
      * @apiParam {Number} parentId 上级档案库分组ID（根节点传0）
      * @apiParam {String{30}} name 档案库分组名称
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiError (Error 400) message 档案库分组名称已存在.
      * @apiUse ErrorExample
      */
@@ -87,7 +87,7 @@ public class ArchivesGroupController {
      */
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList(@RequestParam("fondsId") int fondsId) {
-        return archivesQuery.getArchivesGroupTreeMap(UInteger.valueOf(fondsId));
+        return archivesQuery.getArchivesGroupTreeMap(UInteger.valueOf(fondsId),null);
     }
 
     /**
@@ -108,6 +108,6 @@ public class ArchivesGroupController {
      */
     @RequestMapping(value = "/treeListForUpdate", method = RequestMethod.GET)
     public Map<String, Object> treeListForUpdate(@RequestParam("archivesGroupId") int archivesGroupId, @RequestParam("fondsId") int fondsId) {
-        return archivesQuery.getArchivesGroupTreeMapForUpdate(UInteger.valueOf(fondsId), UInteger.valueOf(archivesGroupId));
+        return archivesQuery.getArchivesGroupTreeMap(UInteger.valueOf(fondsId), UInteger.valueOf(archivesGroupId));
     }
 }

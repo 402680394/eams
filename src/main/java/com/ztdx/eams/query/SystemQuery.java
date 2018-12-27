@@ -5,6 +5,7 @@ import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Name;
+import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,35 +43,15 @@ public class SystemQuery {
 
 
     /**
-     * 获取全宗所属机构树.
+     * 通过上级机构节点与机构类型、所属全宗获取机构树.
      */
-    public Map<String, Object> getOrganizationTreeMapByFondsId(UInteger fondsId) {
-        Map<String, Object> resultMap = new HashMap<>();
-        //伪造根机构，便于递归查询子机构
-        resultMap.put("id", UInteger.valueOf(1));
-        //查询
-        resultMap = getSubOrganizationTreeMap(getAllOrganizationList(fondsId, null), resultMap);
-        //拼装返回数据信息
-        if (null != resultMap.get("children")) {
-            resultMap.put("items", resultMap.get("children"));
-        } else {
-            resultMap.put("items", new ArrayList<Map<String, Object>>());
-        }
-        //去除根机构数据
-        resultMap.remove("id");
-        resultMap.remove("children");
-        return resultMap;
-    }
-
-    /**
-     * 通过上级机构节点与机构类型获取机构树.
-     */
-    public Map<String, Object> getOrganizationTreeMap(UInteger id, Integer type) {
+    public Map<String, Object> getOrganizationTreeMap(UInteger fondsId, UInteger id, Integer type) {
         Map<String, Object> resultMap = new HashMap<>();
         //伪造上级机构，便于递归查询子机构
-        resultMap.put("id", id);
+
+        resultMap.put("id", id != null ? id : UInteger.valueOf(1));
         //查询
-        resultMap = getSubOrganizationTreeMap(getAllOrganizationList(null, type), resultMap);
+        resultMap = getSubOrganizationTreeMap(getAllOrganizationList(fondsId, type), resultMap);
         //拼装返回数据信息
         if (null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -138,7 +119,7 @@ public class SystemQuery {
                 sysOrganization.ORG_CODE.as("code"),
                 sysOrganization.ORG_NAME.as("name"),
                 sysOrganization.PARENT_ID.as("parentId"),
-                sysOrganization.REMARK.as("remark"),
+                DSL.decode().when(sysOrganization.REMARK.isNull(), "").otherwise(sysOrganization.REMARK).as("remark"),
                 sysOrganization.ORG_TYPE.as("type"))
                 .from(sysOrganization).where(sysOrganization.ID.equal(id)).fetch().intoMaps().get(0);
     }
@@ -152,7 +133,6 @@ public class SystemQuery {
         List<Map<String, Object>> list = new ArrayList<>();
 
         List<Condition> conditions = new ArrayList<>();
-        key = key.trim();
         conditions.add(sysUser.USERNAME.notEqual("admin"));
         conditions.add(sysUser.GMT_DELETED.eq(0));
         conditions.add(sysUser.REAL_NAME.like("%" + key + "%")
@@ -171,13 +151,13 @@ public class SystemQuery {
             list = dslContext.select(
                     sysUser.ID.as("id"),
                     sysUser.REAL_NAME.as("name"),
-                    sysUser.WORKERS.as("workers"),
+                    DSL.decode().when(sysUser.WORKERS.isNull(), "").otherwise(sysUser.WORKERS).as("workers"),
                     sysUser.ORGANIZATION_ID.as("organiztionId"),
                     sysUser.USERNAME.as("username"),
-                    sysUser.PHONE.as("phone"),
-                    sysUser.EMAIL.as("email"),
-                    sysUser.JOB.as("job"),
-                    sysUser.REMARK.as("remark"),
+                    DSL.decode().when(sysUser.PHONE.isNull(), "").otherwise(sysUser.PHONE).as("phone"),
+                    DSL.decode().when(sysUser.EMAIL.isNull(), "").otherwise(sysUser.EMAIL).as("email"),
+                    DSL.decode().when(sysUser.JOB.isNull(), "").otherwise(sysUser.JOB).as("job"),
+                    DSL.decode().when(sysUser.REMARK.isNull(), "").otherwise(sysUser.REMARK).as("remark"),
                     sysUser.FLAG.as("flag"))
                     .from(sysUser)
                     .where(conditions).orderBy(sysUser.GMT_CREATE.desc())
@@ -196,13 +176,14 @@ public class SystemQuery {
     public Map<String, Object> getUser(UInteger id) {
         return dslContext.select(sysUser.ID.as("id"),
                 sysUser.REAL_NAME.as("name"),
-                sysUser.WORKERS.as("workers"),
                 sysUser.USERNAME.as("username"),
-                sysUser.ORGANIZATION_ID.as("organizationId"),
                 sysOrganization.ORG_NAME.as("organizationName"),
-                sysUser.PHONE.as("phone"),
-                sysUser.EMAIL.as("email"),
-                sysUser.JOB.as("job"),
+                DSL.decode().when(sysUser.WORKERS.isNull(), "").otherwise(sysUser.WORKERS).as("workers"),
+                sysUser.ORGANIZATION_ID.as("organiztionId"),
+                DSL.decode().when(sysUser.PHONE.isNull(), "").otherwise(sysUser.PHONE).as("phone"),
+                DSL.decode().when(sysUser.EMAIL.isNull(), "").otherwise(sysUser.EMAIL).as("email"),
+                DSL.decode().when(sysUser.JOB.isNull(), "").otherwise(sysUser.JOB).as("job"),
+                DSL.decode().when(sysUser.REMARK.isNull(), "").otherwise(sysUser.REMARK).as("remark"),
                 sysUser.REMARK.as("remark"))
                 .from(sysUser, sysOrganization)
                 .where(sysUser.ID.equal(id), sysUser.ORGANIZATION_ID.equal(sysOrganization.ID))
@@ -315,7 +296,7 @@ public class SystemQuery {
         if (null == fondsId) {
             condition = sysRole.FONDS_ID.isNull();
         }
-        return dslContext.select(sysRole.ID, sysRole.ROLE_NAME.as("name"), sysRole.REMARK).from(sysRole).where(condition).fetch().intoMaps();
+        return dslContext.select(sysRole.ID, sysRole.ROLE_NAME.as("name"), DSL.decode().when(sysRole.REMARK.isNull(), "").otherwise(sysRole.REMARK)).from(sysRole).where(condition).fetch().intoMaps();
     }
 
     /**

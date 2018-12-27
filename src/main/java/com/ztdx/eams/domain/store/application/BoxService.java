@@ -57,7 +57,7 @@ public class BoxService {
     public void delete(List<Integer> ids) {
         List<Box> list = boxRepository.findAllById(ids);
         if(ids.size()!=list.size()){
-            throw new InvalidArgumentException("档案盒不存在或已被删除");
+            throw new InvalidArgumentException("有档案盒不存在或已被删除");
         }
         boxRepository.deleteAll(list);
     }

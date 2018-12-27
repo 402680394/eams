@@ -118,7 +118,7 @@ public class ArchivalCodeRulerController {
      * @apiParam {Number} interceptionLength 截取长度(类型为著录项值时传递)
      * @apiParam {Number} flowNumberLength 流水号长度(类型为流水号时传递)
      * @apiParam {Number} catalogueId 目录ID
-     * @apiParam {String{50}} remark 备注（未输入传""值）
+     * @apiParam {String{50}} remark 备注（非必须）
      * @apiError (Error 400) message .
      * @apiUse ErrorExample
      */
@@ -150,7 +150,7 @@ public class ArchivalCodeRulerController {
      * @apiParam {Number} interceptionLength 截取长度(类型为著录项值时传递)
      * @apiParam {Number} flowNumberLength 流水号长度(类型为流水号时传递)
      * @apiParam {Number} catalogueId 目录ID
-     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiParam {String} remark 备注（非必须）
      * @apiError (Error 400) message .
      * @apiUse ErrorExample
      */

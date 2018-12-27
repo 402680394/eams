@@ -67,8 +67,11 @@ public class MetadataController {
      * "range": 值域,"informationSources": 信息来源,"orderNumber": "排序号","remark": "备注"}]}}.
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public Map<String, Object> list(@RequestParam(value = "metadataStandardsId") int metadataStandardsId,@RequestParam(value = "name",defaultValue = "") String name) {
-        return archivesQuery.getMetadataList(UInteger.valueOf(metadataStandardsId),name);
+    public Map<String, Object> list(@RequestParam(value = "metadataStandardsId") int metadataStandardsId
+            ,@RequestParam(value = "name",defaultValue = "") String name
+            , @RequestParam(name = "pageSize", required = false, defaultValue = "15") int pageSize
+            , @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
+        return archivesQuery.getMetadataList(UInteger.valueOf(metadataStandardsId),name, pageNum, pageSize);
     }
 
     /**
@@ -79,20 +82,19 @@ public class MetadataController {
      * @apiParam {String{30}} name 字段名称.
      * @apiParam {Number} fieldProperties 字段属性.
      * @apiParam {Number} dataType 数据类型.
-     * @apiParam {String{20}} fieldWidth 字段宽度.
-     * @apiParam {String{20}} fieldPrecision 字段精度.
-     * @apiParam {Number} parentId 父字段ID.
+     * @apiParam {String{20}} fieldWidth 字段宽度(非必须).
+     * @apiParam {String{20}} fieldPrecision 字段精度(非必须).
      * @apiParam {Number} metadataStandardsId 元数据规范ID.
      * @apiParam {Number} defaultValue 默认值.
-     * @apiParam {String{50}} definition 定义.
-     * @apiParam {String{50}} objective 目的.
+     * @apiParam {String{50}} definition 定义(非必须).
+     * @apiParam {String{50}} objective 目的(非必须).
      * @apiParam {Number} constraint 约束性.
      * @apiParam {Number} elementType 元素类型.
-     * @apiParam {String{30}} codingModification 编码修饰体系.
-     * @apiParam {String{30}} relatedElements 相关元素.
-     * @apiParam {String{30}} range 值域.
-     * @apiParam {String{30}} informationSources 信息来源.
-     * @apiParam {String{100}} remark 备注.
+     * @apiParam {String{30}} codingModification 编码修饰体系(非必须).
+     * @apiParam {String{30}} relatedElements 相关元素(非必须).
+     * @apiParam {String{30}} range 值域(非必须).
+     * @apiParam {String{30}} informationSources 信息来源(非必须).
+     * @apiParam {String{100}} remark 备注(非必须).
      * @apiError (Error 400) message 字段名称已存在.
      * @apiUse ErrorExample
      */

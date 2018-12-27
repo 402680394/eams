@@ -7,7 +7,6 @@ import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.text.NumberFormat;
@@ -31,11 +30,11 @@ public class StoreQuery {
 
     private final StoreBoxCodeRule storeBoxCodeRule = Tables.STORE_BOX_CODE_RULE;
 
-    private final StoreShelf storeShelf = Tables.STORE_SHELF;
+//    private final StoreShelf storeShelf = Tables.STORE_SHELF;
 
     private final StoreShelfCell storeShelfCell = Tables.STORE_SHELF_CELL;
 
-    private final ArchivesCatalogue archivesCatalogue = Tables.ARCHIVES_CATALOGUE;
+//    private final ArchivesCatalogue archivesCatalogue = Tables.ARCHIVES_CATALOGUE;
 
     @Autowired
     public StoreQuery(DSLContext dslContext) {
@@ -54,10 +53,10 @@ public class StoreQuery {
         conditions.add(storage.FONDS_ID.equal(sysFonds.ID));
         conditions.add(storage.GMT_DELETED.equal(0));
         conditions.add(sysFonds.GMT_DELETED.equal(0));
-        if (null != keyWord && !keyWord.trim().equals("")) {
-            conditions.add(storage.NAME.like("%" + keyWord.trim() + "%")
-                    .or(storage.NUMBER.like("%" + keyWord.trim() + "%"))
-                    .or(storage.DESCRIPTION.like("%" + keyWord.trim() + "%")));
+        if (null != keyWord && !keyWord.equals("")) {
+            conditions.add(storage.NAME.like("%" + keyWord + "%")
+                    .or(storage.NUMBER.like("%" + keyWord + "%"))
+                    .or(storage.DESCRIPTION.like("%" + keyWord + "%")));
         }
         int total = (int) dslContext.select(storage.ID.count()).from(storage, sysFonds)
                 .where(conditions).fetch().getValue(0, 0);
@@ -105,7 +104,7 @@ public class StoreQuery {
                     monitoringPoint.NUMBER.as("number"),
                     monitoringPoint.TYPE.as("type"),
                     monitoringPoint.STATUS.as("status"),
-                    monitoringPoint.REMARK.as("remark"),
+                    DSL.decode().when(monitoringPoint.REMARK.isNull(), "").otherwise(monitoringPoint.REMARK).as("remark"),
                     storage.NAME.as("name"))
                     .from(monitoringPoint, storage)
                     .where(conditions).orderBy(monitoringPoint.GMT_CREATE.desc())
@@ -129,10 +128,10 @@ public class StoreQuery {
         if (null != storageId) {
             conditions.add(monitoringRecord.STORAGE_ID.equal(storageId));
         }
-        if (null != keyWord && !keyWord.trim().equals("")) {
-            conditions.add(monitoringRecord.TEMPERATURE_VALUE.like("%" + keyWord.trim() + "%")
-                    .or(monitoringRecord.HUMIDITY_VALUE.like("%" + keyWord.trim() + "%"))
-                    .or(monitoringRecord.TAKE_STEPS.like("%" + keyWord.trim() + "%")));
+        if (null != keyWord && !keyWord.equals("")) {
+            conditions.add(monitoringRecord.TEMPERATURE_VALUE.like("%" + keyWord + "%")
+                    .or(monitoringRecord.HUMIDITY_VALUE.like("%" + keyWord + "%"))
+                    .or(monitoringRecord.TAKE_STEPS.like("%" + keyWord + "%")));
         }
 
         Map<String, Object> resultMap = new HashMap<>();
@@ -233,8 +232,8 @@ public class StoreQuery {
                 storeBox.FLOW_NUMBER.as("flowNumber"),
                 storeBox.MAX_PAGES_TOTAL.as("maxPagesTotal"),
                 storeBox.WIDTH.as("width"),
-                storeBox.REMARK.as("remark")
-        ).from(storeBox)
+                DSL.decode().when(storeBox.REMARK.isNull(), "").otherwise(storeBox.REMARK).as("remark"))
+                .from(storeBox)
                 .where(storeBox.ID.equal(id))
                 .fetch().intoMaps().get(0);
     }
@@ -250,61 +249,61 @@ public class StoreQuery {
                 storeBoxCodeRule.INTERCEPTION_LENGTH.as("interceptionLength"),
                 storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"),
                 storeBoxCodeRule.ORDER_NUMBER.as("orderNumber"),
-                storeBoxCodeRule.REMARK.as("remark"))
+                DSL.decode().when(storeBoxCodeRule.REMARK.isNull(), "").otherwise(storeBoxCodeRule.REMARK).as("remark"))
                 .from(storeBoxCodeRule)
                 .where(storeBoxCodeRule.ARCHIVES_ID.equal(archivesId))
                 .orderBy(storeBoxCodeRule.ORDER_NUMBER)
                 .fetch().intoMaps();
     }
 
-    public List<Map<String, Object>> getBoxCodeRulesByCatalogueId(UInteger catalogueId) {
-        return dslContext.select(storeBoxCodeRule.TYPE.as("type"),
-                storeBoxCodeRule.VALUE.as("value"),
-                storeBoxCodeRule.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
-                storeBoxCodeRule.INTERCEPTION_LENGTH.as("interceptionLength"),
-                storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"),
-                storeBoxCodeRule.ORDER_NUMBER.as("orderNumber"),
-                storeBoxCodeRule.REMARK.as("remark"))
-                .from(storeBoxCodeRule, archivesCatalogue)
-                .where(storeBoxCodeRule.ARCHIVES_ID.equal(archivesCatalogue.ARCHIVES_ID), archivesCatalogue.ID.equal(catalogueId))
-                .orderBy(storeBoxCodeRule.ORDER_NUMBER)
-                .fetch().intoMaps();
-    }
-
-    public Map<String, Object> listShelf(String key, int storageId, Pageable pageable) {
-        Integer total = dslContext
-                .selectCount()
-                .from(storeShelf)
-                .where(storeShelf.STORAGE_ID.eq(storageId)
-                        , storeShelf.NAME.like("%" + key.trim() + "%")
-                                .or(storeShelf.CODE.like("%" + key.trim() + "%"))
-                                .or(storeShelf.REMARK.like("%" + key.trim() + "%")))
-                .fetchOne().value1();
-
-        List<Map<String, Object>> list = dslContext
-                .select(
-                        storeShelf.ID
-                        , storeShelf.NAME
-                        , storeShelf.NAME.as("title")
-                        , storeShelf.CODE
-                        , storeShelf.STORAGE_ID.as("storageId")
-                        , storeShelf.REMARK
-                        , storeShelf.SHELF_TYPE.as("shelfType")
-                        , storeShelf.SECTION_NUM.as("sectionNum")
-                )
-                .from(storeShelf)
-                .where(storeShelf.STORAGE_ID.eq(storageId)
-                        , storeShelf.NAME.like("%" + key.trim() + "%")
-                                .or(storeShelf.CODE.like("%" + key.trim() + "%"))
-                                .or(storeShelf.REMARK.like("%" + key.trim() + "%")))
-                .orderBy(storeShelf.GMT_CREATE.desc())
-                .limit((int) pageable.getOffset(), pageable.getPageSize()).fetch().intoMaps();
-
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("items", list);
-        resultMap.put("total", total);
-        return resultMap;
-    }
+//    public List<Map<String, Object>> getBoxCodeRulesByCatalogueId(UInteger catalogueId) {
+//        return dslContext.select(storeBoxCodeRule.TYPE.as("type"),
+//                storeBoxCodeRule.VALUE.as("value"),
+//                storeBoxCodeRule.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
+//                storeBoxCodeRule.INTERCEPTION_LENGTH.as("interceptionLength"),
+//                storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"),
+//                storeBoxCodeRule.ORDER_NUMBER.as("orderNumber"),
+//                storeBoxCodeRule.REMARK.as("remark"))
+//                .from(storeBoxCodeRule, archivesCatalogue)
+//                .where(storeBoxCodeRule.ARCHIVES_ID.equal(archivesCatalogue.ARCHIVES_ID), archivesCatalogue.ID.equal(catalogueId))
+//                .orderBy(storeBoxCodeRule.ORDER_NUMBER)
+//                .fetch().intoMaps();
+//    }
+//
+//    public Map<String, Object> listShelf(String key, int storageId, Pageable pageable) {
+//        Integer total = dslContext
+//                .selectCount()
+//                .from(storeShelf)
+//                .where(storeShelf.STORAGE_ID.eq(storageId)
+//                        , storeShelf.NAME.like("%" + key.trim() + "%")
+//                                .or(storeShelf.CODE.like("%" + key.trim() + "%"))
+//                                .or(storeShelf.REMARK.like("%" + key.trim() + "%")))
+//                .fetchOne().value1();
+//
+//        List<Map<String, Object>> list = dslContext
+//                .select(
+//                        storeShelf.ID
+//                        , storeShelf.NAME
+//                        , storeShelf.NAME.as("title")
+//                        , storeShelf.CODE
+//                        , storeShelf.STORAGE_ID.as("storageId")
+//                        , storeShelf.REMARK
+//                        , storeShelf.SHELF_TYPE.as("shelfType")
+//                        , storeShelf.SECTION_NUM.as("sectionNum")
+//                )
+//                .from(storeShelf)
+//                .where(storeShelf.STORAGE_ID.eq(storageId)
+//                        , storeShelf.NAME.like("%" + key.trim() + "%")
+//                                .or(storeShelf.CODE.like("%" + key.trim() + "%"))
+//                                .or(storeShelf.REMARK.like("%" + key.trim() + "%")))
+//                .orderBy(storeShelf.GMT_CREATE.desc())
+//                .limit((int) pageable.getOffset(), pageable.getPageSize()).fetch().intoMaps();
+//
+//        Map<String, Object> resultMap = new HashMap<>();
+//        resultMap.put("items", list);
+//        resultMap.put("total", total);
+//        return resultMap;
+//    }
 
     public Map<String, Object> maxFlowNumber(int archivesId, String codeRule) {
 
@@ -366,11 +365,10 @@ public class StoreQuery {
         return dslContext.select(storeBoxCodeRule.ID.as("id"),
                 storeBoxCodeRule.TYPE.as("type"),
                 storeBoxCodeRule.VALUE.as("value"),
-                storeBoxCodeRule.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
                 storeBoxCodeRule.INTERCEPTION_LENGTH.as("interceptionLength"),
                 storeBoxCodeRule.FLOW_NUMBER_LENGTH.as("flowNumberLength"),
                 storeBoxCodeRule.ARCHIVES_ID.as("archivesId"),
-                storeBoxCodeRule.REMARK.as("remark"))
+                DSL.decode().when(storeBoxCodeRule.REMARK.isNull(), "").otherwise(storeBoxCodeRule.REMARK).as("remark"))
                 .from(storeBoxCodeRule).where(storeBoxCodeRule.ID.equal(id)).fetch().intoMaps().get(0);
     }
 }

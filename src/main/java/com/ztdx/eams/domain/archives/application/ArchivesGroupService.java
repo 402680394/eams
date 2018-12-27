@@ -1,6 +1,7 @@
 package com.ztdx.eams.domain.archives.application;
 
 import com.ztdx.eams.basic.exception.BusinessException;
+import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.application.event.ArchivesGroupDeleteEvent;
 import com.ztdx.eams.domain.archives.model.Archives;
 import com.ztdx.eams.domain.archives.model.ArchivesGroup;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by li on 2018/5/3.
@@ -48,6 +50,10 @@ public class ArchivesGroupService {
         List<ArchivesGroup> archivesGroups = archivesGroupRepository.findByParentIdAndGmtDeleted(id, 0);
         if (archives.size() != 0 && archivesGroups.size() != 0) {
             throw new BusinessException("该分组下存在子分组或档案库");
+        }
+        Optional<ArchivesGroup> optional = archivesGroupRepository.findById(id);
+        if (!optional.isPresent() || optional.get().getGmtDeleted() == 1) {
+            throw new InvalidArgumentException("该项不存在或已被删除");
         }
         archivesGroupRepository.setDeleteById(id, 1);
 //        archivesRepository.setDeleteByArchivesGroupId(id, 1);

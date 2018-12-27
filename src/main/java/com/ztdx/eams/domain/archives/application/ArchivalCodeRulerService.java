@@ -115,22 +115,30 @@ public class ArchivalCodeRulerService {
 
     @Transactional
     public void priority(int upId, int downId) {
-        ArchivalCodeRuler up = archivalCodeRulerRepository.findById(upId).orElse(null);
-        ArchivalCodeRuler down = archivalCodeRulerRepository.findById(downId).orElse(null);
-        if (up == null || down == null) {
-            throw new InvalidArgumentException("对象不存在或已被删除");
+        Optional<ArchivalCodeRuler> up = archivalCodeRulerRepository.findById(upId);
+        Optional<ArchivalCodeRuler> down = archivalCodeRulerRepository.findById(downId);
+        if (!up.isPresent() || !down.isPresent()) {
+            throw new InvalidArgumentException("数据不存在或已被删除");
         }
-        archivalCodeRulerRepository.updateOrderNumberById(upId, down.getOrderNumber());
-        archivalCodeRulerRepository.updateOrderNumberById(downId, up.getOrderNumber());
+        archivalCodeRulerRepository.updateOrderNumberById(upId, down.get().getOrderNumber());
+        archivalCodeRulerRepository.updateOrderNumberById(downId, up.get().getOrderNumber());
     }
 
     @Transactional
     public void delete(int id) {
+        Optional<ArchivalCodeRuler> optional = archivalCodeRulerRepository.findById(id);
+        if (!optional.isPresent()) {
+            throw new InvalidArgumentException("数据不存在或已被删除");
+        }
         archivalCodeRulerRepository.deleteById(id);
     }
 
     @Transactional
     public void update(ArchivalCodeRuler archivalCodeRuler) {
+        Optional<ArchivalCodeRuler> optional = archivalCodeRulerRepository.findById(archivalCodeRuler.getId());
+        if (!optional.isPresent()) {
+            throw new InvalidArgumentException("数据不存在或已被删除");
+        }
         archivalCodeRulerRepository.updateById(archivalCodeRuler);
     }
 

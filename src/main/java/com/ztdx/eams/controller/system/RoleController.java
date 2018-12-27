@@ -49,7 +49,7 @@ public class RoleController {
      * @apiGroup role
      * @apiParam {String{50}} roleName 角色名称
      * @apiParam {Number} [fondsId] 全宗id
-     * @apiParam {String(200)} remark 描述
+     * @apiParam {String(200)} remark 描述(非必须)
      * @apiError (Error 400) message 1.角色名称已存在
      * @apiUse ErrorExample
      */
@@ -79,7 +79,7 @@ public class RoleController {
      * @apiParam {Number} id 角色id（url占位符）
      * @apiParam {String{50}} roleName 角色名称
      * @apiParam {Number} [fondsId] 全宗节点id
-     * @apiParam {String(200)} remark 描述
+     * @apiParam {String(200)} remark 描述(非必须)
      * @apiError (Error 400) message 1.角色名称已存在
      * @apiUse ErrorExample
      */

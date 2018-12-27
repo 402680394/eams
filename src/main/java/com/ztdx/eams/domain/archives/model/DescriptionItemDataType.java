@@ -20,9 +20,9 @@ public enum DescriptionItemDataType {
     Integer(1, "整数"),
 
     /**
-     * 字符串
+     * 文本
      */
-    String(5, "字符串"),
+    Text(2, "文本"),
 
     /**
      * 日期
@@ -35,9 +35,9 @@ public enum DescriptionItemDataType {
     Double(4, "浮点"),
 
     /**
-     * 文本
+     * 字符串
      */
-    Text(2, "文本"),
+    String(5, "字符串"),
 
     /**
      * 数组

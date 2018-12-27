@@ -63,7 +63,7 @@ public class MetadataStandardsController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam(value = "name", defaultValue = "") String name) {
-        return archivesQuery.getMetadataStandardsList(name);
+        return archivesQuery.getMetadataStandardsList(name.trim());
     }
 
     /**
@@ -73,11 +73,11 @@ public class MetadataStandardsController {
      * @apiParam {String{30}} code 编号
      * @apiParam {String{30}} name 名称
      * @apiParam {Number} characterSet 字符集(1-"utf-8",2-"gb2312",3-其他).
-     * @apiParam {String{20}} releaseOrganization 发布机构（未输入传""值）
-     * @apiParam {String{30}} descriptionFile 描述文件（未输入传""值）
+     * @apiParam {String{20}} releaseOrganization 发布机构（非必须）
+     * @apiParam {String{30}} descriptionFile 描述文件（非必须）
      * @apiParam {String{20}} edition 版本.
      * @apiParam {Number{0-1}} flag 是否启用(0-启用,1-禁用).
-     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiParam {String} remark 备注（非必须）
      * @apiError (Error 400) message 编号已存在.
      * @apiUse ErrorExample
      */
@@ -105,11 +105,11 @@ public class MetadataStandardsController {
      * @apiParam {String{30}} code 编号
      * @apiParam {String{30}} name 名称
      * @apiParam {Number} characterSet 字符集(1-"utf-8",2-"gb2312",3-其他).
-     * @apiParam {String{20}} releaseOrganization 发布机构（未输入传""值）
-     * @apiParam {String{30}} descriptionFile 描述文件（未输入传""值）
+     * @apiParam {String{20}} releaseOrganization 发布机构（非必须）
+     * @apiParam {String{30}} descriptionFile 描述文件（非必须）
      * @apiParam {String{20}} edition 版本.
      * @apiParam {Number{0-1}} flag 是否启用(0-启用,1-禁用).
-     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiParam {String} remark 备注（非必须）
      * @apiError (Error 400) message 编号已存在.
      * @apiUse ErrorExample
      */

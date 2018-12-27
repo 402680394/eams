@@ -19,19 +19,16 @@ import javax.persistence.Table;
 public interface MetadataStandardsRepository extends JpaRepository<MetadataStandards, Integer> {
     boolean existsByCode(String code);
 
-    MetadataStandards findById(int id);
-
-    //查询排序优先级最大值
+    //最大排序号
     @Query("select max (m.orderNumber) from MetadataStandards m")
     Integer findMaxOrderNumber();
 
-    boolean existsByCodeAndId(String code, int id);
-    //通过ID修改信息
+    //修改信息
     @Modifying
     @Query("update MetadataStandards m set m.code=:#{#metadataStandards.code},m.name=:#{#metadataStandards.name},m.characterSet=:#{#metadataStandards.characterSet},m.releaseOrganization=:#{#metadataStandards.releaseOrganization},m.descriptionFile=:#{#metadataStandards.descriptionFile},m.edition=:#{#metadataStandards.edition},m.flag=:#{#metadataStandards.flag},m.remark=:#{#metadataStandards.remark} where m.id=:#{#metadataStandards.id}")
     void updateById(@Param(value = "metadataStandards")MetadataStandards metadataStandards);
 
-    //设置机构优先级
+    //排序
     @Modifying
     @Query("update MetadataStandards m set m.orderNumber=:orderNumber where m.id=:id")
     void updateOrderNumberById(@Param(value = "id") int id, @Param(value = "orderNumber") int orderNumber);

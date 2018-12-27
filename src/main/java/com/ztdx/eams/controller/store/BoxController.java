@@ -76,7 +76,7 @@ public class BoxController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_read')")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public Map<String, Object> list(@RequestParam(value = "pageNum", required = false, defaultValue = "1") int pageNum,
-                                    @RequestParam(name = "size", required = false, defaultValue = "20") int size,
+                                    @RequestParam(name = "size", required = false, defaultValue = "15") int size,
                                     @RequestParam("archivesId") int archivesId,
                                     @RequestParam(value = "code", required = false, defaultValue = "") String code,
                                     @RequestParam(name = "status", required = false, defaultValue = "0") int status,
@@ -95,8 +95,8 @@ public class BoxController {
      * @apiParam {Number} total 新增个数
      * @apiParam {Number} maxPagesTotal 最大容量（页）
      * @apiParam {String} remark 备注（未输入传""值）
-     * @apiParam {Number} catalogueId 备注（非必传）
-     * @apiParam {String[]} ids 备注（非必传）
+     * @apiParam {Number} catalogueId 备注（非必须）
+     * @apiParam {String[]} ids 备注（非必须）
      * @apiError (Error 400) message 盒号已存在.
      * @apiUse ErrorExample
      */
@@ -149,7 +149,7 @@ public class BoxController {
      * @apiParam {String{100}} flowNumber 流水号
      * @apiParam {Number} width 盒子宽度（毫米）
      * @apiParam {Number} maxPagesTotal 最大容量（页）
-     * @apiParam {String{50}} remark 备注
+     * @apiParam {String{50}} remark 备注（非必须）
      * @apiError (Error 400) message 盒号已存在.
      * @apiUse ErrorExample
      */

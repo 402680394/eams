@@ -188,7 +188,7 @@ public class UserController {
             throw new ForbiddenException("没有此组织机构的权限");
         }
 
-        return systemQuery.getUserList(organizationId, key, pageNum, pageSize);
+        return systemQuery.getUserList(organizationId, key.trim(), pageNum, pageSize);
     }
 
     /**
@@ -196,13 +196,13 @@ public class UserController {
      * @apiName save
      * @apiGroup user
      * @apiParam {String{10}} name 姓名
-     * @apiParam {String{20}} workers 工号（未输入传""值）
+     * @apiParam {String{20}} workers 工号（非必须）
      * @apiParam {String{10}} username 用户名
      * @apiParam {Number} organizationId 所属机构ID
-     * @apiParam {String{20}} phone 电话（未输入传""值）
-     * @apiParam {String{50}} email 邮箱（未输入传""值）
-     * @apiParam {String{20}} job 职位（未输入传""值）
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{20}} phone 电话（非必须）
+     * @apiParam {String{50}} email 邮箱（非必须）
+     * @apiParam {String{20}} job 职位（非必须）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiError (Error 400) message 1.用户名已存在;2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */
@@ -219,13 +219,13 @@ public class UserController {
      * @apiGroup user
      * @apiParam {Number} id ID
      * @apiParam {String{10}} name 姓名
-     * @apiParam {String{20}} workers 工号（未输入传""值）
+     * @apiParam {String{20}} workers 工号（非必须）
      * @apiParam {String{20}} username 用户名
      * @apiParam {Number} organizationId 所属机构ID
-     * @apiParam {String{20}} phone 电话（未输入传""值）
-     * @apiParam {String{50}} email 邮箱（未输入传""值）
-     * @apiParam {String{20}} job 职位（未输入传""值）
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{20}} phone 电话（非必须）
+     * @apiParam {String{50}} email 邮箱（非必须）
+     * @apiParam {String{20}} job 职位（非必须）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiError (Error 400) message 1.用户名已存在;2.机构不存在或已被删除.
      * @apiUse ErrorExample
      */

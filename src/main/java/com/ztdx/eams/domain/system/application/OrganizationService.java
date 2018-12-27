@@ -57,7 +57,7 @@ public class OrganizationService {
                 throw new InvalidArgumentException("该机构下存在子机构");
             }
             if (!organizationRepository.findById(id).isPresent()) {
-                throw new InvalidArgumentException("该角色不存在或已被删除");
+                throw new InvalidArgumentException("该项不存在或已被删除");
             }
             organizationRepository.deleteById(id);
     }

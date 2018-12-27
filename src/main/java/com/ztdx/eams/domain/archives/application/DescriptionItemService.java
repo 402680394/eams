@@ -62,7 +62,19 @@ public class DescriptionItemService {
     }
 
     public void delete(List<Integer> ids) {
-        descriptionItemRepository.deleteByIdIn(ids);
+        List<DescriptionItem> descriptionItems=descriptionItemRepository.findAllById(ids);
+        if(descriptionItems.size()!=ids.size()){
+            throw new InvalidArgumentException("有数据不存在或已被删除");
+        }
+        int catalogueId= descriptionItems.get(0).getCatalogueId();
+
+        descriptionItemRepository.deleteAll(descriptionItems);
+
+        if(descriptionItemRepository.findByCatalogueId(catalogueId).size()==0){
+            Catalogue catalogue = catalogueRepository.findById(catalogueId).get();
+            catalogue.setMetadataStandardsId(null);
+            catalogueRepository.save(catalogue);
+        }
     }
 
     @Transactional

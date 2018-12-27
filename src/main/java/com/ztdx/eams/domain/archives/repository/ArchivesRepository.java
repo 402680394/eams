@@ -34,7 +34,7 @@ public interface ArchivesRepository extends JpaRepository<Archives, Integer> {
     @Query("update Archives a set a.name=:#{#archives.name},a.archivesGroupId=:#{#archives.archivesGroupId},a.remark=:#{#archives.remark} where a.id=:#{#archives.id}")
     void update(@Param(value = "archives") Archives archives);
 
-    @Modifying
-    @Query("update Archives a set a.gmtDeleted=:gmtDeleted where a.archivesGroupId=:archivesGroupId")
-    void setDeleteByArchivesGroupId(@Param(value = "archivesGroupId") int archivesGroupId, @Param(value = "gmtDeleted") int gmtDeleted);
+//    @Modifying
+//    @Query("update Archives a set a.gmtDeleted=:gmtDeleted where a.archivesGroupId=:archivesGroupId")
+//    void setDeleteByArchivesGroupId(@Param(value = "archivesGroupId") int archivesGroupId, @Param(value = "gmtDeleted") int gmtDeleted);
 }

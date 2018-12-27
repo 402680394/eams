@@ -76,7 +76,7 @@ public class ArchivesController {
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList(
             @SessionAttribute(required = false) UserCredential LOGIN_USER
-            , @RequestParam(value = "archiveType", defaultValue = "1") int archiveType) {
+            , @RequestParam(value = "archiveType", defaultValue = "1") byte archiveType) {
         int userId;
         if (LOGIN_USER != null) {
             userId = LOGIN_USER.getUserId();
@@ -88,7 +88,7 @@ public class ArchivesController {
         Set<Integer> catalogueIds = roleService.findUserManageArchiveCatalogue(userId);
 
         return archivesQuery.getFondsToCatalogueTreeMap(
-                archiveType
+                archiveType == 0 ? null : archiveType
                 , a -> hasPermission(fondsIds, a)
                 , a -> hasPermission(catalogueIds, a));
     }
@@ -127,7 +127,7 @@ public class ArchivesController {
     @RequestMapping(value = "/treeListBelowFonds", method = RequestMethod.GET)
     public Map<String, Object> treeListBelowFonds(
             @SessionAttribute(required = false) UserCredential LOGIN_USER
-            , @RequestParam(value = "archiveType", defaultValue = "2") int archiveType
+            , @RequestParam(value = "archiveType", defaultValue = "2") byte archiveType
             , @RequestParam("id") int id) {
         int userId;
         if (LOGIN_USER != null) {
@@ -142,7 +142,7 @@ public class ArchivesController {
 
         return archivesQuery.getArchivesGroupToArchivesTreeMap(
                 fondsId
-                , archiveType
+                , archiveType == 0 ? null : archiveType
                 , a -> hasPermission(catalogueIds, a));
     }
 
@@ -178,7 +178,7 @@ public class ArchivesController {
     @RequestMapping(value = "/fondsToArchivesTree", method = RequestMethod.GET)
     public Map<String, Object> fondsToArchivesTree(
             @SessionAttribute(required = false) UserCredential LOGIN_USER
-            , @RequestParam(value = "archiveType", defaultValue = "0") int archiveType) {
+            , @RequestParam(value = "archiveType", defaultValue = "0") byte archiveType) {
         int userId;
         if (LOGIN_USER != null) {
             userId = LOGIN_USER.getUserId();
@@ -190,7 +190,7 @@ public class ArchivesController {
         Set<Integer> catalogueIds = roleService.findUserManageArchiveCatalogue(userId);
 
         return archivesQuery.getFondsToArchivesTreeMap(
-                archiveType
+                archiveType == 0 ? null : archiveType
                 , a -> hasPermission(fondsIds, a)
                 , a -> hasPermission(catalogueIds, a));
     }
@@ -242,7 +242,7 @@ public class ArchivesController {
      * @apiParam {Number} archivesGroupId 档案库分组ID
      * @apiParam {Number} contentTypeId 档案库内容类型ID
      * @apiParam {Number} type 档案库类型(1 登记库； 2 归档库)
-     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiParam {String} remark 备注（非必须）
      * @apiError (Error 400) message 档案库名称已存在.
      * @apiUse ErrorExample
      */
@@ -271,7 +271,7 @@ public class ArchivesController {
      * @apiParam {Number} id 档案库ID
      * @apiParam {String{30}} name 档案库名称
      * @apiParam {Number} archivesGroupId 档案库分组ID
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiError (Error 400) message 档案库名称已存在.
      * @apiUse ErrorExample
      */

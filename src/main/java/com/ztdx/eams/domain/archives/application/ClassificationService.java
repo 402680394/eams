@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 /**
  * Created by li on 2018/4/18.
  */
@@ -42,14 +44,16 @@ public class ClassificationService {
      */
     @Transactional
     public void delete(int id) {
-        if (classificationRepository.existsById(id)) {
-            //是否存在子档案分类
-            if (classificationRepository.existsByParentId(id)) {
-                throw new InvalidArgumentException("该档案分类下存在子档案分类");
-            }
-            //删除本档案分类
-            classificationRepository.deleteById(id);
+        Optional<Classification> optional = classificationRepository.findById(id);
+        if(!optional.isPresent()){
+            throw new InvalidArgumentException("该档案分类不存在或已被删除");
         }
+        //是否存在子档案分类
+        if (classificationRepository.existsByParentId(id)) {
+            throw new InvalidArgumentException("该档案分类下存在子档案分类");
+        }
+        //删除本档案分类
+        classificationRepository.deleteById(id);
     }
 
     /**
@@ -57,7 +61,10 @@ public class ClassificationService {
      */
     @Transactional
     public void update(Classification classification) {
-        //修改数据
+        Optional<Classification> optional = classificationRepository.findById(classification.getId());
+        if(!optional.isPresent()){
+            throw new InvalidArgumentException("该档案分类不存在或已被删除");
+        }
         classificationRepository.updateById(classification);
     }
 
@@ -66,16 +73,16 @@ public class ClassificationService {
      */
     @Transactional
     public void priority(int upId, int downId) {
-        Classification up = classificationRepository.findById(upId).orElse(null);
-        Classification down = classificationRepository.findById(downId).orElse(null);
-        if (up == null || down == null) {
+        Optional<Classification> up = classificationRepository.findById(upId);
+        Optional<Classification> down = classificationRepository.findById(downId);
+        if (!up.isPresent() || !down.isPresent()) {
             throw new InvalidArgumentException("档案分类不存在或已被删除");
         }
-        if (up.getParentId() != down.getParentId()) {
+        if (up.get().getParentId() != down.get().getParentId()) {
             throw new InvalidArgumentException("档案分类类型或上级档案分类不一致");
         }
-        classificationRepository.updateOrderNumberById(upId, down.getOrderNumber());
-        classificationRepository.updateOrderNumberById(downId, up.getOrderNumber());
+        classificationRepository.updateOrderNumberById(upId, down.get().getOrderNumber());
+        classificationRepository.updateOrderNumberById(downId, up.get().getOrderNumber());
     }
 
     public Classification get(int id) {

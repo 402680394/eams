@@ -237,6 +237,9 @@ public class DescriptionItemController {
     @Transactional
     @RequestMapping(value = "/", method = RequestMethod.DELETE)
     public void delete(@RequestBody List<Integer> ids) {
+        if(ids.size()==0){
+            throw new InvalidArgumentException("选择要删除的著录项");
+        }
         applicationContext.publishEvent(new DescriptionItemDeleteEvent(this, ids));
         descriptionItemService.delete(ids);
     }

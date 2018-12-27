@@ -91,6 +91,10 @@ public class FondsService {
      */
     @Transactional
     public void update(Fonds fonds, ArrayList<Integer> associationList) {
+        Optional<Fonds> optional = fondsRepository.findById(fonds.getId());
+        if (!optional.isPresent() || optional.get().getGmtDeleted() == 1) {
+            throw new BusinessException("该全宗不存在或已被删除");
+        }
         if (!fondsRepository.existsByCodeAndId(fonds.getCode(), fonds.getId())) {
             if (fondsRepository.existsByCodeAndGmtDeleted(fonds.getCode(), 0)) {
                 throw new InvalidArgumentException("全宗号已存在");
@@ -111,7 +115,7 @@ public class FondsService {
     }
 
     /**
-     * 修改全宗排序优先级
+     * 排序
      */
     @Transactional
     public void priority(int upId, int downId) {

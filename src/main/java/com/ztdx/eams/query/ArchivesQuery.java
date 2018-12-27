@@ -4,10 +4,8 @@ import com.ztdx.eams.domain.archives.model.CatalogueType;
 import com.ztdx.eams.domain.archives.model.Structure;
 import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
-import org.jooq.DSLContext;
-import org.jooq.Record4;
-import org.jooq.Result;
-import org.jooq.SelectJoinStep;
+import org.jooq.*;
+import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -128,7 +126,7 @@ public class ArchivesQuery {
                 businessClassification.ID.as("id"),
                 businessClassification.CLASSIFICATION_CODE.as("code"),
                 businessClassification.CLASSIFICATION_NAME.as("name"),
-                businessClassification.REMARK.as("remark"),
+                DSL.decode().when(businessClassification.REMARK.isNull(), "").otherwise(businessClassification.REMARK).as("remark"),
                 businessClassification.RETENTION_PERIOD.as("retentionPeriod"),
                 businessClassification.PARENT_ID.as("parentId"),
                 businessClassification.ORDER_NUMBER.as("orderNumber"))
@@ -219,7 +217,7 @@ public class ArchivesQuery {
         return dslContext.select(businessClassification.ID.as("id"),
                 businessClassification.CLASSIFICATION_CODE.as("code"),
                 businessClassification.CLASSIFICATION_NAME.as("name"),
-                businessClassification.REMARK.as("remark"),
+                DSL.decode().when(businessClassification.REMARK.isNull(), "").otherwise(businessClassification.REMARK).as("remark"),
                 businessClassification.RETENTION_PERIOD.as("retentionPeriod"),
                 businessClassification.PARENT_ID.as("parentId"))
                 .from(businessClassification).where(businessClassification.ID.equal(id)).fetch().intoMaps().get(0);
@@ -233,7 +231,7 @@ public class ArchivesQuery {
                 businessDictionaryClassification.ID.as("id"),
                 businessDictionaryClassification.CLASSIFICATION_CODE.as("code"),
                 businessDictionaryClassification.CLASSIFICATION_NAME.as("name"),
-                businessDictionaryClassification.REMARK.as("remark"),
+                DSL.decode().when(businessDictionaryClassification.REMARK.isNull(), "").otherwise(businessDictionaryClassification.REMARK).as("remark"),
                 businessDictionaryClassification.FONDS_ID.as("fondsId"))
                 .from(businessDictionaryClassification)
                 .fetch().intoMaps();
@@ -249,7 +247,7 @@ public class ArchivesQuery {
                 sysFonds.FONDS_NAME.as("name"),
                 sysFonds.PARENT_ID.as("parentId"),
                 sysFonds.ORDER_NUMBER.as("orderNumber"),
-                sysFonds.REMARK.as("remark"))
+                DSL.decode().when(sysFonds.REMARK.isNull(), "").otherwise(sysFonds.REMARK).as("remark"))
                 .from(sysFonds)
                 .where(sysFonds.GMT_DELETED.equal(0))
                 .orderBy(sysFonds.ORDER_NUMBER)
@@ -320,7 +318,7 @@ public class ArchivesQuery {
         return dslContext.select(businessDictionaryClassification.ID.as("id"),
                 businessDictionaryClassification.CLASSIFICATION_CODE.as("code"),
                 businessDictionaryClassification.CLASSIFICATION_NAME.as("name"),
-                businessDictionaryClassification.REMARK.as("remark"))
+                DSL.decode().when(businessDictionaryClassification.REMARK.isNull(), "").otherwise(businessDictionaryClassification.REMARK).as("remark"))
                 .from(businessDictionaryClassification).where(businessDictionaryClassification.ID.equal(id)).fetch().intoMaps().get(0);
     }
 
@@ -332,7 +330,7 @@ public class ArchivesQuery {
         List<Map<String, Object>> list = dslContext.select(businessDictionaryClassification.ID.as("id"),
                 businessDictionaryClassification.CLASSIFICATION_CODE.as("code"),
                 businessDictionaryClassification.CLASSIFICATION_NAME.as("name"),
-                businessDictionaryClassification.REMARK.as("remark"))
+                DSL.decode().when(businessDictionaryClassification.REMARK.isNull(), "").otherwise(businessDictionaryClassification.REMARK).as("remark"))
                 .from(businessDictionaryClassification).where(businessDictionaryClassification.FONDS_ID.equal(fondsId)).fetch().intoMaps();
         resultMap.put("items", list);
         return resultMap;
@@ -348,8 +346,8 @@ public class ArchivesQuery {
                 businessDictionary.DICTIONARY_NAME.as("name"),
                 businessDictionaryClassification.CLASSIFICATION_NAME.as("classificationName"),
                 businessDictionary.BUSINESS_LEVEL.as("businessLevel"),
-                businessDictionary.BUSINESS_EXPANSION.as("businessExpansion"),
-                businessDictionary.REMARK.as("remark"))
+                DSL.decode().when(businessDictionary.BUSINESS_EXPANSION.isNull(), "").otherwise(businessDictionary.BUSINESS_EXPANSION).as("businessExpansion"),
+                DSL.decode().when(businessDictionary.REMARK.isNull(), "").otherwise(businessDictionary.REMARK).as("remark"))
                 .from(businessDictionary, businessDictionaryClassification)
                 .where(businessDictionary.DICTIONARY_CLASSIFICATION_ID.equal(dictionaryClassificationId)
                         , businessDictionary.DICTIONARY_CLASSIFICATION_ID.equal(businessDictionaryClassification.ID)
@@ -382,8 +380,8 @@ public class ArchivesQuery {
                 businessDictionary.DICTIONARY_CODE.as("code"),
                 businessDictionary.DICTIONARY_NAME.as("name"),
                 businessDictionary.BUSINESS_LEVEL.as("businessLevel"),
-                businessDictionary.BUSINESS_EXPANSION.as("businessExpansion"),
-                businessDictionary.REMARK.as("remark"))
+                DSL.decode().when(businessDictionary.BUSINESS_EXPANSION.isNull(), "").otherwise(businessDictionary.BUSINESS_EXPANSION).as("businessExpansion"),
+                DSL.decode().when(businessDictionary.REMARK.isNull(), "").otherwise(businessDictionary.REMARK).as("remark"))
                 .from(businessDictionary).where(businessDictionary.ID.equal(id)).fetch().intoMaps().get(0);
     }
 
@@ -396,12 +394,12 @@ public class ArchivesQuery {
                 businessMetadataStandards.METADATA_STANDARDS_CODE.as("code"),
                 businessMetadataStandards.METADATA_STANDARDS_NAME.as("name"),
                 businessMetadataStandards.CHARACTER_SET.as("characterSet"),
-                businessMetadataStandards.RELEASE_ORGANIZATION.as("releaseOrganization"),
-                businessMetadataStandards.DESCRIPTION_FILE.as("descriptionFile"),
+                DSL.decode().when(businessMetadataStandards.RELEASE_ORGANIZATION.isNull(), "").otherwise(businessMetadataStandards.RELEASE_ORGANIZATION).as("releaseOrganization"),
+                DSL.decode().when(businessMetadataStandards.DESCRIPTION_FILE.isNull(), "").otherwise(businessMetadataStandards.DESCRIPTION_FILE).as("descriptionFile"),
                 businessMetadataStandards.EDITION.as("edition"),
                 businessMetadataStandards.ORDER_NUMBER.as("orderNumber"),
                 businessMetadataStandards.FLAG.as("flag"),
-                businessMetadataStandards.REMARK.as("remark"))
+                DSL.decode().when(businessMetadataStandards.REMARK.isNull(), "").otherwise(businessMetadataStandards.REMARK).as("remark"))
                 .from(businessMetadataStandards)
                 .where(businessMetadataStandards.METADATA_STANDARDS_NAME.like("%" + name + "%"))
                 .orderBy(businessMetadataStandards.ORDER_NUMBER)
@@ -418,11 +416,11 @@ public class ArchivesQuery {
                 businessMetadataStandards.METADATA_STANDARDS_CODE.as("code"),
                 businessMetadataStandards.METADATA_STANDARDS_NAME.as("name"),
                 businessMetadataStandards.CHARACTER_SET.as("characterSet"),
-                businessMetadataStandards.RELEASE_ORGANIZATION.as("releaseOrganization"),
-                businessMetadataStandards.DESCRIPTION_FILE.as("descriptionFile"),
+                DSL.decode().when(businessMetadataStandards.RELEASE_ORGANIZATION.isNull(), "").otherwise(businessMetadataStandards.RELEASE_ORGANIZATION).as("releaseOrganization"),
+                DSL.decode().when(businessMetadataStandards.DESCRIPTION_FILE.isNull(), "").otherwise(businessMetadataStandards.DESCRIPTION_FILE).as("descriptionFile"),
                 businessMetadataStandards.EDITION.as("edition"),
                 businessMetadataStandards.FLAG.as("flag"),
-                businessMetadataStandards.REMARK.as("remark"))
+                DSL.decode().when(businessMetadataStandards.REMARK.isNull(), "").otherwise(businessMetadataStandards.REMARK).as("remark"))
                 .from(businessMetadataStandards)
                 .where(businessMetadataStandards.ID.equal(id)).fetch().intoMaps().get(0);
     }
@@ -430,7 +428,7 @@ public class ArchivesQuery {
     /**
      * 获取元数据列表.
      */
-    public Map<String, Object> getMetadataList(UInteger metadataStandardsId, String name) {
+    public Map<String, Object> getMetadataList(UInteger metadataStandardsId, String name, int pageNum, int pageSize) {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = dslContext.select(businessMetadata.ID.as("id"),
                 businessMetadata.DISPLAY_NAME.as("displayName"),
@@ -439,22 +437,23 @@ public class ArchivesQuery {
                 businessMetadata.DATA_TYPE.as("dataType"),
                 businessMetadata.FIELD_WIDTH.as("fieldWidth"),
                 businessMetadata.FIELD_PRECISION.as("fieldPrecision"),
-                businessMetadata.FIELD_FORMAT.as("fieldFormat"),
+                DSL.decode().when(businessMetadata.FIELD_FORMAT.isNull(), "").otherwise(businessMetadata.FIELD_FORMAT).as("fieldFormat"),
                 businessMetadata.METADATA_STANDARDS_ID.as("metadataStandardsId"),
                 businessMetadata.DEFAULT_VALUE.as("defaultValue"),
-                businessMetadata.METADATA_DEFINITION.as("definition"),
-                businessMetadata.OBJECTIVE.as("objective"),
+                DSL.decode().when(businessMetadata.METADATA_DEFINITION.isNull(), "").otherwise(businessMetadata.METADATA_DEFINITION).as("definition"),
+                DSL.decode().when(businessMetadata.OBJECTIVE.isNull(), "").otherwise(businessMetadata.OBJECTIVE).as("objective"),
                 businessMetadata.METADATA_CONSTRAINT.as("constraint"),
                 businessMetadata.ELEMENT_TYPE.as("elementType"),
-                businessMetadata.CODING_MODIFICATION.as("codingModification"),
-                businessMetadata.RELATED_ELEMENTS.as("relatedElements"),
-                businessMetadata.METADATA_RANGE.as("range"),
-                businessMetadata.INFORMATION_SOURCES.as("informationSources"),
+                DSL.decode().when(businessMetadata.CODING_MODIFICATION.isNull(), "").otherwise(businessMetadata.CODING_MODIFICATION).as("codingModification"),
+                DSL.decode().when(businessMetadata.RELATED_ELEMENTS.isNull(), "").otherwise(businessMetadata.RELATED_ELEMENTS).as("relatedElements"),
+                DSL.decode().when(businessMetadata.METADATA_RANGE.isNull(), "").otherwise(businessMetadata.METADATA_RANGE).as("range"),
+                DSL.decode().when(businessMetadata.INFORMATION_SOURCES.isNull(), "").otherwise(businessMetadata.INFORMATION_SOURCES).as("informationSources"),
                 businessMetadata.ORDER_NUMBER.as("orderNumber"),
-                businessMetadata.REMARK.as("remark"))
+                DSL.decode().when(businessMetadata.REMARK.isNull(), "").otherwise(businessMetadata.REMARK).as("remark"))
                 .from(businessMetadata)
-                .where(businessMetadata.METADATA_STANDARDS_ID.equal(metadataStandardsId), businessMetadata.METADATA_NAME.like("%" + name + "%"))
+                .where(businessMetadata.METADATA_STANDARDS_ID.equal(metadataStandardsId), businessMetadata.METADATA_NAME.like("%" + name.trim() + "%"))
                 .orderBy(businessMetadata.ORDER_NUMBER)
+                .limit((pageNum - 1) * pageSize, pageSize)
                 .fetch().intoMaps();
         resultMap.put("items", list);
         return resultMap;
@@ -471,19 +470,19 @@ public class ArchivesQuery {
                 businessMetadata.DATA_TYPE.as("dataType"),
                 businessMetadata.FIELD_WIDTH.as("fieldWidth"),
                 businessMetadata.FIELD_PRECISION.as("fieldPrecision"),
-                businessMetadata.FIELD_FORMAT.as("fieldFormat"),
+                DSL.decode().when(businessMetadata.FIELD_FORMAT.isNull(), "").otherwise(businessMetadata.FIELD_FORMAT).as("fieldFormat"),
                 businessMetadata.METADATA_STANDARDS_ID.as("metadataStandardsId"),
                 businessMetadata.DEFAULT_VALUE.as("defaultValue"),
-                businessMetadata.METADATA_DEFINITION.as("definition"),
-                businessMetadata.OBJECTIVE.as("objective"),
+                DSL.decode().when(businessMetadata.METADATA_DEFINITION.isNull(), "").otherwise(businessMetadata.METADATA_DEFINITION).as("definition"),
+                DSL.decode().when(businessMetadata.OBJECTIVE.isNull(), "").otherwise(businessMetadata.OBJECTIVE).as("objective"),
                 businessMetadata.METADATA_CONSTRAINT.as("constraint"),
                 businessMetadata.ELEMENT_TYPE.as("elementType"),
-                businessMetadata.CODING_MODIFICATION.as("codingModification"),
-                businessMetadata.RELATED_ELEMENTS.as("relatedElements"),
-                businessMetadata.METADATA_RANGE.as("range"),
-                businessMetadata.INFORMATION_SOURCES.as("informationSources"),
+                DSL.decode().when(businessMetadata.CODING_MODIFICATION.isNull(), "").otherwise(businessMetadata.CODING_MODIFICATION).as("codingModification"),
+                DSL.decode().when(businessMetadata.RELATED_ELEMENTS.isNull(), "").otherwise(businessMetadata.RELATED_ELEMENTS).as("relatedElements"),
+                DSL.decode().when(businessMetadata.METADATA_RANGE.isNull(), "").otherwise(businessMetadata.METADATA_RANGE).as("range"),
+                DSL.decode().when(businessMetadata.INFORMATION_SOURCES.isNull(), "").otherwise(businessMetadata.INFORMATION_SOURCES).as("informationSources"),
                 businessMetadata.ORDER_NUMBER.as("orderNumber"),
-                businessMetadata.REMARK.as("remark"))
+                DSL.decode().when(businessMetadata.REMARK.isNull(), "").otherwise(businessMetadata.REMARK).as("remark"))
                 .from(businessMetadata)
                 .where(businessMetadata.ID.equal(id)).fetch().intoMaps().get(0);
     }
@@ -493,7 +492,7 @@ public class ArchivesQuery {
      */
     public Map<String, Object> getArchivesGroupToArchivesTreeMap(
             int fondsId
-            , int archiveType
+            , Byte archiveType
             , Function<Integer, Boolean> hasCataloguePermission
     ) {
         Map<String, Object> resultMap = new HashMap<>();
@@ -501,23 +500,13 @@ public class ArchivesQuery {
         resultMap.put("id", UInteger.valueOf(1));
         resultMap.put("fondsId", UInteger.valueOf(fondsId));
         //查询
-        if (archiveType == 0) {
-            resultMap = getSubArchivesGroupToArchivesTreeMap(
-                    getAllArchivesGroupList()
-                    , getAllArchivesList()
-                    , getAllCatalogueList()
-                    , resultMap
-                    , hasCataloguePermission
-            );
-        } else {
-            resultMap = getSubArchivesGroupToArchivesTreeMap(
-                    getAllArchivesGroupList()
-                    , getAllArchivesListByType((byte) archiveType)
-                    , getAllCatalogueList()
-                    , resultMap
-                    , hasCataloguePermission
-            );
-        }
+        resultMap = getSubArchivesGroupToArchivesTreeMap(
+                getAllArchivesGroupList()
+                , getAllArchivesList(archiveType)
+                , getAllCatalogueList()
+                , resultMap
+                , hasCataloguePermission
+        );
         //拼装返回数据信息
         if (null != resultMap && null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -593,7 +582,7 @@ public class ArchivesQuery {
      * 获取全宗、库分组、库树.
      */
     public Map<String, Object> getFondsToArchivesTreeMap(
-            int archiveType
+            Byte archiveType
             , Function<Integer, Boolean> hasFondsPermission
             , Function<Integer, Boolean> hasCataloguePermission
     ) {
@@ -601,27 +590,15 @@ public class ArchivesQuery {
         //伪造全宗根节点，便于递归查询
         resultMap.put("id", UInteger.valueOf(1));
         //查询
-        if (archiveType == 0) {
-            resultMap = getSubFondsToArchivesTreeMap(
-                    getAllFondsList()
-                    , getAllArchivesGroupList()
-                    , getAllArchivesList()
-                    , getAllCatalogueList()
-                    , resultMap
-                    , hasFondsPermission
-                    , hasCataloguePermission
-            );
-        } else {
-            resultMap = getSubFondsToArchivesTreeMap(
-                    getAllFondsList()
-                    , getAllArchivesGroupList()
-                    , getAllArchivesListByType((byte) archiveType)
-                    , getAllCatalogueList()
-                    , resultMap
-                    , hasFondsPermission
-                    , hasCataloguePermission
-            );
-        }
+        resultMap = getSubFondsToArchivesTreeMap(
+                getAllFondsList()
+                , getAllArchivesGroupList()
+                , getAllArchivesList(archiveType)
+                , getAllCatalogueList()
+                , resultMap
+                , hasFondsPermission
+                , hasCataloguePermission
+        );
         //拼装返回数据信息
         if (null != resultMap && null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -718,7 +695,7 @@ public class ArchivesQuery {
      * 获取全宗、库分组、库、目录树.
      */
     public Map<String, Object> getFondsToCatalogueTreeMap(
-            int archiveType
+            Byte archiveType
             , Function<Integer, Boolean> hasFondsPermission
             , Function<Integer, Boolean> hasCataloguePermission
     ) {
@@ -726,27 +703,16 @@ public class ArchivesQuery {
         //伪造全宗根节点，便于递归查询
         resultMap.put("id", UInteger.valueOf(1));
         //查询
-        if (archiveType == 0) {
-            resultMap = getSubFondsToCatalogueTreeMap(
-                    getAllFondsList()
-                    , getAllArchivesGroupList()
-                    , getAllArchivesList()
-                    , getAllCatalogueList()
-                    , resultMap
-                    , hasFondsPermission
-                    , hasCataloguePermission
-            );
-        } else {
-            resultMap = getSubFondsToCatalogueTreeMap(
-                    getAllFondsList()
-                    , getAllArchivesGroupList()
-                    , getAllArchivesListByType((byte) archiveType)
-                    , getAllCatalogueList()
-                    , resultMap
-                    , hasFondsPermission
-                    , hasCataloguePermission
-            );
-        }
+        resultMap = getSubFondsToCatalogueTreeMap(
+                getAllFondsList()
+                , getAllArchivesGroupList()
+                , getAllArchivesList(archiveType)
+                , getAllCatalogueList()
+                , resultMap
+                , hasFondsPermission
+                , hasCataloguePermission
+        );
+
         //拼装返回数据信息
         if (null != resultMap && null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -957,9 +923,14 @@ public class ArchivesQuery {
     }
 
     /**
-     * 通过类型获取库.
+     * 获取档案库.
      */
-    private List<Map<String, Object>> getAllArchivesListByType(byte type) {
+    private List<Map<String, Object>> getAllArchivesList(Byte type) {
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(archives.GMT_DELETED.equal(0));
+        if (null != type) {
+            conditions.add(archives.TYPE.equal(type));
+        }
         return dslContext.select(
                 archives.ID.as("id"),
                 archives.STRUCTURE.as("structure"),
@@ -967,22 +938,7 @@ public class ArchivesQuery {
                 archives.ARCHIVES_GROUP_ID.as("archivesGroupId"),
                 archives.TYPE.as("type"))
                 .from(archives)
-                .where(archives.TYPE.equal(type), archives.GMT_DELETED.equal(0))
-                .fetch().intoMaps();
-    }
-
-    /**
-     * 获取全部库.
-     */
-    private List<Map<String, Object>> getAllArchivesList() {
-        return dslContext.select(
-                archives.ID.as("id"),
-                archives.STRUCTURE.as("structure"),
-                archives.NAME.as("name"),
-                archives.ARCHIVES_GROUP_ID.as("archivesGroupId"),
-                archives.TYPE.as("type"))
-                .from(archives)
-                .where(archives.GMT_DELETED.equal(0))
+                .where(conditions)
                 .fetch().intoMaps();
     }
 
@@ -1171,13 +1127,13 @@ public class ArchivesQuery {
     /**
      * 获取所属全宗的库分组树.
      */
-    public Map<String, Object> getArchivesGroupTreeMap(UInteger fondsId) {
+    public Map<String, Object> getArchivesGroupTreeMap(UInteger fondsId, UInteger archivesGroupId) {
         Map<String, Object> resultMap = new HashMap<>();
         //伪造根节点，便于递归查询子档案库分组
         resultMap.put("id", UInteger.valueOf(1));
         resultMap.put("fondsId", fondsId);
         //查询
-        resultMap = getSubArchivesGroupTreeMap(getArchivesGroupsByFondsId(fondsId), resultMap);
+        resultMap = getSubArchivesGroupTreeMap(getArchivesGroups(fondsId, archivesGroupId), resultMap);
         //拼装返回数据信息
         if (null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -1216,15 +1172,23 @@ public class ArchivesQuery {
     /**
      * 获取全宗下全部档案分类.
      */
-    private List<Map<String, Object>> getArchivesGroupsByFondsId(UInteger fondsId) {
+    private List<Map<String, Object>> getArchivesGroups(UInteger fondsId, UInteger archivesGroupId) {
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(archivesGroup.GMT_DELETED.equal(0));
+        if (null != fondsId) {
+            conditions.add(archivesGroup.FONDS_ID.equal(fondsId));
+        }
+        if (null != archivesGroupId) {
+            conditions.add(archivesGroup.ID.notEqual(archivesGroupId));
+        }
         return dslContext.select(
                 archivesGroup.ID.as("id"),
                 archivesGroup.FONDS_ID.as("fondsId"),
                 archivesGroup.NAME.as("name"),
-                archivesGroup.REMARK.as("remark"),
+                DSL.decode().when(archivesGroup.REMARK.isNull(), "").otherwise(archivesGroup.REMARK).as("remark"),
                 archivesGroup.PARENT_ID.as("parentId"))
                 .from(archivesGroup)
-                .where(archivesGroup.FONDS_ID.equal(fondsId), archivesGroup.GMT_DELETED.equal(0))
+                .where(conditions)
                 .fetch().intoMaps();
     }
 
@@ -1301,7 +1265,7 @@ public class ArchivesQuery {
                 archivesArchivalcodeRuler.INTERCEPTION_LENGTH.as("interceptionLength"),
                 archivesArchivalcodeRuler.FLOW_NUMBER_LENGTH.as("flowNumberLength"),
                 archivesArchivalcodeRuler.CATALOGUE_ID.as("catalogueId"),
-                archivesArchivalcodeRuler.REMARK.as("remark"))
+                DSL.decode().when(archivesArchivalcodeRuler.REMARK.isNull(), "").otherwise(archivesArchivalcodeRuler.REMARK).as("remark"))
                 .from(archivesArchivalcodeRuler)
                 .where(archivesArchivalcodeRuler.CATALOGUE_ID.equal(id))
                 .orderBy(archivesArchivalcodeRuler.ORDER_NUMBER)
@@ -1315,7 +1279,7 @@ public class ArchivesQuery {
                 archivesArchivalcodeRuler.DESCRIPTION_ITEM_ID.as("descriptionItemId"),
                 archivesArchivalcodeRuler.INTERCEPTION_LENGTH.as("interceptionLength"),
                 archivesArchivalcodeRuler.CATALOGUE_ID.as("catalogueId"),
-                archivesArchivalcodeRuler.REMARK.as("remark"))
+                DSL.decode().when(archivesArchivalcodeRuler.REMARK.isNull(), "").otherwise(archivesArchivalcodeRuler.REMARK).as("remark"))
                 .from(archivesArchivalcodeRuler).where(archivesArchivalcodeRuler.ID.equal(id)).fetch().intoMaps().get(0);
     }
 
@@ -1418,22 +1382,21 @@ public class ArchivesQuery {
      */
     public Map<String, Object> getMetadataStandardsRelationList(UInteger catalogueId) {
         Map<String, Object> resultMap = new HashMap<>();
+        List<Condition> conditions = new ArrayList<>();
 
         UInteger metadataStandardsId = (UInteger) dslContext.select(archivesCatalogue.METADATA_STANDARDS_ID)
                 .from(archivesCatalogue).where(archivesCatalogue.ID.equal(catalogueId)).fetch().getValue(0, 0);
 
-        SelectJoinStep<Record4<UInteger, String, String, String>> step = dslContext.select(businessMetadataStandards.ID.as("id"),
+        if (null == metadataStandardsId) {
+            conditions.add(businessMetadataStandards.ID.equal(metadataStandardsId));
+        }
+        List<Map<String, Object>> list = dslContext.select(businessMetadataStandards.ID.as("id"),
                 businessMetadataStandards.METADATA_STANDARDS_CODE.as("code"),
                 businessMetadataStandards.METADATA_STANDARDS_NAME.as("name"),
-                businessMetadataStandards.REMARK.as("remark"))
-                .from(businessMetadataStandards);
+                DSL.decode().when(businessMetadataStandards.REMARK.isNull(), "").otherwise(businessMetadataStandards.REMARK).as("remark"))
+                .from(businessMetadataStandards).where(conditions)
+                .orderBy(businessMetadataStandards.ORDER_NUMBER).fetch().intoMaps();
 
-        List<Map<String, Object>> list;
-        if (null == metadataStandardsId) {
-            list = step.orderBy(businessMetadataStandards.ORDER_NUMBER).fetch().intoMaps();
-        } else {
-            list = step.where(businessMetadataStandards.ID.equal(metadataStandardsId)).fetch().intoMaps();
-        }
         resultMap.put("items", list);
         return resultMap;
     }
@@ -1460,42 +1423,5 @@ public class ArchivesQuery {
                 .from(archivesDescriptionItem)
                 .where(archivesDescriptionItem.ID.equal(id))
                 .fetch().intoMaps().get(0);
-    }
-
-    /**
-     * 获取所属全宗的库分组树.
-     */
-    public Map<String, Object> getArchivesGroupTreeMapForUpdate(UInteger fondsId, UInteger archivesGroupId) {
-        Map<String, Object> resultMap = new HashMap<>();
-        //伪造根节点，便于递归查询子档案库分组
-        resultMap.put("id", UInteger.valueOf(1));
-        resultMap.put("fondsId", fondsId);
-        //查询
-        resultMap = getSubArchivesGroupTreeMap(getArchivesGroupsByFondsIdAndId(fondsId, archivesGroupId), resultMap);
-        //拼装返回数据信息
-        if (null != resultMap.get("children")) {
-            resultMap.put("items", resultMap.get("children"));
-        } else {
-            resultMap.put("items", new ArrayList<Map<String, Object>>());
-        }
-        //去除根节点数据
-        resultMap.remove("id");
-        resultMap.remove("children");
-        return resultMap;
-    }
-
-    /**
-     * 获取全宗下全部档案分类.
-     */
-    private List<Map<String, Object>> getArchivesGroupsByFondsIdAndId(UInteger fondsId, UInteger archivesGroupId) {
-        return dslContext.select(
-                archivesGroup.ID.as("id"),
-                archivesGroup.FONDS_ID.as("fondsId"),
-                archivesGroup.NAME.as("name"),
-                archivesGroup.REMARK.as("remark"),
-                archivesGroup.PARENT_ID.as("parentId"))
-                .from(archivesGroup)
-                .where(archivesGroup.FONDS_ID.equal(fondsId), archivesGroup.GMT_DELETED.equal(0), archivesGroup.ID.notEqual(archivesGroupId))
-                .fetch().intoMaps();
     }
 }

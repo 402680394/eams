@@ -68,7 +68,7 @@ public class StorageController {
     public Map<String,Object> storageList(@RequestParam(value = "keyWord", defaultValue = "") String keyWord
             , @RequestParam(name = "pageSize", required = false, defaultValue = "15") int pageSize
             , @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
-        return storeQuery.getStorageList(keyWord, pageNum, pageSize);
+        return storeQuery.getStorageList(keyWord.trim(), pageNum, pageSize);
     }
 
     /**

@@ -73,7 +73,7 @@ public class MonitoringRecordController {
             , @RequestParam(value = "keyWord",required = false, defaultValue = "") String keyWord
             , @RequestParam(name = "pageSize", required = false, defaultValue = "15") int pageSize
             , @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
-        return storeQuery.getMonitoringRecordList(null == storageId ? null: UInteger.valueOf(storageId),keyWord, pageNum, pageSize);
+        return storeQuery.getMonitoringRecordList(null == storageId ? null: UInteger.valueOf(storageId),keyWord.trim(), pageNum, pageSize);
     }
 
     /**

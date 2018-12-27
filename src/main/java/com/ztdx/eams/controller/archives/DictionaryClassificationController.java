@@ -105,7 +105,7 @@ public class DictionaryClassificationController {
      * @apiParam {Number} fondsId 所属全宗ID（全局传1）
      * @apiParam {String{30}} code 词典分类编码
      * @apiParam {String{30}} name 词典分类名称
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiError (Error 400) message 词典分类编码已存在.
      * @apiUse ErrorExample
      */
@@ -133,7 +133,7 @@ public class DictionaryClassificationController {
      * @apiParam {Number} fondsId 所属全宗ID（全局传1）
      * @apiParam {String{30}} code 词典分类编码
      * @apiParam {String{30}} name 词典分类名称
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiError (Error 400) message 词典分类编码已存在.
      * @apiUse ErrorExample
      */

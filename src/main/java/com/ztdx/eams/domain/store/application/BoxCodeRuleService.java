@@ -7,6 +7,8 @@ import com.ztdx.eams.domain.store.repository.BoxCodeRuleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 public class BoxCodeRuleService {
 
@@ -35,6 +37,10 @@ public class BoxCodeRuleService {
 
     @Transactional
     public void delete(int id) {
+        Optional<BoxCodeRule> optional = boxCodeRuleRepository.findById(id);
+        if (!optional.isPresent()) {
+            throw new InvalidArgumentException("该项不存在或已被删除");
+        }
         boxCodeRuleRepository.deleteById(id);
     }
 

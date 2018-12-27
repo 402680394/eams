@@ -49,7 +49,7 @@ public class OrganizationController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_read', 'global_role_user_set')")
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList(@RequestParam(required = false, defaultValue = "1", name = "id") int id, @RequestParam(name = "type", required = false, defaultValue = "0") int type) {
-        return systemQuery.getOrganizationTreeMap(UInteger.valueOf(id), type == 0 ? null : type);
+        return systemQuery.getOrganizationTreeMap(null, UInteger.valueOf(id), type == 0 ? null : type);
     }
 
     /**
@@ -73,7 +73,7 @@ public class OrganizationController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_read', 'fonds_role_user_set_' + #fondsId)")
     @RequestMapping(value = "/treeListByFonds", method = RequestMethod.GET)
     public Map<String, Object> treeListByFonds(@RequestParam("fondsId") int fondsId) {
-        return systemQuery.getOrganizationTreeMapByFondsId(UInteger.valueOf(fondsId));
+        return systemQuery.getOrganizationTreeMap(UInteger.valueOf(fondsId), null, null);
     }
 
     /**
@@ -83,7 +83,7 @@ public class OrganizationController {
      * @apiParam {Number} parentId 上级机构ID（根机构传1）
      * @apiParam {String{20}} code 机构编码
      * @apiParam {String{50}} name 机构名称
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiParam {Number} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室；4.科室下无法创建部门.
      * @apiUse ErrorExample
@@ -99,7 +99,7 @@ public class OrganizationController {
      * @apiName delete
      * @apiGroup organization
      * @apiParam {Number} id 机构ID（url占位符）
-     * @apiError (Error 400) message 1.该机构或子机构下存在用户；2.该机构下存在子机构.
+     * @apiError (Error 400) message 1.该机构或子机构下存在用户；2.该机构下存在子机构； 3.该项不存在或已被删除.
      * @apiUse ErrorExample
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_write')")
@@ -116,7 +116,7 @@ public class OrganizationController {
      * @apiParam {Number} parentId 上级机构ID（根机构传1）
      * @apiParam {String{20}} code 机构编码
      * @apiParam {String{50}} name 机构名称
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiParam {Number} type 机构类型（可选值：1-公司；2-部门；3-科室）
      * @apiError (Error 400) message 1.机构编码已存在；2.部门与科室下无法创建公司；3.根节点无法创建部门与科室 4.机构不存在或已被删除.
      * @apiUse ErrorExample

@@ -44,15 +44,15 @@ public class Metadata {
 
     //显示宽度
     @Column(name = "display_width")
-    private Integer displayWidth;
+    private int displayWidth;
 
     //字段宽度
     @Column(name = "field_width")
-    private Integer fieldWidth;
+    private int fieldWidth;
 
     //字段精度
     @Column(name = "field_precision")
-    private Integer fieldPrecision;
+    private int fieldPrecision;
 
     //字段格式
     @Size(max = 100)

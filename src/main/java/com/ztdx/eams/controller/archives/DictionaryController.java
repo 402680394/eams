@@ -71,7 +71,7 @@ public class DictionaryController {
      * @apiParam {Number} classificationId 词典分类ID
      * @apiParam {Number} businessLevel 业务级别
      * @apiParam {String{30}} businessExpansion 业务扩展（未输入传""值）
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiError (Error 400) message 词典编码已存在.
      * @apiUse ErrorExample
      */
@@ -99,8 +99,8 @@ public class DictionaryController {
      * @apiParam {String{30}} code 词典编码
      * @apiParam {String{30}} name 词典名称
      * @apiParam {Number} businessLevel 业务级别
-     * @apiParam {String{30}} businessExpansion 业务扩展（未输入传""值）
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{30}} businessExpansion 业务扩展（非必须）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiError (Error 400) message 词典编码已存在.
      * @apiUse ErrorExample
      */

@@ -39,7 +39,7 @@ public class ClassificationController {
     }
 
     /**
-     * @api {get} /classification/treeList 获取全宗所属档案分类表单树
+     * @api {get} /classification/treeList 获取全宗下档案分类表单树
      * @apiName treeList
      * @apiGroup classification
      * @apiParam {Number} fondsId 所属全宗ID(全局为1)(url参数)
@@ -62,7 +62,7 @@ public class ClassificationController {
     }
 
     /**
-     * @api {get} /classification/fondsAndClassificationTreeList 著录项设置档案分类下拉树
+     * @api {get} /classification/fondsAndClassificationTreeList 著录项设置的档案分类下拉树
      * @apiName fondsAndClassificationTreeList
      * @apiGroup classification
      * @apiSuccess (Success 200) {String} childrenType 节点类型(1.Classification-档案分类;2.Fonds-全宗).
@@ -135,7 +135,7 @@ public class ClassificationController {
      * @apiParam {String} code 档案分类编码
      * @apiParam {String} name 档案分类名称
      * @apiParam {String} fondsId 所属全宗ID
-     * @apiParam {String} remark 备注（未输入传""值）
+     * @apiParam {String} remark 备注（非必须）
      * @apiParam {String} retentionPeriod 保管期限
      * @apiError (Error 400) message 档案分类编码已存在.
      * @apiUse ErrorExample
@@ -164,7 +164,7 @@ public class ClassificationController {
      * @apiParam {Number} parentId 上级档案分类ID（根节点传0）
      * @apiParam {String{30}} code 档案分类编码
      * @apiParam {String{30}} name 档案分类名称
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{100}} remark 备注（非必须）
      * @apiParam {String{20}} retentionPeriod 保管期限
      * @apiError (Error 400) message 档案分类编码已存在.
      * @apiUse ErrorExample
