@@ -111,4 +111,8 @@ public class DescriptionItemService {
         descriptionItemRepository.updateById(descriptionItem);
     }
 
+    public List<DescriptionItem> findByMetadataId(int metadataId){
+        return descriptionItemRepository.findByMetadataId(metadataId);
+    }
+
 }

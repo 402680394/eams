@@ -24,7 +24,7 @@ public interface BoxRepository extends JpaRepository<Box, Integer> {
 
     //通过ID修改信息
     @Modifying
-    @Query("update Box b set b.codeRule=:#{#box.codeRule},b.flowNumber=:#{#box.flowNumber},b.width=:#{#box.width},b.maxPagesTotal=:#{#box.maxPagesTotal},b.remark=:#{#box.remark} where b.id=:#{#box.id}")
+    @Query("update Box b set b.codeRule=:#{#box.codeRule},b.code=:#{#box.code},b.flowNumber=:#{#box.flowNumber},b.width=:#{#box.width},b.maxPagesTotal=:#{#box.maxPagesTotal},b.remark=:#{#box.remark} where b.id=:#{#box.id}")
     void updateById(@Param("box") Box box);
 
     //通过ID修改上架信息

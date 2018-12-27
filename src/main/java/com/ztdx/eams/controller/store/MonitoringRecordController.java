@@ -4,6 +4,7 @@ import com.ztdx.eams.basic.params.JsonParam;
 import com.ztdx.eams.domain.store.application.MonitoringRecordService;
 import com.ztdx.eams.domain.store.model.MonitoringRecord;
 import com.ztdx.eams.query.StoreQuery;
+import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +22,6 @@ public class MonitoringRecordController {
 
     private final StoreQuery storeQuery;
 
-    /**
-     * 构造函数
-     */
     @Autowired
     public MonitoringRecordController(MonitoringRecordService monitoringRecordService,StoreQuery storeQuery) {
         this.monitoringRecordService = monitoringRecordService;
@@ -36,7 +34,9 @@ public class MonitoringRecordController {
      * @apiName monitoringRecordList
      * @apiGroup monitoringRecord
      * @apiParam {Number} storageId 库房ID(url参数)
-     * @apiParam {String} keyWord 检索框输入的内容(未输入传""值)(url参数)
+     * @apiParam {String} keyWord 检索框输入的内容(非必传)(url参数)
+     * @apiParam {Number} pageNum 每页条数（默认为15）（url参数）
+     * @apiParam {Number} pageSize 页码（默认为1）（url参数）
      * @apiSuccess (Success 200) {Number} id 监测记录ID.
      * @apiSuccess (Success 200) {Number} monitoringPointId 监测点id.
      * @apiSuccess (Success 200) {String} number 监测点编号.
@@ -61,11 +61,11 @@ public class MonitoringRecordController {
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "/monitoringRecordList", method = RequestMethod.GET)
-    public Map<String, Object> monitoringRecordList(@RequestParam(name = "storageId",required = false) Integer storageId, @RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
-        if (storageId!=null){
-            return storeQuery.getMonitoringPointListByStorageIdAndKeyWord(storageId,keyWord);
-        }
-        return storeQuery.getMonitoringRecordList();
+    public Map<String, Object> monitoringRecordList(@RequestParam(name = "storageId",required = false) Integer storageId
+            , @RequestParam(value = "keyWord",required = false, defaultValue = "") String keyWord
+            , @RequestParam(name = "pageSize", required = false, defaultValue = "15") int pageSize
+            , @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
+        return storeQuery.getMonitoringRecordList(null == storageId ? null: UInteger.valueOf(storageId),keyWord, pageNum, pageSize);
     }
 
     /**

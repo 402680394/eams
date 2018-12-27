@@ -81,7 +81,7 @@ public class BoxController {
                                     @RequestParam(value = "code", required = false, defaultValue = "") String code,
                                     @RequestParam(name = "status", required = false, defaultValue = "0") int status,
                                     @RequestParam(name = "onFrame", required = false, defaultValue = "0") int onFrame) {
-        return storeQuery.getBoxList(pageNum, size, archivesId, code, status, onFrame);
+        return storeQuery.getBoxList(pageNum, size, UInteger.valueOf(archivesId), code.trim(), status, onFrame);
     }
 
     /**
@@ -109,8 +109,8 @@ public class BoxController {
         int width = (int) map.get("width");
         int total = (int) map.get("total");
         int maxPagesTotal = (int) map.get("maxPagesTotal");
-        String remark = (String) map.get("remark");
-        Box box = boxService.save(archivesId, codeRule, flowNumber, width, total, maxPagesTotal, remark);
+        Object remark = map.getOrDefault("remark", null);
+        Box box = boxService.save(archivesId, codeRule, flowNumber, width, total, maxPagesTotal, remark == null ? null : remark.toString());
 
         Collection<String> ids = (Collection<String>) map.getOrDefault("ids", null);
         Integer catalogueId = (Integer) map.getOrDefault("catalogueId", null);
@@ -131,8 +131,7 @@ public class BoxController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_box_write')")
     @RequestMapping(value = "/", method = RequestMethod.DELETE)
     public void delete(@RequestBody Map<String, Object> map) {
-        int archivesId = (int) map.get("archivesId");
-        int catalogueId = archivesQuery.getCatalogueIdByArchivesIdAndType(UInteger.valueOf(archivesId)).intValue();
+        int catalogueId = archivesQuery.getCatalogueIdByArchivesIdAndType(UInteger.valueOf((int) map.get("archivesId"))).intValue();
         List<Integer> ids = (List<Integer>) map.get("ids");
         boxService.checkOnFrameByIds(ids);
 
@@ -150,7 +149,7 @@ public class BoxController {
      * @apiParam {String{100}} flowNumber 流水号
      * @apiParam {Number} width 盒子宽度（毫米）
      * @apiParam {Number} maxPagesTotal 最大容量（页）
-     * @apiParam {String{50}} remark 备注（未输入传""值）
+     * @apiParam {String{50}} remark 备注
      * @apiError (Error 400) message 盒号已存在.
      * @apiUse ErrorExample
      */

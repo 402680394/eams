@@ -440,7 +440,7 @@ public class GeneratingBusiness {
                 }
                 break;
             case FondsCode:
-                str = fondsRepository.findById(entry.getFondsId()).getCode();
+                str = fondsRepository.findById(entry.getFondsId()).get().getCode();
                 if (str.equals("")) {
                     errorsMap.put(entry.getId(), "全宗号不能为空");
                 }

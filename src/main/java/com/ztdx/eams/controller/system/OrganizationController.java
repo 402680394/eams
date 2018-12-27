@@ -49,7 +49,7 @@ public class OrganizationController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_organization_read', 'global_role_user_set')")
     @RequestMapping(value = "/treeList", method = RequestMethod.GET)
     public Map<String, Object> treeList(@RequestParam(required = false, defaultValue = "1", name = "id") int id, @RequestParam(name = "type", required = false, defaultValue = "0") int type) {
-        return systemQuery.getOrganizationTreeMap(id, type);
+        return systemQuery.getOrganizationTreeMap(UInteger.valueOf(id), type == 0 ? null : type);
     }
 
     /**

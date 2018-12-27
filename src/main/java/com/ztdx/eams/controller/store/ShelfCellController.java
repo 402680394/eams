@@ -88,7 +88,7 @@ public class ShelfCellController {
     public Page<ShelfCell> list(
             @RequestParam int shelfSectionId
             , @RequestParam(value = "page", required = false, defaultValue = "0") int page
-            , @RequestParam(value ="size", required = false, defaultValue = "20") int size
+            , @RequestParam(value ="size", required = false, defaultValue = "15") int size
     ){
         return shelfCellService.findByShelfSectionId(shelfSectionId, PageRequest.of(page, size));
     }

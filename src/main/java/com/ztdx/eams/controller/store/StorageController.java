@@ -39,7 +39,9 @@ public class StorageController {
      * @api {get} /store/storageList 库房表单列表
      * @apiName storageList
      * @apiGroup store
-     * @apiParam {String} keyWord 检索框输入的内容(未输入传""值)(url参数)
+     * @apiParam {String} keyWord 检索框输入的内容(非必须)(url参数)
+     * @apiParam {Number} pageNum 每页条数（默认为15）（url参数）
+     * @apiParam {Number} pageSize 页码（默认为1）（url参数）
      * @apiSuccess (Success 200) {Number} id 库房ID.
      * @apiSuccess (Success 200) {String} name 库房名称.
      * @apiSuccess (Success 200) {String} number 库房编号.
@@ -56,11 +58,10 @@ public class StorageController {
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "/storageList", method = RequestMethod.GET)
-    public Map<String,Object> storageList(@RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
-        if (keyWord!=null && !keyWord.trim().equals("")){
-            return storeQuery.getStorageListByFondsIdAndKeyWord(keyWord);
-        }
-        return storeQuery.getStorageList();
+    public Map<String,Object> storageList(@RequestParam(value = "keyWord", defaultValue = "") String keyWord
+            , @RequestParam(name = "pageSize", required = false, defaultValue = "15") int pageSize
+            , @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
+        return storeQuery.getStorageList(keyWord, pageNum, pageSize);
     }
 
     /**
@@ -167,6 +168,8 @@ public class StorageController {
      * @apiGroup store
      * @apiParam {Number} storageId 库房ID(url参数)
      * @apiParam {String} keyWord 检索框输入的内容(未输入传""值)(url参数)
+     * @apiParam {Number} pageNum 每页条数（默认为15）（url参数）
+     * @apiParam {Number} pageSize 页码（默认为1）（url参数）
      * @apiSuccess (Success 200) {Number} id 监测点id.
      * @apiSuccess (Success 200) {Number} storageId 所属库房id.
      * @apiSuccess (Success 200) {String{10}} number 监测点编号.
@@ -187,8 +190,11 @@ public class StorageController {
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "/monitoringPointList", method = RequestMethod.GET)
-    public Map<String,Object> monitoringPointList(@RequestParam("storageId") Integer storageId, @RequestParam(value = "keyWord", defaultValue = "") String keyWord) {
-        return storeQuery.getMonitoringPointList(storageId,keyWord);
+    public Map<String,Object> monitoringPointList(@RequestParam("storageId") Integer storageId
+            , @RequestParam(value = "keyWord", defaultValue = "") String keyWord
+            , @RequestParam(name = "pageSize", required = false, defaultValue = "15") int pageSize
+            , @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
+        return storeQuery.getMonitoringPointList(storageId,keyWord, pageNum, pageSize);
     }
 
     /**

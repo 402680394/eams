@@ -31,7 +31,7 @@ public class User {
     private String workers;
 
     //用户名
-    @Size(max = 20)
+    @Size(max = 10)
     @Column(name = "username")
     private String username;
 

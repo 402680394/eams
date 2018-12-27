@@ -49,7 +49,7 @@ public class SystemQuery {
         //伪造根机构，便于递归查询子机构
         resultMap.put("id", UInteger.valueOf(1));
         //查询
-        resultMap = getSubOrganizationTreeMap(getAllOrganizationListByFondsId(fondsId), resultMap);
+        resultMap = getSubOrganizationTreeMap(getAllOrganizationList(fondsId, null), resultMap);
         //拼装返回数据信息
         if (null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -65,17 +65,12 @@ public class SystemQuery {
     /**
      * 通过上级机构节点与机构类型获取机构树.
      */
-    public Map<String, Object> getOrganizationTreeMap(int id, int type) {
+    public Map<String, Object> getOrganizationTreeMap(UInteger id, Integer type) {
         Map<String, Object> resultMap = new HashMap<>();
         //伪造上级机构，便于递归查询子机构
-        resultMap.put("id", UInteger.valueOf(id));
+        resultMap.put("id", id);
         //查询
-        if (type == 0) {
-            resultMap = getSubOrganizationTreeMap(getAllOrganizationList(), resultMap);
-        } else {
-            resultMap = getSubOrganizationTreeMap(getAllOrganizationListByType(type), resultMap);
-
-        }
+        resultMap = getSubOrganizationTreeMap(getAllOrganizationList(null, type), resultMap);
         //拼装返回数据信息
         if (null != resultMap.get("children")) {
             resultMap.put("items", resultMap.get("children"));
@@ -89,9 +84,16 @@ public class SystemQuery {
     }
 
     /**
-     * 获取全部机构.
+     * 获取机构.
      */
-    private List<Map<String, Object>> getAllOrganizationList() {
+    private List<Map<String, Object>> getAllOrganizationList(UInteger fondsId, Integer type) {
+        List<Condition> conditions = new ArrayList<>();
+        if (null != fondsId) {
+            conditions.add(sysOrganization.FONDS_ID.equal(fondsId));
+        }
+        if (null != type) {
+            conditions.add(sysOrganization.ORG_TYPE.equal(type));
+        }
         return dslContext.select(
                 sysOrganization.ID.as("id"),
                 sysOrganization.ORG_CODE.as("code"),
@@ -101,43 +103,8 @@ public class SystemQuery {
                 sysOrganization.FONDS_ID.as("fondsId"),
                 sysOrganization.ORG_TYPE.as("type"))
                 .from(sysOrganization)
-                .orderBy(sysOrganization.ORG_TYPE, sysOrganization.ORDER_NUMBER)
-                .fetch().intoMaps();
-    }
-
-    /**
-     * 通过公司类型获取机构.
-     */
-    private List<Map<String, Object>> getAllOrganizationListByType(int type) {
-        return dslContext.select(
-                sysOrganization.ID.as("id"),
-                sysOrganization.ORG_CODE.as("code"),
-                sysOrganization.ORG_NAME.as("name"),
-                sysOrganization.PARENT_ID.as("parentId"),
-                sysOrganization.ORDER_NUMBER.as("orderNumber"),
-                sysOrganization.FONDS_ID.as("fondsId"),
-                sysOrganization.ORG_TYPE.as("type"))
-                .from(sysOrganization)
-                .where(sysOrganization.ORG_TYPE.equal(type))
-                .orderBy(sysOrganization.ORG_TYPE, sysOrganization.ORDER_NUMBER)
-                .fetch().intoMaps();
-    }
-
-    /**
-     * 通过公司类型获取机构.
-     */
-    private List<Map<String, Object>> getAllOrganizationListByFondsId(UInteger fondsId) {
-        return dslContext.select(
-                sysOrganization.ID.as("id"),
-                sysOrganization.ORG_CODE.as("code"),
-                sysOrganization.ORG_NAME.as("name"),
-                sysOrganization.PARENT_ID.as("parentId"),
-                sysOrganization.ORDER_NUMBER.as("orderNumber"),
-                sysOrganization.FONDS_ID.as("fondsId"),
-                sysOrganization.ORG_TYPE.as("type"))
-                .from(sysOrganization)
-                .where(sysOrganization.FONDS_ID.equal(fondsId))
-                .orderBy(sysOrganization.ORG_TYPE, sysOrganization.ORDER_NUMBER)
+                .where(conditions)
+                .orderBy(sysOrganization.ORG_TYPE, sysOrganization.ORDER_NUMBER.desc())
                 .fetch().intoMaps();
     }
 
@@ -179,12 +146,12 @@ public class SystemQuery {
     /**
      * 根据条件查询用户.
      */
-    public Map<String, Object> getUserList(int organizationId,String key, int pageNum, int pageSize) {
+    public Map<String, Object> getUserList(int organizationId, String key, int pageNum, int pageSize) {
 
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
 
-        List<Condition> conditions=new ArrayList<>();
+        List<Condition> conditions = new ArrayList<>();
         key = key.trim();
         conditions.add(sysUser.USERNAME.notEqual("admin"));
         conditions.add(sysUser.GMT_DELETED.eq(0));
@@ -213,7 +180,7 @@ public class SystemQuery {
                     sysUser.REMARK.as("remark"),
                     sysUser.FLAG.as("flag"))
                     .from(sysUser)
-                    .where(conditions)
+                    .where(conditions).orderBy(sysUser.GMT_CREATE.desc())
                     .limit((pageNum - 1) * pageSize, pageSize)
                     .fetch().intoMaps();
         }
@@ -278,7 +245,7 @@ public class SystemQuery {
                 sysFonds.REMARK.as("remark"))
                 .from(sysFonds)
                 .where(sysFonds.GMT_DELETED.equal(0))
-                .orderBy(sysFonds.ORDER_NUMBER)
+                .orderBy(sysFonds.ORDER_NUMBER.desc())
                 .fetch().intoMaps();
         return dataList;
     }

@@ -36,14 +36,12 @@ public class OrganizationService {
         }
         //机构结构验证
         validate(organization);
-        //设置同级机构优先级
         Integer orderNumber = organizationRepository.findMaxOrderNumber(organization.getParentId(), organization.getType());
         if (orderNumber != null) {
             organization.setOrderNumber(orderNumber + 1);
         } else {
             organization.setOrderNumber(1);
         }
-        //存储数据
         organizationRepository.save(organization);
     }
 
@@ -52,18 +50,16 @@ public class OrganizationService {
      */
     @Transactional
     public void delete(int id) {
-        if (organizationRepository.existsById(id)) {
-            //机构下是否存在用户
             if (userRepository.existsByOrganizationId(id)) {
                 throw new InvalidArgumentException("该机构或子机构下存在用户");
             }
-            //机构下是否存在子机构
             if (organizationRepository.existsByParentId(id)) {
                 throw new InvalidArgumentException("该机构下存在子机构");
             }
-            //删除本机构
+            if (!organizationRepository.findById(id).isPresent()) {
+                throw new InvalidArgumentException("该角色不存在或已被删除");
+            }
             organizationRepository.deleteById(id);
-        }
     }
 
     /**
@@ -78,7 +74,6 @@ public class OrganizationService {
         }
         //机构结构验证
         validate(organization);
-        //修改数据
         organizationRepository.updateById(organization);
     }
 

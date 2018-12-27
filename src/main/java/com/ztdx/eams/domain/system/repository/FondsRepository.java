@@ -35,9 +35,6 @@ public interface FondsRepository extends JpaRepository<Fonds, Integer> {
     // 通过父ID查询是否存在子全宗
     boolean existsByParentId(int id);
 
-    //通过ID查询
-    Fonds findById(int id);
-
     //查询所有的全宗
     List<Fonds> findByGmtDeletedAndParentIdNotNull(int gmtDeleted);
 

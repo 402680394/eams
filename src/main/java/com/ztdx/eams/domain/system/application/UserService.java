@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.system.application;
 
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.basic.exception.UnauthorizedException;
 import com.ztdx.eams.domain.system.model.Fonds;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -58,9 +60,12 @@ public class UserService {
      */
     @Transactional
     public void delete(int id) {
-        if (userRepository.existsById(id)) {
-            userRepository.updateGmtDeletedById(id,1);
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (!optionalUser.isPresent()|| optionalUser.get().getGmtDeleted()==1) {
+            throw new BusinessException("用户不存在或已被删除");
         }
+        userRepository.updateGmtDeletedById(id,1);
+
     }
 
     /**

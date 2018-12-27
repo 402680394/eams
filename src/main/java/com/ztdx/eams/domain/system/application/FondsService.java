@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.system.application;
 
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.archives.application.event.ArchivesGroupDeleteEvent;
 import com.ztdx.eams.domain.system.model.Fonds;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by li on 2018/4/15.
@@ -68,18 +70,20 @@ public class FondsService {
      */
     @Transactional
     public void delete(int id) {
-        if (fondsRepository.existsById(id)) {
-            //是否存在子全宗
-            if (fondsRepository.existsByParentId(id)) {
-                throw new InvalidArgumentException("该全宗下存在子全宗");
-            }
-            //取消机构关联
-            organizationRepository.updatefondsIdByfondsId(id);
-            //删除本全宗
-            fondsRepository.updateGmtDeletedById(id, 1);
-
-            applicationContext.publishEvent(new ArchivesGroupDeleteEvent(this, id));
+        Optional<Fonds> optional = fondsRepository.findById(id);
+        if (!optional.isPresent() || optional.get().getGmtDeleted() == 1) {
+            throw new BusinessException("该全宗不存在或已被删除");
         }
+        //是否存在子全宗
+        if (fondsRepository.existsByParentId(id)) {
+            throw new BusinessException("该全宗下存在子全宗");
+        }
+        //取消机构关联
+        organizationRepository.updatefondsIdByfondsId(id);
+        //删除本全宗
+        fondsRepository.updateGmtDeletedById(id, 1);
+
+        applicationContext.publishEvent(new ArchivesGroupDeleteEvent(this, id));
     }
 
     /**
@@ -112,16 +116,16 @@ public class FondsService {
     @Transactional
     public void priority(int upId, int downId) {
 
-        Fonds up = fondsRepository.findById(upId);
-        Fonds down = fondsRepository.findById(downId);
-        if (up == null || down == null) {
+        Optional<Fonds> up = fondsRepository.findById(upId);
+        Optional<Fonds> down = fondsRepository.findById(downId);
+        if (!up.isPresent() || !down.isPresent()) {
             throw new InvalidArgumentException("全宗不存在或已被删除");
         }
-        if (up.getParentId() != down.getParentId()) {
+        if (up.get().getParentId() != down.get().getParentId()) {
             throw new InvalidArgumentException("上级全宗不一致");
         }
-        fondsRepository.updateOrderNumberById(upId, down.getOrderNumber());
-        fondsRepository.updateOrderNumberById(downId, up.getOrderNumber());
+        fondsRepository.updateOrderNumberById(upId, down.get().getOrderNumber());
+        fondsRepository.updateOrderNumberById(downId, up.get().getOrderNumber());
     }
 
     public Fonds get(Integer fondId) {

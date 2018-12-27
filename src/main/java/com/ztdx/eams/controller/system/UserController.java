@@ -197,7 +197,7 @@ public class UserController {
      * @apiGroup user
      * @apiParam {String{10}} name 姓名
      * @apiParam {String{20}} workers 工号（未输入传""值）
-     * @apiParam {String{20}} username 用户名
+     * @apiParam {String{10}} username 用户名
      * @apiParam {Number} organizationId 所属机构ID
      * @apiParam {String{20}} phone 电话（未输入传""值）
      * @apiParam {String{50}} email 邮箱（未输入传""值）

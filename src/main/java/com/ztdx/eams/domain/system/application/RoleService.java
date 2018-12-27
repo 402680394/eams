@@ -1,5 +1,6 @@
 package com.ztdx.eams.domain.system.application;
 
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.domain.system.model.*;
 import com.ztdx.eams.domain.system.repository.*;
@@ -63,9 +64,15 @@ public class RoleService {
 
     @Transactional
     public void delete(long id) {
-        if (roleRepository.existsById(id)) {
-            roleRepository.deleteById(id);
+        List<RoleOfUser> roleOfUsers=roleOfUserRepository.findByRoleId(id);
+        if(roleOfUsers.size()!=0){
+            throw new BusinessException("该角色已被其他用户使用");
         }
+        if (!roleRepository.findById(id).isPresent()) {
+            throw new InvalidArgumentException("该角色不存在或已被删除");
+        }
+        roleRepository.deleteById(id);
+
     }
 
     @Transactional

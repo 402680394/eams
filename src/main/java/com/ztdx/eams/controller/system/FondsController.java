@@ -84,7 +84,7 @@ public class FondsController {
      * @apiParam {Number} parentId 上级全宗ID（根节点传1）
      * @apiParam {String{20}} code 全宗号
      * @apiParam {String{20}} name 全宗名称
-     * @apiParam {String{100}} remark 备注（未输入传""值）
+     * @apiParam {String{100}} remark 备注(非必传)
      * @apiParam {Number[]} association 关联机构ID
      * @apiError (Error 400) message 1.全宗号已存在 2.请设置关联机构 3.机构已被其它全宗关联.
      * @apiUse ErrorExample
@@ -96,7 +96,8 @@ public class FondsController {
         fonds.setParentId(1);
         fonds.setCode((String) map.get("code"));
         fonds.setName((String) map.get("name"));
-        fonds.setRemark((String) map.get("remark"));
+        Object remark = map.getOrDefault("remark", null);
+        fonds.setRemark(remark == null ? null : remark.toString());
         ArrayList<Integer> associationList = (ArrayList<Integer>) map.get("association");
         fondsService.save(fonds, associationList);
     }
@@ -133,10 +134,10 @@ public class FondsController {
     public void update(@RequestBody HashMap<String, Object> map) {
         Fonds fonds = new Fonds();
         fonds.setId((int) map.get("id"));
-//        fonds.setParentId((int) map.get("parentId"));
         fonds.setCode((String) map.get("code"));
         fonds.setName((String) map.get("name"));
-        fonds.setRemark((String) map.get("remark"));
+        Object remark = map.getOrDefault("remark", null);
+        fonds.setRemark(remark == null ? null : remark.toString());
         ArrayList<Integer> associationList = (ArrayList<Integer>) map.get("association");
         fondsService.update(fonds, associationList);
     }

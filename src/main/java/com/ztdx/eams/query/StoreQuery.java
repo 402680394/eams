@@ -4,6 +4,7 @@ import com.ztdx.eams.basic.exception.InvalidArgumentException;
 import com.ztdx.eams.query.jooq.Tables;
 import com.ztdx.eams.query.jooq.tables.*;
 import org.jooq.*;
+import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -45,8 +46,17 @@ public class StoreQuery {
     /**
      * 获取全部库房列表
      */
-    public Map<String, Object> getStorageList() {
+    public Map<String, Object> getStorageList(String keyWord, int pageNum, int pageSize) {
         Map<String, Object> resultMap = new HashMap<>();
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(storage.FONDS_ID.equal(sysFonds.ID));
+        conditions.add(storage.GMT_DELETED.equal(0));
+        conditions.add(sysFonds.GMT_DELETED.equal(0));
+        if (null != keyWord && keyWord.trim().equals("")) {
+            conditions.add(storage.NAME.like("%" + keyWord.trim() + "%")
+                    .or(storage.NUMBER.like("%" + keyWord.trim() + "%"))
+                    .or(storage.DESCRIPTION.like("%" + keyWord.trim() + "%")));
+        }
         List<Map<String, Object>> list = dslContext.select(storage.ID.as("id"),
                 storage.NAME.as("name"),
                 storage.NUMBER.as("number"),
@@ -54,40 +64,17 @@ public class StoreQuery {
                 storage.FONDS_ID.as("fonds_id"),
                 sysFonds.FONDS_NAME.as("fonds_name"))
                 .from(storage, sysFonds)
-                .where(storage.FONDS_ID.equal(sysFonds.ID), storage.GMT_DELETED.equal(0), sysFonds.GMT_DELETED.equal(0))
+                .where(conditions).orderBy(storage.GMT_CREATE.desc())
+                .limit((pageNum - 1) * pageSize, pageSize)
                 .fetch().intoMaps();
         resultMap.put("items", list);
-        return resultMap;
-    }
-
-    /**
-     * 通过关键字内容查询库房列表
-     */
-    public Map<String, Object> getStorageListByFondsIdAndKeyWord(String keyWord) {
-
-        Map<String, Object> resultMap = new HashMap<>();
-        List<Map<String, Object>> list = dslContext.select(storage.ID.as("id"),
-                storage.NAME.as("name"),
-                storage.NUMBER.as("number"),
-                storage.DESCRIPTION.as("description"),
-                storage.FONDS_ID.as("fonds_id"),
-                sysFonds.FONDS_NAME.as("fonds_name"))
-                .from(storage, sysFonds)
-                .where(storage.FONDS_ID.equal(sysFonds.ID),
-                        sysFonds.GMT_DELETED.equal(0),
-                        storage.NAME.like("%" + keyWord.trim() + "%")
-                                .or(storage.NUMBER.like("%" + keyWord.trim() + "%"))
-                                .or(storage.DESCRIPTION.like("%" + keyWord.trim() + "%")))
-                .fetch().intoMaps();
-        resultMap.put("items", list);
-
         return resultMap;
     }
 
     /**
      * 通过库房id与关键字内容查询监测点列表
      */
-    public Map<String, Object> getMonitoringPointList(Integer storageId, String keyWord) {
+    public Map<String, Object> getMonitoringPointList(Integer storageId, String keyWord, int pageNum, int pageSize) {
 
         List<Condition> conditions = new ArrayList<>();
         conditions.add(monitoringPoint.STORAGE_ID.equal(UInteger.valueOf(storageId)));
@@ -108,6 +95,7 @@ public class StoreQuery {
                 storage.NAME.as("name"))
                 .from(monitoringPoint, storage)
                 .where(conditions)
+                .limit((pageNum - 1) * pageSize, pageSize)
                 .fetch().intoMaps();
         resultMap.put("items", list);
 
@@ -115,37 +103,17 @@ public class StoreQuery {
     }
 
     /**
-     * 获取全部监测记录列表
+     * 查询监测记录列表
      */
-    public Map<String, Object> getMonitoringRecordList() {
-
-        Map<String, Object> resultMap = new HashMap<>();
-        List<Map<String, Object>> list = dslContext.select(monitoringRecord.ID.as("id"),
-                monitoringPoint.NUMBER.as("number"),
-                monitoringRecord.MONITORING_POINT_ID.as("monitoring_point_id"),
-                monitoringRecord.MONITORING_TIME.as("monitoring_time"),
-                monitoringRecord.TEMPERATURE_VALUE.as("temperature_value"),
-                monitoringRecord.HUMIDITY_VALUE.as("humidity_value"),
-                monitoringRecord.TAKE_STEPS.as("take_steps"),
-                monitoringRecord.STORAGE_ID.as("storage_id"),
-                monitoringPoint.TYPE.as("type"))
-                .from(monitoringRecord, monitoringPoint)
-                .where(monitoringRecord.MONITORING_POINT_ID.equal(monitoringPoint.ID))
-                .fetch().intoMaps();
-        resultMap.put("items", list);
-
-        return resultMap;
-    }
-
-    /**
-     * 通过库房id与关键字内容查询监测记录列表
-     */
-    public Map<String, Object> getMonitoringPointListByStorageIdAndKeyWord(Integer storageId, String keyWord) {
+    public Map<String, Object> getMonitoringRecordList(UInteger storageId, String keyWord, int pageNum, int pageSize) {
 
         List<Condition> conditions = new ArrayList<>();
-        conditions.add(monitoringRecord.STORAGE_ID.equal(UInteger.valueOf(storageId)));
         conditions.add(monitoringRecord.MONITORING_POINT_ID.equal(monitoringPoint.ID));
-        if (keyWord != null && !keyWord.trim().equals("")) {
+
+        if (null != storageId) {
+            conditions.add(monitoringRecord.STORAGE_ID.equal(storageId));
+        }
+        if (null != keyWord && !keyWord.trim().equals("")) {
             conditions.add(monitoringRecord.TEMPERATURE_VALUE.like("%" + keyWord.trim() + "%")
                     .or(monitoringRecord.HUMIDITY_VALUE.like("%" + keyWord.trim() + "%"))
                     .or(monitoringRecord.TAKE_STEPS.like("%" + keyWord.trim() + "%")));
@@ -162,10 +130,10 @@ public class StoreQuery {
                 monitoringRecord.STORAGE_ID.as("storage_id"),
                 monitoringPoint.TYPE.as("type"))
                 .from(monitoringRecord, monitoringPoint)
-                .where(conditions)
+                .where(conditions).orderBy(monitoringRecord.GMT_CREATE.desc())
+                .limit((pageNum - 1) * pageSize, pageSize)
                 .fetch().intoMaps();
         resultMap.put("items", list);
-
         return resultMap;
     }
 
@@ -188,11 +156,28 @@ public class StoreQuery {
     /**
      * 根据条件获取档案盒列表
      */
-    public Map<String, Object> getBoxList(int pageNum, int size, int archivesId, String code, int status, int onFrame) {
+    public Map<String, Object> getBoxList(int pageNum, int size, UInteger archivesId, String code, int status, int onFrame) {
         Map<String, Object> resultMap = new HashMap<>();
-        List<Map<String, Object>> list = null;
-        int total = 0;
-        SelectJoinStep<Record9<UInteger, String, Integer, Integer, Integer, Integer, Integer, String, String>> selectJoinStep = dslContext
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(storeBox.ARCHIVES_ID.equal(archivesId));
+        conditions.add(storeBox.CODE.like("%" + code + "%"));
+        if (status == 1 && onFrame == 0) {
+            //容纳状况已满
+            conditions.add(storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL));
+        } else if (status == 2 && onFrame == 0) {
+            //容纳状况未满
+            conditions.add(storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL));
+        } else if (status == 0 && onFrame != 0) {
+            //已上架或未上架
+            conditions.add(storeBox.ON_FRAME.equal(onFrame));
+        } else if (status == 1 && onFrame != 0) {
+            conditions.add(storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL));
+            conditions.add(storeBox.ON_FRAME.equal(onFrame));
+        } else if (status == 2 && onFrame != 0) {
+            conditions.add(storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL));
+            conditions.add(storeBox.ON_FRAME.equal(onFrame));
+        }
+        List<Map<String, Object>> list = dslContext
                 .select(storeBox.ID.as("id"),
                         storeBox.CODE.as("code"),
                         storeBox.FILES_TOTAL.as("filesTotal"),
@@ -200,100 +185,17 @@ public class StoreQuery {
                         storeBox.MAX_PAGES_TOTAL.as("maxPagesTotal"),
                         storeBox.WIDTH.as("width"),
                         storeBox.ON_FRAME.as("onFrame"),
-                        storeBox.POINT.as("point"),
-                        storeBox.REMARK.as("remark")
-                ).from(storeBox);
-        if (status == 1 && onFrame == 0) {
-            //容纳状况已满
-            list = selectJoinStep
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL))
-                    .limit((pageNum - 1) * size, size)
-                    .fetch().intoMaps();
+                        DSL.decode().when(storeBox.POINT.isNull(), "").otherwise(storeBox.POINT).as("point"),
+                        DSL.decode().when(storeBox.REMARK.isNull(), "").otherwise(storeBox.REMARK).as("remark")
+                ).from(storeBox)
+                .where(conditions).orderBy(storeBox.GMT_CREATE.desc())
+                .limit((pageNum - 1) * size, size)
+                .fetch().intoMaps();
 
-            total = (int) dslContext.select(storeBox.ID.as("id").count()
-            ).from(storeBox)
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL))
-                    .fetch().getValue(0, 0);
-        } else if (status == 2 && onFrame == 0) {
-            //容纳状况未满
-            list = selectJoinStep
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL))
-                    .limit((pageNum - 1) * size, size)
-                    .fetch().intoMaps();
-
-            total = (int) dslContext.select(storeBox.ID.as("id").count()
-            ).from(storeBox)
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL))
-                    .fetch().getValue(0, 0);
-        } else if (status == 0 && onFrame != 0) {
-            //已上架或未上架
-            list = selectJoinStep
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"),
-                            storeBox.ON_FRAME.equal(onFrame))
-                    .limit((pageNum - 1) * size, size)
-                    .fetch().intoMaps();
-
-            total = (int) dslContext.select(storeBox.ID.as("id").count()
-            ).from(storeBox)
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"),
-                            storeBox.ON_FRAME.equal(onFrame))
-                    .fetch().getValue(0, 0);
-        } else if (status == 1 && onFrame != 0) {
-            list = selectJoinStep
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL),
-                            storeBox.ON_FRAME.equal(onFrame))
-                    .limit((pageNum - 1) * size, size)
-                    .fetch().intoMaps();
-
-            total = (int) dslContext.select(storeBox.ID.as("id").count()
-            ).from(storeBox)
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.greaterThan(storeBox.MAX_PAGES_TOTAL),
-                            storeBox.ON_FRAME.equal(onFrame))
-                    .fetch().getValue(0, 0);
-        } else if (status == 2 && onFrame != 0) {
-            list = selectJoinStep
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL),
-                            storeBox.ON_FRAME.equal(onFrame))
-                    .limit((pageNum - 1) * size, size)
-                    .fetch().intoMaps();
-
-            total = (int) dslContext.select(storeBox.ID.as("id").count()
-            ).from(storeBox)
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"),
-                            storeBox.PAGES_TOTAL.lessThan(storeBox.MAX_PAGES_TOTAL),
-                            storeBox.ON_FRAME.equal(onFrame))
-                    .fetch().getValue(0, 0);
-        } else {
-            //全部
-            list = selectJoinStep
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"))
-                    .limit((pageNum - 1) * size, size)
-                    .fetch().intoMaps();
-
-            total = (int) dslContext.select(storeBox.ID.as("id").count()
-            ).from(storeBox)
-                    .where(storeBox.ARCHIVES_ID.equal(UInteger.valueOf(archivesId)),
-                            storeBox.CODE.like("%" + code + "%"))
-                    .fetch().getValue(0, 0);
-        }
+        int total = (int) dslContext.select(storeBox.ID.as("id").count()
+        ).from(storeBox)
+                .where(conditions)
+                .fetch().getValue(0, 0);
         resultMap.put("items", list);
         resultMap.put("total", total);
         return resultMap;

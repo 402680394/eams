@@ -1,12 +1,16 @@
 package com.ztdx.eams.controller.archives;
 
+import com.ztdx.eams.basic.exception.BusinessException;
+import com.ztdx.eams.domain.archives.application.DescriptionItemService;
 import com.ztdx.eams.domain.archives.application.MetadataService;
+import com.ztdx.eams.domain.archives.model.DescriptionItem;
 import com.ztdx.eams.domain.archives.model.Metadata;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,10 +23,13 @@ public class MetadataController {
     private final MetadataService metadataService;
 
     private final ArchivesQuery archivesQuery;
+
+    private final DescriptionItemService descriptionItemService;
     @Autowired
-    public MetadataController(MetadataService metadataService, ArchivesQuery archivesQuery) {
+    public MetadataController(MetadataService metadataService, ArchivesQuery archivesQuery, DescriptionItemService descriptionItemService) {
         this.metadataService = metadataService;
         this.archivesQuery = archivesQuery;
+        this.descriptionItemService = descriptionItemService;
     }
 
     /**
@@ -31,7 +38,7 @@ public class MetadataController {
      * @apiDescription 用于通过名称与元数据规范ID获取元数据列表
      * @apiGroup metadata
      * @apiParam {Number} metadataStandardsId 元数据规范ID(url参数)
-     * @apiParam {String{30}} name 名称(未输入传""值)(url参数)
+     * @apiParam {String{30}} name 名称(非必传)(url参数)
      * @apiSuccess (Success 200) {Number} id ID.
      * @apiSuccess (Success 200) {String} displayName 字段显示名.
      * @apiSuccess (Success 200) {String} name 字段名称.
@@ -102,6 +109,10 @@ public class MetadataController {
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable("id") int id) {
+        List<DescriptionItem> descriptionItems = descriptionItemService.findByMetadataId(id);
+        if(descriptionItems.size()!=0){
+            throw new BusinessException("该元数据已被使用");
+        }
         metadataService.delete(id);
     }
 
@@ -173,11 +184,11 @@ public class MetadataController {
     }
 
     /**
-     * @api {patch} /metadata/{upId},{downId}/priority 修改元数据排序优先级
+     * @api {patch} /metadata/{upId},{downId}/priority 排序
      * @apiName priority
      * @apiGroup metadata
-     * @apiParam {Number} upId 上移词典ID（url占位符）
-     * @apiParam {Number} downId 下移词典ID（url占位符）
+     * @apiParam {Number} upId 上移ID（url占位符）
+     * @apiParam {Number} downId 下移ID（url占位符）
      */
     @RequestMapping(value = "/{upId},{downId}/priority", method = RequestMethod.PATCH)
     public void priority(@PathVariable("upId") int upId, @PathVariable("downId") int downId) {

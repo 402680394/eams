@@ -56,6 +56,9 @@ public class BoxService {
     @Transactional
     public void delete(List<Integer> ids) {
         List<Box> list = boxRepository.findAllById(ids);
+        if(ids.size()!=list.size()){
+            throw new InvalidArgumentException("档案盒不存在或已被删除");
+        }
         boxRepository.deleteAll(list);
     }
 
@@ -75,7 +78,7 @@ public class BoxService {
     @Transactional
     public void downFrame(List<Integer> ids) {
         for (int id : ids) {
-            boxRepository.updateOnFrameById(id, 0, "");
+            boxRepository.updateOnFrameById(id, 0, null);
         }
     }
 
@@ -110,7 +113,6 @@ public class BoxService {
             box.setWidth(width);
             box.setMaxPagesTotal(maxPagesTotal);
             box.setRemark(remark);
-            box.setPoint("");
             try {
                 int number = formatter.parse(flowNumber).intValue();
                 if (i != 0) {

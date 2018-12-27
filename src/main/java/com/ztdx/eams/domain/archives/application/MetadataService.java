@@ -21,50 +21,46 @@ public class MetadataService {
     }
 
     /**
-     * 新增词典
+     * 新增
      */
     @Transactional
     public void save(Metadata metadata) {
         if (metadataRepository.existsByName(metadata.getName())) {
-            throw new InvalidArgumentException("字段名称已存在");
+            throw new InvalidArgumentException("名称已存在");
         }
-        //设置排序优先级
         Integer orderNumber = metadataRepository.findMaxOrderNumber();
         if (orderNumber != null) {
             metadata.setOrderNumber(orderNumber + 1);
         } else {
             metadata.setOrderNumber(1);
         }
-        //存储数据
         metadataRepository.save(metadata);
     }
     /**
-     * 删除词典
+     * 删除
      */
     @Transactional
     public void delete(int id) {
         if (metadataRepository.existsById(id)) {
-            //删除词典
             metadataRepository.deleteById(id);
         }
     }
     /**
-     * 修改词典
+     * 修改
      */
     @Transactional
     public void update(Metadata metadata) {
         if (!metadataRepository.existsByNameAndId(metadata.getName(), metadata.getId())) {
             if (metadataRepository.existsByName(metadata.getName())) {
-                throw new InvalidArgumentException("字段名称已存在");
+                throw new InvalidArgumentException("名称已存在");
             }
         }
-        //修改数据
         if (metadataRepository.existsById(metadata.getId())) {
             metadataRepository.updateById(metadata);
         }
     }
     /**
-     * 修改词典排序优先级
+     * 修改排序
      */
     @Transactional
     public void priority(int upId, int downId) {
@@ -72,7 +68,7 @@ public class MetadataService {
         Metadata up=metadataRepository.findById(upId);
         Metadata down=metadataRepository.findById(downId);
         if(up==null||down==null){
-            throw new InvalidArgumentException("词典不存在或已被删除");
+            throw new InvalidArgumentException("该项不存在或已被删除");
         }
         metadataRepository.updateOrderNumberById(upId,down.getOrderNumber());
         metadataRepository.updateOrderNumberById(downId,up.getOrderNumber());

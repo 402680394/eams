@@ -33,6 +33,7 @@ public interface DescriptionItemRepository extends JpaRepository<DescriptionItem
 
     void deleteByIdIn(Collection<Integer> id);
 
+    List<DescriptionItem> findByMetadataId(int metadataId);
 
     @Modifying
     @Query("update DescriptionItem d set d.displayName=:#{#descriptionItem.displayName},d.dictionaryValueType=:#{#descriptionItem.dictionaryValueType},d.dictionaryRootSelect=:#{#descriptionItem.dictionaryRootSelect},d.dictionaryNodeId=:#{#descriptionItem.dictionaryNodeId},d.dictionaryType=:#{#descriptionItem.dictionaryType},d.isDictionary=:#{#descriptionItem.isDictionary},d.isNull=:#{#descriptionItem.isNull},d.isRead=:#{#descriptionItem.isRead},d.isIncrement=:#{#descriptionItem.isIncrement},d.fieldPrecision=:#{#descriptionItem.fieldPrecision},d.fieldWidth=:#{#descriptionItem.fieldWidth},d.propertyType=:#{#descriptionItem.propertyType},d.defaultValue=:#{#descriptionItem.defaultValue},d.dataType=:#{#descriptionItem.dataType} where d.id=:#{#descriptionItem.id}")
