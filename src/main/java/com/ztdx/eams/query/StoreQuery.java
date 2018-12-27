@@ -59,11 +59,11 @@ public class StoreQuery {
                     .or(storage.NUMBER.like("%" + keyWord.trim() + "%"))
                     .or(storage.DESCRIPTION.like("%" + keyWord.trim() + "%")));
         }
-        int total = (int) dslContext.select(storage.ID.count()).from(storage)
+        int total = (int) dslContext.select(storage.ID.count()).from(storage, sysFonds)
                 .where(conditions).fetch().getValue(0, 0);
 
         if (total != 0) {
-             list = dslContext.select(storage.ID.as("id"),
+            list = dslContext.select(storage.ID.as("id"),
                     storage.NAME.as("name"),
                     storage.NUMBER.as("number"),
                     storage.DESCRIPTION.as("description"),
@@ -96,7 +96,7 @@ public class StoreQuery {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
 
-        int total = (int) dslContext.select(monitoringPoint.ID.count()).from(monitoringPoint)
+        int total = (int) dslContext.select(monitoringPoint.ID.count()).from(monitoringPoint, storage)
                 .where(conditions).fetch().getValue(0, 0);
 
         if (total != 0) {
@@ -136,20 +136,27 @@ public class StoreQuery {
         }
 
         Map<String, Object> resultMap = new HashMap<>();
-        List<Map<String, Object>> list = dslContext.select(monitoringRecord.ID.as("id"),
-                monitoringPoint.NUMBER.as("number"),
-                monitoringRecord.MONITORING_POINT_ID.as("monitoring_point_id"),
-                monitoringRecord.MONITORING_TIME.as("monitoring_time"),
-                monitoringRecord.TEMPERATURE_VALUE.as("temperature_value"),
-                monitoringRecord.HUMIDITY_VALUE.as("humidity_value"),
-                monitoringRecord.TAKE_STEPS.as("take_steps"),
-                monitoringRecord.STORAGE_ID.as("storage_id"),
-                monitoringPoint.TYPE.as("type"))
-                .from(monitoringRecord, monitoringPoint)
-                .where(conditions).orderBy(monitoringRecord.GMT_CREATE.desc())
-                .limit((pageNum - 1) * pageSize, pageSize)
-                .fetch().intoMaps();
+        List<Map<String, Object>> list = new ArrayList<>();
+
+        int total = (int) dslContext.select(monitoringRecord.ID.count()).from(monitoringRecord, monitoringPoint)
+                .where(conditions).fetch().getValue(0, 0);
+        if (total != 0) {
+            list = dslContext.select(monitoringRecord.ID.as("id"),
+                    monitoringPoint.NUMBER.as("number"),
+                    monitoringRecord.MONITORING_POINT_ID.as("monitoring_point_id"),
+                    monitoringRecord.MONITORING_TIME.as("monitoring_time"),
+                    monitoringRecord.TEMPERATURE_VALUE.as("temperature_value"),
+                    monitoringRecord.HUMIDITY_VALUE.as("humidity_value"),
+                    monitoringRecord.TAKE_STEPS.as("take_steps"),
+                    monitoringRecord.STORAGE_ID.as("storage_id"),
+                    monitoringPoint.TYPE.as("type"))
+                    .from(monitoringRecord, monitoringPoint)
+                    .where(conditions).orderBy(monitoringRecord.GMT_CREATE.desc())
+                    .limit((pageNum - 1) * pageSize, pageSize)
+                    .fetch().intoMaps();
+        }
         resultMap.put("items", list);
+        resultMap.put("total", total);
         return resultMap;
     }
 

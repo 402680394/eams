@@ -46,7 +46,11 @@ public class MonitoringRecordController {
      * @apiSuccess (Success 200) {String{100}} takeSteps 采取措施.
      * @apiSuccess (Success 200) {Number} storageId 所属库房id.
      * @apiSuccess (Success 200) {Number} type 监测点类型（1 温度记录仪 2 湿度记录仪 3 温湿度记录仪）.
+     * @apiSuccess (Success 200) {Number} total 数据总数
      * @apiSuccessExample {json} Success-Response:
+     * {
+     * "data":{
+     * "items":[
      * {
      *      "id": 1,
      *      "number": "BH001",
@@ -57,6 +61,10 @@ public class MonitoringRecordController {
      *      "take_steps": "降温",
      *      "storage_id": 1,
      *      "type" : 2
+     * }
+     * ]
+     * "total":1
+     * }
      * }
      */
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
