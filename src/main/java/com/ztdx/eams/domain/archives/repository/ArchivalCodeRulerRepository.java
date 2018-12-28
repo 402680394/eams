@@ -16,8 +16,6 @@ public interface ArchivalCodeRulerRepository extends JpaRepository<ArchivalCodeR
 
     List<ArchivalCodeRuler> findByCatalogueIdOrderByOrderNumber(int catalogueId);
 
-    String findByIsGroup(int isGroup);
-
     @Modifying
     @Query("update ArchivalCodeRuler a set a.orderNumber=:orderNumber where a.id=:id")
     void updateOrderNumberById(@Param(value = "id") int id, @Param(value = "orderNumber") int orderNumber);
@@ -30,4 +28,6 @@ public interface ArchivalCodeRulerRepository extends JpaRepository<ArchivalCodeR
     void updateById(@Param("archivalCodeRuler") ArchivalCodeRuler archivalCodeRuler);
 
     Optional<ArchivalCodeRuler> findByCatalogueIdAndType(int catalogueId, RulerType rulerType);
+
+    boolean existsByDescriptionItemId(int descriptionItemId);
 }

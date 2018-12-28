@@ -1,6 +1,8 @@
 package com.ztdx.eams.controller.archives;
 
+import com.ztdx.eams.basic.exception.BusinessException;
 import com.ztdx.eams.basic.exception.InvalidArgumentException;
+import com.ztdx.eams.domain.archives.application.ArchivalCodeRulerService;
 import com.ztdx.eams.domain.archives.application.ClassificationService;
 import com.ztdx.eams.domain.archives.application.DescriptionItemService;
 import com.ztdx.eams.domain.archives.application.DictionaryClassificationService;
@@ -8,8 +10,8 @@ import com.ztdx.eams.domain.archives.application.event.DescriptionItemAddEvent;
 import com.ztdx.eams.domain.archives.application.event.DescriptionItemDeleteEvent;
 import com.ztdx.eams.domain.archives.application.task.EntryAsyncTask;
 import com.ztdx.eams.domain.archives.model.DescriptionItem;
+import com.ztdx.eams.domain.store.application.BoxCodeRuleService;
 import com.ztdx.eams.domain.system.application.OrganizationService;
-import com.ztdx.eams.domain.system.application.UserDesItemConfService;
 import com.ztdx.eams.query.ArchivesQuery;
 import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,9 +44,13 @@ public class DescriptionItemController {
 
     private final ApplicationContext applicationContext;
 
+    private final BoxCodeRuleService boxCodeRuleService;
+
+    private final ArchivalCodeRulerService archivalCodeRulerService;
+
 
     @Autowired
-    public DescriptionItemController(ArchivesQuery archivesQuery, DescriptionItemService descriptionItemService, ClassificationService classificationService, DictionaryClassificationService dictionaryClassificationService, OrganizationService organizationService, EntryAsyncTask entryAsyncTask, ApplicationContext applicationContext) {
+    public DescriptionItemController(ArchivesQuery archivesQuery, DescriptionItemService descriptionItemService, ClassificationService classificationService, DictionaryClassificationService dictionaryClassificationService, OrganizationService organizationService, EntryAsyncTask entryAsyncTask, ApplicationContext applicationContext, BoxCodeRuleService boxCodeRuleService, ArchivalCodeRulerService archivalCodeRulerService) {
         this.archivesQuery = archivesQuery;
         this.descriptionItemService = descriptionItemService;
         this.classificationService = classificationService;
@@ -52,6 +58,8 @@ public class DescriptionItemController {
         this.organizationService = organizationService;
         this.entryAsyncTask = entryAsyncTask;
         this.applicationContext = applicationContext;
+        this.boxCodeRuleService = boxCodeRuleService;
+        this.archivalCodeRulerService = archivalCodeRulerService;
     }
 
     /**
@@ -237,9 +245,22 @@ public class DescriptionItemController {
     @Transactional
     @RequestMapping(value = "/", method = RequestMethod.DELETE)
     public void delete(@RequestBody List<Integer> ids) {
-        if(ids.size()==0){
+
+        List<DescriptionItem> descriptionItems = descriptionItemService.findAllById(ids);
+
+        if (ids.size() == 0) {
             throw new InvalidArgumentException("选择要删除的著录项");
         }
+        descriptionItems.forEach(descriptionItem -> {
+            if (!boxCodeRuleService.existsByDescriptionItemId(descriptionItem.getId())) {
+                throw new BusinessException("著录项" + descriptionItem.getDisplayName() + "已被盒号规则使用");
+            }
+
+            if (!archivalCodeRulerService.existsByDescriptionItemId(descriptionItem.getId())) {
+                throw new BusinessException("著录项" + descriptionItem.getDisplayName() + "已被档号规则使用");
+            }
+        });
+
         applicationContext.publishEvent(new DescriptionItemDeleteEvent(this, ids));
         descriptionItemService.delete(ids);
     }

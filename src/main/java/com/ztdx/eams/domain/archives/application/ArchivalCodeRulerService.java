@@ -161,8 +161,13 @@ public class ArchivalCodeRulerService {
 
         //流水号只能位于最后
         if (null != a) {
-            a.setOrderNumber(orderNumber++);
+            orderNumber++;
+            a.setOrderNumber(orderNumber);
             archivalCodeRulerRepository.save(a);
         }
+    }
+
+    public boolean existsByDescriptionItemId(int descriptionItemId){
+        return archivalCodeRulerRepository.existsByDescriptionItemId(descriptionItemId);
     }
 }

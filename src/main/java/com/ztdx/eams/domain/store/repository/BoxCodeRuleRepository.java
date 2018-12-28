@@ -1,6 +1,5 @@
 package com.ztdx.eams.domain.store.repository;
 
-import com.ztdx.eams.domain.store.model.Box;
 import com.ztdx.eams.domain.store.model.BoxCodeRule;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,6 +32,5 @@ public interface BoxCodeRuleRepository extends JpaRepository<BoxCodeRule, Intege
     @Query("update BoxCodeRule b set b.type=:#{#boxCodeRule.type},b.value=:#{#boxCodeRule.value},b.descriptionItemId=:#{#boxCodeRule.descriptionItemId},b.interceptionLength=:#{#boxCodeRule.interceptionLength},b.flowNumberLength=:#{#boxCodeRule.flowNumberLength},b.remark=:#{#boxCodeRule.remark} where b.id=:#{#boxCodeRule.id}")
     void updateById(@Param("boxCodeRule") BoxCodeRule boxCodeRule);
 
-
-
+    boolean existsByDescriptionItemId(int descriptionItemId);
 }

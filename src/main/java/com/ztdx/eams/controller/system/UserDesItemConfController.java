@@ -93,7 +93,7 @@ public class UserDesItemConfController {
         userDesItemConfs.forEach(userDesItemConf -> {
             param.forEach(p -> {
                 if (userDesItemConf.getId() == p.get("id")) {
-                    userDesItemConf.setWidth(p.getOrDefault("width",0));
+                    userDesItemConf.setWidth(null == p.get("width") ? 0 : p.get("width"));
                 }
             });
         });
@@ -133,8 +133,8 @@ public class UserDesItemConfController {
         int catalogueId = descriptionItems.get(0).getCatalogueId();
         for (User user : users) {
             Integer order = userDesItemConfService.findMaxOrderNumber(catalogueId, user.getId());
-            if(null==order){
-                order=1;
+            if (null == order) {
+                order = 1;
             }
             for (DescriptionItem descriptionItem : descriptionItems) {
                 UserDesItemConf userDesItemConf = new UserDesItemConf();

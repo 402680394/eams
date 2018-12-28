@@ -62,7 +62,8 @@ public class BoxCodeRuleService {
         boxCodeRuleRepository.save(boxCodeRule);
         //流水号只能位于最后
         if (null != b) {
-            b.setOrderNumber(orderNumber++);
+            orderNumber++;
+            b.setOrderNumber(orderNumber);
             boxCodeRuleRepository.save(b);
         }
     }
@@ -75,5 +76,9 @@ public class BoxCodeRuleService {
             throw new BusinessException("只能有一个流水号");
         }
         boxCodeRuleRepository.updateById(boxCodeRule);
+    }
+
+    public boolean existsByDescriptionItemId(int descriptionItemId){
+        return boxCodeRuleRepository.existsByDescriptionItemId(descriptionItemId);
     }
 }

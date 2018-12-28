@@ -249,16 +249,13 @@ public class BoxCodeRuleController {
             }
         } else if (boxCodeRule.getType() == 2) {
             boxCodeRule.setValue("全宗号");
+        } else if (boxCodeRule.getType() == 4) {
+            boxCodeRule.setValue("流水号");
+            if (boxCodeRule.getFlowNumberLength() <= 0) {
+                boxCodeRule.setFlowNumberLength((byte) 0);
+            }
         }
-        if (null == boxCodeRule.getRemark()) {
-            boxCodeRule.setRemark("");
-        }
-        if (null == boxCodeRule.getValue()) {
-            boxCodeRule.setValue("");
-        }
-        if (boxCodeRule.getFlowNumberLength() <= 0) {
-            boxCodeRule.setFlowNumberLength((byte) 0);
-        }
+
     }
 
 }

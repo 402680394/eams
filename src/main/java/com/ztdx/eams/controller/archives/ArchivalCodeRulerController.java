@@ -212,14 +212,11 @@ public class ArchivalCodeRulerController {
         } else if (archivalCodeRuler.getType().equals(RulerType.FondsCode)) {
             archivalCodeRuler.setValue("全宗号");
         }
-        if (null == archivalCodeRuler.getRemark()) {
-            archivalCodeRuler.setRemark("");
-        }
-        if (null == archivalCodeRuler.getValue()) {
-            archivalCodeRuler.setValue("");
-        }
-        if (archivalCodeRuler.getType().equals(RulerType.SerialNumber) && archivalCodeRuler.getFlowNumberLength() <= 4) {
-            archivalCodeRuler.setFlowNumberLength(4);
+        if (archivalCodeRuler.getType().equals(RulerType.SerialNumber)) {
+            if(archivalCodeRuler.getFlowNumberLength() <= 4){
+                archivalCodeRuler.setFlowNumberLength(4);
+            }
+            archivalCodeRuler.setValue("流水号");
         }
     }
 }

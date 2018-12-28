@@ -22,19 +22,21 @@ public interface MetadataRepository extends JpaRepository<Metadata, Integer> {
 
     void deleteByMetadataStandardsId(int metadataStandardsId);
 
-    Metadata findById(int id);
-
     List<Metadata> findByIdIn(Collection<Integer> ids);
 
     boolean existsByName(String name);
 
-    //查询排序号最大值
+    boolean existsByDisplayName(String displayName);
+
+    //最大排序号
     @Query("select max (m.orderNumber) from Metadata m")
     Integer findMaxOrderNumber();
 
+    boolean existsByDisplayNameAndId(String displayName, int id);
+
     boolean existsByNameAndId(String name, int id);
 
-    //通过ID修改信息
+    //修改
     @Modifying
     @Query("update Metadata m set m.displayName=:#{#metadata.displayName},m.name=:#{#metadata.name},m.fieldProperties=:#{#metadata.fieldProperties}" +
             ",m.dataType=:#{#metadata.dataType},m.fieldWidth=:#{#metadata.fieldWidth},m.fieldPrecision=:#{#metadata.fieldPrecision}" +
@@ -43,7 +45,7 @@ public interface MetadataRepository extends JpaRepository<Metadata, Integer> {
             ",m.range=:#{#metadata.range},m.informationSources=:#{#metadata.informationSources},m.remark=:#{#metadata.remark} where m.id=:#{#metadata.id}")
     void updateById(@Param(value = "metadata") Metadata metadata);
 
-    //设置排序号
+    //排序
     @Modifying
     @Query("update Metadata m set m.orderNumber=:orderNumber where m.id=:id")
     void updateOrderNumberById(@Param(value = "id") int id, @Param(value = "orderNumber") int orderNumber);
