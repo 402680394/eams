@@ -66,8 +66,8 @@ public class StorageController {
     @PreAuthorize("hasAnyRole('ADMIN') || hasAnyAuthority('global_storage_read')")
     @RequestMapping(value = "/storageList", method = RequestMethod.GET)
     public Map<String,Object> storageList(@RequestParam(value = "keyWord", defaultValue = "") String keyWord
-            , @RequestParam(name = "pageSize", required = false, defaultValue = "15") int pageSize
-            , @RequestParam(name = "pageNum", required = false, defaultValue = "1") int pageNum) {
+            , @RequestParam(name = "pageSize", required = false) Integer pageSize
+            , @RequestParam(name = "pageNum", required = false) Integer pageNum) {
         return storeQuery.getStorageList(keyWord.trim(), pageNum, pageSize);
     }
 

@@ -9,6 +9,7 @@ import org.jooq.types.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -45,7 +46,7 @@ public class StoreQuery {
     /**
      * 获取全部库房列表
      */
-    public Map<String, Object> getStorageList(String keyWord, int pageNum, int pageSize) {
+    public Map<String, Object> getStorageList(String keyWord, Integer pageNum, Integer pageSize) {
         Map<String, Object> resultMap = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
 
@@ -62,16 +63,20 @@ public class StoreQuery {
                 .where(conditions).fetch().getValue(0, 0);
 
         if (total != 0) {
-            list = dslContext.select(storage.ID.as("id"),
+            SelectSeekStep1<Record6<UInteger, String, String, String, UInteger, String>, Timestamp> step = dslContext.select(storage.ID.as("id"),
                     storage.NAME.as("name"),
                     storage.NUMBER.as("number"),
                     storage.DESCRIPTION.as("description"),
                     storage.FONDS_ID.as("fonds_id"),
                     sysFonds.FONDS_NAME.as("fonds_name"))
                     .from(storage, sysFonds)
-                    .where(conditions).orderBy(storage.GMT_CREATE.desc())
-                    .limit((pageNum - 1) * pageSize, pageSize)
-                    .fetch().intoMaps();
+                    .where(conditions).orderBy(storage.GMT_CREATE.desc());
+
+            if (null != pageNum || null != pageSize) {
+                list = step.limit((pageNum - 1) * pageSize, pageSize).fetch().intoMaps();
+            } else {
+                list = step.fetch().intoMaps();
+            }
         }
         resultMap.put("items", list);
         resultMap.put("total", total);
